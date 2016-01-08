@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-#
+
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
 #
@@ -65,13 +65,12 @@ from eoxmagmod import (
     GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN, convert, vrot_sph2cart, vnorm,
 )
 
+import matplotlib
 import matplotlib.cm
 from matplotlib.colors import LinearSegmentedColormap
 import tempfile
 os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 
-import matplotlib as mpl
-mpl.use('Agg')
 from matplotlib import pyplot
 
 

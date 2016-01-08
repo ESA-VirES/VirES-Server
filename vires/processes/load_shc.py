@@ -69,8 +69,6 @@ from matplotlib.colors import LinearSegmentedColormap
 import tempfile
 os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 
-import matplotlib as mpl
-mpl.use('Agg')
 from matplotlib import pyplot
 
 import math
