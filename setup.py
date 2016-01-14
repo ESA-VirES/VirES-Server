@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Project: ViRES
+# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ import vires
 DATA_FILES = []
 
 setup(
-    name='ViRES-Server',
+    name='VirES-Server',
     version=vires.__version__,
     packages=find_packages(),
     data_files=DATA_FILES,
@@ -49,7 +49,7 @@ setup(
     maintainer="EOX IT Services GmbH",
     maintainer_email="packages@eox.at",
 
-    description="ViRES server - EOxServer extension",
+    description="VirES server - EOxServer extension",
     #long_description=read("README.rst"),
 
     classifiers=[

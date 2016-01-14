@@ -1,2 +1,2 @@
-# ViRES-Server
-ViRES EOxServer extension
+# VirES-Server
+VirES EOxServer extension
