@@ -1,0 +1,51 @@
+{% load i18n %}
+{% load url from future %}
+
+{% load staticfiles %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block title %}
+    <title>VIRES SWARM SERVICES</title>
+    {% endblock %}
+
+</head>
+
+<body>
+
+	{% block messages %}
+	    {% if messages %}
+		    <div class="container" id="messagescontainer">
+		        <div class="row">
+		            <div class="col-xs-12">
+		                <div>
+		                    {% for message in messages %}
+		                    <div class="alert alert-{% if message.tags %}{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}{% else %}success{% endif %} fade in"><!-- alert-warning alert-danger -->
+		                        <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">&times;</a>
+		                        {{ message|capfirst }}
+		                    </div>
+		                    {% endfor %}
+		                </div>
+		            </div>
+		        </div>
+		    </div>
+		    <script type="text/javascript">
+		        setTimeout(function(){
+		          if ($('.alert').length > 0) {
+		            $('.alert').remove();
+		          }
+		        }, 5000)
+		    </script>
+	    {% endif %}
+    {% endblock messages %}
+
+    {% block content %}
+    {% endblock content %}
+
+</body>
+
+</html>
