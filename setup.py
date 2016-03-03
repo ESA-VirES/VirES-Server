@@ -29,7 +29,7 @@
 from setuptools import setup, find_packages
 import vires
 
-DATA_FILES = []
+DATA_FILES = ['templates/vires/base.html', 'templates/vires/workspace.html']
 
 setup(
     name='VirES-Server',
