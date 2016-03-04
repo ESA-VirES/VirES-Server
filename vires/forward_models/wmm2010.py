@@ -1,5 +1,6 @@
 #-------------------------------------------------------------------------------
-# $Id$
+#
+# WMM 2010 magnetic model
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
@@ -26,15 +27,14 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod
-
+from eoxmagmod.wmm import read_model_wmm, DATA_WMM_2010
 from vires.forward_models.base import BaseForwardModel
 
-
 class WMMForwardModel(BaseForwardModel):
-    """ Forward model calculator for the WMM.
+    """ Forward model calculator for the WMM2010.
     """
-    identifier = "WMM"
+    identifier = "WMM2010"
 
-    def get_model(self, data_item):
-        return eoxmagmod.read_model_wmm2010()
+    @property
+    def model(self):
+        return read_model_wmm(DATA_WMM_2010)

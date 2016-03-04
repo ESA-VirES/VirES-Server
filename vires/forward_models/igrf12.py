@@ -1,5 +1,6 @@
 #-------------------------------------------------------------------------------
-# $Id$
+#
+# IGRF12 magnetic model
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
@@ -26,18 +27,15 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod.shc
-import vires.util as ut
-
-
+from eoxmagmod.shc import read_model_shc
+from vires.util import DATA_IGRF12
 from vires.forward_models.base import BaseForwardModel
-
 
 class IGRF12Model(BaseForwardModel):
     """ Forward model calculator for the IGRF12 field.
     """
-
     identifier = "IGRF12"
 
-    def get_model(self, data_item):
-		return eoxmagmod.shc.read_model_shc(ut.DATA_IGRF12)
+    @property
+    def model(self):
+        return read_model_shc(DATA_IGRF12)

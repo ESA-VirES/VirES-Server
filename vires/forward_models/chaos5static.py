@@ -1,5 +1,6 @@
 #-------------------------------------------------------------------------------
-# $Id$
+#
+# CHAOS 5 - STATIC magnetic model
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
@@ -26,16 +27,14 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod.shc
-
+from eoxmagmod.shc import read_model_shc, DATA_CHAOS5_STATIC
 from vires.forward_models.base import BaseForwardModel
-
 
 class CHAOS5StaticForwardModel(BaseForwardModel):
     """ Forward model calculator for the CHAOS-5 static field.
     """
-
     identifier = "CHAOS-5-Static"
 
-    def get_model(self, data_item):
-        return eoxmagmod.shc.read_model_shc(eoxmagmod.shc.DATA_CHAOS5_STATIC)
+    @property
+    def model(self):
+        return read_model_shc(DATA_CHAOS5_STATIC)

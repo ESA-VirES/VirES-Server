@@ -1,5 +1,6 @@
 #-------------------------------------------------------------------------------
-# $Id$
+#
+# WMM 2015 magnetic model
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
@@ -26,16 +27,14 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod.emm
-
+from eoxmagmod.wmm import read_model_wmm, DATA_WMM_2015
 from vires.forward_models.base import BaseForwardModel
 
-
-class EMMForwardModel(BaseForwardModel):
-    """ Forward model calculator for the EMM.
+class WMMForwardModel(BaseForwardModel):
+    """ Forward model calculator for the WMM2015.
     """
+    identifier = "WMM2015"
 
-    identifier = "EMM"
-
-    def get_model(self, data_item):
-        return eoxmagmod.emm.read_model_emm2010()
+    @property
+    def model(self):
+        return read_model_wmm(DATA_WMM_2015)
