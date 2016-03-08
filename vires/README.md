@@ -1,2 +1,2 @@
 # VirES-Server
-VirES EOxServer extension
+VirES [EOxServer](https://github.com/EOxServer/eoxserver) extension.
