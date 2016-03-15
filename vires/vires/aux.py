@@ -33,6 +33,7 @@ except ImportError:
     from django.utils.datastructures import SortedDict as OrderedDict
 import math
 
+from os.path import exists
 from django.conf import settings
 from spacepy import pycdf
 import numpy as np
@@ -44,14 +45,18 @@ from vires.util import get_total_seconds
 
 
 def _open_db(filename, mode="r"):
-    try:
-        cdf = pycdf.CDF(filename, "")
-    except pycdf.CDFError:
+    """ Open a CDF file. """
+    if mode == "r":
         cdf = pycdf.CDF(filename)
-        if mode == "w":
+    elif mode == "w":
+        if exists(filename):
+            cdf = pycdf.CDF(filename)
             cdf.readonly(False)
+        else:
+            cdf = pycdf.CDF(filename, "")
+    else:
+        raise ValueError("Invalid mode value %r!" % mode)
     return cdf
-
 
 def mjd2000_to_datetime(mjd):
     return jdutil.jd_to_datetime(mjd + 2451544.5)
@@ -107,6 +112,8 @@ def _parse_kp(filename):
 
 
 def _read_cdf(filename, start, stop, fields):
+    # TODO: The file is not guaranteed to exist. Implement a proper check.
+    # NOTE: Where is the file closed?!
     cdf = _open_db(filename)
 
     #second, third = cdf["time"][1:3]
