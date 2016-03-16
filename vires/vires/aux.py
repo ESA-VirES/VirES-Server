@@ -85,7 +85,7 @@ def _parse_dst(filename):
     with open(filename) as f:
         arr = np.array([
             _parse_line(line) for line in f
-            if not "#" in line
+            if "#" not in line
         ])
 
     return arr.T
@@ -99,7 +99,7 @@ def _parse_kp(filename):
     with open(filename) as f:
         arr = np.array([
             _parse_line(line) for line in f
-            if not "#" in line
+            if "#" not in line
         ])
 
     return arr.T
@@ -170,15 +170,27 @@ def _query_kp(input_arr, start, stop):
     }
 
 
-def query_db(start, stop, count):
+def query_db(start, stop, count, dst_nodata_value=None, kp_nodata_value=None):
     start = datetime_to_mjd2000(start)
     stop = datetime_to_mjd2000(stop)
 
     input_arr = np.linspace(start, stop, count)
 
     values = {}
-    values.update(_query_dst(input_arr, start, stop))
-    values.update(_query_kp(input_arr, start, stop))
+    try:
+        values.update(_query_dst(input_arr, start, stop))
+    except:
+        if dst_nodata_value is None:
+            raise
+        values["dst"] = np.empty(count)
+        values["dst"].fill(dst_nodata_value)
+    try:
+        values.update(_query_kp(input_arr, start, stop))
+    except:
+        if kp_nodata_value is None:
+            raise
+        values["kp"] = np.empty(count)
+        values["kp"].fill(kp_nodata_value)
 
     return values
 
@@ -195,6 +207,7 @@ def query_dst_ni(start, stop):
 
     return values
 
+
 # Query Not Interpolated kp values
 def query_kp_ni(start, stop):
     start = datetime_to_mjd2000(start)
@@ -207,5 +220,3 @@ def query_kp_ni(start, stop):
     values["time"] = map(float, values["time"])
 
     return values
-
-
