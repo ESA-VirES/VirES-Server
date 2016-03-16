@@ -40,8 +40,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 from eoxserver.core.util.timetools import isoformat
 
-from vires import jdutil
-from vires.util import get_total_seconds
+from .time_util import mjd2000_to_datetime, datetime_to_mjd2000
+from .util import get_total_seconds
 
 
 def _open_db(filename, mode="r"):
@@ -57,13 +57,6 @@ def _open_db(filename, mode="r"):
     else:
         raise ValueError("Invalid mode value %r!" % mode)
     return cdf
-
-def mjd2000_to_datetime(mjd):
-    return jdutil.jd_to_datetime(mjd + 2451544.5)
-
-
-def datetime_to_mjd2000(dt):
-    return jdutil.datetime_to_jd(dt) - 2451544.5
 
 
 def update_db(file_dst, file_kp):
