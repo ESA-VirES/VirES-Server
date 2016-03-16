@@ -1,7 +1,8 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
+# Auxiliary data files handling.
+#
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -122,8 +123,8 @@ def _read_cdf(filename, start, stop, fields):
         stop = start
         start = tmp
     if start > end or stop < start:
-        raise ValueError("Request outside of defined aux bounds: [%s, %s]"
-            % (
+        raise ValueError(
+            "Request outside of defined aux bounds: [%s, %s]" % (
                 isoformat(mjd2000_to_datetime(begin)),
                 isoformat(mjd2000_to_datetime(end))
             )
