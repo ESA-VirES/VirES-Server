@@ -27,88 +27,62 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-try:
-    # available in Python 2.7+
-    from collections import OrderedDict
-except ImportError:
-    from django.utils.datastructures import SortedDict as OrderedDict
 import math
-
-from os.path import exists
-from django.conf import settings
-from spacepy import pycdf
+from contextlib import closing
 import numpy as np
 from scipy.interpolate import interp1d
+from django.conf import settings
 from eoxserver.core.util.timetools import isoformat
 
+from .cdf_util import cdf_open
 from .time_util import mjd2000_to_datetime, datetime_to_mjd2000
 from .util import get_total_seconds
 
-
-def _open_db(filename, mode="r"):
-    """ Open a CDF file. """
-    if mode == "r":
-        cdf = pycdf.CDF(filename)
-    elif mode == "w":
-        if exists(filename):
-            cdf = pycdf.CDF(filename)
-            cdf.readonly(False)
-        else:
-            cdf = pycdf.CDF(filename, "")
-    else:
-        raise ValueError("Invalid mode value %r!" % mode)
-    return cdf
+KP_FLAGS = {"D": 0, "Q": 1}
+DST_FLAGS = {"D": 0, "P": 1}
 
 
-def update_db(file_dst, file_kp):
-    cdf_dst = _open_db(settings.VIRES_AUX_DB_DST, "w")
-    dst = _parse_dst(file_dst)
-    cdf_dst["time"] = dst[0]
-    cdf_dst["dst"] = dst[1]
-    cdf_dst["est"] = dst[2]
-    cdf_dst["ist"] = dst[3]
-    cdf_dst.close()
-
-    cdf_kp = _open_db(settings.VIRES_AUX_DB_KP, "w")
-    kp = _parse_kp(file_kp)
-    cdf_kp["time"] = kp[0]
-    cdf_kp["kp"] = kp[1]
-    cdf_kp["ap"] = kp[2]
-    cdf_kp.close()
+def parse_dst(src_file):
+    """ Parse Dst index text file. """
+    data = np.loadtxt(src_file, converters={4: lambda v: float(DST_FLAGS[v])})
+    return (
+        data[:, 0], data[:, 1], data[:, 2], data[:, 3],
+        np.array(data[:, 4], 'uint8')
+    )
 
 
-def _parse_dst(filename):
-    def _parse_line(line):
-        mjd, dst, est, ist, flag = line.strip().split()
-        return float(mjd), float(dst), float(est), float(ist)
+def update_dst(src_file, dst_file=None):
+    """ Update Dst index file. """
+    if dst_file is None:
+        dst_file = settings.VIRES_AUX_DB_DST
 
-    with open(filename) as f:
-        arr = np.array([
-            _parse_line(line) for line in f
-            if "#" not in line
-        ])
-
-    return arr.T
+    with closing(cdf_open(dst_file, "w")) as cdf:
+        cdf["time"], cdf["dst"], cdf["est"], cdf["ist"], cdf["flag"] = (
+            parse_dst(src_file)
+        )
 
 
-def _parse_kp(filename):
-    def _parse_line(line):
-        mjd, kp, ap, flag = line.strip().split()
-        return float(mjd), int(kp), int(ap)
+def parse_kp(src_file):
+    """ Parse Kp index text file. """
+    data = np.loadtxt(src_file, converters={3: lambda v: float(KP_FLAGS[v])})
+    return (
+        data[:, 0], data[:, 1], data[:, 2], np.array(data[:, 3], 'uint8')
+    )
 
-    with open(filename) as f:
-        arr = np.array([
-            _parse_line(line) for line in f
-            if "#" not in line
-        ])
 
-    return arr.T
+def update_kp(src_file, dst_file=None):
+    """ Update Kp index file. """
+    if dst_file is None:
+        dst_file = settings.VIRES_AUX_DB_KP
+
+    with closing(cdf_open(dst_file, "w")) as cdf:
+        cdf["time"], cdf["kp"], cdf["ap"], cdf["flag"] = parse_kp(src_file)
 
 
 def _read_cdf(filename, start, stop, fields):
     # TODO: The file is not guaranteed to exist. Implement a proper check.
     # NOTE: Where is the file closed?!
-    cdf = _open_db(filename)
+    cdf = cdf_open(filename)
 
     #second, third = cdf["time"][1:3]
     #resolution = third - second
