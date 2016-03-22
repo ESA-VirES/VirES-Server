@@ -35,6 +35,7 @@ import scipy
 from scipy.interpolate import interp1d
 from spacepy import pycdf
 
+
 try:
     from numpy import full
 except ImportError:
@@ -62,6 +63,14 @@ def cdf_open(filename, mode="r"):
     else:
         raise ValueError("Invalid mode value %r!" % mode)
     return cdf
+
+
+def cdf_rawtime2mjd2000(cdf_type, arr):
+    """ Convert array of CDF raw time values to array MJD2000 values. """
+    if cdf_type == pycdf.const.CDF_EPOCH.value:
+        return arr / 8.640000e+07 - 7.304850e+05
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def cdf_time_subset(cdf, start, stop, fields, margin=0):

@@ -32,7 +32,10 @@
 import unittest
 from StringIO import StringIO
 
-from vires.cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
+from vires.cdf_util import (
+    cdf_open, cdf_time_subset, cdf_time_interp,
+    cdf_rawtime2mjd2000,
+)
 from vires.aux import parse_dst
 from vires.tests.aux import TEST_DST, DATA_DST, ArrayMixIn
 
