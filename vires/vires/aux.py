@@ -28,7 +28,6 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from contextlib import closing
 from os.path import exists
 from numpy import loadtxt, array, linspace, nan
 
@@ -62,7 +61,7 @@ def parse_kp(src_file):
 
 def update_dst(src_file, dst_file):
     """ Update Dst index file. """
-    with closing(cdf_open(dst_file, "w")) as cdf:
+    with cdf_open(dst_file, "w") as cdf:
         cdf["time"], cdf["dst"], cdf["est"], cdf["ist"], cdf["flag"] = (
             parse_dst(src_file)
         )
@@ -70,7 +69,7 @@ def update_dst(src_file, dst_file):
 
 def update_kp(src_file, dst_file):
     """ Update Kp index file. """
-    with closing(cdf_open(dst_file, "w")) as cdf:
+    with cdf_open(dst_file, "w") as cdf:
         cdf["time"], cdf["kp"], cdf["ap"], cdf["flag"] = parse_kp(src_file)
 
 
@@ -78,7 +77,7 @@ def query_dst(filename, start, stop):
     """ Query non-interpolated Dst index values. """
     if not exists(filename):
         return {"time": array([]), "dst": array([])}
-    with closing(cdf_open(filename)) as cdf:
+    with cdf_open(filename) as cdf:
         return dict(cdf_time_subset(
             cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
             fields=("time", "dst"), margin=1
@@ -89,7 +88,7 @@ def query_kp(filename, start, stop):
     """ Query non-interpolated Kp index values. """
     if not exists(filename):
         return {"time": array([]), "kp": array([])}
-    with closing(cdf_open(filename)) as cdf:
+    with cdf_open(filename) as cdf:
         return dict(cdf_time_subset(
             cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
             fields=("time", "kp"), margin=1,
@@ -102,7 +101,7 @@ def query_dst_int(filename, start, stop, count, nodata=nan):
         datetime_to_mjd2000(start), datetime_to_mjd2000(stop), count
     )
     data = {"time": time}
-    with closing(cdf_open(filename)) as cdf:
+    with cdf_open(filename) as cdf:
         data.update(cdf_time_interp(cdf, time, ("dst",), fill_value=nodata))
     return data
 
@@ -113,7 +112,7 @@ def query_kp_int(filename, start, stop, count, nodata=nan):
         datetime_to_mjd2000(start), datetime_to_mjd2000(stop), count
     )
     data = {"time": time}
-    with closing(cdf_open(filename)) as cdf:
+    with cdf_open(filename) as cdf:
         data.update(cdf_time_interp(
             cdf, time, ("kp",), fill_value=nodata, kind="nearest"
         ))

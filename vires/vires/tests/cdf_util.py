@@ -30,7 +30,6 @@
 
 # TODO: Test cdf_time_interp .
 import unittest
-from contextlib import closing
 from StringIO import StringIO
 
 from vires.cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
@@ -41,7 +40,7 @@ class TestCDF(ArrayMixIn, unittest.TestCase):
     FILE = "./test_tmp_cdf.cdf"
 
     def setUp(self):
-        with closing(cdf_open(self.FILE, "w")) as cdf:
+        with cdf_open(self.FILE, "w") as cdf:
             cdf["time"], cdf["dst"], cdf["est"], cdf["ist"], cdf["flag"] = (
                 parse_dst(StringIO(TEST_DST))
             )

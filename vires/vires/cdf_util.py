@@ -49,6 +49,7 @@ def cdf_open(filename, mode="r"):
     """ Open a new or an existing  CDF file.
     Allowed modes are 'r' (read-only) and 'w' (read-write).
     A new CDF file is created in for the 'w' mode if it does not exist.
+    The returned object can be used with the `with` command.
     """
     if mode == "r":
         cdf = pycdf.CDF(filename)
