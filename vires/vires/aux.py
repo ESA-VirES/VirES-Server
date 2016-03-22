@@ -29,7 +29,7 @@
 #-------------------------------------------------------------------------------
 
 from os.path import exists
-from numpy import loadtxt, array, linspace, nan
+from numpy import loadtxt, array, nan
 
 from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
 from .time_util import datetime_to_mjd2000
@@ -37,9 +37,6 @@ from .time_util import datetime_to_mjd2000
 
 KP_FLAGS = {"D": 0, "Q": 1} # Definitive / Quick-look
 DST_FLAGS = {"D": 0, "P": 1} # Definitive / Preliminary(?)
-
-#KP_INDEX_FILE=settings.VIRES_AUX_DB_KP
-#DST_INDEX_FILE=settings.VIRES_AUX_DB_DST
 
 
 def parse_dst(src_file):
@@ -95,23 +92,17 @@ def query_kp(filename, start, stop):
         ))
 
 
-def query_dst_int(filename, start, stop, count, nodata=nan):
+def query_dst_int(filename, time, nodata=nan):
     """ Query interpolated Dst index values. """
-    time = linspace(
-        datetime_to_mjd2000(start), datetime_to_mjd2000(stop), count
-    )
-    data = {"time": time}
+    data = {}
     with cdf_open(filename) as cdf:
         data.update(cdf_time_interp(cdf, time, ("dst",), fill_value=nodata))
     return data
 
 
-def query_kp_int(filename, start, stop, count, nodata=nan):
+def query_kp_int(filename, time, nodata=nan):
     """ Query interpolated Kp index values. """
-    time = linspace(
-        datetime_to_mjd2000(start), datetime_to_mjd2000(stop), count
-    )
-    data = {"time": time}
+    data = {}
     with cdf_open(filename) as cdf:
         data.update(cdf_time_interp(
             cdf, time, ("kp",), fill_value=nodata, kind="nearest"

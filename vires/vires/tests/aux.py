@@ -157,18 +157,13 @@ class TestIndexKp(ArrayMixIn, unittest.TestCase):
         self.assertAllEqual(data['kp'], DATA_KP['kp'][idx_start:idx_stop])
 
     def _query_kp_int(self, start, stop, count):
-        data = query_kp_int(
-            self.FILE, mjd2000_to_datetime(start), mjd2000_to_datetime(stop),
-            count
-        )
         times = linspace(start, stop, count)
+        data = query_kp_int(self.FILE, times)
         values = interp1d(
             DATA_KP['time'], DATA_KP['kp'], bounds_error=False, kind="nearest"
         )(times)
-        self.assertEqual(data['time'].shape, (count,))
         self.assertEqual(data['kp'].shape, (count,))
         self.assertEqual(isnan(data['kp']).shape, isnan(values).shape)
-        self.assertAllAlmostEqual(data['time'], times)
         self.assertAllAlmostEqual(
             data['kp'][logical_not(isnan(values))],
             values[logical_not(isnan(values))]
@@ -221,19 +216,14 @@ class TestIndexDst(ArrayMixIn, unittest.TestCase):
         self.assertAllEqual(data['dst'], DATA_DST['dst'][idx_start:idx_stop])
 
     def _query_dst_int(self, start, stop, count):
-        data = query_dst_int(
-            self.FILE, mjd2000_to_datetime(start), mjd2000_to_datetime(stop),
-            count
-        )
         times = linspace(start, stop, count)
+        data = query_dst_int(self.FILE, times)
         values = interp1d(
             DATA_DST['time'], DATA_DST['dst'], bounds_error=False
         )(times)
 
-        self.assertEqual(data['time'].shape, (count,))
         self.assertEqual(data['dst'].shape, (count,))
         self.assertEqual(isnan(data['dst']).shape, isnan(values).shape)
-        self.assertAllAlmostEqual(data['time'], times)
         self.assertAllAlmostEqual(
             data['dst'][logical_not(isnan(values))],
             values[logical_not(isnan(values))]
