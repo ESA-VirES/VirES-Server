@@ -26,29 +26,59 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+import sys
+from contextlib import closing
+from urllib2 import urlopen
 from optparse import make_option
 
 from django.core.management.base import CommandError, BaseCommand
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
 )
-from vires import aux
+from vires.aux import update_kp, update_dst
+
+# URL time-out in seconds
+URL_TIMEOUT = 25
+
+def update(source, updater, label):
+    """ Update index from the given source. """
+    print "Updating %s-index from %s" % (
+        label, source if source != '-' else '<standard input>'
+    )
+
+    is_url = (
+        source.startswith("https://") or
+        source.startswith("http://") or
+        source.startswith("ftp://")
+    )
+
+    if is_url:
+        with closing(urlopen(source, timeout=URL_TIMEOUT)) as fin:
+            updater(fin)
+    elif source == '-':
+        updater(sys.stdin)
+    else:
+        with open(source) as fin:
+            updater(fin)
 
 
 class Command(CommandOutputMixIn, BaseCommand):
     option_list = BaseCommand.option_list + (
-        make_option("--dst-filename", "--dst", dest="dst_filename",
+        make_option(
+            "--dst-url", "--dst-filename", "--dst", dest="dst_filename",
             action="store", default=None,
-            help=("")
+            help="Dst index source (-, file-name, or URL)."
         ),
-        make_option("--kp-filename", "--kp", dest="kp_filename",
+        make_option(
+            "--kp-url", "--kp-filename", "--kp", dest="kp_filename",
             action="store", default=None,
-            help=("")
+            help="Kp index source (-, file-name, or URL)."
         ),
     )
 
-    @nested_commit_on_success
+    #@nested_commit_on_success # There is no Django DB modification.
     def handle(self, *args, **kwargs):
-        print kwargs["dst_filename"]
-        print kwargs["kp_filename"]
-        aux.update_db(kwargs["dst_filename"], kwargs["kp_filename"])
+        if kwargs["dst_filename"] is not None:
+            update(kwargs["dst_filename"], update_dst, 'Dst')
+        if kwargs["kp_filename"] is not None:
+            update(kwargs["kp_filename"], update_kp, 'Kp')
