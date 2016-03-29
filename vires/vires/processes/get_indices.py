@@ -54,11 +54,7 @@ from eoxserver.backends.access import connect
 from vires import models
 from vires.util import get_total_seconds
 from vires import aux
-from vires import jdutil
-
-
-def mjd2000_to_datetime(mjd):
-    return jdutil.jd_to_datetime(mjd + 2451544.5)
+from vires.time_util import mjd2000_to_datetime
 
 
 class get_indices(Component):
