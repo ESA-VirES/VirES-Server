@@ -47,7 +47,8 @@ from vires.cdf_util import (
     cdf_rawtime_to_decimal_year_fast,
 )
 from vires.aux import parse_dst
-from vires.tests.aux import TEST_DST, DATA_DST, ArrayMixIn
+from vires.tests.util import ArrayMixIn
+from vires.tests.aux import TEST_DST, DATA_DST
 
 class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):
     FILE = "./test_tmp_cdf_epoch2.cdf"

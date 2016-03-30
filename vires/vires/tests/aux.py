@@ -28,15 +28,18 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from StringIO import StringIO
 import unittest
-from numpy import array, linspace, isnan, logical_not, abs as aabs
+from os import remove
+from os.path import exists
+from StringIO import StringIO
+from numpy import array, linspace, isnan, logical_not
 from scipy.interpolate import interp1d
 #from vires.cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
 from vires.aux import (
     update_dst, update_kp, query_dst, query_kp, query_dst_int, query_kp_int,
 )
 from vires.time_util import mjd2000_to_datetime
+from vires.tests.util import ArrayMixIn
 
 TEST_DST = """
 # Expanded and assembled Dst, Est and Ist, Zero Mean
@@ -127,25 +130,15 @@ DATA_KP = {
 }
 
 
-class ArrayMixIn(object):
-    """ Adding array assertions """
-    # pylint: disable=invalid-name
-
-    def assertAllTrue(self, arr):
-        self.assertTrue(arr.all())
-
-    def assertAllEqual(self, arr0, arr1):
-        self.assertAllTrue(arr0 == arr1)
-
-    def assertAllAlmostEqual(self, arr0, arr1, atol=1e-7):
-        self.assertAllTrue(aabs(arr0 - arr1) < atol)
-
-
 class TestIndexKp(ArrayMixIn, unittest.TestCase):
     FILE = "./test_tmp_Kp.cdf"
 
     def setUp(self):
         update_kp(StringIO(TEST_KP), self.FILE)
+
+    def tearDown(self):
+        if exists(self.FILE):
+            remove(self.FILE)
 
     def _query_kp(self, start, stop, idx_start, idx_stop):
         data = query_kp(
@@ -205,6 +198,10 @@ class TestIndexDst(ArrayMixIn, unittest.TestCase):
 
     def setUp(self):
         update_dst(StringIO(TEST_DST), self.FILE)
+
+    def tearDown(self):
+        if exists(self.FILE):
+            remove(self.FILE)
 
     def _query_dst(self, start, stop, idx_start, idx_stop):
         data = query_dst(
