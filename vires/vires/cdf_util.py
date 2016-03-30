@@ -27,16 +27,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=wrong-import-position, invalid-name, ungrouped-imports
 
 from os.path import exists
 from math import ceil, floor
-from numpy import empty, nan, max as amax, min as amin
+from numpy import empty, nan, vectorize
 import scipy
 from scipy.interpolate import interp1d
 from spacepy import pycdf
-
+from .time_util import mjd2000_to_decimal_year, year_to_day2k, days_per_year
 
 try:
+    # pylint: disable=wrong-import-order, ungrouped-imports
     from numpy import full
 except ImportError:
     def full(shape, value, dtype=None, order='C'):
@@ -44,6 +46,11 @@ except ImportError:
         arr = empty(shape, dtype, order)
         arr.fill(value)
         return arr
+
+
+CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
+CDF_EPOCH_1970 = 62167219200000.0
+CDF_EPOCH_2000 = 63113904000000.0
 
 
 def cdf_open(filename, mode="r"):
@@ -65,15 +72,51 @@ def cdf_open(filename, mode="r"):
     return cdf
 
 
-def cdf_rawtime2mjd2000(cdf_type, arr):
-    """ Convert array of CDF raw time values to array MJD2000 values. """
-    if cdf_type == pycdf.const.CDF_EPOCH.value:
-        return arr / 8.640000e+07 - 7.304850e+05
+def cdf_rawtime_to_datetime(raw_time, cdf_type):
+    """ Convert array of CDF raw time values to array of `dateitme`. """
+    if cdf_type == CDF_EPOCH_TYPE:
+        return pycdf.lib.v_epoch_to_datetime(raw_time)
     else:
         raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
-def cdf_time_subset(cdf, start, stop, fields, margin=0):
+def cdf_rawtime_to_unix_epoch(raw_time, cdf_type):
+    """ Convert array of CDF raw time values to array of MJD2000 values. """
+    if cdf_type == CDF_EPOCH_TYPE:
+        return (raw_time - CDF_EPOCH_1970) * 1e-3
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def cdf_rawtime_to_mjd2000(raw_time, cdf_type):
+    """ Convert array of CDF raw time values to array of MJD2000 values. """
+    if cdf_type == CDF_EPOCH_TYPE:
+        return (raw_time - CDF_EPOCH_2000) / 86400000.0
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def cdf_rawtime_to_decimal_year_fast(raw_time, cdf_type, year):
+    """ Convert array of CDF raw time values to array of decimal years.
+    This function expect all dates to of the same year and this year has
+    to be provided as a parameter.
+    """
+    if cdf_type == CDF_EPOCH_TYPE:
+        year_offset = year_to_day2k(year) * 86400000.0 + CDF_EPOCH_2000
+        year_length = days_per_year(year) * 86400000.0
+        return year + (raw_time - year_offset) / year_length
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def cdf_rawtime_to_decimal_year(raw_time, cdf_type):
+    """ Convert array of CDF raw time values to array of decimal years.
+    """
+    v_mjd2000_to_decimal_year = vectorize(mjd2000_to_decimal_year)
+    return v_mjd2000_to_decimal_year(cdf_rawtime_to_mjd2000(raw_time, cdf_type))
+
+
+def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
     """ Extract subset of the listed `fields` from a CDF data file.
     The extracted range of values match times which lie within the given
     closed time interval. The time interval is defined by the MDJ2000 `start`
@@ -81,7 +124,7 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0):
     The `margin` parameter is used to extend the index range by N surrounding
     elements. Negative margin is allowed.
     """
-    time = cdf['time']
+    time = cdf.raw_var(time_field)
     idx_start, idx_stop = 0, time.shape[0]
 
     if start > stop:
@@ -107,7 +150,8 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0):
     return [(field, cdf[field][idx_start:idx_stop]) for field in fields]
 
 
-def cdf_time_interp(cdf, time, fields, min_len=2, **interp1d_prm):
+def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
+                    **interp1d_prm):
     """ Read values of the listed fields from the CDF file and interpolate
     them at the given time values (the `time` array of MDJ2000 values).
     The data exceeding the time interval of the source data is filled with the
@@ -121,10 +165,12 @@ def cdf_time_interp(cdf, time, fields, min_len=2, **interp1d_prm):
     interp1d_prm['copy'] = False
     interp1d_prm['bounds_error'] = False
 
+    cdf_time = cdf.raw_var(time_field)
+
     # check minimal length required by the chosen kind of interpolation
-    if time.size > 0 and cdf['time'].shape[0] > min_len:
+    if time.size > 0 and cdf_time.shape[0] > min_len:
         return [
-            (field, interp1d(cdf["time"], cdf[field], **interp1d_prm)(time))
+            (field, interp1d(cdf_time, cdf[field], **interp1d_prm)(time))
             for field in fields
         ]
     else:
