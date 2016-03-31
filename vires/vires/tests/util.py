@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Unit tests utilities
+# Testing utilities.
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -28,17 +28,153 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from numpy import abs as aabs
+import unittest
+from datetime import timedelta, datetime
+from matplotlib.colors import LinearSegmentedColormap
+from vires.util import (
+    float_array_slice,
+    datetime_array_slice,
+    get_total_seconds,
+    get_color_scale,
+    get_model,
+)
 
-class ArrayMixIn(object):
-    """ Mix-in class adding handy array assertions. """
-    # pylint: disable=invalid-name
+class TestUtil(unittest.TestCase):
+    # NOTE: The IGRF12 and SIFM models are broken!
+    MODELS = [
+        "CHAOS-5-Combined", "WMM", "EMM", "IGRF", #"IGRF12", "SIFM",
+    ]
 
-    def assertAllTrue(self, arr):
-        self.assertTrue(arr.all())
+    COLOR_MAPS = ["blackwhite", "coolwarm", "rainbow", "custom2", "custom1"]
 
-    def assertAllEqual(self, arr0, arr1):
-        self.assertAllTrue(arr0 == arr1)
+    def test_color_scale(self):
+        for cm_id in self.COLOR_MAPS:
+            try:
+                self.assertTrue(
+                    isinstance(get_color_scale(cm_id), LinearSegmentedColormap)
+                )
+            except:
+                print "Test failed for colormap %r!" % cm_id
+                raise
+        self.assertEqual(get_color_scale("-invalid-"), "-invalid-")
 
-    def assertAllAlmostEqual(self, arr0, arr1, delta=1e-7):
-        self.assertAllTrue(aabs(arr0 - arr1) <= delta)
+
+    def test_model(self):
+        for model_id in self.MODELS:
+            try:
+                self.assertTrue(get_model(model_id) is not None)
+            except:
+                print "Test failed for model %r!" % model_id
+                raise
+        self.assertTrue(get_model("-invalid-model-") is None)
+
+
+    def test_total_seconds(self):
+        self.assertAlmostEqual(
+            get_total_seconds(
+                datetime(2016, 3, 30, 1, 1, 1, 1001) - datetime(2016, 3, 29)
+            ), 90061.001001, delta=1e-7
+        )
+        self.assertAlmostEqual(
+            get_total_seconds(
+                datetime(2016, 3, 27, 22, 58, 58, 998999) -
+                datetime(2016, 3, 29)
+            ), -90061.001001, delta=1e-7
+        )
+
+    def test_float_array_slice(self):
+
+        def test_ascending(start, stop, low, high):
+            self.assertEqual(
+                float_array_slice(start, stop, 1.0, 2.0, 0.1, 1e-6),
+                (low, high)
+            )
+
+        def test_descending(start, stop, low, high):
+            self.assertEqual(
+                float_array_slice(start, stop, -1.0, -2.0, -0.1, 1e-6),
+                (low, high)
+            )
+
+        # ascending order ...
+        # total overlap
+        test_ascending(0.0, 3.0, 0, 11)
+        test_ascending(1.0, 2.0, 0, 11)
+        test_ascending(1.0 + 1e-7, 2.0 - 1e-7, 0, 11)
+        # partial overlap
+        test_ascending(1.25, 1.75, 3, 8)
+        test_ascending(0.25, 1.75, 0, 8)
+        test_ascending(1.25, 2.75, 3, 11)
+        test_ascending(0.25, 1.0, 0, 1)
+        test_ascending(2.0, 2.75, 10, 11)
+        test_ascending(1.45, 1.55, 5, 6)
+        # no overlap
+        test_ascending(0.25, 0.75, 0, 0)
+        test_ascending(2.25, 2.75, 0, 0)
+        test_ascending(1.24, 1.26, 3, 3)
+        # descending order ...
+        # total overlap
+        test_descending(0.0, -3.0, 0, 11)
+        test_descending(-1.0, -2.0, 0, 11)
+        test_descending(-1.0 + 1e-7, -2.0 - 1e-7, 0, 11)
+        # partial overlap
+        test_descending(-1.25, -1.75, 3, 8)
+        test_descending(-0.25, -1.75, 0, 8)
+        test_descending(-1.25, -2.75, 3, 11)
+        test_descending(-0.25, -1.0, 0, 1)
+        test_descending(-2.0, -2.75, 10, 11)
+        test_descending(-1.45, -1.55, 5, 6)
+        # no overlap
+        test_descending(-0.25, -0.75, 0, 0)
+        test_descending(-2.25, -2.75, 0, 0)
+        test_descending(-1.24, -1.26, 3, 3)
+
+    def test_time_array_slice(self):
+
+        def test_ascending(start, stop, low, high):
+            first = datetime(2016, 3, 29)
+            last = datetime(2016, 3, 30)
+            step = timedelta(seconds=3600)
+            tolerance = timedelta(seconds=60)
+            self.assertEqual(
+                datetime_array_slice(start, stop, first, last, step, tolerance),
+                (low, high)
+            )
+
+        # total overlap
+        delta = timedelta(seconds=30)
+        test_ascending(datetime(2016, 3, 28), datetime(2016, 3, 31), 0, 25)
+        test_ascending(datetime(2016, 3, 29), datetime(2016, 3, 30), 0, 25)
+        test_ascending(
+            datetime(2016, 3, 29) - delta, datetime(2016, 3, 30) + delta,
+            0, 25
+        )
+        # partial overlap
+        test_ascending(
+            datetime(2016, 3, 29, 3, 30), datetime(2016, 3, 29, 20, 30), 4, 21
+        )
+        test_ascending(
+            datetime(2016, 3, 28), datetime(2016, 3, 29, 20, 30), 0, 21
+        )
+        test_ascending(
+            datetime(2016, 3, 29, 3, 30), datetime(2016, 3, 31), 4, 25
+        )
+        test_ascending(datetime(2016, 3, 28), datetime(2016, 3, 29), 0, 1)
+        test_ascending(datetime(2016, 3, 30), datetime(2016, 3, 31), 24, 25)
+        test_ascending(
+            datetime(2016, 3, 29, 5, 30), datetime(2016, 3, 29, 6, 30), 6, 7
+        )
+        # no overlap
+        test_ascending(
+            datetime(2016, 3, 28), datetime(2016, 3, 28, 23, 0), 0, 0
+        )
+        test_ascending(
+            datetime(2016, 3, 30, 1, 0), datetime(2016, 3, 31), 0, 0
+        )
+        test_ascending(
+            datetime(2016, 3, 29, 3, 15), datetime(2016, 3, 29, 3, 45), 4, 4
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -39,7 +39,7 @@ from vires.aux import (
     update_dst, update_kp, query_dst, query_kp, query_dst_int, query_kp_int,
 )
 from vires.time_util import mjd2000_to_datetime
-from vires.tests.util import ArrayMixIn
+from vires.tests import ArrayMixIn
 
 TEST_DST = """
 # Expanded and assembled Dst, Est and Ist, Zero Mean

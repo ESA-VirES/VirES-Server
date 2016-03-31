@@ -3,6 +3,7 @@
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #          Daniel Santillan <daniel.santillan@eox.at>
+#          Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
@@ -27,14 +28,59 @@
 #-------------------------------------------------------------------------------
 
 from os.path import dirname, join
+from math import ceil, floor
 from matplotlib.colors import LinearSegmentedColormap
 
 import eoxmagmod as mm
 
 # Extra models' data locations
 DATA_DIR = join(dirname(__file__), 'model_data')
-DATA_IGRF12 = join(DATA_DIR, 'IGRF12.shc')
-DATA_SIFM = join(DATA_DIR, 'SIFM.shc')
+#NOTE: Uncomment when these data-files become available!
+#DATA_IGRF12 = join(DATA_DIR, 'IGRF12.shc')
+#DATA_SIFM = join(DATA_DIR, 'SIFM.shc')
+
+
+# TODO: To be removed.
+#       Unnecessary as the Python 2.6 compatibility has been dropped.
+def get_total_seconds(td_obj):
+    """ Get `datetime.timedelta` as total number of seconds. """
+    try:
+        return td_obj.total_seconds()
+    except AttributeError:
+        return td_obj.microseconds*1e-6 + td_obj.seconds + td_obj.days*86400
+
+
+def float_array_slice(start, stop, first, last, step, tolerance):
+    """
+        Get array index range for given sub-setting interval
+        (`start`, `stop`), extent of the array (`first`, `last`),
+        step of the regular sampling `step`, and selection tolerance
+        `tolerance`.
+    """
+    rstep = 1.0 / step
+    _first = first * rstep
+    _tolerance = abs(tolerance * rstep)
+    size = 1 + int(round(rstep * last - _first))
+    low = int(ceil(rstep * start - _tolerance - _first))
+    high = int(floor(rstep * stop + _tolerance - _first))
+    if high < 0 or low >= size:
+        return 0, 0
+    else:
+        return max(0, low), min(size, high + 1)
+
+
+def datetime_array_slice(start, stop, first, last, step, tolerance):
+    """
+        Get array index range for given sub-setting time interval
+        (`start`, `stop`), time extent of the array (`first`, `last`),
+        step of the regular time sampling `step`, and selection tolerance
+        time `tolerance`.
+    """
+    return float_array_slice(
+        (start - first).total_seconds(), (stop - first).total_seconds(),
+        0.0, (last - first).total_seconds(),
+        step.total_seconds(), tolerance.total_seconds()
+    )
 
 
 def get_model(model_id):
@@ -48,42 +94,33 @@ def get_model(model_id):
         return mm.emm.read_model_emm2010()
     if model_id == "IGRF":
         return mm.igrf.read_model_igrf11()
-    if model_id == "IGRF12":
-        return mm.shc.read_model_shc(DATA_IGRF12)
-    if model_id == "SIFM":
-        return mm.shc.read_model_shc(DATA_SIFM)
+#    if model_id == "IGRF12":
+#        return mm.shc.read_model_shc(DATA_IGRF12)
+#    if model_id == "SIFM":
+#        return mm.shc.read_model_shc(DATA_SIFM)
     if model_id == "WMM":
         return mm.read_model_wmm2010()
-
-
-# TODO: Uncecessary as Python 2.6 compatibility has been dropped.
-def get_total_seconds(td_obj):
-    """ Get `datetime.timedelta` as total number of seconds. """
-    try:
-        return td_obj.total_seconds()
-    except AttributeError:
-        return td_obj.microseconds*1e-6 + td_obj.seconds + td_obj.days*86400
 
 
 def get_color_scale(name):
     """ Get named color-map. """
 
-    def clist_to_colormap(label, color_list, color_scale=1.0, alpha_scale=1.0):
+    def clist_to_colormap(label, colors, color_scale=1.0, alpha_scale=1.0):
         """ Convert list of colors to `LinearSegmentedColormap` object """
-        red_list, green_list, blue_list = [], [], []
+        reds, greens, blues = [], [], []
 
-        for alpha, red, green, blue in color_list:
+        for alpha, red, green, blue in colors:
             alpha *= alpha_scale
             red *= color_scale
             green *= color_scale
             blue *= color_scale
 
-            red_list.append((alpha, red, red))
-            green_list.append((alpha, green, green))
-            blue_list.append((alpha, blue, blue))
+            reds.append((alpha, red, red))
+            greens.append((alpha, green, green))
+            blues.append((alpha, blue, blue))
 
         return LinearSegmentedColormap(
-            label, {'red': red_list, 'green': green_list, 'blue': blue_list}
+            label, {'red': reds, 'green': greens, 'blue': blues}
         )
 
 
