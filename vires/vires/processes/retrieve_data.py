@@ -24,292 +24,311 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments, too-many-locals, missing-docstring
 
-import json
 import csv
-import math
-import datetime as dt
-import time
+from collections import OrderedDict
+from datetime import datetime, timedelta
 from itertools import izip
-from lxml import etree
 import cStringIO
-try:
-    # available in Python 2.7+
-    from collections import OrderedDict
-except ImportError:
-    from django.utils.datastructures import SortedDict as OrderedDict
 import numpy as np
 
-from django.views.decorators.gzip import gzip_page
-
+from django.conf import settings
 from eoxserver.core import Component, implements
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
-from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
-from eoxserver.services.result import ResultBuffer, ResultFile
+from eoxserver.services.ows.wps.exceptions import ExecuteError
 from eoxserver.services.ows.wps.parameters import (
-    ComplexData, CDObject, CDTextBuffer,
-    FormatText, FormatXML, FormatJSON, #FormatBinaryRaw, FormatBinaryBase64,
-    BoundingBoxData, BoundingBox,
-    LiteralData, String,
-    AllowedRange, UnitLinear,
+    ComplexData, FormatText, BoundingBoxData, LiteralData, AllowedRange,
 )
 
-from uuid import uuid4
-from spacepy import pycdf
 from eoxserver.backends.access import connect
-from vires import models
-from vires.util import get_total_seconds
-from vires.util import get_model
-from vires import aux
+from vires import models as db_models
+from vires.aux import query_kp_int, query_dst_int
+from vires.util import (
+    get_model, datetime_array_slice, between, datetime_mean,
+)
+from vires.time_util import datetime_to_decimal_year
+from vires.cdf_util import (
+    cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
+    cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
+)
 
 import eoxmagmod as mm
 
+# TODO: Make following parameters configurable.
+# Limit response size (equivalent to 1/2 daily SWARM LR product).
+MAX_SAMPLES_COUNT = 43200
+
+# time selection tolerance (10us)
+TIME_TOLERANCE = timedelta(microseconds=10)
+
+# display sample period
+DISPLAY_SAMPLE_PERIOD = timedelta(seconds=5)
+
+REQUIRED_FIELDS = [
+    "Timestamp", "Latitude", "Longitude", "Radius", "F", "F_error", "B_NEC",
+    "B_error"
+]
+
+DROPPED_FIELDS = [
+    "B_VFM", "SyncStatus", "q_NEC_CRF", "Att_error", "Flags_F", "Flags_B",
+    "Flags_q", "Flags_Platform", "ASM_Freq_Dev", "dB_AOCS", "dB_other",
+    "dF_AOCS", "dF_other"
+]
+
+CDF_RAW_TIME_CONVERTOR = {
+    "ISO date-time": cdf_rawtime_to_datetime,
+    "MDJ2000": cdf_rawtime_to_mjd2000,
+    "Unix epoch": cdf_rawtime_to_unix_epoch,
+}
 
 
-def toYearFractionInterval(dt_start, dt_end):
-    def sinceEpoch(date): # returns seconds since epoch
-        return time.mktime(date.timetuple())
-
-    date = (dt_end - dt_start)/2 + dt_start  
-    s = sinceEpoch
-
-    year = date.year
-    startOfThisYear = dt.datetime(year=year, month=1, day=1)
-    startOfNextYear = dt.datetime(year=year+1, month=1, day=1)
-
-    yearElapsed = s(date) - s(startOfThisYear)
-    yearDuration = s(startOfNextYear) - s(startOfThisYear)
-    fraction = yearElapsed/yearDuration
-
-    return date.year + fraction
-
-
-def toYearFraction(date):
-    def sinceEpoch(date): # returns seconds since epoch
-        return time.mktime(date.timetuple())
- 
-    s = sinceEpoch
-
-    year = date.year
-    startOfThisYear = dt.datetime(year=year, month=1, day=1)
-    startOfNextYear = dt.datetime(year=year+1, month=1, day=1)
-
-    yearElapsed = s(date) - s(startOfThisYear)
-    yearDuration = s(startOfNextYear) - s(startOfThisYear)
-    fraction = yearElapsed/yearDuration
-
-    return date.year + fraction
-
-
-
-#CH5M = eoxmagmod.shc.read_model_shc(eoxmagmod.shc.DATA_CHAOS5_CORE)# + eoxmagmod.shc.read_model_shc(eoxmagmod.shc.DATA_CHAOS5_STATIC) 
-
-CRSS = (
-    4326,  # WGS84
-    32661, 32761,  # WGS84 UPS-N and UPS-S
-    32601, 32602, 32603, 32604, 32605, 32606, 32607, 32608, 32609, 32610,  # WGS84 UTM  1N-10N
-    32611, 32612, 32613, 32614, 32615, 32616, 32617, 32618, 32619, 32620,  # WGS84 UTM 11N-20N
-    32621, 32622, 32623, 32624, 32625, 32626, 32627, 32628, 32629, 32630,  # WGS84 UTM 21N-30N
-    32631, 32632, 32633, 32634, 32635, 32636, 32637, 32638, 32639, 32640,  # WGS84 UTM 31N-40N
-    32641, 32642, 32643, 32644, 32645, 32646, 32647, 32648, 32649, 32650,  # WGS84 UTM 41N-50N
-    32651, 32652, 32653, 32654, 32655, 32656, 32657, 32658, 32659, 32660,  # WGS84 UTM 51N-60N
-    32701, 32702, 32703, 32704, 32705, 32706, 32707, 32708, 32709, 32710,  # WGS84 UTM  1S-10S
-    32711, 32712, 32713, 32714, 32715, 32716, 32717, 32718, 32719, 32720,  # WGS84 UTM 11S-20S
-    32721, 32722, 32723, 32724, 32725, 32726, 32727, 32728, 32729, 32730,  # WGS84 UTM 21S-30S
-    32731, 32732, 32733, 32734, 32735, 32736, 32737, 32738, 32739, 32740,  # WGS84 UTM 31S-40S
-    32741, 32742, 32743, 32744, 32745, 32746, 32747, 32748, 32749, 32750,  # WGS84 UTM 41S-50S
-    32751, 32752, 32753, 32754, 32755, 32756, 32757, 32758, 32759, 32760,  # WGS84 UTM 51S-60S
-    0, # ImageCRS
-)
-
-class retrieve_data(Component):
-    """ Process to retrieve registered data (focused on Swarm data)
+class RetrieveData(Component):
+    """ Process retrieving registered Swarm data based on collection, time
+    interval and additional optional parameters.
     """
     implements(ProcessInterface)
 
     identifier = "retrieve_data"
-    title = "Retrieve registered Swarm data based on collection, time intervall, [bbox] and resolution"
-    metadata = {"test-metadata":"http://www.metadata.com/test-metadata"}
-    profiles = ["test_profile"]
+    title = "Retrieve Swarm data"
+    metadata = {}
+    profiles = ["vires"]
 
     inputs = [
-        ("collection_ids", LiteralData('collection_ids', str, optional=False,
-            abstract="String input for collection identifiers (semicolon separator)",
+        ("collection_ids", LiteralData(
+            'collection_ids', str, optional=False,
+            title="Collection identifiers",
+            abstract="Semicolon separated list of collection identifiers.",
         )),
-        ("shc", ComplexData('shc',
-                title="SHC file data",
-                abstract="SHC file data to be processed.",
-                optional=True,
-                formats=(FormatText('text/plain'),
-            )
+        ("shc", ComplexData(
+            'shc',
+            title="Custom model coefficients.",
+            abstract=(
+                "Custom forward magnetic field model coefficients encoded "
+                " in the SHC plain-text format."
+            ),
+            optional=True,
+            formats=(FormatText('text/plain'),)
         )),
-        ("model_ids", LiteralData('model_ids', str, optional=True, default="",
-            abstract="One model id to compare to shc model or two comma separated ids",
+        ("model_ids", LiteralData(
+            'model_ids', str, optional=True, default="",
+            title="Model identifiers",
+            abstract="One one or more forward magnetic model identifiers.",
         )),
-        ("begin_time", LiteralData('begin_time', dt.datetime, optional=False,
-            abstract="Start of the time interval",
+        ("begin_time", LiteralData(
+            'begin_time', datetime, optional=False, title="Begin time",
+            abstract="Start of the selection time interval",
         )),
-        ("end_time", LiteralData('end_time', dt.datetime, optional=False,
-            abstract="End of the time interval",
+        ("end_time", LiteralData(
+            'end_time', datetime, optional=False, title="End time",
+            abstract="End of the selection time interval",
         )),
-        ("bbox", BoundingBoxData("bbox", crss=CRSS, optional=True,
-            default=None,
+        ("bbox", BoundingBoxData(
+            "bbox", crss=(4326,), optional=True, title="Bounding box",
+            abstract="Optional selection bounding box.", default=None,
         )),
-        ("resolution", LiteralData('resolution', int, optional=True,
-            default=20, abstract="Resolution attribute to define step size for returned elements",
-            #TODO: think about how we want to implement this, maybe the process should check
-            #      the result size and decide how to handle large amount of elements.
+        ("sampling_step", LiteralData(
+            'sampling_step', int, optional=True, title="Data sampling step.",
+            allowed_values=AllowedRange(1, None, dtype=int), default=None,
+            abstract=(
+                "Optional output data sampling step used to reduce the amount "
+                "of the returned data. If set to 1 all matched product samples "
+                "will be returned. If not used the server tries to find the "
+                "optimal data sampling."
+            ),
+        )),
+        ("csv_time_format", LiteralData(
+            'csv_time_format', str, optional=True, title="CSV time  format",
+            abstract="Optional time format used by the CSV output.",
+            allowed_values=("ISO date-time", "MDJ2000", "Unix epoch"),
+            default="ISO date-time",
         )),
     ]
-
 
     outputs = [
-        ("output",
-            ComplexData('output',
-                title="Requested subset of data",
-                abstract="Process returns subset of data defined by time, bbox and collections.",
-                formats=FormatText('text/plain')
-            )
-        ),
+        ("output", ComplexData(
+            'output', title="Output data", formats=FormatText('text/csv')
+        )),
     ]
 
-    def execute(self, collection_ids, shc, model_ids, begin_time, end_time, bbox, resolution, **kwarg):
-        outputs = {}
+    def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
+                bbox, sampling_step, csv_time_format, **kwarg):
 
-        collection_ids = collection_ids.split(",")
+        fobj = cStringIO.StringIO()
+        outputs = {'output': fobj}
+        writer = csv.writer(fobj)
 
-        f = cStringIO.StringIO()
-        writer = csv.writer(f)
+        collection_ids = collection_ids.split(",") if collection_ids else []
 
-        collections = models.ProductCollection.objects.filter(identifier__in=collection_ids)
-        range_type = collections[0].range_type
+        collections = db_models.ProductCollection.objects.filter(
+            identifier__in=collection_ids
+        )
 
-        measurements = []
-        # 1 day product equals 86400
-        MAX_FEATURE_LIMIT = 86400/2
+        if not collections or end_time < begin_time:
+            return outputs # no collection matched -> empty response
 
-        model_ids = model_ids.split(",")
-        mm_models = [get_model(x) for x in model_ids]
-
-        if len(mm_models)>0 and mm_models[0] is None:
-            mm_models = []
-            model_ids = []
-
+        # collect models
+        models = OrderedDict(
+            (name, model) for name, model in (
+                (name, get_model(name)) for name
+                in (model_ids.split(",") if model_ids else [])
+            ) if model is not None
+        )
         if shc:
-            model_ids.append("Custom_Model")
-            mm_models.append(mm.read_model_shc(shc))
+            models["Custom_Model"] = mm.read_model_shc(shc)
 
-        
-        add_range_type = []
-        if len(model_ids)>0 and model_ids[0] != '':
-            for mid in model_ids:
-                    add_range_type.append("F_res_%s"%(mid))
-                    add_range_type.append("B_NEC_res_%s"%(mid))
+        # prepare fields
+        data_fields = [
+            field.identifier for field in collections[0].range_type
+            if field.identifier in REQUIRED_FIELDS
+        ]
+        extra_fields = ["dst", "kp", "qdlat", "mlt"]
+        for model_id in models:
+            extra_fields.append("F_res_%s"%(model_id))
+            extra_fields.append("B_NEC_res_%s"%(model_id))
 
-        needed_bands = ["Timestamp","Latitude","Longitude","Radius","F","F_error","B_NEC","B_error"]
-        not_needed = ["B_VFM","SyncStatus","q_NEC_CRF","Att_error","Flags_F","Flags_B","Flags_q","Flags_Platform","ASM_Freq_Dev","dB_AOCS","dB_other","dF_AOCS","dF_other"]
-
-        select_range = [band.identifier for band in range_type if band.identifier in needed_bands]
-
-        writer.writerow(["id"] + select_range + add_range_type + ["dst", "kp", "qdlat", "mlt"])
+        # write CSV header
+        writer.writerow(["id"] + data_fields + extra_fields)
         # TODO: assert that the range_type is equal for all collections
 
-        for collection_id in collection_ids:
-            coverages_qs = models.Product.objects.filter(collections__identifier=collection_id)
-            coverages_qs = coverages_qs.filter(begin_time__lte=end_time)
-            coverages_qs = coverages_qs.filter(end_time__gte=begin_time)
-
-            if bbox:
-                # Estimate resolution based on size of bbox and number of products
-                bb_area = ( (bbox.upper[0] - bbox.lower[0]) * (bbox.lower[1] - bbox.upper[1]) )
-                bb_percentage = bb_area/(360*180)
-                resolution = int( max((bb_percentage*coverages_qs.count()*5), 1) )
-            else:
-                # Define resolution based on number of complete products
-                resolution = coverages_qs.count()*7
-
-            for coverage in coverages_qs:
-                #collection_id = models.ProductCollection.objects.filter(identifier__in=collection_id)
-                cov_begin_time, cov_end_time = coverage.time_extent
-                cov_cast = coverage.cast()
-                t_res = get_total_seconds(cov_cast.resolution_time)
-                low = max(0, int(get_total_seconds(begin_time - cov_begin_time) / t_res))
-                high = min(cov_cast.size_x, int(math.ceil(get_total_seconds(end_time - cov_begin_time) / t_res)))
-                self.handle(cov_cast, collection_id, select_range, measurements, low, high, begin_time, end_time, resolution, mm_models, model_ids, bbox)
-
-                # Check current ammount of features and decide if to continue
-                if len(measurements)>MAX_FEATURE_LIMIT:
-                    break
-
-        for row in measurements:
-            writer.writerow(row)
-
-        outputs['output'] = f
-        
-        return outputs
-
-
-    def handle(self, coverage, collection_id, select_range, measurements, low, high, begin_time, end_time, resolution, mm_models, model_ids, bbox=None):
-        # Open file
-        filename = connect(coverage.data_items.all()[0])
-
-        ds = pycdf.CDF(filename)
-        output_data = OrderedDict()
-
-        # Read data
-        for band in select_range:
-            data = ds[band]
-            output_data[band] = data[low:high:resolution]
+        total_count = 0
 
         if bbox:
-            lons = output_data["Longitude"]
-            lats = output_data["Latitude"]
-            mask = (lons > bbox.lower[1]) & (lons < bbox.upper[1]) & (lats > bbox.lower[0]) & (lats < bbox.upper[0])
+            relative_area = (
+                (bbox.upper[0] - bbox.lower[0]) *
+                (bbox.lower[1] - bbox.upper[1])
+            ) / 64800.0
+        else:
+            relative_area = 1.0
+        day_count = (end_time - begin_time).total_seconds() / 86400.0
 
-            for name, data in output_data.items():
-                output_data[name] = output_data[name][mask]
+        for collection_id in collection_ids:
+            products_qs = db_models.Product.objects.filter(
+                collections__identifier=collection_id,
+                begin_time__lte=(end_time + TIME_TOLERANCE),
+                end_time__gte=(begin_time - TIME_TOLERANCE),
+            ).order_by('begin_time')
 
-        rads = output_data["Radius"]*1e-3
-       
-        coords_sph = np.vstack((output_data["Latitude"], output_data["Longitude"], rads)).T
+            for product in (item.cast() for item in products_qs):
 
-        #raise Exception(mm_models)
-        if len(mm_models)>0:
+                if sampling_step is None:
+                    # automatic adaptive sampling
+                    relative_period = (
+                        DISPLAY_SAMPLE_PERIOD.total_seconds() /
+                        product.sampling_period.total_seconds()
+                    )
+                    step = max(1, int(
+                        relative_area * day_count * relative_period
+                    ))
+                else:
+                    # user defined sampling
+                    step = sampling_step
 
-            models_data = [x.eval(coords_sph, toYearFractionInterval(begin_time, end_time), mm.GEOCENTRIC_SPHERICAL, check_validity=False) for x in mm_models]
+                time_first_sample, time_last_sample = product.time_extent
+                low, high = datetime_array_slice(
+                    begin_time, end_time, time_first_sample, time_last_sample,
+                    product.sampling_period, TIME_TOLERANCE
+                )
+                data, count, cdf_type = self.handle(
+                    product, data_fields, low, high, step, models, bbox
+                )
+                total_count += count
 
-            for md, mid in zip(models_data, model_ids):
-                label_res = "F_res_%s"%(mid)
-                label_NEC_res = "B_NEC_%s"%(mid)
-                md[:,2] *= -1
-                output_data[label_res] = output_data["F"] - mm.vnorm(md)
-                output_data[label_NEC_res] = output_data["B_NEC"] - md
+                # Check current amount of features and decide if to continue
+                if total_count > MAX_SAMPLES_COUNT:
+                    raise ExecuteError(
+                        "Requested data is too large and exceeds the "
+                        "maximum limit of %d records!" % MAX_SAMPLES_COUNT
+                    )
 
+                # fix the output time format
+                data['Timestamp'] = (
+                    CDF_RAW_TIME_CONVERTOR[csv_time_format](
+                        data['Timestamp'], cdf_type['Timestamp']
+                    )
+                )
 
-        aux_data = aux.query_db(
-            output_data["Timestamp"][0], output_data["Timestamp"][-1],
-            len(output_data["Timestamp"]), 0, 0
+                for row in izip(*data.itervalues()):
+                    writer.writerow(
+                        [collection_id] + [translate(v) for v in row]
+                    )
+
+        return outputs
+
+    def handle(self, product, fields, low, high, sampling_step, models,
+               bbox=None):
+
+        # read initial subset of the CDF data
+        cdf_type = {}
+        data = OrderedDict()
+        with cdf_open(connect(product.data_items.all()[0])) as cdf:
+            time_mean = datetime_mean(cdf['Timestamp'][0], cdf['Timestamp'][-1])
+            for field in fields:
+                cdf_var = cdf.raw_var(field)
+                cdf_type[field] = cdf_var.type()
+                data[field] = cdf_var[low:high:sampling_step]
+
+        # bounding box filter
+        if bbox:
+            # initialize indices
+            index = np.arange(high - low)
+            # filter the indices
+            index = index[
+                between(data["Longitude"][index], bbox.lower[1], bbox.upper[1])
+            ]
+            index = index[
+                between(data["Latitude"][index], bbox.lower[0], bbox.upper[0])
+            ]
+            # data update
+            data = OrderedDict(
+                (field, values[index]) for field, values in data.iteritems()
+            )
+
+        # evaluate models
+        if models:
+            coords_sph = np.vstack((
+                data["Latitude"],
+                data["Longitude"],
+                data["Radius"] * 1e-3, # radius in km
+            )).T
+
+            for model_id, model in models.iteritems():
+                model_data = model.eval(
+                    coords_sph,
+                    datetime_to_decimal_year(time_mean),
+                    mm.GEOCENTRIC_SPHERICAL,
+                    check_validity=False
+                )
+                model_data[:, 2] *= -1
+                # store residuals
+                # TODO: check if the residual evaluation is correct
+                data["F_res_%s" % model_id] = data["F"] - mm.vnorm(model_data)
+                data["B_NEC_%s" % model_id] = data["B_NEC"] - model_data
+
+        # get auxiliary data
+        mjd2000_times = cdf_rawtime_to_mjd2000(
+            data['Timestamp'], cdf_type['Timestamp']
         )
-        output_data["dst"] = aux_data["dst"]
-        output_data["kp"] = aux_data["kp"]
+        data.update(query_dst_int(settings.VIRES_AUX_DB_DST, mjd2000_times))
+        data.update(query_kp_int(settings.VIRES_AUX_DB_KP, mjd2000_times))
 
-        times = map(toYearFraction, output_data["Timestamp"])
+        # get Quasi-dipole Latitude and Magnetic Local Time
+        data["qdlat"], _, data["mlt"] = mm.eval_apex(
+            data["Latitude"],
+            data["Longitude"],
+            data["Radius"] * 1e-3, # radius in km
+            cdf_rawtime_to_decimal_year_fast(
+                data["Timestamp"], cdf_type['Timestamp'], time_mean.year
+            )
+        )
 
-        qdlat, qdlon, mlt = mm.eval_apex(output_data["Latitude"], output_data["Longitude"], rads, times)
+        return data, len(data['Timestamp']), cdf_type
 
-        output_data["qdlat"] = qdlat
-        output_data["mlt"] = mlt
 
-        for row in izip(*output_data.itervalues()):
-            #writer.writerow([collection_id] + map(translate, row))
-            measurements.append( ([collection_id] + map(translate, row)) )
-        
 def translate(arr):
-
     try:
         if arr.ndim == 1:
-            return "{%s}" % ";".join(map(str, arr))
+            return "{%s}" % ";".join(str(v) for v in arr)
     except:
         pass
-
     return arr

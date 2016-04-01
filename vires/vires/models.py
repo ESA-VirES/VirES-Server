@@ -40,9 +40,17 @@ class Product(Coverage):
     objects = models.GeoManager()
     ground_path = models.MultiLineStringField(null=True, blank=True)
 
+    # TODO: Get rid of the incorrect resolution time
     @property
     def resolution_time(self):
         return (self.end_time - self.begin_time) / self.size_x
+
+    @property
+    def sampling_period(self):
+        if self.size_x > 1:
+            return (self.end_time - self.begin_time) / (self.size_x - 1)
+        else:
+            return timedelta(0)
 
     @property
     def duration(self):
@@ -75,10 +83,10 @@ class ProductCollection(Product, Collection):
             #            self, product
             #        )
             #    )
-            temporal_resolution = get_total_seconds(self.resolution_time)
+            sampling_period = self.sampling_period
             #ground_path = self.ground_path.union(product.ground_path)
         else:
-            temporal_resolution = get_total_seconds(product.resolution_time)
+            sampling_period = product.sampling_period
             #ground_path = product.ground_path
 
         if self.begin_time and self.end_time and self.footprint:
@@ -92,9 +100,10 @@ class ProductCollection(Product, Collection):
             self.begin_time, self.end_time, self.footprint = collect_eo_metadata(
                 self.eo_objects.all(), insert=[eo_object], bbox=True
             )
-        self.size_x = int(round(
-            get_total_seconds(self.duration) / temporal_resolution)
-        )
+        self.size_x = 1 + int(round(
+            get_total_seconds(self.duration) /
+            get_total_seconds(sampling_period)
+        ))
         #self.ground_path = ground_path
         self.save()
 
