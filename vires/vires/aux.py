@@ -31,6 +31,7 @@
 from os.path import exists
 from numpy import loadtxt, array, nan
 
+from .util import full
 from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
 from .time_util import datetime_to_mjd2000
 
@@ -94,17 +95,19 @@ def query_kp(filename, start, stop):
 
 def query_dst_int(filename, time, nodata=nan):
     """ Query interpolated Dst index values. """
-    data = {}
-    with cdf_open(filename) as cdf:
-        data.update(cdf_time_interp(cdf, time, ("dst",), fill_value=nodata))
-    return data
+    if exists(filename):
+        with cdf_open(filename) as cdf:
+            return dict(cdf_time_interp(cdf, time, ("dst",), fill_value=nodata))
+    else:
+        return {"dst": full(time.shape, nan)}
 
 
 def query_kp_int(filename, time, nodata=nan):
     """ Query interpolated Kp index values. """
-    data = {}
-    with cdf_open(filename) as cdf:
-        data.update(cdf_time_interp(
-            cdf, time, ("kp",), fill_value=nodata, kind="nearest"
-        ))
-    return data
+    if exists(filename):
+        with cdf_open(filename) as cdf:
+            return dict(cdf_time_interp(
+                cdf, time, ("kp",), fill_value=nodata, kind="nearest"
+            ))
+    else:
+        return {"kp": full(time.shape, nan)}
