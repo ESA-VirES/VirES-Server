@@ -29,9 +29,18 @@
 
 import math
 from datetime import datetime, timedelta
+from django.utils.dateparse import utc
 
 DT_1970 = datetime(1970, 1, 1)
 DT_2000 = datetime(2000, 1, 1)
+
+TZ_UTC = utc
+
+def naive_to_utc(dt_obj):
+    """ Convert naive `datetime.datetime` to UTC time-zone aware one. """
+    if dt_obj.tzinfo is None:
+        dt_obj = dt_obj.replace(tzinfo=TZ_UTC)
+    return dt_obj
 
 
 def is_leap_year(year):

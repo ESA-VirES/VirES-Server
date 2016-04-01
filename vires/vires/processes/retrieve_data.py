@@ -38,7 +38,7 @@ from eoxserver.core import Component, implements
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.exceptions import ExecuteError
 from eoxserver.services.ows.wps.parameters import (
-    ComplexData, FormatText, BoundingBoxData, LiteralData, AllowedRange,
+    LiteralData, ComplexData, FormatText, AllowedRange, BoundingBoxData,
 )
 
 from eoxserver.backends.access import connect
@@ -47,7 +47,7 @@ from vires.aux import query_kp_int, query_dst_int
 from vires.util import (
     get_model, datetime_array_slice, between, datetime_mean,
 )
-from vires.time_util import datetime_to_decimal_year
+from vires.time_util import datetime_to_decimal_year, naive_to_utc
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
@@ -78,7 +78,7 @@ DROPPED_FIELDS = [
 
 CDF_RAW_TIME_CONVERTOR = {
     "ISO date-time": cdf_rawtime_to_datetime,
-    "MDJ2000": cdf_rawtime_to_mjd2000,
+    "MJD2000": cdf_rawtime_to_mjd2000,
     "Unix epoch": cdf_rawtime_to_unix_epoch,
 }
 
@@ -86,6 +86,7 @@ CDF_RAW_TIME_CONVERTOR = {
 class RetrieveData(Component):
     """ Process retrieving registered Swarm data based on collection, time
     interval and additional optional parameters.
+    This precess is designed to be used by the web-client.
     """
     implements(ProcessInterface)
 
@@ -140,7 +141,7 @@ class RetrieveData(Component):
         ("csv_time_format", LiteralData(
             'csv_time_format', str, optional=True, title="CSV time  format",
             abstract="Optional time format used by the CSV output.",
-            allowed_values=("ISO date-time", "MDJ2000", "Unix epoch"),
+            allowed_values=("ISO date-time", "MJD2000", "Unix epoch"),
             default="ISO date-time",
         )),
     ]
@@ -153,6 +154,10 @@ class RetrieveData(Component):
 
     def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
                 bbox, sampling_step, csv_time_format, **kwarg):
+
+        # fix the time-zone of the naive date-time
+        begin_time = naive_to_utc(begin_time)
+        end_time = naive_to_utc(end_time)
 
         fobj = cStringIO.StringIO()
         outputs = {'output': fobj}
@@ -182,13 +187,9 @@ class RetrieveData(Component):
             field.identifier for field in collections[0].range_type
             if field.identifier in REQUIRED_FIELDS
         ]
-        extra_fields = ["dst", "kp", "qdlat", "mlt"]
-        for model_id in models:
-            extra_fields.append("F_res_%s"%(model_id))
-            extra_fields.append("B_NEC_res_%s"%(model_id))
 
-        # write CSV header
-        writer.writerow(["id"] + data_fields + extra_fields)
+        # write CSV header flag
+        initialize = True
         # TODO: assert that the range_type is equal for all collections
 
         total_count = 0
@@ -224,9 +225,9 @@ class RetrieveData(Component):
                     # user defined sampling
                     step = sampling_step
 
-                time_first_sample, time_last_sample = product.time_extent
+                time_first, time_last = product.time_extent
                 low, high = datetime_array_slice(
-                    begin_time, end_time, time_first_sample, time_last_sample,
+                    begin_time, end_time, time_first, time_last,
                     product.sampling_period, TIME_TOLERANCE
                 )
                 data, count, cdf_type = self.handle(
@@ -241,12 +242,16 @@ class RetrieveData(Component):
                         "maximum limit of %d records!" % MAX_SAMPLES_COUNT
                     )
 
-                # fix the output time format
+                # convert the time format
                 data['Timestamp'] = (
                     CDF_RAW_TIME_CONVERTOR[csv_time_format](
                         data['Timestamp'], cdf_type['Timestamp']
                     )
                 )
+
+                if initialize:
+                    writer.writerow(["collection"] + data.keys())
+                    initialize = False
 
                 for row in izip(*data.itervalues()):
                     writer.writerow(
@@ -255,8 +260,8 @@ class RetrieveData(Component):
 
         return outputs
 
-    def handle(self, product, fields, low, high, sampling_step, models,
-               bbox=None):
+    def handle(self, product, fields, low, high, step, models, bbox=None):
+        """ Single product retrieval. """
 
         # read initial subset of the CDF data
         cdf_type = {}
@@ -266,7 +271,7 @@ class RetrieveData(Component):
             for field in fields:
                 cdf_var = cdf.raw_var(field)
                 cdf_type[field] = cdf_var.type()
-                data[field] = cdf_var[low:high:sampling_step]
+                data[field] = cdf_var[low:high:step]
 
         # bounding box filter
         if bbox:
@@ -283,6 +288,23 @@ class RetrieveData(Component):
             data = OrderedDict(
                 (field, values[index]) for field, values in data.iteritems()
             )
+
+        # get auxiliary data
+        mjd2000_times = cdf_rawtime_to_mjd2000(
+            data['Timestamp'], cdf_type['Timestamp']
+        )
+        data.update(query_dst_int(settings.VIRES_AUX_DB_DST, mjd2000_times))
+        data.update(query_kp_int(settings.VIRES_AUX_DB_KP, mjd2000_times))
+
+        # get Quasi-dipole Latitude and Magnetic Local Time
+        data["qdlat"], _, data["mlt"] = mm.eval_apex(
+            data["Latitude"],
+            data["Longitude"],
+            data["Radius"] * 1e-3, # radius in km
+            cdf_rawtime_to_decimal_year_fast(
+                data["Timestamp"], cdf_type['Timestamp'], time_mean.year
+            )
+        )
 
         # evaluate models
         if models:
@@ -304,23 +326,6 @@ class RetrieveData(Component):
                 # TODO: check if the residual evaluation is correct
                 data["F_res_%s" % model_id] = data["F"] - mm.vnorm(model_data)
                 data["B_NEC_%s" % model_id] = data["B_NEC"] - model_data
-
-        # get auxiliary data
-        mjd2000_times = cdf_rawtime_to_mjd2000(
-            data['Timestamp'], cdf_type['Timestamp']
-        )
-        data.update(query_dst_int(settings.VIRES_AUX_DB_DST, mjd2000_times))
-        data.update(query_kp_int(settings.VIRES_AUX_DB_KP, mjd2000_times))
-
-        # get Quasi-dipole Latitude and Magnetic Local Time
-        data["qdlat"], _, data["mlt"] = mm.eval_apex(
-            data["Latitude"],
-            data["Longitude"],
-            data["Radius"] * 1e-3, # radius in km
-            cdf_rawtime_to_decimal_year_fast(
-                data["Timestamp"], cdf_type['Timestamp'], time_mean.year
-            )
-        )
 
         return data, len(data['Timestamp']), cdf_type
 
