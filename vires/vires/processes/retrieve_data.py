@@ -276,7 +276,7 @@ class RetrieveData(Component):
         # bounding box filter
         if bbox:
             # initialize indices
-            index = np.arange(high - low)
+            index = np.arange(len(data['Timestamp']))
             # filter the indices
             index = index[
                 between(data["Longitude"][index], bbox.lower[1], bbox.upper[1])
