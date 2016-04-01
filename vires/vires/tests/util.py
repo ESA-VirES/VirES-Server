@@ -30,16 +30,16 @@
 
 import unittest
 from datetime import timedelta, datetime
+from numpy import array
 from matplotlib.colors import LinearSegmentedColormap
+from vires.tests import ArrayMixIn
 from vires.util import (
-    float_array_slice,
-    datetime_array_slice,
-    get_total_seconds,
-    get_color_scale,
-    get_model,
+    between, datetime_mean,
+    float_array_slice, datetime_array_slice,
+    get_total_seconds, get_color_scale, get_model,
 )
 
-class TestUtil(unittest.TestCase):
+class TestUtil(ArrayMixIn, unittest.TestCase):
     # NOTE: The IGRF12 and SIFM models are broken!
     MODELS = [
         "CHAOS-5-Combined", "WMM", "EMM", "IGRF", #"IGRF12", "SIFM",
@@ -58,7 +58,6 @@ class TestUtil(unittest.TestCase):
                 raise
         self.assertEqual(get_color_scale("-invalid-"), "-invalid-")
 
-
     def test_model(self):
         for model_id in self.MODELS:
             try:
@@ -68,6 +67,17 @@ class TestUtil(unittest.TestCase):
                 raise
         self.assertTrue(get_model("-invalid-model-") is None)
 
+    def test_between(self):
+        self.assertAllEqual(
+            between(array([1.0, 2.0, 3.0, 4.0]), 1.5, 3.5),
+            array([False, True, True, False])
+        )
+
+    def test_datetime_mean(self):
+        self.assertEqual(
+            datetime_mean(datetime(2016, 3, 10), datetime(2016, 3, 11)),
+            datetime(2016, 3, 10, 12, 0)
+        )
 
     def test_total_seconds(self):
         self.assertAlmostEqual(

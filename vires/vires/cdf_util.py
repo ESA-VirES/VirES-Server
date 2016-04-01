@@ -27,7 +27,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=wrong-import-position, invalid-name, ungrouped-imports
 
 from os.path import exists
 from math import ceil, floor
@@ -35,18 +34,8 @@ from numpy import empty, nan, vectorize
 import scipy
 from scipy.interpolate import interp1d
 from spacepy import pycdf
+from .util import full
 from .time_util import mjd2000_to_decimal_year, year_to_day2k, days_per_year
-
-try:
-    # pylint: disable=wrong-import-order, ungrouped-imports
-    from numpy import full
-except ImportError:
-    def full(shape, value, dtype=None, order='C'):
-        """ Numpy < 1.8 workaround. """
-        arr = empty(shape, dtype, order)
-        arr.fill(value)
-        return arr
-
 
 CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
 CDF_EPOCH_1970 = 62167219200000.0

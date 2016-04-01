@@ -26,6 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=wrong-import-order, ungrouped-imports, unused-import
 
 from os.path import dirname, join
 from math import ceil, floor
@@ -33,11 +34,31 @@ from matplotlib.colors import LinearSegmentedColormap
 
 import eoxmagmod as mm
 
+try:
+    from numpy import full
+except ImportError:
+    from numpy import empty
+    def full(shape, value, dtype=None, order='C'):
+        """ Numpy < 1.8 workaround. """
+        arr = empty(shape, dtype, order)
+        arr.fill(value)
+        return arr
+
 # Extra models' data locations
 DATA_DIR = join(dirname(__file__), 'model_data')
 #NOTE: Uncomment when these data-files become available!
 #DATA_IGRF12 = join(DATA_DIR, 'IGRF12.shc')
 #DATA_SIFM = join(DATA_DIR, 'SIFM.shc')
+
+
+def between(data, lower_bound, upper_bound):
+    """ Get mask of values within the given closed interval. """
+    return (data >= lower_bound) & (data <= upper_bound)
+
+
+def datetime_mean(start, stop):
+    """ Get arithmetic mean of two `datetime` values. """
+    return (stop - start)/2 + start
 
 
 # TODO: To be removed.
