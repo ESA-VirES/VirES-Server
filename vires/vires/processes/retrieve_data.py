@@ -26,7 +26,6 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, missing-docstring
 
-import csv
 import json
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -52,7 +51,7 @@ from vires.util import (
 from vires.time_util import datetime_to_decimal_year, naive_to_utc
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
-    cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
+    cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
 )
 
 import eoxmagmod as mm
@@ -157,13 +156,11 @@ class RetrieveData(Component):
 
     def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
                 bbox, sampling_step, csv_time_format, output, **kwarg):
-
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
 
         output_fobj = cStringIO.StringIO()
-        writer = csv.writer(output_fobj)
 
         collection_ids = collection_ids.split(",") if collection_ids else []
 
@@ -221,7 +218,6 @@ class RetrieveData(Component):
             ).order_by('begin_time')
 
             for product in (item.cast() for item in products_qs):
-
                 if sampling_step is None:
                     # automatic adaptive sampling
                     relative_period = (
@@ -271,13 +267,23 @@ class RetrieveData(Component):
                 )
 
                 if initialize:
-                    writer.writerow(["id"] + data.keys())
+                    output_fobj.write("id,")
+                    output_fobj.write(",".join(data.keys()))
+                    output_fobj.write("\r\n")
                     initialize = False
 
+                cid_prefix = "%s," % collection_id
+                formatters = [
+                    get_formatter(data[field], cdf_type.get(field))
+                    for field in data
+                ]
+
                 for row in izip(*data.itervalues()):
-                    writer.writerow(
-                        [collection_id] + [translate(v) for v in row]
+                    output_fobj.write(cid_prefix)
+                    output_fobj.write(
+                        ",".join(f(v) for f, v in zip(formatters, row))
                     )
+                    output_fobj.write("\r\n")
 
         # HTTP headers
         http_headers = (
@@ -360,12 +366,3 @@ class RetrieveData(Component):
                 data["B_NEC_%s" % model_id] = data["B_NEC"] - model_data
 
         return data, len(data['Timestamp']), cdf_type
-
-
-def translate(arr):
-    try:
-        if arr.ndim == 1:
-            return "{%s}" % ";".join(str(v) for v in arr)
-    except:
-        pass
-    return arr

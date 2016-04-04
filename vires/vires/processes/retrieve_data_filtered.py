@@ -26,7 +26,6 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, missing-docstring
 
-import csv
 from os import remove
 from os.path import join, exists
 from uuid import uuid4
@@ -55,7 +54,7 @@ from vires.util import (
 from vires.time_util import datetime_to_decimal_year, naive_to_utc, TZ_UTC
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
-    cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
+    cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
 )
 
 import eoxmagmod as mm
@@ -260,7 +259,6 @@ class RetrieveDataFiltered(Component):
             initialize = True
 
             with open(temp_filename, "w") as fout:
-                writer = csv.writer(fout)
                 for item in generate_results():
                     collection_id, product, result, cdf_type, count = item
                     # convert the time format
@@ -269,11 +267,22 @@ class RetrieveDataFiltered(Component):
                             result['Timestamp'], cdf_type['Timestamp']
                         )
                     )
+
                     if initialize:
-                        writer.writerow(result.keys())
+                        fout.write(",".join(result.keys()))
+                        fout.write("\r\n")
                         initialize = False
+
+                    formatters = [
+                        get_formatter(result[field], cdf_type.get(field))
+                        for field in result
+                    ]
+
                     for row in izip(*result.itervalues()):
-                        writer.writerow([translate(v) for v in row])
+                        fout.write(
+                            ",".join(f(v) for f, v in zip(formatters, row))
+                        )
+                        fout.write("\r\n")
 
         elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
             temp_filename = join(conf_sys.path_temp, temp_basename + ".cdf")
@@ -417,12 +426,3 @@ class RetrieveDataFiltered(Component):
         )
 
         return data, len(data['Timestamp']), cdf_type
-
-
-def translate(arr):
-    try:
-        if arr.ndim == 1:
-            return "{%s}" % ";".join(str(v) for v in arr)
-    except:
-        pass
-    return arr

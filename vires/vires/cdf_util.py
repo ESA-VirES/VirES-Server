@@ -30,7 +30,9 @@
 
 from os.path import exists
 from math import ceil, floor
-from numpy import empty, nan, vectorize
+from numpy import (
+    nan, vectorize, object as dt_object, float64 as dt_float64,
+)
 import scipy
 from scipy.interpolate import interp1d
 from spacepy import pycdf
@@ -38,8 +40,39 @@ from .util import full
 from .time_util import mjd2000_to_decimal_year, year_to_day2k, days_per_year
 
 CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
+CDF_DOUBLE_TYPE = pycdf.const.CDF_DOUBLE.value
+
 CDF_EPOCH_1970 = 62167219200000.0
 CDF_EPOCH_2000 = 63113904000000.0
+
+
+def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
+    """ Second order function returning optimal data-type string formatter
+    function.
+    """
+    if cdf_type is None:
+        cdf_type == CDF_DOUBLE_TYPE
+    def _get_formater(shape, dtype, cdf_type):
+        if len(shape) > 1:
+            value_formater = _get_formater(shape[1:], dtype, cdf_type)
+            def formater(arr):
+                " vector formatter "
+                return "{%s}" % ";".join(
+                    value_formater(value) for value in arr
+                )
+            return formater
+        elif cdf_type == CDF_DOUBLE_TYPE:
+            return lambda v: "%.9g" % v
+        elif cdf_type == CDF_EPOCH_TYPE:
+            if dtype == dt_float64:
+                return lambda v: "%.14g" % v
+            elif dtype == dt_object:
+                return lambda v: v.isoformat(" ")
+            else:
+                return str
+        else:
+            return str
+    return _get_formater(data.shape, data.dtype, cdf_type)
 
 
 def cdf_open(filename, mode="r"):
