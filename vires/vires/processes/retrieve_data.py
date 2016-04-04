@@ -65,7 +65,7 @@ MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
 TIME_TOLERANCE = timedelta(microseconds=10)
 
 # display sample period
-DISPLAY_SAMPLE_PERIOD = timedelta(seconds=10)
+DISPLAY_SAMPLE_PERIOD = timedelta(seconds=15)
 
 REQUIRED_FIELDS = [
     "Timestamp", "Latitude", "Longitude", "Radius", "F", "F_error", "B_NEC",
@@ -229,7 +229,7 @@ class RetrieveData(Component):
                         product.sampling_period.total_seconds()
                     )
                     step = max(1, int(
-                        relative_area * day_count * relative_period
+                        relative_area * max(1.0, day_count) * relative_period
                     ))
                 else:
                     # user defined sampling
