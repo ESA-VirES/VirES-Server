@@ -271,7 +271,7 @@ class RetrieveData(Component):
                 )
 
                 if initialize:
-                    writer.writerow(["collection"] + data.keys())
+                    writer.writerow(["id"] + data.keys())
                     initialize = False
 
                 for row in izip(*data.itervalues()):
