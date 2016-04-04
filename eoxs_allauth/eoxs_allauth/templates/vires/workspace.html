@@ -1,0 +1,257 @@
+{% extends "vires/base.html" %}
+{% load i18n %}
+{% block title %}
+  <title>VirES for Swarm</title>
+  <style type="text/css">
+    .inputwide input {
+      width: 100%;
+    }
+    .inputwide input[type=checkbox] {
+      width: auto;
+    }
+  </style>
+{% endblock %}
+{% block content %}
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
+{% if user.is_authenticated %}
+  <!-- Page Content -->
+  <div id="content">
+    <div id="main"></div>
+    <div id="viewContent"></div>
+    <div id="leftSideBar"></div>
+    <div id="rightSideBar"></div>
+    <div id="optionsBar"></div>
+    <div id="topBar"></div>
+    <div id="bottomBar"></div>
+  </div>
+  <div id="storyView" style="z-index: 0"></div>
+  <div id="loadscreen" class="modal-backdrop">
+    <div id="loading-spacer">
+      <div class="project-title">VirES</div>
+    </div>
+    <div class="spinner">
+      <div class="spinner-container container1">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+      </div>
+      <div class="spinner-container container2">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+      </div>
+      <div class="spinner-container container3">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+      </div>
+    </div>
+  </div>
+  <!-- HIDDEN DOWNLOAD DIV -->
+  <div id="div-downloads">
+    <iframe name="iframe-download-post" id="iframe-download-post"></iframe>
+  </div>
+  <div id="error-messages"></div>
+  <div id="pngdataurl"></div>
+  <div id="terrain_attribution">
+    <p style="float: right"><a href="javascript:;" onclick="toggle(terrain_attribution)">×</a></p>
+    <p>Terrain map data</p>
+    <ul>
+      <li>OpenStreetMap © <a href="http://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a></li>
+      <li>NaturalEarth <a href="http://www.naturalearthdata.com/about/terms-of-use/" target="_blank">public domain</a></li>
+      <li>EU-DEM © Produced using Copernicus data and information<br>funded by the European Union</li>
+      <li>SRTM © <a href="http://nasa.gov" target="_blank">NASA</a></li>
+      <li>GTOPO30</li>
+      <li>CleanTOPO2 public domain</li>
+      <li>GlobCover © <a href="http://esa.int" target="_blank">ESA</a></li>
+    </ul>
+    <p>Terrain map design © <a href="http://eox.at" target="_blank">EOX IT Services GmbH</a></p>
+  </div>
+  <script>
+    // Used to display/hide terrain attribution
+    function toggle(e) { e.style.display = (e.style.display == 'block' ? 'none' : 'block'); }
+  </script>
+    {% load account %}
+    <script type="text/javascript">
+      this.NAVBARITEMS = [{
+        "name": "{% user_display user %}",
+        "icon": "fa-user",
+        "eventToRaise": "modal:accountSettingsModal",
+      },{
+        "name": "Logout",
+        "icon": "fa-sign-out",
+        "url": "{% url 'account_logout' %}",
+      }];
+      var CONFIG_URL = "{% static 'workspace/scripts/config.json'%}";
+      CESIUM_BASE_URL = "{% static 'workspace/bower_components/cesium/Build/Cesium/'%}";
+      // you can register settings like this before require.js is loaded
+      var require = {
+          baseUrl : "{% static 'workspace/scripts/' %}"
+      };
+    </script>
+    <!-- Modal forms -->
+    <div class="modal fade" id="accountSettingsModal" tabindex="-1" role="dialog" aria-labelledby="accountSettingsLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="accountSettingsLabel">Settings ({% user_display user %})</h4>
+          </div>
+          <div class="modal-body">
+            <a href="{% url 'account_change_password' %}">{% trans "Change password" %}</a><br/>
+            <a href="{% url 'account_email' %}">{% trans "Change e-mail" %}</a><br/>
+            <a href="{% url 'socialaccount_connections' %}">{% trans "Connect social accounts" %}</a><br/>
+            <a href="{% url 'account_change_profile' %}">{% trans "Change profile information" %}</a>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script data-main="{% static 'workspace/scripts/init.js' %}" src="{% static 'workspace/bower_components/requirejs/require.js' %}"></script>
+  {% else %}
+    
+    {% load i18n %}
+    {% load account socialaccount %}
+
+    
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+
+    <div class="background-image toggle-image first-image show"></div>
+    <div class="background-image toggle-image second-image"></div>
+    <div class="background-image toggle-image third-image"></div>
+
+    <style type="text/css">
+      body {background-color: #fff !important;}
+      /* Basic background image styling. */
+      .background-image {
+        background-position: center center;
+        background-repeat: no-repeat;
+        /*background-size: cover;*/
+      }
+
+      /* Styles for the alternating / transition effect. */
+      .toggle-image {
+        position: absolute;
+        width: 80%;
+        top: 0;
+        right: -30%;
+        height: 100%;
+        transition: opacity 1s ease-in-out;
+      }
+
+      /* Styles for the specific images. */
+      .first-image {
+        background: -webkit-radial-gradient(top right, ellipse cover, rgba(0,0,0,0) 10%,rgba(255,255,255,1) 80%), url('https://eox.at/wp-content/uploads/2015/10/Selection_083-1024x527.png') no-repeat;
+        z-index: -3;
+        opacity: 0;
+      }
+
+      .second-image {
+        background: -webkit-radial-gradient(top right, ellipse cover, rgba(0,0,0,0) 10%,rgba(255,255,255,1) 80%), url('https://eox.at/wp-content/uploads/2015/10/VirES_Globe_Visualizations.png') no-repeat;
+        z-index: -2;
+        opacity: 0;
+      }
+
+      .third-image {
+       background: -webkit-radial-gradient(top right, ellipse cover, rgba(0,0,0,0) 10%,rgba(255,255,255,1) 80%), url('https://eox.at/wp-content/uploads/2015/10/Selection_094.png') no-repeat;
+        z-index: -1;
+        opacity: 0;
+      }
+
+      .first-image.show {
+        opacity: 0.4;
+      }
+
+      .second-image.show {
+        opacity: 0.4;
+      }
+
+      .third-image.show {
+        opacity: 0.4;
+      }
+    </style>
+
+
+
+    <div class="row">
+      <div class="col-md-4 col-md-offset-4" id="formcontainer">
+
+        <div><h3>Welcome to VirES Services, this is a placeholder screen, please sign up or login to continue</h3></div>
+          {% get_providers as socialaccount_providers %}
+          {% if socialaccount_providers %}
+            <p>
+              {% blocktrans with site.name as site_name %}Login with following services or sign up
+              below{% endblocktrans %}
+            </p>
+            <div class="socialaccount_ballot">
+              <ul class="socialaccount_providers">
+                {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+              </ul>
+            </div>
+            {% include "socialaccount/snippets/login_extra.html" %}
+          <h3>{% trans "Sign up" %}</h3>
+          <p>Already have an account? Then please <a href="{% url 'account_login' %}">Login</a>.</p>
+          <form class="form-horizontal inputwide" method="POST" action="{% url 'account_signup' %}">
+            {% csrf_token %}
+            <fieldset>
+              {% for field in signup_form.visible_fields %}
+                {% if field.errors %}
+                  <div class="control-group error">
+                    <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    <span class="help-inline error">
+                      {% for error in  field.errors %}{{ error }}{% endfor %}
+                    </span>
+                  </div>
+                {% else %}
+                  <div class="control-group">
+                    <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                      <p class="help-inline"><small>{{ field.help_text }}</small></p>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+              {% if redirect_field_value %}
+                  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+              {% endif %}
+              <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
+                  <button type="submit" class="btn btn-primary">{% trans "Sign up" %} &raquo;</button>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+      </div>
+      <script type="text/javascript">
+        function cycleBackgrounds() {
+          var index = 0;
+
+          $imageEls = $('.toggle-image'); // Get the images to be cycled.
+
+          setInterval(function () {
+            // Get the next index.  If at end, restart to the beginning.
+            index = index + 1 < $imageEls.length ? index + 1 : 0;
+            // Show the next image.
+            $imageEls.eq(index).addClass('show');
+            // Hide the previous image.
+            $imageEls.eq(index - 1).removeClass('show');
+
+          }, 4000);
+        };
+
+        // Document Ready.
+        $(function () {
+          cycleBackgrounds();
+        });
+      </script>
+    {% endif %}
+  {% endif %}
+  
+{% endblock %}

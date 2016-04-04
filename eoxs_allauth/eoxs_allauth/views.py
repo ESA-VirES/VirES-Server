@@ -29,8 +29,24 @@
 from django.conf import settings
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.views.generic.edit import UpdateView
+from django.contrib.messages.views import SuccessMessageMixin
+from django.forms.models import modelform_factory
+
 from allauth.account.forms import LoginForm, SignupForm
 from eoxserver.services.views import ows
+
+from django_countries.widgets import CountrySelectWidget
+
+from eoxs_allauth.models import UserProfile
+from eoxs_allauth.forms import ProfileForm
+
+
+
+class ModelFormWidgetMixin(object):
+    def get_form_class(self):
+        return modelform_factory(self.model, fields=self.fields, widgets=self.widgets)
+
 
 if hasattr(settings, 'EOXS_ALLAUTH_WORKSPACE_TEMPLATE'):
     WORKSPACE_TEMPLATE = settings.EOXS_ALLAUTH_WORKSPACE_TEMPLATE
@@ -52,3 +68,14 @@ def workspace(request):
 def wrapped_ows(request):
     """ EOxServer/allauth wrapper of the ows endpoint. """
     return ows(request)
+
+
+class ProfileUpdate(ModelFormWidgetMixin, SuccessMessageMixin, UpdateView):
+    model = UserProfile
+    fields = ['title', 'institution', 'country', 'study_area', 'executive_summary']
+    widgets = {'country': CountrySelectWidget()}
+    success_url = '/accounts/profile'
+    success_message = "Profile was updated successfully"
+    template_name = 'account/userprofile_update_form.html'
+    def get_object(self):
+        return UserProfile.objects.get(user=self.request.user)
