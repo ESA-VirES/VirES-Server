@@ -59,13 +59,13 @@ import eoxmagmod as mm
 
 # TODO: Make following parameters configurable.
 # Limit response size (equivalent to 1/2 daily SWARM LR product).
-MAX_SAMPLES_COUNT = 43200
+MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
 
 # time selection tolerance (10us)
 TIME_TOLERANCE = timedelta(microseconds=10)
 
 # display sample period
-DISPLAY_SAMPLE_PERIOD = timedelta(seconds=5)
+DISPLAY_SAMPLE_PERIOD = timedelta(seconds=10)
 
 REQUIRED_FIELDS = [
     "Timestamp", "Latitude", "Longitude", "Radius", "F", "F_error", "B_NEC",
@@ -213,6 +213,7 @@ class RetrieveData(Component):
         day_count = (end_time - begin_time).total_seconds() / 86400.0
 
         for collection_id in collection_ids:
+            collection_count = 0
             products_qs = db_models.Product.objects.filter(
                 collections__identifier=collection_id,
                 begin_time__lte=(end_time + TIME_TOLERANCE),
@@ -252,12 +253,14 @@ class RetrieveData(Component):
                     product, data_fields, low, high, step, models, bbox
                 )
                 total_count += count
+                collection_count += count
 
                 # Check current amount of features and decide if to continue
-                if total_count > MAX_SAMPLES_COUNT:
+                if collection_count > MAX_SAMPLES_COUNT_PER_COLLECTION:
                     raise ExecuteError(
                         "Requested data is too large and exceeds the "
-                        "maximum limit of %d records!" % MAX_SAMPLES_COUNT
+                        "maximum limit of %d records per collection!" %
+                        MAX_SAMPLES_COUNT_PER_COLLECTION
                     )
 
                 # convert the time format
