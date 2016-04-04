@@ -166,8 +166,7 @@ class RetrieveDataFiltered(Component):
         """ Parse filters' string. """
         try:
             filter_ = {}
-            # There is an apparent bug in the WPS string parser!
-            if filter_string and filter_string != 'None':
+            if filter_string:
                 for item in filter_string.split(";"):
                     name, bounds = item.split(":")
                     lower, upper = [float(v) for v in bounds.split(",")]
