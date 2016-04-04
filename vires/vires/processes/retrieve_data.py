@@ -27,6 +27,7 @@
 # pylint: disable=too-many-arguments, too-many-locals, missing-docstring
 
 import csv
+import json
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from itertools import izip
@@ -39,6 +40,7 @@ from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.exceptions import ExecuteError
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, AllowedRange, BoundingBoxData,
+    CDFileWrapper,
 )
 
 from eoxserver.backends.access import connect
@@ -154,15 +156,14 @@ class RetrieveData(Component):
     ]
 
     def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
-                bbox, sampling_step, csv_time_format, **kwarg):
+                bbox, sampling_step, csv_time_format, output, **kwarg):
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
 
-        fobj = cStringIO.StringIO()
-        outputs = {'output': fobj}
-        writer = csv.writer(fobj)
+        output_fobj = cStringIO.StringIO()
+        writer = csv.writer(output_fobj)
 
         collection_ids = collection_ids.split(",") if collection_ids else []
 
@@ -171,7 +172,11 @@ class RetrieveData(Component):
         )
 
         if not collections or end_time < begin_time:
-            return outputs # no collection matched -> empty response
+            http_headers = (
+                ("X-EOX-Source-Data-Sampling-Period", json.dumps({})),
+                ("X-EOX-Output-Data-Sampling-Period", json.dumps({})),
+            )
+            return CDFileWrapper(output_fobj, headers=http_headers, **output)
 
         # collect models
         models = OrderedDict(
@@ -183,6 +188,7 @@ class RetrieveData(Component):
         if shc:
             models["Custom_Model"] = mm.read_model_shc(shc)
 
+        # TODO: assert that the range_type is equal for all collections
         # prepare fields
         data_fields = [
             field.identifier for field in collections[0].range_type
@@ -191,7 +197,9 @@ class RetrieveData(Component):
 
         # write CSV header flag
         initialize = True
-        # TODO: assert that the range_type is equal for all collections
+        # per-collection sampling periods in seconds
+        source_sampling_period = {}
+        output_sampling_period = {}
 
         total_count = 0
 
@@ -226,6 +234,15 @@ class RetrieveData(Component):
                     # user defined sampling
                     step = sampling_step
 
+                #NOTE: How to get sampling period for an empty collection?
+                #TODO: Move outside of the product loop.
+                source_sampling_period[collection_id] = (
+                    product.sampling_period.total_seconds()
+                )
+                output_sampling_period[collection_id] = (
+                    step * product.sampling_period.total_seconds()
+                )
+
                 time_first, time_last = product.time_extent
                 low, high = datetime_array_slice(
                     begin_time, end_time, time_first, time_last,
@@ -259,7 +276,18 @@ class RetrieveData(Component):
                         [collection_id] + [translate(v) for v in row]
                     )
 
-        return outputs
+        # HTTP headers
+        http_headers = (
+            (
+                "X-EOX-Source-Data-Sampling-Period",
+                json.dumps(source_sampling_period)
+            ),
+            (
+                "X-EOX-Output-Data-Sampling-Period",
+                json.dumps(output_sampling_period)
+            ),
+        )
+        return CDFileWrapper(output_fobj, headers=http_headers, **output)
 
     def handle(self, product, fields, low, high, step, models, bbox=None):
         """ Single product retrieval. """
