@@ -148,7 +148,8 @@ class RetrieveData(Component):
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Output data", formats=FormatText('text/csv')
+            'output', title="Output data",
+            formats=(FormatText('text/csv'), FormatText('text/plain'))
         )),
     ]
 
