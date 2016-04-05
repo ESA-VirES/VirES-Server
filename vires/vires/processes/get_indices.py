@@ -70,7 +70,7 @@ class get_indices(Component):
     inputs = [
         ("index_id", LiteralData('index_id', str, optional=False,
             abstract="Index id from which auxiliary data will be retrieved",
-            allowed_values=('kp','dsp'),
+            allowed_values=('kp','dst'),
         )),
         ("begin_time", LiteralData('begin_time', dt.datetime, optional=False,
             abstract="Start of the time interval",
