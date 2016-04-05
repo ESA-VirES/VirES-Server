@@ -27,3 +27,6 @@
 #-------------------------------------------------------------------------------
 
 __version__="0.1.0dev0"
+
+
+default_app_config = 'eoxs_allauth.apps.EOxServerAllauthConfig'

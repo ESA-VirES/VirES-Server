@@ -26,10 +26,23 @@
 #-------------------------------------------------------------------------------
 
 from django.apps import AppConfig
+from django.db.models.signals import post_migrate
+from django.contrib.auth.models import User
 
-class TasksConfig(AppConfig):
+from eoxs_allauth.models import UserProfile
+
+
+def create_profiles(sender, **kwargs):
+    import pdb; pdb.set_trace()
+    if sender == "eoxs_allauth":
+        for u in User.objects.all():
+            UserProfile.objects.get_or_create(user=u)
+    pass
+
+class EOxServerAllauthConfig(AppConfig):
     name = 'eoxs_allauth'
-    verbose_name = "eoxs_allauth"
+    verbose_name = "EOxServer allauth"
 
     def ready(self):
-        import eoxs_allauth.signals.handlers
+        post_migrate.connect(create_profiles, sender=self)
+
