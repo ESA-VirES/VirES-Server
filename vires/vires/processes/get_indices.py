@@ -103,7 +103,7 @@ class get_indices(Component):
 
         if index_id == "dst":
             aux_data = query_dst(
-                settings.VIRES_AUX_DB_DSP, begin_time, end_time
+                settings.VIRES_AUX_DB_DST, begin_time, end_time
             )
         elif index_id == "kp":
             aux_data = query_kp(

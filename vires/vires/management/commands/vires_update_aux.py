@@ -55,9 +55,9 @@ def update(source, destination, updater, label):
 
     if is_url:
         with closing(urlopen(source, timeout=URL_TIMEOUT)) as fin:
-            updater(fin)
+            updater(fin, destination)
     elif source == '-':
-        updater(sys.stdin)
+        updater(sys.stdin, destination)
     else:
         with open(source) as fin:
             updater(fin, destination)
@@ -82,7 +82,7 @@ class Command(CommandOutputMixIn, BaseCommand):
         if kwargs["dst_filename"] is not None:
             update(
                 kwargs["dst_filename"],
-                settings.VIRES_AUX_DB_DSP,
+                settings.VIRES_AUX_DB_DST,
                 update_dst, 'Dst'
             )
         if kwargs["kp_filename"] is not None:
