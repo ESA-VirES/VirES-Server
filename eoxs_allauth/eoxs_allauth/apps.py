@@ -28,8 +28,8 @@
 from django.apps import AppConfig
 
 class TasksConfig(AppConfig):
-    name = 'tasks'
-    verbose_name = "Tasks"
+    name = 'eoxs_allauth'
+    verbose_name = "eoxs_allauth"
 
     def ready(self):
-        import eoxs_allauth.eoxs_allauth.signals.handlers #noqa
+        import eoxs_allauth.signals.handlers
