@@ -24,418 +24,405 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments, too-many-locals, missing-docstring
 
-import json
-import csv
-import math
-import datetime as dt
-import time
+from os import remove
+from os.path import join, exists
+from uuid import uuid4
+from collections import OrderedDict
+from datetime import datetime, timedelta
 from itertools import izip
-from lxml import etree
-from StringIO import StringIO
-try:
-    # available in Python 2.7+
-    from collections import OrderedDict
-except ImportError:
-    from django.utils.datastructures import SortedDict as OrderedDict
 import numpy as np
 
+from django.conf import settings
 from eoxserver.core import Component, implements
-from eoxserver.core.util import timetools
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
-from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
-from eoxserver.services.result import ResultBuffer, ResultFile
+from eoxserver.services.ows.wps.exceptions import (
+    ExecuteError, InvalidInputValueError,
+)
 from eoxserver.services.ows.wps.parameters import (
-    ComplexData, CDObject, CDAsciiTextBuffer, CDFile, 
-    FormatText, FormatXML, FormatJSON, FormatBinaryRaw, FormatBinaryBase64,
-    BoundingBoxData, BoundingBox,
-    LiteralData, String,
-    AllowedRange, UnitLinear,
+    LiteralData, ComplexData, FormatText, AllowedRange, CDFile, FormatBinaryRaw,
 )
 
-from uuid import uuid4
-from spacepy import pycdf
 from eoxserver.backends.access import connect
-from vires import models
-from vires.util import get_total_seconds
-from vires.util import get_model
-from vires import aux
+from vires import models as db_models
+from vires.aux import query_kp_int, query_dst_int
+from vires.config import SystemConfigReader
+from vires.util import (
+    get_model, datetime_array_slice, between, datetime_mean,
+)
+from vires.time_util import datetime_to_decimal_year, naive_to_utc, TZ_UTC
+from vires.cdf_util import (
+    cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
+    cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
+)
 
 import eoxmagmod as mm
 
-def toYearFractionInterval(dt_start, dt_end):
-    def sinceEpoch(date): # returns seconds since epoch
-        return time.mktime(date.timetuple())
+# TODO: Make the limits configurable.
+# Limit response size (equivalent to 5 daily SWARM LR products).
+MAX_SAMPLES_COUNT = 432000
 
-    date = (dt_end - dt_start)/2 + dt_start  
-    s = sinceEpoch
+# time selection tolerance (10us)
+TIME_TOLERANCE = timedelta(microseconds=10)
 
-    year = date.year
-    startOfThisYear = dt.datetime(year=year, month=1, day=1)
-    startOfNextYear = dt.datetime(year=year+1, month=1, day=1)
+# display sample period
+DISPLAY_SAMPLE_PERIOD = timedelta(seconds=5)
 
-    yearElapsed = s(date) - s(startOfThisYear)
-    yearDuration = s(startOfNextYear) - s(startOfThisYear)
-    fraction = yearElapsed/yearDuration
+# Auxiliary data query function and file sources
+AUX_INDEX = {
+    "kp": (query_kp_int, settings.VIRES_AUX_DB_KP),
+    "dst": (query_dst_int, settings.VIRES_AUX_DB_DST),
+}
 
-    return date.year + fraction
+# Magnetic field vector components
+B_NEC_COMPONENTS = {"B_N": 0, "B_E": 1, "B_C": 2}
 
-
-def toYearFraction(date):
-    def sinceEpoch(date): # returns seconds since epoch
-        return time.mktime(date.timetuple())
- 
-    s = sinceEpoch
-
-    year = date.year
-    startOfThisYear = dt.datetime(year=year, month=1, day=1)
-    startOfNextYear = dt.datetime(year=year+1, month=1, day=1)
-
-    yearElapsed = s(date) - s(startOfThisYear)
-    yearDuration = s(startOfNextYear) - s(startOfThisYear)
-    fraction = yearElapsed/yearDuration
-
-    return date.year + fraction
+CDF_RAW_TIME_CONVERTOR = {
+    "ISO date-time": cdf_rawtime_to_datetime,
+    "MJD2000": cdf_rawtime_to_mjd2000,
+    "Unix epoch": cdf_rawtime_to_unix_epoch,
+}
 
 
-
-def getModelResidualIdentifiers(modelid):
-    if modelid == "CHAOS-5-Combined":
-        return  ("B_N_res_CHAOS-5-Combined", "B_E_res_CHAOS-5-Combined", "B_C_res_CHAOS-5-Combined", "F_res_CHAOS-5-Combined")
-    if modelid == "EMM":
-        return  ("B_N_res_EMM", "B_E_res_EMM", "B_C_res_EMM", "F_res_EMM")
-    if modelid == "IGRF":
-        return  ("B_N_res_IGRF", "B_E_res_IGRF", "B_C_res_IGRF", "F_res_IGRF")
-    if modelid == "IGRF12":
-        return  ("B_N_res_IGRF12", "B_E_res_IGRF12", "B_C_res_IGRF12", "F_res_IGRF12")
-    if modelid == "SIFM":
-        return  ("B_N_res_SIFM", "B_E_res_SIFM", "B_C_res_SIFM", "F_res_SIFM")
-    if modelid == "WMM":
-        return  ("B_N_res_WMM", "B_E_res_WMM", "B_C_res_WMM", "F_res_WMM")
-    if modelid == "Custom_Model":
-        return  ("B_N_res_Custom_Model", "B_E_res_Custom_Model", "B_C_res_Custom_Model", "F_res_Custom_Model")
-
-
-class retrieve_data_filtered(Component):
-    """ Process to retrieve a subset of registered data (focused on Swarm data) by a set of filters
+class RetrieveDataFiltered(Component):
+    """ Process retrieving subset of the registered Swarm data based
+    on collection, time interval and optional additional custom filters.
+    This precess is designed to be used for the data download.
     """
     implements(ProcessInterface)
 
     identifier = "retrieve_data_filtered"
-    title = "Retrieve registered Swarm data based on collection, time intervall and filters"
-    metadata = {"test-metadata":"http://www.metadata.com/test-metadata"}
-    profiles = ["test_profile"]
+    title = "Retrieve filtered Swarm data."
+    metadata = {}
+    profiles = ["vires"]
 
     inputs = [
-        ("collection_ids", LiteralData('collection_ids', str, optional=False,
-            abstract="String input for collection identifiers (semicolon separator)",
+        ("collection_ids", LiteralData(
+            'collection_ids', str, optional=False,
+            title="Collection identifiers",
+            abstract="Semicolon separated list of collection identifiers.",
         )),
-        ("shc", ComplexData('shc',
-                title="SHC file data",
-                abstract="SHC file data to be processed.",
-                optional=True,
-                formats=(FormatText('text/plain'),
-            )
+        ("shc", ComplexData(
+            'shc', optional=True, title="Custom model coefficients.",
+            abstract=(
+                "Custom forward magnetic field model coefficients encoded "
+                " in the SHC plain-text format."
+            ),
+            formats=(FormatText('text/plain'),)
         )),
-        ("model_ids", LiteralData('model_ids', str, optional=True, default="",
-            abstract="One model id to compare to shc model or two comma separated ids",
+        ("model_ids", LiteralData(
+            'model_ids', str, optional=True, default="",
+            title="Model identifiers",
+            abstract="One one or more forward magnetic model identifiers.",
         )),
-        ("begin_time", LiteralData('begin_time', dt.datetime, optional=False,
-            abstract="Start of the time interval",
+        ("begin_time", LiteralData(
+            'begin_time', datetime, optional=False, title="Begin time",
+            abstract="Start of the selection time interval",
         )),
-        ("end_time", LiteralData('end_time', dt.datetime, optional=False,
-            abstract="End of the time interval",
+        ("end_time", LiteralData(
+            'end_time', datetime, optional=False, title="End time",
+            abstract="End of the selection time interval",
         )),
-        ("filters", LiteralData('filters', str, optional=True,
-            abstract="""Set of filters defined by user, identifier and extent are separated by a colon,
-             both extent values are separated by a comma and filters are separated by semicolon; 
-             Example 'F:10000,20000;Latitude:-50,50'""", default=None,
+        ("filters", LiteralData(
+            'filters', str, optional=True, default="",
+            abstract=(
+                "Set of semi-colon-separated filters. The identifier and "
+                "extent are separated by a colon and the range bounds "
+                "are separated by a comma. "
+                "E.g., 'F:10000,20000;Latitude:-50,50'"
+            ),
         )),
-
+        ("sampling_step", LiteralData(
+            'sampling_step', int, optional=True, title="Data sampling step.",
+            allowed_values=AllowedRange(1, None, dtype=int), default=1,
+            abstract=(
+                "Optional output data sampling step used to reduce the amount "
+                "of the returned data. If set to 1 all matched product samples "
+                "will be returned. If not used the server tries to find the "
+                "optimal data sampling."
+            ),
+        )),
+        ("csv_time_format", LiteralData(
+            'csv_time_format', str, optional=True, title="CSV time  format",
+            abstract="Optional time format used by the CSV output.",
+            allowed_values=("ISO date-time", "MJD2000", "Unix epoch"),
+            default="ISO date-time",
+        )),
     ]
-
 
     outputs = [
-        ("output",
-            ComplexData('output',
-                title="Requested subset of data",
-                abstract="Process returns subset of data defined by time, filters and collections.",
-                formats=(
-                    FormatText('text/csv'),
-                    FormatBinaryRaw("application/cdf")
-                )
+        ("output", ComplexData(
+            'output', title="Output data", formats=(
+                FormatText('text/csv'),
+                FormatBinaryRaw("application/cdf"),
+                FormatBinaryRaw("application/x-cdf"),
             )
-        ),
+        )),
     ]
 
-    def execute(self, collection_ids, shc, model_ids, begin_time, end_time, filters, output, **kwarg):
-
-        collection_ids = collection_ids.split(",")
-
-        if filters:
-            filter_input = filters.split(";")
-            filters={}
-
-            for elem in filter_input:
-                f_id, f_range = elem.split(":")
-                f_range = [float(x) for x in f_range.split(",")]
-                filters[f_id] = f_range
-
-
-        collections = models.ProductCollection.objects.filter(identifier__in=collection_ids)
-        range_type = collections[0].range_type
+    def parse_filters(self, filter_string):
+        """ Parse filters' string. """
+        try:
+            filter_ = {}
+            if filter_string:
+                for item in filter_string.split(";"):
+                    name, bounds = item.split(":")
+                    lower, upper = [float(v) for v in bounds.split(",")]
+                    filter_[name] = (lower, upper)
+        except ValueError as exc:
+            raise InvalidInputValueError("filters", exc)
+        return filter_
 
 
-        model_ids = model_ids.split(",")
-        mm_models = [get_model(x) for x in model_ids]
+    def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
+                filters, sampling_step, csv_time_format, output, **kwarg):
 
-        if len(mm_models)>0 and mm_models[0] is None:
-            mm_models = []
-            model_ids = []
+        # get configurations
+        conf_sys = SystemConfigReader()
 
+        # fix the time-zone of the naive date-time
+        begin_time = naive_to_utc(begin_time)
+        end_time = naive_to_utc(end_time)
+
+        collection_ids = collection_ids.split(",") if collection_ids else []
+
+        collections = db_models.ProductCollection.objects.filter(
+            identifier__in=collection_ids
+        )
+
+        filters = self.parse_filters(filters)
+
+
+        # collect models
+        models = OrderedDict(
+            (name, model) for name, model in (
+                (name, get_model(name)) for name
+                in (model_ids.split(",") if model_ids else [])
+            ) if model is not None
+        )
         if shc:
-            model_ids.append("Custom_Model")
-            mm_models.append(mm.read_model_shc(shc))
+            models["Custom_Model"] = mm.read_model_shc(shc)
 
-        add_range_type = []
-        if len(model_ids)>0 and model_ids[0] != '':
-            for mid in model_ids:
-                    add_range_type.append("F_res_%s"%(mid))
-                    add_range_type.append("B_NEC_res_%s"%(mid))
+        data_fields = [
+            field.identifier for field in collections[0].range_type
+        ]
 
-        results = []
-        total_amount = 0
+        # TODO: assert that the range_type is equal for all collections
 
-        bt = timetools.isoformat(begin_time).translate(None, 'Z:-')
-        et = timetools.isoformat(end_time).translate(None, 'Z:-')
-        resultname = "%s_%s_%s_MDR_MAG_LR_Filtered"%("_".join(collection_ids),bt,et)
+        total_count = 0
+
+        # FIXME: Product type in the file name!
+        result_basename = "%s_%s_%s_MDR_MAG_Filtered" % (
+            "_".join(collection_ids),
+            begin_time.astimezone(TZ_UTC).strftime("%Y%m%dT%H%M%S"),
+            end_time.astimezone(TZ_UTC).strftime("%Y%m%dT%H%M%S"),
+        )
+        temp_basename = uuid4().hex
+
+        def generate_results():
+            """ Result generator. """
+            total_count = 0
+            for collection_id in collection_ids:
+                products_qs = db_models.Product.objects.filter(
+                    collections__identifier=collection_id,
+                    begin_time__lte=(end_time + TIME_TOLERANCE),
+                    end_time__gte=(begin_time - TIME_TOLERANCE),
+                ).order_by('begin_time')
+
+                for product in (item.cast() for item in products_qs):
+                    time_first, time_last = product.time_extent
+                    low, high = datetime_array_slice(
+                        begin_time, end_time, time_first, time_last,
+                        product.sampling_period, TIME_TOLERANCE
+                    )
+
+                    result, count, cdf_type = self.handle(
+                        product, data_fields, low, high, sampling_step,
+                        models, filters
+                    )
+
+                    total_count += count
+                    if total_count > MAX_SAMPLES_COUNT:
+                        raise ExecuteError(
+                            "Requested data is too large and exceeds the "
+                            "maximum limit of %d records! Please refine "
+                            "your filters." % MAX_SAMPLES_COUNT
+                        )
+
+                    yield collection_id, product, result, cdf_type, count
+
 
         if output['mime_type'] == "text/csv":
-            output_filename = "/tmp/%s.csv" % uuid4().hex
-            
-            with open(output_filename, "w") as fout:
+            temp_filename = join(conf_sys.path_temp, temp_basename + ".csv")
+            result_filename = result_basename + ".csv"
+            initialize = True
 
-                writer = csv.writer(fout)
-                first = True
+            with open(temp_filename, "w") as fout:
+                for item in generate_results():
+                    collection_id, product, result, cdf_type, count = item
+                    # convert the time format
+                    result['Timestamp'] = (
+                        CDF_RAW_TIME_CONVERTOR[csv_time_format](
+                            result['Timestamp'], cdf_type['Timestamp']
+                        )
+                    )
 
-                for collection_id in collection_ids:
-                    coverages_qs = models.Product.objects.filter(collections__identifier=collection_id)
-                    coverages_qs = coverages_qs.filter(begin_time__lte=end_time)
-                    coverages_qs = coverages_qs.filter(end_time__gte=begin_time)
+                    if initialize:
+                        fout.write(",".join(result.keys()))
+                        fout.write("\r\n")
+                        initialize = False
 
-                    for coverage in coverages_qs:
-                        cov_begin_time, cov_end_time = coverage.time_extent
-                        cov_cast = coverage.cast()
-                        t_res = get_total_seconds(cov_cast.resolution_time)
-                        low = max(0, int(get_total_seconds(begin_time - cov_begin_time) / t_res))
-                        high = min(cov_cast.size_x, int(math.ceil(get_total_seconds(end_time - cov_begin_time) / t_res)))
-                        result, count = self.handle(cov_cast, collection_id, range_type, low, high, begin_time, end_time, mm_models, model_ids, filters)
-                        total_amount += count
-                        if (total_amount) > (432e3): # equivalent to five complete days of swarm data
-                            raise Exception("Requested data too large: %d, please refine filters"%total_amount)
+                    formatters = [
+                        get_formatter(result[field], cdf_type.get(field))
+                        for field in result
+                    ]
 
-                        if first:
-                            writer.writerow(result.keys())
-                            for row in izip(*result.values()):
-                                writer.writerow(map(translate, row))
-                            first = False
-                        else:
-                            for row in izip(*result.values()):
-                                writer.writerow(map(translate, row))
-
-            return CDFile(output_filename, filename=(resultname+".csv"), **output)
+                    for row in izip(*result.itervalues()):
+                        fout.write(
+                            ",".join(f(v) for f, v in zip(formatters, row))
+                        )
+                        fout.write("\r\n")
 
         elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
-            #encoder = CDFEncoder(params.rangesubset)
-            output_filename = "/tmp/%s.cdf" % uuid4().hex
+            temp_filename = join(conf_sys.path_temp, temp_basename + ".cdf")
+            result_filename = result_basename + ".cdf"
+            initialize = True
 
-            with pycdf.CDF(output_filename, '') as output_ds:
-                #output_ds = pycdf.CDF(output_filename, '')
+            if exists(temp_filename):
+                remove(temp_filename)
 
-                for collection_id in collection_ids:
-                    coverages_qs = models.Product.objects.filter(collections__identifier=collection_id)
-                    coverages_qs = coverages_qs.filter(begin_time__lte=end_time)
-                    coverages_qs = coverages_qs.filter(end_time__gte=begin_time)
-
-                    for coverage in coverages_qs:
-                        cov_begin_time, cov_end_time = coverage.time_extent
-                        cov_cast = coverage.cast()
-                        t_res = get_total_seconds(cov_cast.resolution_time)
-                        low = max(0, int(get_total_seconds(begin_time - cov_begin_time) / t_res))
-                        high = min(cov_cast.size_x, int(math.ceil(get_total_seconds(end_time - cov_begin_time) / t_res)))
-                        result, count = self.handle(cov_cast, collection_id, range_type, low, high, begin_time, end_time, mm_models, model_ids, filters)
-                        total_amount += count
-                        if (total_amount) > (432e3): # equivalent to five complete days of swarm data
-                            raise Exception("Requested data too large: %d, please refine filters"%total_amount)
-
-                        for name, data in result.items():
-                            output_ds[name] = data
-
-            return CDFile(output_filename, filename=(resultname+".cdf"), **output)
+            with cdf_open(temp_filename, 'w') as cdf:
+                for item in generate_results():
+                    collection_id, product, result, cdf_type, count = item
+                    if initialize:
+                        initialize = False
+                        for field, values in result.iteritems():
+                            cdf.new(field, values, cdf_type.get(field))
+                    else:
+                        for field, values in result.iteritems():
+                            cdf[field].extend(values)
 
         else:
-            ExecuteError("Unexpected output format requested! %r"%output['mime_type'])
+            ExecuteError(
+                "Unexpected output format %r requested!" % output['mime_type']
+            )
 
-        return _encode_data(merged_result, output, resultname)
+        return CDFile(temp_filename, filename=result_filename, **output)
 
+    def handle(self, product, fields, low, high, step, models, filters):
+        """ Single product retrieval. """
 
-    def handle(self, coverage, collection_id, range_type, low, high, begin_time, end_time, mm_models, model_ids, filters):
-        # Open file
-        filename = connect(coverage.data_items.all()[0])
+        # read initial subset of the CDF data
+        cdf_type = {}
+        data = OrderedDict()
+        with cdf_open(connect(product.data_items.all()[0])) as cdf:
+            time_mean = datetime_mean(cdf['Timestamp'][0], cdf['Timestamp'][-1])
+            for field in fields:
+                cdf_var = cdf.raw_var(field)
+                cdf_type[field] = cdf_var.type()
+                data[field] = cdf_var[low:high:step]
 
-        with pycdf.CDF(filename) as ds:
-            #ds = pycdf.CDF(filename)
-            output_data = OrderedDict()
+        # initialize full index array
+        index = np.arange(len(data['Timestamp']))
 
-            # Read data
-            for band in range_type:
-                data = ds[band.identifier]
-                output_data[band.identifier] = data[low:high]
+        # apply data filters
+        for field, bounds in filters.items():
+            if field in fields: # filter scalar data field
+                filtered_data = data[field][index]
 
+            elif field in B_NEC_COMPONENTS: # filter vector component
+                cidx = B_NEC_COMPONENTS[field]
+                filtered_data = data["B_NEC"][index, cidx]
 
-            if filters:
-
-                band_names = [band.identifier for band in range_type]
-
-                # First filter by all possible parameters of the data
-                mask = True
-
-                for filter_name, filter_value in filters.items():
-                    if filter_name in band_names:
-                        data = output_data[filter_name]
-                        mask = mask & (data >= filter_value[0]) & (data <= filter_value[1])
-                     # Check for single parameter filter of 3D vectors
-                    if filter_name in ("B_N", "B_E", "B_C"):
-                        index = ("B_N", "B_E", "B_C").index(filter_name)
-                        data = output_data["B_NEC"][:,index]
-                        mask = mask & (data >= filter_value[0]) & (data <= filter_value[1])
-
-
-                # Only apply mask if something was added to the mask (i.e. not boolean)
-                if not isinstance(mask, bool):
-                    for name, data in output_data.items():
-                        output_data[name] = output_data[name][mask]
-
-                
-                # Filter for possible kp and Dst indices
-                filter_names = [filter_name for filter_name in filters.keys() if filter_name in ("dst", "kp")]
-                if filter_names:
-                    aux_data = aux.query_db(
-                        output_data["Timestamp"][0], output_data["Timestamp"][-1],
-                        len(output_data["Timestamp"])
+            elif field in AUX_INDEX: # filter auxiliary data
+                query, filename = AUX_INDEX[field]
+                filtered_data = query(
+                    filename, cdf_rawtime_to_mjd2000(
+                        data['Timestamp'][index], cdf_type['Timestamp']
                     )
-                    mask = True
-                    for fn in filter_names:
-                        data = aux_data[fn]
-                        mask = mask & (data >= filters[fn][0]) & (data <= filters[fn][1])
+                )
 
-                    # Only apply mask if something was added to the mask (i.e. not boolean)
-                    if not isinstance(mask, bool):
-                        for name, data in output_data.items():
-                            output_data[name] = output_data[name][mask]
+            else: # skip unknown filters
+                continue
 
+            # update index array
+            index = index[between(filtered_data, bounds[0], bounds[1])]
 
-                # Filter for possible residuals
-                for model_id, model in zip(model_ids, mm_models):
-                    filter_names = [
-                        filter_name
-                        for filter_name in filters.keys()
-                        if filter_name in getModelResidualIdentifiers(model_id)
-                    ]
-                    if filter_names:
-                        # One of the filters is based on model residuals so we calculate model for values
-                        rads = output_data["Radius"]*1e-3
-                        coords_sph = np.vstack((output_data["Latitude"], output_data["Longitude"], rads)).T
-                        model_data = model.eval(coords_sph, toYearFractionInterval(begin_time, end_time), mm.GEOCENTRIC_SPHERICAL, check_validity=False)
-                        model_data[:,2] *= -1
+        # apply Quasi-dipole Latitude and Magnetic Local Time filters
+        appex_fields = set(filters) & set(("qdlat", "mlt"))
 
-                        data_res = output_data["F"] - mm.vnorm(model_data)
-                        data_res_vec = output_data["B_NEC"] - model_data
+        if appex_fields:
+            qdlat, qdlon, mlt = mm.eval_apex(
+                data["Latitude"][index],
+                data["Longitude"][index],
+                data["Radius"][index] * 1e-3, # radius in km
+                cdf_rawtime_to_decimal_year_fast(
+                    data["Timestamp"], cdf_type['Timestamp'],
+                    time_mean.year
+                )
+            )
 
-                        mask = True
+            mask = True
+            if "qdlat" in appex_fields:
+                bounds = filters["qdlat"]
+                mask &= between(qdlat, bounds[0], bounds[1])
 
-                        for fn in filter_names:
-                            if "B_N_res_" in fn:
-                                data = data_res_vec[:,0]
-                                mask = mask & (data >= filters[fn][0]) & (data <= filters[fn][1])
-                            if "B_E_res_" in fn:
-                                data = data_res_vec[:,1]
-                                mask = mask & (data >= filters[fn][0]) & (data <= filters[fn][1])
-                            if "B_C_res_" in fn:
-                                data = data_res_vec[:,2]
-                                mask = mask & (data >= filters[fn][0]) & (data <= filters[fn][1])
-                            if "F_res_" in fn:
-                                mask = mask & (data_res >= filters[fn][0]) & (data_res <= filters[fn][1])
-                        
-                        if not isinstance(mask, bool):
-                            for name, data in output_data.items():
-                                output_data[name] = output_data[name][mask]
+            if "mlt" in appex_fields:
+                bounds = filters["mlt"]
+                mask &= between(mlt, bounds[0], bounds[1])
 
+            # update index array
+            index = index[mask]
 
-                # Filter for possible residuals to custom model
+        # apply model filters
+        for model_id, model in models.iteritems():
+            model_res_fields = set(filters) & set(
+                "%s_res_%s" % (var_id, model_id)
+                for var_id in ("B_N", "B_E", "B_C", "F")
+            )
 
+            # skip model evaluation if no residual filter is requested
+            if not model_res_fields:
+                continue
 
-                #Filter for possible qdlat or mlt
-                filter_names = [filter_name for filter_name in filters.keys() if filter_name in ("qdlat", "mlt")]
-                if filter_names:
-                    rads = output_data["Radius"]*1e-3
-                    times = map(toYearFraction, output_data["Timestamp"])
-                    qdlat, qdlon, mlt = mm.eval_apex(output_data["Latitude"], output_data["Longitude"], rads, times)
-                    mask = True
+            coords_sph = np.vstack((
+                data["Latitude"][index],
+                data["Longitude"][index],
+                data["Radius"][index] * 1e-3, # radius in km
+            )).T
 
-                    for fn in filter_names:
-                        if fn == "qdlat":
-                            mask = mask & (qdlat >= filters[fn][0]) & (qdlat <= filters[fn][1])
-                        if fn == "mlt":
-                            mask = mask & (mlt >= filters[fn][0]) & (mlt <= filters[fn][1])
-                    
-                    if not isinstance(mask, bool):
-                        for name, data in output_data.items():
-                            output_data[name] = output_data[name][mask]
+            model_data = model.eval(
+                coords_sph,
+                datetime_to_decimal_year(time_mean),
+                mm.GEOCENTRIC_SPHERICAL,
+                check_validity=False
+            )
+            model_data[:, 2] *= -1
 
-            count = len(output_data["Latitude"])
+            mask = True
+            for field in model_res_fields:
+                bounds = filters[field]
 
-            return output_data, count
+                if field.startswith("F"):
+                    mask &= between(
+                        data["F"][index] - mm.vnorm(model_data),
+                        bounds[0], bounds[1]
+                    )
 
-        
-def translate(arr):
+                elif field[:3] in B_NEC_COMPONENTS:
+                    cidx = B_NEC_COMPONENTS[field[:3]]
+                    mask &= between(
+                        data["B_NEC"][index, cidx] - model_data[:, cidx],
+                        bounds[0], bounds[1]
+                    )
 
-    try:
-        if arr.ndim == 1:
-            return "{%s}" % ";".join(map(str, arr))
-    except:
-        pass
+            # update index array
+            index = index[mask]
 
-    return arr
+        # filter the actual data
+        data = OrderedDict(
+            (field, values[index]) for field, values in data.iteritems()
+        )
 
-
-def _encode_data(output_data, output, resultname):
-
-    if output['mime_type'] == "text/csv":
-        output_filename = "/tmp/%s.csv" % uuid4().hex
-        
-        with open(output_filename, "w") as fout:
-            writer = csv.writer(fout)
-            writer.writerow(output_data.keys())
-            for row in izip(*output_data.values()):
-                writer.writerow(map(translate, row))
-
-        return CDFile(output_filename, filename=(resultname+".csv"), **output)
-
-    elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
-        #encoder = CDFEncoder(params.rangesubset)
-        output_filename = "/tmp/%s.cdf" % uuid4().hex
-        output_ds = pycdf.CDF(output_filename, '')
-
-        for name, data in output_data.items():
-            output_ds[name] = data
-
-        output_ds.save()
-        output_ds.close()
-
-        return CDFile(output_filename, filename=(resultname+".cdf"), **output)
-
-    else:
-        ExecuteError("Unexpected output format requested! %r"%output['mime_type'])
-
-    
+        return data, len(data['Timestamp']), cdf_type
