@@ -1,0 +1,74 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% block head_title %}{% trans "Signup" %}{% endblock %}
+{% block content %}
+  <h2>{% trans "Sign up" %}</h2>
+  <p>{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">Login</a>.{% endblocktrans %}</p>
+  <p class="help-inline"><small>(*)Required fields; Please help us getting to know you by filling out non required fields.</small></p>
+  <form class="form-horizontal inputwide" method="POST" action="{% url 'account_signup' %}">
+    {% csrf_token %}
+    <fieldset>
+      {% for error in form.non_field_errors %}
+        <span class="help-inline error">{{ error|escape }}</span>
+    {% endfor %}
+      {% for field in form.visible_fields %}
+        {% if field.errors %}
+          <div class="control-group error">
+            <label class="control-label{% if field.field.required %} required{% endif %}" for="{{ field.id_for_label }}">
+              {{ field.label }}{% if field.field.required %} *{% endif %}
+            </label>
+            {{ field }}
+            <span class="help-inline error">
+              {% for error in  field.errors %}{{ error }}{% endfor %}
+            </span>
+          </div>
+        {% else %}
+          <div class="control-group">
+            <label class="control-label{% if field.field.required %} required{% endif %}" for="{{ field.id_for_label }}">
+              {{ field.label }}{% if field.field.required %} *{% endif %}
+            </label>
+            {{ field }}
+            {% if field.help_text %}
+              <p class="help-inline"><small>{{ field.help_text }}</small></p>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% if redirect_field_value %}
+          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+      {% endif %}
+      <div class="checkbox">
+          <label>
+              <input id="tosagree" style="width: auto;" type="checkbox" value="">
+              I agree to the <a href="/accounts/tos" target="_blank_">Terms of Service</a>
+          </label>
+      </div>
+      <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
+          <button id="formsubmit" type="submit" class="btn btn-primary" disabled="true">{% trans "Sign up" %} &raquo;</button>
+      </div>
+    </fieldset>
+  </form>
+
+  <script type="text/javascript">
+    window.onload = function () {
+      $('#id_password2').parent().prependTo("fieldset");
+      $('#id_password1').parent().prependTo("fieldset");
+      $('#id_email').parent().prependTo("fieldset");
+      $('#id_username').parent().prependTo("fieldset");
+      $('#id_username').focus();
+
+      $('#tosagree').change(function () {
+          if ($('#tosagree')[0].checked) {
+              $('#formsubmit').prop('disabled', false);
+          } else {
+              $('#formsubmit').prop('disabled', true);
+          }
+      });
+      $('#tosagree').keypress(function(e){
+          if((e.keyCode ? e.keyCode : e.which) == 13){
+              $(this).trigger('click');
+          }
+      });
+    }
+  </script>
+{% endblock %}

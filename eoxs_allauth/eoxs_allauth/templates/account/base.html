@@ -1,0 +1,245 @@
+{% load i18n %}
+{% load url from future %}
+{% load staticfiles %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block title %}
+    <title>VirES for Swarm</title>
+    {% endblock %}
+    <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
+    <script type="text/javascript" src="{% static 'workspace/bower_components/jquery/jquery.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+    <style type="text/css">
+      body {
+        background-color: #fff!important;
+        margin: 0;
+        padding: 0;
+      }
+      /* Special form styling*/
+      .inputwide input{
+          width: 100%;
+      }
+      .inputwide input[type=checkbox]{
+          width: auto;
+      }
+      #formcontainer {
+        padding: 25px;
+      }
+      .help-inline.error{
+        color: #CC4C4C;
+        display: inline;
+        font-size: 0.9em;
+        padding: 0;
+        list-style-type: none;
+      }
+      .help-inline{
+        color: #333;
+        font-size: 0.9em;
+        padding: 0;
+      }
+      .helptext{
+        color: #777;
+        font-size: 0.8em;
+        padding: 0;
+      }
+
+      .control-label.required {
+        font-weight: 700;
+      }
+
+      .control-label{
+        font-weight: 500;
+      }
+    </style>
+
+    <style type="text/css">
+    .socialaccount_providers li{
+      display: inline;
+      margin-left: 1em;
+    }
+
+    .socialaccount_providers{
+      padding-left: 0px;
+      text-align: center;
+    }
+
+    .socialaccount_provider.facebook  { 
+      font-size: 0;
+      text-decoration: none;
+    }
+    .socialaccount_provider.facebook::before { 
+      font-family: FontAwesome;
+      content: "\f082";
+      font-size: 40px;
+    }
+
+
+    .socialaccount_provider.twitter  { 
+      font-size: 0;
+      text-decoration: none;
+    }
+    .socialaccount_provider.twitter::before { 
+      font-family: FontAwesome;
+      content: "\f081";
+      font-size: 40px;
+    }
+
+
+    .socialaccount_provider.github  { 
+      font-size: 0;
+      text-decoration: none;
+    }
+    .socialaccount_provider.github::before { 
+      font-family: FontAwesome;
+      content: "\f092";
+      font-size: 40px;
+    }
+
+
+    .socialaccount_provider.dropbox  { 
+      font-size: 0;
+      text-decoration: none;
+    }
+    .socialaccount_provider.dropbox::before { 
+      font-family: FontAwesome;
+      content: "\f16b";
+      font-size: 40px;
+    }
+
+    .socialaccount_provider.linkedin_oauth2  { 
+      font-size: 0;
+      text-decoration: none;
+    }
+    .socialaccount_provider.linkedin_oauth2::before { 
+      font-family: FontAwesome;
+      content: "\f08c";
+      font-size: 40px;
+    }
+
+    .socialaccount_provider.google  { 
+      font-size: 0;
+      text-decoration: none;
+    }
+    .socialaccount_provider.google::before { 
+      font-family: FontAwesome;
+      content: "\f0d4";
+      font-size: 40px;
+    }
+
+    /*Styling for messages div to be on top and
+     floating over all elements */
+    #messagescontainer{
+      position: absolute;
+      z-index: 2;
+      left: 0;
+      right: 0;
+      top: 66px;
+    }
+
+  </style>
+
+</head>
+<body>
+  {% block messages %}
+    {% if messages %}
+      <div class="container" id="messagescontainer">
+        <div class="row">
+          <div class="col-xs-12">
+            <div>
+              {% for message in messages %}
+              <div class="alert alert-{% if message.tags %}{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}{% else %}success{% endif %} fade in"><!-- alert-warning alert-danger -->
+                <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">&times;</a>
+                {{ message|capfirst }}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      <script type="text/javascript">
+        setTimeout(function(){
+          if ($('.alert').length > 0) {
+            $('.alert').remove();
+          }
+        }, 5000)
+      </script>
+    {% endif %}
+  {% endblock messages %}
+  <div class="navbar navbar-inverse navbar-fixed-top not-selectable" style="position:relative; margin-bottom: 0px">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+          <a class="navbar-brand" href="//vires.services" style="font-size:30px">VirES for Swarm</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav" id="tab-headers-main">
+          <li class="divider-vertical"></li>
+          <li>
+            <a class="tab-header" href="/">
+              <i class="fa fa-fw fa-desktop"></i> Application
+            </a>
+          </li>
+          {% block navbaritems %}
+            {% if user.is_authenticated %}
+              {% load account %}
+              <li>
+                <a class="tab-header" data-toggle="modal" data-target="#accountSettingsModal">
+                  <i class="fa fa-fw fa-user"></i> {% user_display user %}
+                </a>
+              </li>
+              <li>
+                <a class="tab-header" href="{% url 'account_logout' %}">
+                  <i class="fa fa-fw fa-sign-out"></i> Logout
+                </a>
+              </li>
+            {% else %}
+              <li>
+                <a class="tab-header" href="{% url 'account_login' %}">
+                  <i class="fa fa-fw fa-sign-in"></i> Login
+                </a>
+              </li>
+            {% endif %}
+          {% endblock navbaritems %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div style="position: relative; height: 95%; height: calc(100% - 50px);; overflow-y: scroll; overflow-x: hidden; padding-top: 40px;">
+    <div class="row">
+      <div class="col-md-4 col-md-offset-4" id="formcontainer">
+        {% block content %}
+        {% endblock content %}
+      </div>
+    </div>
+  </div>
+  {% if user.is_authenticated %}
+    <!-- Modal forms -->
+    <div class="modal fade" id="accountSettingsModal" tabindex="-1" role="dialog" aria-labelledby="accountSettingsLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="accountSettingsLabel">Settings ({% user_display user %})</h4>
+          </div>
+          <div class="modal-body">
+            <a href="{% url 'account_change_password' %}">{% trans "Change password" %}</a><br/>
+            <a href="{% url 'account_email' %}">{% trans "Change e-mail" %}</a><br/>
+            <a href="{% url 'socialaccount_connections' %}">{% trans "Connect social accounts" %}</a><br/>
+            <a href="{% url 'account_change_profile' %}">{% trans "Change profile information" %}</a>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</body>
+</html>

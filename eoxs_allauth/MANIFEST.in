@@ -1,0 +1,3 @@
+eoxs_allauth/MANIFEST.in
+include README.md
+recursive-include eoxs_allauth/templates *
