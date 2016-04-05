@@ -33,8 +33,7 @@ from eoxs_allauth.models import UserProfile
 
 
 def create_profiles(sender, **kwargs):
-    import pdb; pdb.set_trace()
-    if sender == "eoxs_allauth":
+    if sender.name == "eoxs_allauth":
         for u in User.objects.all():
             UserProfile.objects.get_or_create(user=u)
     pass
