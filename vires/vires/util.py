@@ -44,12 +44,6 @@ except ImportError:
         arr.fill(value)
         return arr
 
-# Extra models' data locations
-DATA_DIR = join(dirname(__file__), 'model_data')
-#NOTE: Uncomment when these data-files become available!
-#DATA_IGRF12 = join(DATA_DIR, 'IGRF12.shc')
-#DATA_SIFM = join(DATA_DIR, 'SIFM.shc')
-
 
 def between(data, lower_bound, upper_bound):
     """ Get mask of values within the given closed interval. """
@@ -108,18 +102,20 @@ def get_model(model_id):
     """ Get model for given identifier. """
     if model_id == "CHAOS-5-Combined":
         return (
-            mm.shc.read_model_shc(mm.shc.DATA_CHAOS5_CORE) +
-            mm.shc.read_model_shc(mm.shc.DATA_CHAOS5_STATIC)
+            mm.read_model_shc(mm.DATA_CHAOS5_CORE_V4) +
+            mm.read_model_shc(mm.DATA_CHAOS5_STATIC)
         )
-    if model_id == "EMM":
-        return mm.emm.read_model_emm2010()
-    if model_id == "IGRF":
-        return mm.igrf.read_model_igrf11()
-#    if model_id == "IGRF12":
-#        return mm.shc.read_model_shc(DATA_IGRF12)
-#    if model_id == "SIFM":
-#        return mm.shc.read_model_shc(DATA_SIFM)
-    if model_id == "WMM":
+    if model_id in ("IGRF12", "IGRF"):
+        return mm.read_model_shc(mm.DATA_IGRF12)
+    if model_id == "SIFM":
+        return mm.read_model_shc(mm.DATA_SIFM)
+    if model_id in ("WMM", "WMM2015"):
+        return mm.read_model_wmm2015()
+    if model_id in ("EMM", "EMM2010"):
+        return mm.read_model_emm2010()
+    if model_id == "IGRF11":
+        return mm.read_model_igrf11()
+    if model_id == "WMM2010":
         return mm.read_model_wmm2010()
 
 

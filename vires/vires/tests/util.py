@@ -42,7 +42,8 @@ from vires.util import (
 class TestUtil(ArrayMixIn, unittest.TestCase):
     # NOTE: The IGRF12 and SIFM models are broken!
     MODELS = [
-        "CHAOS-5-Combined", "WMM", "EMM", "IGRF", #"IGRF12", "SIFM",
+        "CHAOS-5-Combined", "WMM", "WMM2010", "WMM2015", "EMM", "EMM2010",
+        "IGRF", "IGRF11", "IGRF12", "SIFM",
     ]
 
     COLOR_MAPS = ["blackwhite", "coolwarm", "rainbow", "custom2", "custom1"]
