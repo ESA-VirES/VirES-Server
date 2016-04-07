@@ -2,7 +2,7 @@
 #
 # Swarm Initial Field magnetic model
 #
-# Project: EOxServer <http://eoxserver.org>
+# Project: VirES
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
 #
 #-------------------------------------------------------------------------------

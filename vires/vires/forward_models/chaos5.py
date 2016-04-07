@@ -2,7 +2,7 @@
 #
 # CHAOS 5 - CORE, STATIC and Combined magnetic models
 #
-# Project: EOxServer <http://eoxserver.org>
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 #
 #  Base forward expansion model class.
 #
-# Project: EOxServer <http://eoxserver.org>
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------

@@ -1,7 +1,8 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
+# Forward Model Provider interface
+#
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -25,7 +26,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-
 
 class ForwardModelProviderInterface(object):
     """ Interface for forward model calculators.
