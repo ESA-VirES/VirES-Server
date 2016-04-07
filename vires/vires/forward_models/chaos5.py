@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# CHAOS 5 - CORE magnetic model
+# CHAOS 5 - CORE + STATIC combined magnetic model
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
@@ -27,8 +27,11 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod.shc import read_model_shc, DATA_CHAOS5_CORE
+from eoxmagmod.shc import (
+    read_model_shc, DATA_CHAOS5_CORE_V4, DATA_CHAOS5_STATIC,
+)
 from vires.forward_models.base import BaseForwardModel
+
 
 class CHAOS5CoreForwardModel(BaseForwardModel):
     """ Forward model calculator for the CHAOS-5 core field.
@@ -37,4 +40,27 @@ class CHAOS5CoreForwardModel(BaseForwardModel):
 
     @property
     def model(self):
-        return read_model_shc(DATA_CHAOS5_CORE)
+        return read_model_shc(DATA_CHAOS5_CORE_V4)
+
+
+class CHAOS5StaticForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-5 static field.
+    """
+    identifier = "CHAOS-5-Static"
+
+    @property
+    def model(self):
+        return read_model_shc(DATA_CHAOS5_STATIC)
+
+
+class CHAOS5CombinedForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-5 Combined field.
+    """
+    identifier = "CHAOS-5-Combined"
+
+    @property
+    def model(self):
+        return (
+            read_model_shc(DATA_CHAOS5_CORE_V4) +
+            read_model_shc(DATA_CHAOS5_STATIC)
+        )
