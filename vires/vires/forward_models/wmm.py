@@ -26,8 +26,9 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod.wmm import read_model_wmm, DATA_WMM_2010
+from eoxmagmod.wmm import read_model_wmm, DATA_WMM_2010, DATA_WMM_2015
 from vires.forward_models.base import BaseForwardModel
+
 
 class WMM2010ForwardModel(BaseForwardModel):
     """ Forward model calculator for the WMM2010.
@@ -39,7 +40,17 @@ class WMM2010ForwardModel(BaseForwardModel):
         return read_model_wmm(DATA_WMM_2010)
 
 
-class WMMForwardModel(WMM2010ForwardModel):
+class WMM2015ForwardModel(BaseForwardModel):
+    """ Forward model calculator for the WMM2015.
+    """
+    identifier = "WMM2015"
+
+    @property
+    def model(self):
+        return read_model_wmm(DATA_WMM_2015)
+
+
+class WMMForwardModel(WMM2015ForwardModel):
     """ Forward model calculator for the WMM2010.
     """
     identifier = "WMM"
