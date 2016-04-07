@@ -1,12 +1,3 @@
-*.py[cod]
-*.so
-
-# Packaging
-/dist
-/build
-*.egg
-*.egg-info
-
-# Developers
-.project
-.pydevproject
+*.pyc
+*.egg-info/
+eoxs_allauth/eoxs_allauth/migrations/
