@@ -28,10 +28,8 @@
 #-------------------------------------------------------------------------------
 
 import math
-from datetime import datetime, timedelta
 from numpy import cos, meshgrid, empty, linspace, tile
 
-from django.utils.timezone import make_aware, utc
 from eoxserver.core import Component, implements
 from eoxmagmod import (
     vnorm, convert, vincdecnorm,
@@ -39,21 +37,9 @@ from eoxmagmod import (
 )
 
 from vires.interfaces import ForwardModelProviderInterface
-from vires.util import get_total_seconds
+from vires.time_util import decimal_year_to_datetime, naive_to_utc
 
 DG2RAD = math.pi / 180.0
-
-def decimal_to_datetime(raw_value):
-    """ Converts a decimal year representation to a Python datetime.
-    """
-    year = int(raw_value)
-    rem = raw_value - year
-
-    base = make_aware(datetime(year, 1, 1), utc)
-    return base + timedelta(
-        seconds=get_total_seconds(base.replace(year=base.year + 1) - base) * rem
-    )
-
 
 def diff_row(array):
     """ Diferentiate 2D arrayay columns along the row."""
@@ -181,7 +167,11 @@ class BaseForwardModel(Component):
 
     @property
     def time_validity(self):
-        return [decimal_to_datetime(v) for v in self.model.validity]
+        """ Get the validity interval of the model. """
+        return [
+            naive_to_utc(decimal_year_to_datetime(dy))
+            for dy in self.model.validity
+        ]
 
     @property
     def model(self):
