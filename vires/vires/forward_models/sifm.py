@@ -27,8 +27,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod.shc import read_model_shc
-from vires.util import DATA_SIFM
+from eoxmagmod.shc import read_model_shc, DATA_SIFM
 from vires.forward_models.base import BaseForwardModel
 
 class SwarmInitialFieldModel(BaseForwardModel):
