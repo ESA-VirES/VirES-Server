@@ -1,5 +1,6 @@
 #-------------------------------------------------------------------------------
-# $Id$
+#
+# IGRF magnetic models
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>

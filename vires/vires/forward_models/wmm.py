@@ -1,5 +1,6 @@
 #-------------------------------------------------------------------------------
-# $Id$
+#
+# WMM magnetic models
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
@@ -28,7 +29,6 @@
 
 from eoxmagmod.wmm import read_model_wmm, DATA_WMM_2010, DATA_WMM_2015
 from vires.forward_models.base import BaseForwardModel
-
 
 class WMM2010ForwardModel(BaseForwardModel):
     """ Forward model calculator for the WMM2010.

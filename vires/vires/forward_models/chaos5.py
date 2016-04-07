@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# CHAOS 5 - CORE + STATIC combined magnetic model
+# CHAOS 5 - CORE, STATIC and Combined magnetic models
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
@@ -31,7 +31,6 @@ from eoxmagmod.shc import (
     read_model_shc, DATA_CHAOS5_CORE_V4, DATA_CHAOS5_STATIC,
 )
 from vires.forward_models.base import BaseForwardModel
-
 
 class CHAOS5CoreForwardModel(BaseForwardModel):
     """ Forward model calculator for the CHAOS-5 core field.
