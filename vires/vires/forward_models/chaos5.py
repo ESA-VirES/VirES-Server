@@ -27,7 +27,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod.shc import (
+from eoxmagmod import (
     read_model_shc, DATA_CHAOS5_CORE_V4, DATA_CHAOS5_STATIC,
 )
 from vires.forward_models.base import BaseForwardModel
