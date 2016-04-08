@@ -1,0 +1,340 @@
+[{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time of observation",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt16",
+            "definition": "",
+            "description": "On-board time-synchronization status",
+            "identifier": "SyncStatus",
+            "name": "SyncStatus",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Radius",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic field intensity",
+            "identifier": "F",
+            "name": "F",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic stray field correction intensity of AOCS magneto-torquer coils",
+            "identifier": "dF_AOCS",
+            "name": "dF_AOCS",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic stray field correction intensity of all other sources",
+            "identifier": "dF_other",
+            "name": "dF_other",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error estimate on magnetic field intensity",
+            "identifier": "F_error",
+            "name": "F_error",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic field vector, VFM frame",
+            "identifier": "B_VFM",
+            "name": "B_VFM",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic field vector, NEC frame",
+            "identifier": "B_NEC",
+            "name": "B_NEC",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic stray field correction vector of AOCS magneto-torquer coils, VFM frame",
+            "identifier": "dB_AOCS",
+            "name": "dB_AOCS",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Magnetic stray field correction vector of all other sources, VFM frame",
+            "identifier": "dB_other",
+            "name": "dB_other",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Error estimates on magnetic field, VFM frame",
+            "identifier": "B_error",
+            "name": "B_error",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Quaternion, transformation: NEC ... CRF",
+            "identifier": "q_NEC_CRF",
+            "name": "q_NEC_CRF",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error estimates on attitude information",
+            "identifier": "Att_error",
+            "name": "Att_error",
+            "nil_values": [],
+            "uom": "mdeg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the magnetic field intensity measurement (F)",
+            "identifier": "Flags_F",
+            "name": "Flags_F",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the magnetic field measurement",
+            "identifier": "Flags_B",
+            "name": "Flags_B",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the attitude information",
+            "identifier": "Flags_q",
+            "name": "Flags_q",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the S/C platform information",
+            "identifier": "Flags_Platform",
+            "name": "Flags_Platform",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "ASM frequency calibration data deviation",
+            "identifier": "ASM_Freq_Dev",
+            "name": "ASM_Freq_Dev",
+            "nil_values": [],
+            "uom": "-"
+        }
+    ],
+    "name": "SWARM_MAG"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "F",
+            "description": "Total magnetic field strength",
+            "identifier": "F",
+            "name": "F",
+            "nil_values": [],
+            "uom": "nT",
+            "value_max": "70000",
+            "value_min": "20000"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "H",
+            "description": "Strenght of the horizontal component of the magnetic field",
+            "identifier": "H",
+            "name": "H",
+            "nil_values": [],
+            "uom": "nT",
+            "value_max": "70000",
+            "value_min": "20000"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "X",
+            "description": "Northing component of the magnetic field",
+            "identifier": "X",
+            "name": "X",
+            "nil_values": [],
+            "uom": "nT",
+            "value_max": "-20000",
+            "value_min": "40000"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "Y",
+            "description": "Easting component of the magnetic field",
+            "identifier": "Y",
+            "name": "Y",
+            "nil_values": [],
+            "uom": "nT",
+            "value_max": "-20000",
+            "value_min": "20000"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "Z",
+            "description": "Vertical (down-pointing) component of the magnetic field",
+            "identifier": "Z",
+            "name": "Z",
+            "nil_values": [],
+            "uom": "nT",
+            "value_max": "-60000",
+            "value_min": "60000"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "I",
+            "description": "Magnetic field inclination",
+            "identifier": "I",
+            "name": "I",
+            "nil_values": [],
+            "uom": "degree",
+            "value_max": "180",
+            "value_min": "-180"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "D",
+            "description": "Magnetic field declination",
+            "identifier": "D",
+            "name": "D",
+            "nil_values": [],
+            "uom": "degree",
+            "value_max": "180",
+            "value_min": "-180"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "X_EW",
+            "description": "East-west gradient of the northing component of the magnetic field",
+            "identifier": "X_EW",
+            "name": "X_EW",
+            "nil_values": [],
+            "uom": "nT/km",
+            "value_max": "10",
+            "value_min": "-10"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "Y_EW",
+            "description": "East-west gradient of the easting component of the magnetic field",
+            "identifier": "Y_EW",
+            "name": "Y_EW",
+            "nil_values": [],
+            "uom": "nT/km",
+            "value_max": "10",
+            "value_min": "-10"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "Z_EW",
+            "description": "East-west gradient of the vertical component of the magnetic field",
+            "identifier": "Z_EW",
+            "name": "Z_EW",
+            "nil_values": [],
+            "uom": "nT/km",
+            "value_max": "10",
+            "value_min": "-10"
+        }
+    ],
+    "name": "MagneticModel"
+}]
