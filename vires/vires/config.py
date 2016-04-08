@@ -1,8 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
+#  Configuration readers
+#
+# Project: VirES
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
@@ -25,8 +26,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, too-few-public-methods
 
-__version__="0.1.0dev0"
+from eoxserver.core.config import get_eoxserver_config
+from eoxserver.core.decoders.config import Reader, Option
 
 
-default_app_config = 'eoxs_allauth.apps.EOxServerAllauthConfig'
+class AutoReader(Reader):
+    def __init__(self):
+        super(AutoReader, self).__init__(get_eoxserver_config())
+
+
+class VirESConfigReader(AutoReader):
+    section = "extensions.vires"
+
+
+class SystemConfigReader(AutoReader):
+    section = "core.system"
+    path_temp = Option(type=str, default="/tmp")
+    def __init__(self):
+        Reader.__init__(self, get_eoxserver_config())

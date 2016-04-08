@@ -1,8 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
+# Unit tests.
+#
+# Project: VirES
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
@@ -25,8 +26,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
-__version__="0.1.0dev0"
+from numpy import abs as aabs
 
+class ArrayMixIn(object):
+    """ Mix-in class adding handy array assertions. """
+    # pylint: disable=invalid-name
 
-default_app_config = 'eoxs_allauth.apps.EOxServerAllauthConfig'
+    def assertAllTrue(self, arr):
+        self.assertTrue(arr.all())
+
+    def assertAllEqual(self, arr0, arr1):
+        self.assertAllTrue(arr0 == arr1)
+
+    def assertAllAlmostEqual(self, arr0, arr1, delta=1e-7):
+        self.assertAllTrue(aabs(arr0 - arr1) <= delta)

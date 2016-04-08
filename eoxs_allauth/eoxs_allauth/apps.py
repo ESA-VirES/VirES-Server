@@ -2,7 +2,6 @@
 #
 # Project: EOxServer - django-allauth integration.
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
@@ -26,7 +25,23 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-__version__="0.1.0dev0"
+from django.apps import AppConfig
+from django.db.models.signals import post_migrate
+from django.contrib.auth.models import User
+
+from eoxs_allauth.models import UserProfile
 
 
-default_app_config = 'eoxs_allauth.apps.EOxServerAllauthConfig'
+def create_profiles(sender, **kwargs):
+    if sender.name == "eoxs_allauth":
+        for u in User.objects.all():
+            UserProfile.objects.get_or_create(user=u)
+    pass
+
+class EOxServerAllauthConfig(AppConfig):
+    name = 'eoxs_allauth'
+    verbose_name = "EOxServer allauth"
+
+    def ready(self):
+        post_migrate.connect(create_profiles, sender=self)
+

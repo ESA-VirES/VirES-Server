@@ -31,6 +31,7 @@ from contextlib import closing
 from urllib2 import urlopen
 from optparse import make_option
 
+from django.conf import settings
 from django.core.management.base import CommandError, BaseCommand
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
@@ -40,7 +41,7 @@ from vires.aux import update_kp, update_dst
 # URL time-out in seconds
 URL_TIMEOUT = 25
 
-def update(source, updater, label):
+def update(source, destination, updater, label):
     """ Update index from the given source. """
     print "Updating %s-index from %s" % (
         label, source if source != '-' else '<standard input>'
@@ -54,12 +55,12 @@ def update(source, updater, label):
 
     if is_url:
         with closing(urlopen(source, timeout=URL_TIMEOUT)) as fin:
-            updater(fin)
+            updater(fin, destination)
     elif source == '-':
-        updater(sys.stdin)
+        updater(sys.stdin, destination)
     else:
         with open(source) as fin:
-            updater(fin)
+            updater(fin, destination)
 
 
 class Command(CommandOutputMixIn, BaseCommand):
@@ -79,6 +80,14 @@ class Command(CommandOutputMixIn, BaseCommand):
     #@nested_commit_on_success # There is no Django DB modification.
     def handle(self, *args, **kwargs):
         if kwargs["dst_filename"] is not None:
-            update(kwargs["dst_filename"], update_dst, 'Dst')
+            update(
+                kwargs["dst_filename"],
+                settings.VIRES_AUX_DB_DST,
+                update_dst, 'Dst'
+            )
         if kwargs["kp_filename"] is not None:
-            update(kwargs["kp_filename"], update_kp, 'Kp')
+            update(
+                kwargs["kp_filename"],
+                settings.VIRES_AUX_DB_KP,
+                update_kp, 'Kp'
+            )

@@ -38,6 +38,7 @@ except ImportError:
     from django.utils.datastructures import SortedDict as OrderedDict
 import numpy as np
 
+from django.conf import settings
 from eoxserver.core import Component, implements
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
@@ -49,11 +50,10 @@ from eoxserver.services.ows.wps.parameters import (
     LiteralData, String,
     AllowedRange, UnitLinear,
 )
-
 from eoxserver.backends.access import connect
 from vires import models
 from vires.util import get_total_seconds
-from vires import aux
+from vires.aux import query_dst, query_kp
 from vires.time_util import mjd2000_to_datetime
 
 
@@ -70,6 +70,7 @@ class get_indices(Component):
     inputs = [
         ("index_id", LiteralData('index_id', str, optional=False,
             abstract="Index id from which auxiliary data will be retrieved",
+            allowed_values=('kp','dst'),
         )),
         ("begin_time", LiteralData('begin_time', dt.datetime, optional=False,
             abstract="Start of the time interval",
@@ -101,18 +102,18 @@ class get_indices(Component):
         writer.writerow(["id","value", "time"])
 
         if index_id == "dst":
-            aux_data = aux.query_dst_ni(
-                begin_time, end_time
+            aux_data = query_dst(
+                settings.VIRES_AUX_DB_DST, begin_time, end_time
             )
         elif index_id == "kp":
-            aux_data = aux.query_kp_ni(
-                begin_time, end_time
+            aux_data = query_kp(
+                settings.VIRES_AUX_DB_KP, begin_time, end_time
             )
-        elif index_id == "ibia":
-            aux_data = aux.query_ibi_ni(
-                "A", begin_time, end_time
-            )
-            index_id = "bubble_index"
+        #elif index_id == "ibia":
+        #    aux_data = aux.query_ibi_ni(
+        #        "A", begin_time, end_time
+        #    )
+        #    index_id = "bubble_index"
 
         t_arr = np.array(aux_data["time"]) 
         v_arr = np.array(aux_data[index_id])
