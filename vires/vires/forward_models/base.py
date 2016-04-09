@@ -26,6 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments,too-many-locals
 
 import math
 from numpy import cos, meshgrid, empty, linspace, tile
@@ -165,13 +166,17 @@ class BaseForwardModel(Component):
         else:
             raise Exception("Invalid field '%s'." % field)
 
+    @staticmethod
+    def _time_validity(model):
+        """ Get the validity interval of the given model. """
+        return [
+            naive_to_utc(decimal_year_to_datetime(dy)) for dy in model.validity
+        ]
+
     @property
     def time_validity(self):
         """ Get the validity interval of the model. """
-        return [
-            naive_to_utc(decimal_year_to_datetime(dy))
-            for dy in self.model.validity
-        ]
+        return self._time_validity(self.model)
 
     @property
     def model(self):

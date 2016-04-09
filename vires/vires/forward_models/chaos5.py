@@ -63,3 +63,8 @@ class CHAOS5CombinedForwardModel(BaseForwardModel):
             read_model_shc(DATA_CHAOS5_CORE_V4) +
             read_model_shc(DATA_CHAOS5_STATIC)
         )
+
+    @property
+    def time_validity(self):
+        """ Get the validity interval of the model. """
+        return self._time_validity(read_model_shc(DATA_CHAOS5_CORE_V4))
