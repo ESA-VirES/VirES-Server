@@ -42,9 +42,9 @@ from vires.models import ForwardModel
 from vires.forward_models.util import get_forward_model_providers
 
 @nested_commit_on_success
-def register_forward_model(identifier, provider, range_type):
+def register_forward_model(identifier, provider, range_type, validity=None):
     """ Register new forward mode. """
-    begin_time, end_time = provider.time_validity
+    begin_time, end_time = validity or provider.time_validity
 
     forward_model = ForwardModel()
     forward_model.visible = True
