@@ -35,12 +35,15 @@ from eoxserver.resources.coverages.management.commands import (
 )
 from vires.models import ForwardModel
 
-@nested_commit_on_success
-def deregister_forward_model(identifier):
-    """ De-register forward model. """
-    forward_model = ForwardModel.objects.get(identifier=identifier).cast()
-    forward_model.delete()
-
+# NOTE: Because of the EOxServer core limitation we cannot serve
+#       WMS model views outside of the model time validity range.
+#       Therefore we register two models, one with the original name
+#       and true validity range and the second with an extended validity
+#       range allowing WMS rendering outside of the validity period.
+#       The second model has '_view' prefix in its identifier.
+#       The removal tries to remove both models if existing.
+#       The '_view' model is optional and if missing no error is raised.
+#       The '--all' option loops over the non-view models' identifiers.
 
 class Command(CommandOutputMixIn, BaseCommand):
     help = "De-register one or more forward models."
@@ -59,6 +62,7 @@ class Command(CommandOutputMixIn, BaseCommand):
         if kwargs.get("remove_all"):
             identifiers = [
                 item.identifier for item in ForwardModel.objects.all()
+                if not item.identifier.endswith("_view")
             ]
         else:
             identifiers = args
@@ -94,3 +98,22 @@ class Command(CommandOutputMixIn, BaseCommand):
         else:
             self.print_msg("No model de-registered.")
 
+
+@nested_commit_on_success
+def deregister_forward_model(identifier):
+    """ De-register forward model. """
+    # first 'true' validity model
+    _deregister_forward_model(identifier)
+    # second 'view' (extended range) model
+    # this model is optional and it can be missing
+    try:
+        _deregister_forward_model(identifier + "_view")
+    except ForwardModel.DoesNotExist:
+        pass
+
+
+@nested_commit_on_success
+def _deregister_forward_model(identifier):
+    """ De-register forward model. """
+    forward_model = ForwardModel.objects.get(identifier=identifier).cast()
+    forward_model.delete()

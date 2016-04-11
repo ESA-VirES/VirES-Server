@@ -29,18 +29,27 @@
 # pylint: disable=missing-docstring
 
 from optparse import make_option
+from datetime import datetime
 from django.core.management.base import CommandError, BaseCommand
+from django.contrib.gis import geos
+from eoxserver.backends.models import DataItem
 from eoxserver.resources.coverages import models
 from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn,
+    CommandOutputMixIn, nested_commit_on_success
 )
-from vires.management.commands.vires_add_forward_model import (
-    register_forward_model
-)
+from vires.models import ForwardModel
 from vires.forward_models.util import get_forward_model_providers
+from vires.time_util import naive_to_utc
 
+# NOTE: Because of the EOxServer core limitation we cannot serve
+#       WMS model views outside of the model time validity range.
+#       Therefore we register two models, one with the original name
+#       and true validity range and the second with an extended validity
+#       range allowing WMS rendering outside of the validity period.
+#       The second model has '_view' prefix in its identifier.
 
 class Command(CommandOutputMixIn, BaseCommand):
+    args = "<identifier> [<identifier> ...]"
 
     @property
     def help(self):
@@ -51,7 +60,6 @@ class Command(CommandOutputMixIn, BaseCommand):
                 ", ".join(list(get_forward_model_providers()))
             )
         )
-    args = "<identifier> [<identifier> ...]"
 
     option_list = BaseCommand.option_list + (
         make_option(
@@ -111,3 +119,47 @@ class Command(CommandOutputMixIn, BaseCommand):
             )
         else:
             self.print_msg("No model registered.")
+
+
+@nested_commit_on_success
+def register_forward_model(identifier, provider, range_type):
+    """ Register a new forward model. """
+    # first 'true' validity model
+    _register_forward_model(identifier, provider, range_type)
+    # second 'view' (extended range) model
+    _register_forward_model(
+        identifier + "_view", provider, range_type,
+        (naive_to_utc(datetime(1, 1, 1)), naive_to_utc(datetime(4000, 1, 1)))
+    )
+
+
+@nested_commit_on_success
+def _register_forward_model(identifier, provider, range_type, validity=None):
+    """ Register exactly one new forward model. """
+    begin_time, end_time = validity or provider.time_validity
+
+    forward_model = ForwardModel()
+    forward_model.visible = True
+    forward_model.identifier = identifier
+    forward_model.range_type = range_type
+    forward_model.srid = 4326
+    forward_model.min_x = -180
+    forward_model.min_y = -90
+    forward_model.max_x = 180
+    forward_model.max_y = 90
+    forward_model.size_x = 1
+    forward_model.size_y = 1
+    forward_model.begin_time = begin_time
+    forward_model.end_time = end_time
+    forward_model.footprint = geos.MultiPolygon(
+        geos.Polygon.from_bbox((-180, -90, 180, 90))
+    )
+    forward_model.full_clean()
+    forward_model.save()
+
+    data_item = DataItem(
+        dataset=forward_model, semantic="coefficients",
+        location="none", format=provider.identifier
+    )
+    data_item.full_clean()
+    data_item.save()

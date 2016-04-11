@@ -29,51 +29,17 @@
 # pylint: disable=missing-docstring, too-few-public-methods
 
 from optparse import make_option
-
 from django.core.management.base import CommandError, BaseCommand
-from django.contrib.gis import geos
 from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, nested_commit_on_success
+    CommandOutputMixIn,
 )
 from eoxserver.resources.coverages import models
-from eoxserver.backends import models as backends
-
-from vires.models import ForwardModel
 from vires.forward_models.util import get_forward_model_providers
-
-@nested_commit_on_success
-def register_forward_model(identifier, provider, range_type, validity=None):
-    """ Register new forward mode. """
-    begin_time, end_time = validity or provider.time_validity
-
-    forward_model = ForwardModel()
-    forward_model.visible = True
-    forward_model.identifier = identifier
-    forward_model.range_type = range_type
-    forward_model.srid = 4326
-    forward_model.min_x = -180
-    forward_model.min_y = -90
-    forward_model.max_x = 180
-    forward_model.max_y = 90
-    forward_model.size_x = 1
-    forward_model.size_y = 1
-    forward_model.begin_time = begin_time
-    forward_model.end_time = end_time
-    forward_model.footprint = geos.MultiPolygon(
-        geos.Polygon.from_bbox((-180, -90, 180, 90))
-    )
-    forward_model.full_clean()
-    forward_model.save()
-
-    data_item = backends.DataItem(
-        dataset=forward_model, semantic="coefficients",
-        location="none", format=provider.identifier
-    )
-    data_item.full_clean()
-    data_item.save()
-
+from vires.management.commands.vires_model_add import register_forward_model
 
 class Command(CommandOutputMixIn, BaseCommand):
+    help = "Register one forward model with a custom coverage identifier."
+
     @property
     def option_list(self):
         provider_names = list(get_forward_model_providers())
@@ -99,8 +65,6 @@ class Command(CommandOutputMixIn, BaseCommand):
                 )
             )
         )
-
-    help = "Register one forward model with a custom coverage identifier."
 
     def handle(self, *args, **kwargs):
         identifier = kwargs["identifier"]
