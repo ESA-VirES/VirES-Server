@@ -26,12 +26,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
 from optparse import make_option
 from django.core.management.base import CommandError, BaseCommand
 from eoxserver.resources.coverages import models
 from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, nested_commit_on_success
+    CommandOutputMixIn,
 )
 from vires.management.commands.vires_add_forward_model import (
     register_forward_model
@@ -44,8 +45,8 @@ class Command(CommandOutputMixIn, BaseCommand):
     @property
     def help(self):
         return (
-            "Register one or more forward model using the given forward model\t"
-            "providers' names as the coverage identifiers.\n"
+            "Register one or more forward models using the given forward "
+            "model providers' names as the coverage identifiers.\n"
             "Following models are available:\n\t%s" % (
                 ", ".join(list(get_forward_model_providers()))
             )
@@ -63,7 +64,6 @@ class Command(CommandOutputMixIn, BaseCommand):
         ),
     )
 
-    @nested_commit_on_success
     def handle(self, *args, **kwargs):
         range_type_name = kwargs["range_type_name"]
         try:
@@ -90,13 +90,14 @@ class Command(CommandOutputMixIn, BaseCommand):
             try:
                 register_forward_model(identifier, provider, range_type)
             except Exception as exc:
+                self.print_traceback(exc, kwargs)
                 self.print_err(
                     "Registration of model '%s' failed! Reason: %s" % (
-                        identifier, exc, 
+                        identifier, exc,
                     )
                 )
                 continue
-                
+
             success_count += 1
 
         count = len(args)

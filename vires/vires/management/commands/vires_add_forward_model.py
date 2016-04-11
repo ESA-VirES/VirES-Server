@@ -41,11 +41,13 @@ from eoxserver.backends import models as backends
 from vires.models import ForwardModel
 from vires.forward_models.util import get_forward_model_providers
 
+@nested_commit_on_success
 def register_forward_model(identifier, provider, range_type):
     """ Register new forward mode. """
     begin_time, end_time = provider.time_validity
 
     forward_model = ForwardModel()
+    forward_model.visible = True
     forward_model.identifier = identifier
     forward_model.range_type = range_type
     forward_model.srid = 4326
@@ -100,7 +102,6 @@ class Command(CommandOutputMixIn, BaseCommand):
 
     help = "Register one forward model with a custom coverage identifier."
 
-    @nested_commit_on_success
     def handle(self, *args, **kwargs):
         identifier = kwargs["identifier"]
         range_type_name = kwargs["range_type_name"]
