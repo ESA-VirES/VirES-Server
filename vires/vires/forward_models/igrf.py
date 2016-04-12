@@ -1,7 +1,8 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
+# IGRF magnetic models
+#
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -26,27 +27,32 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod.igrf
-
+from eoxmagmod import (
+    read_model_igrf11, read_model_shc, DATA_IGRF11, DATA_IGRF12,
+)
 from vires.forward_models.base import BaseForwardModel
 
-
-class IGRFForwardModel(BaseForwardModel):
-    """ Forward model calculator for the IGRF.
+class IGRF11ForwardModel(BaseForwardModel):
+    """ Forward model calculator for the IGRF11.
     """
+    identifier = "IGRF11"
 
+    @property
+    def model(self):
+        return read_model_igrf11(DATA_IGRF11)
+
+
+class IGRF12ForwardModel(BaseForwardModel):
+    """ Forward model calculator for the IGRF12.
+    """
+    identifier = "IGRF12"
+
+    @property
+    def model(self):
+        return read_model_shc(DATA_IGRF12)
+
+
+class IGRFForwardModel(IGRF12ForwardModel):
+    """ Forward model calculator for the applicable IGRF model.
+    """
     identifier = "IGRF"
-
-    def get_model(self, data_item):
-        return eoxmagmod.igrf.read_model_igrf11()
-
-        """
-        
-
-
-        vnorm(arr) # F
-        vnorm(arrs[...,0:2]) # H
-        arr[...,0] # X
-        arr[...,1] # X
-        -arr[...,2] # Z
-        """

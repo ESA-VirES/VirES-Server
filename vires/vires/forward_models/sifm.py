@@ -1,7 +1,8 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
+# Swarm Initial Field magnetic model
+#
+# Project: VirES
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -26,17 +27,14 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod.shc
-import vires.util as ut
-
+from eoxmagmod import read_model_shc, DATA_SIFM
 from vires.forward_models.base import BaseForwardModel
-
 
 class SwarmInitialFieldModel(BaseForwardModel):
     """ Forward model calculator for the SIFM field.
     """
-
     identifier = "SIFM"
 
-    def get_model(self, data_item):
-		return eoxmagmod.shc.read_model_shc(ut.DATA_SIFM)
+    @property
+    def model(self):
+        return read_model_shc(DATA_SIFM)

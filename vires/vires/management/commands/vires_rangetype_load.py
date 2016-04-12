@@ -1,11 +1,12 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
+# Initialize VirES range types.
+#
+# Project: VirES
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2011 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,19 +26,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, too-few-public-methods
 
-import eoxmagmod.shc
-import vires.util as ut
+from optparse import make_option
+from django.core.management.base import BaseCommand
+from eoxserver.resources.coverages.management.commands import (
+    eoxs_rangetype_load
+)
+from vires.data import RANGE_TYPES
 
+# NOTE: This command is implemented as a simple wrapper around the generic
+# EOxServer command.
 
-from vires.forward_models.base import BaseForwardModel
+class Command(eoxs_rangetype_load.Command):
 
+    option_list = BaseCommand.option_list + (
+        make_option(
+            '-i', '--input', dest='filename', action='store', type='string',
+            default=RANGE_TYPES, help=(
+                "Optional. Read input from a given file or standard input "
+                "when dash (-) character is used. By default, the package's "
+                "are used."
+            )
+        ),
+    )
 
-class IGRF12Model(BaseForwardModel):
-    """ Forward model calculator for the IGRF12 field.
-    """
-
-    identifier = "IGRF12"
-
-    def get_model(self, data_item):
-		return eoxmagmod.shc.read_model_shc(ut.DATA_IGRF12)
+    help = (
+        "Load range-types stored in JSON file or from the default package's \n"
+        "range type definitions stores in: \n\t%s" % RANGE_TYPES
+    )

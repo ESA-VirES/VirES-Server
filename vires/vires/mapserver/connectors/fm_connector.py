@@ -1,7 +1,8 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
+# Forward Model WMS connector
+#
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -25,33 +26,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring,no-self-use,too-many-locals,unused-argument
 
 from os.path import join
 from uuid import uuid4
 import logging
-
 from django.contrib.gis import geos
-from eoxserver.core import Component, implements, ExtensionPoint
+from eoxserver.core import Component, implements
 from eoxserver.core.util.perftools import log_duration
 from eoxserver.contrib import vsi, gdal
-from eoxserver.backends.access import connect
 from eoxserver.resources.coverages import models
 from eoxserver.services.subset import Trim, Slice
 from eoxserver.services.mapserver.interfaces import ConnectorInterface
+from vires.forward_models.util import get_forward_model_providers
 
-from vires.interfaces import ForwardModelProviderInterface
-
-
+#TODO: Fix the logging.
 logger = logging.getLogger("eoxserver")
-
 
 class ForwardModelConnector(Component):
     """ Connects a CDF file.
     """
-
     implements(ConnectorInterface)
-
-    model_providers = ExtensionPoint(ForwardModelProviderInterface)
 
     def supports(self, data_items):
         return (
@@ -60,96 +55,112 @@ class ForwardModelConnector(Component):
         )
 
     def connect(self, coverage, data_items, layer, options):
-        """
-        """
-
         data_item = data_items[0]
-        for model_provider in self.model_providers:
-            if model_provider.identifier == data_item.format:
-                break
-        else:
-            raise Exception(
-                "No model provider '%s' available." % data_item.format
-            )
+        model_provider = self.get_model_provider(data_item.format)
 
-        time = options.get("time")
-        if isinstance(time, Trim):
-            time = (time.high - time.low) / 2 + time.low
-        elif isinstance(time, Slice):
-            time = time.value
-        else:
-            raise Exception("Missing 'time' parameter.")
-
+        # parse options
+        time = self.check_time(
+            options.get("time"), model_provider.time_validity
+        )
         elevation = options.get("elevation") or 0
-        subsets = options.get("subsets")
-        bands = options.get("bands", ())
-        try:
-            bandname = bands[0]
-            band = coverage.range_type.bands.get(identifier=bandname)
-        except models.Band.DoesNotExist:
-            raise Exception("Invalid band '%s' specified." % bandname)
-        except IndexError:
-            band = coverage.range_type[0]
-
+        band = self.get_band(coverage, options.get("bands", ()))
         size_x, size_y = options["width"], options["height"]
-
-        bbox = subsets.xy_bbox
-        if subsets.srid != 4326:
-            bbox = geos.Polygon.from_bbox(bbox).transform(4326).extent
+        #FIXME: Does 'options.get("subsets")' always return the right object?
+        bbox = self.get_bbox(options.get("subsets"))
+        coeff_min, coeff_max = self.parse_coeff_range(
+            options["dimensions"].get("coeff")
+        )
+        range_min, range_max = self.parse_data_range(
+            band, options["dimensions"].get("range")
+        )
 
         with log_duration("model evaluation", logger):
-
-            coeff_min, coeff_max = (None, None)
-            coeff_range = options["dimensions"].get("coeff")
-            if coeff_range:
-                try:
-                    coeff_min, coeff_max = map(float, coeff_range[0].split(","))
-                except:
-                    raise Exception("Invalid coefficient range provided.")
-
-            array = model_provider.evaluate(
+            # evaluate model
+            pixel_array = model_provider.evaluate(
                 data_item, band.identifier, bbox, size_x, size_y, elevation,
                 time, coeff_min, coeff_max
             )
+            # scale pixel values
+            scale_factor = 255.0 / (range_max - range_min)
+            pixel_array = scale_factor * (pixel_array - range_min)
 
-            range_min, range_max = band.allowed_values
-            data_range = options["dimensions"].get("range")
-            if data_range:
-                try:
-                    range_min, range_max = map(float, data_range[0].split(","))
-                except:
-                    raise Exception("Invalid data range provided.")
-
-            array = (array - range_min) / (range_max - range_min) * 255
-
-
-
+        # finalize the layer data
         path = join("/vsimem", uuid4().hex)
-        #path = "/tmp/fm_output.tif"
         driver = gdal.GetDriverByName("GTiff")
-        ds = driver.Create(path, size_x, size_y, 1, gdal.GDT_Byte)
-
-        gt = (
-            bbox[0],
-            float(bbox[2] - bbox[0]) / size_x,
-            0,
-            bbox[3],
-            0,
-            -float(bbox[3] - bbox[1]) / size_y
-        )
-
-        ds.SetGeoTransform(gt)
-
-        band = ds.GetRasterBand(1)
-        band.WriteArray(array)
+        dataset = driver.Create(path, size_x, size_y, 1, gdal.GDT_Byte)
+        dataset.SetGeoTransform((
+            bbox[0], (bbox[2] - bbox[0]) / float(size_x), 0.0,
+            bbox[3], 0.0, (bbox[1] - bbox[3]) / float(size_y)
+        ))
+        dataset.GetRasterBand(1).WriteArray(pixel_array)
         layer.data = path
 
-        logger.info("Created tempfile %s" % layer.data)
+        logger.info("Created tempfile %s", layer.data)
 
     def disconnect(self, coverage, data_items, layer, options):
-        """
-        """
-
-        logger.info("Removing tempfile %s" % layer.data)
-
+        logger.info("Removing tempfile %s", layer.data)
         vsi.remove(layer.data)
+
+    def get_model_provider(self, identifier):
+        try:
+            return get_forward_model_providers()[identifier]
+        except IndexError:
+            raise Exception("No model provider '%s' found!" % identifier)
+
+    def check_time(self, time, validity):
+        if isinstance(time, Trim):
+            _time = (time.high - time.low) / 2 + time.low
+        elif isinstance(time, Slice):
+            _time = time.value
+        else:
+            if validity[0] == validity[1]:
+                _time = validity[0]
+                # static model and not time is required
+            else:
+                raise Exception("Missing the mandatory 'time' parameter!")
+
+        # time exceeding the validity range is set to the closest valid time
+        if _time < validity[0]:
+            _time = validity[0]
+        if _time > validity[1]:
+            _time = validity[1]
+        return _time
+
+    def get_band(self, coverage, bands):
+        if len(bands) < 1:
+            return coverage.range_type[0]
+        try:
+            return coverage.range_type.bands.get(identifier=bands[0])
+        except models.Band.DoesNotExist:
+            raise Exception("Invalid band '%s' specified." % bands[0])
+
+    def get_bbox(self, subsets):
+        bbox = subsets.xy_bbox
+        if subsets.srid != 4326:
+            bbox = geos.Polygon.from_bbox(bbox).transform(4326).extent
+        return bbox
+
+    def parse_coeff_range(self, coeff_range):
+        if coeff_range:
+            try:
+                cmin, cmax = [
+                    (int(v) if v else None)
+                    for v in coeff_range[0].split(",")
+                ]
+            except ValueError:
+                raise Exception("Invalid coefficient range provided.")
+        else:
+            cmin, cmax = None, None
+        return cmin, cmax
+
+    def parse_data_range(self, band, data_range):
+        if data_range:
+            try:
+                rmin, rmax = [
+                    float(v) for v in data_range[0].split(",")
+                ]
+            except ValueError:
+                raise Exception("Invalid data range provided.")
+        else:
+            rmin, rmax = band.allowed_values
+        return rmin, rmax

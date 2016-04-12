@@ -1,7 +1,8 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
+# CHAOS 5 - CORE, STATIC and Combined magnetic models
+#
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -26,16 +27,44 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod.shc
-
+from eoxmagmod import (
+    read_model_shc, DATA_CHAOS5_CORE_V4, DATA_CHAOS5_STATIC,
+)
 from vires.forward_models.base import BaseForwardModel
+
+class CHAOS5CoreForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-5 core field.
+    """
+    identifier = "CHAOS-5-Core"
+
+    @property
+    def model(self):
+        return read_model_shc(DATA_CHAOS5_CORE_V4)
+
+
+class CHAOS5StaticForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-5 static field.
+    """
+    identifier = "CHAOS-5-Static"
+
+    @property
+    def model(self):
+        return read_model_shc(DATA_CHAOS5_STATIC)
 
 
 class CHAOS5CombinedForwardModel(BaseForwardModel):
     """ Forward model calculator for the CHAOS-5 Combined field.
     """
-
     identifier = "CHAOS-5-Combined"
 
-    def get_model(self, data_item):
-		return eoxmagmod.shc.read_model_shc(eoxmagmod.shc.DATA_CHAOS5_CORE) + eoxmagmod.shc.read_model_shc(eoxmagmod.shc.DATA_CHAOS5_STATIC)
+    @property
+    def model(self):
+        return (
+            read_model_shc(DATA_CHAOS5_CORE_V4) +
+            read_model_shc(DATA_CHAOS5_STATIC)
+        )
+
+    @property
+    def time_validity(self):
+        """ Get the validity interval of the model. """
+        return self._time_validity(read_model_shc(DATA_CHAOS5_CORE_V4))

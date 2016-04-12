@@ -1,7 +1,8 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
+# EMM 2010 magnetic model
+#
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -26,16 +27,20 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod.emm
-
+from eoxmagmod.emm import read_model_emm2010
 from vires.forward_models.base import BaseForwardModel
 
+class EMM2010ForwardModel(BaseForwardModel):
+    """ Forward model calculator for the EMM2010.
+    """
+    identifier = "EMM2010"
 
-class EMMForwardModel(BaseForwardModel):
+    @property
+    def model(self):
+        return read_model_emm2010()
+
+
+class EMMForwardModel(EMM2010ForwardModel):
     """ Forward model calculator for the EMM.
     """
-
     identifier = "EMM"
-
-    def get_model(self, data_item):
-        return eoxmagmod.emm.read_model_emm2010()
