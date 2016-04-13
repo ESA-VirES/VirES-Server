@@ -168,7 +168,7 @@ class BaseForwardModel(Component):
 
 
     def evaluate_int(self, data_item, field, bbox, size_x, size_y, elevation,
-                     date, coeff_min=None, coeff_max=None, grid=None):
+                     date, coeff_min=None, coeff_max=None, grid_step=None):
         """ Interpolated evaluation of the forward expansion model.
         Inputs:
             data_item - ???
@@ -195,24 +195,26 @@ class BaseForwardModel(Component):
             date - decimal Julian date (e.g., 2016.2345)
             coeff_min - optional minimal coefficient trim
             coeff_max - optional maximum coefficient trim
-            grid - a (N, M) tuple defining the interpolated grid size.
-                   This leads to a grid slitting the interpolated patch to NxM
-                   cells and (N+3)x(N+3) grid nodes on which the model
-                   is evaluated.  The rectangular interpolation grid is used
-                   later to evaluate the pixel values by the Cubic Spline
-                   Interpolation.  The default grid is set to (16, 16).
+            grid_step - a (dx, dy) tuple defining the desired grid cell size in
+                    pixels. These values are used to calculate the size of the
+                    interpolation grid. By default it is set to (16.0, 16.0)
+                    which covers a 128x128 pixel with by 8x8 grid cells.
+                    Including the one-cell margins the model will be evaluated
+                    on 11x11 grid nodes.
         Output:
             Rectangular array of size_x by size_y elements.
         """
         # evaluation grid
-        grid_x, grid_y = grid or (16, 16)
-        d_x = (bbox[2] - bbox[0]) / float(grid_x)
-        d_y = (bbox[1] - bbox[3]) / float(grid_y)
+        grid_step_x, grid_step_y = grid_step or (16, 16)
+        grid_size_x = max(1, int(math.ceil(size_x / float(grid_step_x))))
+        grid_size_y = max(1, int(math.ceil(size_y / float(grid_step_y))))
+        d_x = (bbox[2] - bbox[0]) / float(grid_size_x)
+        d_y = (bbox[1] - bbox[3]) / float(grid_size_y)
         lons1_int = linspace(
-            bbox[0] - d_x, bbox[2] + d_x, grid_x + 3, endpoint=True
+            bbox[0] - d_x, bbox[2] + d_x, grid_size_x + 3, endpoint=True
         )
         lats1_int = linspace(
-            bbox[3] - d_y, bbox[1] + d_y, grid_y + 3, endpoint=True
+            bbox[3] - d_y, bbox[1] + d_y, grid_size_y + 3, endpoint=True
         )
         lats1_int = lats1_int[(lats1_int <= 90.0) & (lats1_int >= -90.0)]
         lons_int, lats_int = meshgrid(lons1_int, lats1_int)
