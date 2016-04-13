@@ -138,8 +138,8 @@ class BaseForwardModel(Component):
         Output:
             Rectangular array of size_x by size_y elements.
         """
-        hd_x = (0.5 / size_x) * (bbox[2] - bbox[0])
-        hd_y = (0.5 / size_y) * (bbox[1] - bbox[3])
+        hd_x = (0.5 / max(1, size_x)) * (bbox[2] - bbox[0])
+        hd_y = (0.5 / max(1, size_y)) * (bbox[1] - bbox[3])
         lons, lats = meshgrid(
             linspace(bbox[0] + hd_x, bbox[2] - hd_x, size_x, endpoint=True),
             linspace(bbox[3] + hd_y, bbox[1] - hd_y, size_y, endpoint=True)
@@ -206,8 +206,8 @@ class BaseForwardModel(Component):
         """
         # evaluation grid
         grid_step_x, grid_step_y = grid_step or (16, 16)
-        grid_size_x = max(1, int(math.ceil(size_x / float(grid_step_x))))
-        grid_size_y = max(1, int(math.ceil(size_y / float(grid_step_y))))
+        grid_size_x = max(2, int(math.ceil(size_x / float(grid_step_x))))
+        grid_size_y = max(2, int(math.ceil(size_y / float(grid_step_y))))
         d_x = (bbox[2] - bbox[0]) / float(grid_size_x)
         d_y = (bbox[1] - bbox[3]) / float(grid_size_y)
         lons1_int = linspace(
@@ -235,8 +235,8 @@ class BaseForwardModel(Component):
         )
 
         # interpolation pixel grid
-        hd_x = (0.5 / size_x) * (bbox[2] - bbox[0])
-        hd_y = (0.5 / size_y) * (bbox[1] - bbox[3])
+        hd_x = (0.5 / max(1, size_x)) * (bbox[2] - bbox[0])
+        hd_y = (0.5 / max(1, size_y)) * (bbox[1] - bbox[3])
         lons1 = linspace(bbox[0] + hd_x, bbox[2] - hd_x, size_x, endpoint=True)
         lats1 = linspace(bbox[3] + hd_y, bbox[1] - hd_y, size_y, endpoint=True)
         lons, lats = meshgrid(lons1, lats1)
