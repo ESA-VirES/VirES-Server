@@ -29,12 +29,13 @@
 
 from eoxmagmod import read_model_shc, DATA_SIFM
 from vires.forward_models.base import BaseForwardModel
+from vires.util import cached_property
 
 class SwarmInitialFieldModel(BaseForwardModel):
     """ Forward model calculator for the SIFM field.
     """
     identifier = "SIFM"
 
-    @property
+    @cached_property
     def model(self):
         return read_model_shc(DATA_SIFM)

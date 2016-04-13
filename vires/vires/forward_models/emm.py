@@ -29,13 +29,14 @@
 
 from eoxmagmod.emm import read_model_emm2010
 from vires.forward_models.base import BaseForwardModel
+from vires.util import cached_property
 
 class EMM2010ForwardModel(BaseForwardModel):
     """ Forward model calculator for the EMM2010.
     """
     identifier = "EMM2010"
 
-    @property
+    @cached_property
     def model(self):
         return read_model_emm2010()
 

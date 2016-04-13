@@ -26,8 +26,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-few-public-methods
 
 import math
+import time
 from datetime import datetime, timedelta
 from django.utils.dateparse import utc
 
@@ -212,3 +214,21 @@ def decimal_year_to_mjd2000(decimal_year):
     fraction, year = math.modf(decimal_year)
     year = int(year)
     return year_to_day2k(year) + fraction * days_per_year(year)
+
+
+class Timer(object):
+    """ Object used to measure elapsed time in seconds. """
+
+    def __init__(self):
+        self._start = None
+        self.reset()
+
+    def __call__(self):
+        """ Get elapsed time in seconds."""
+        return time.time() - self._start
+
+    def reset(self):
+        """ Reset initial time."""
+        self._start = time.time()
+
+

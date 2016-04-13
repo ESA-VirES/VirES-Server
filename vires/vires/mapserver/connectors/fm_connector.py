@@ -4,6 +4,7 @@
 #
 # Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
+#          Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
@@ -30,18 +31,17 @@
 
 from os.path import join
 from uuid import uuid4
-import logging
+from logging import getLogger, DEBUG
 from django.contrib.gis import geos
 from eoxserver.core import Component, implements
-from eoxserver.core.util.perftools import log_duration
 from eoxserver.contrib import vsi, gdal
 from eoxserver.resources.coverages import models
 from eoxserver.services.subset import Trim, Slice
 from eoxserver.services.mapserver.interfaces import ConnectorInterface
 from vires.forward_models.util import get_forward_model_providers
+from vires.perf_util import ElapsedTimeLogger
 
-#TODO: Fix the logging.
-logger = logging.getLogger("eoxserver")
+logger = getLogger("vires.mapserver.connectors.fm_connector")
 
 class ForwardModelConnector(Component):
     """ Connects a CDF file.
@@ -56,7 +56,8 @@ class ForwardModelConnector(Component):
 
     def connect(self, coverage, data_items, layer, options):
         data_item = data_items[0]
-        model_provider = self.get_model_provider(data_item.format)
+        model_id = data_item.format
+        model_provider = self.get_model_provider(model_id)
 
         # parse options
         time = self.check_time(
@@ -74,9 +75,11 @@ class ForwardModelConnector(Component):
             band, options["dimensions"].get("range")
         )
 
-        with log_duration("model evaluation", logger):
-            # evaluate model
-            pixel_array = model_provider.evaluate(
+        with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
+            model_id, band.identifier, size_x, size_y
+        ), logger, DEBUG):
+            # fast Cubic Spline model interpolation
+            pixel_array = model_provider.evaluate_int(
                 data_item, band.identifier, bbox, size_x, size_y, elevation,
                 time, coeff_min, coeff_max
             )
@@ -94,11 +97,10 @@ class ForwardModelConnector(Component):
         ))
         dataset.GetRasterBand(1).WriteArray(pixel_array)
         layer.data = path
-
-        logger.info("Created tempfile %s", layer.data)
+        logger.debug("Created tempfile %s", layer.data)
 
     def disconnect(self, coverage, data_items, layer, options):
-        logger.info("Removing tempfile %s", layer.data)
+        logger.debug("Removing tempfile %s", layer.data)
         vsi.remove(layer.data)
 
     def get_model_provider(self, identifier):
