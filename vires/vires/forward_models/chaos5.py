@@ -31,13 +31,14 @@ from eoxmagmod import (
     read_model_shc, DATA_CHAOS5_CORE_V4, DATA_CHAOS5_STATIC,
 )
 from vires.forward_models.base import BaseForwardModel
+from vires.util import cached_property
 
 class CHAOS5CoreForwardModel(BaseForwardModel):
     """ Forward model calculator for the CHAOS-5 core field.
     """
     identifier = "CHAOS-5-Core"
 
-    @property
+    @cached_property
     def model(self):
         return read_model_shc(DATA_CHAOS5_CORE_V4)
 
@@ -47,7 +48,7 @@ class CHAOS5StaticForwardModel(BaseForwardModel):
     """
     identifier = "CHAOS-5-Static"
 
-    @property
+    @cached_property
     def model(self):
         return read_model_shc(DATA_CHAOS5_STATIC)
 
@@ -57,14 +58,14 @@ class CHAOS5CombinedForwardModel(BaseForwardModel):
     """
     identifier = "CHAOS-5-Combined"
 
-    @property
+    @cached_property
     def model(self):
         return (
             read_model_shc(DATA_CHAOS5_CORE_V4) +
             read_model_shc(DATA_CHAOS5_STATIC)
         )
 
-    @property
+    @cached_property
     def time_validity(self):
         """ Get the validity interval of the model. """
         return self._time_validity(read_model_shc(DATA_CHAOS5_CORE_V4))

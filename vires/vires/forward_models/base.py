@@ -41,6 +41,7 @@ from eoxmagmod import (
 
 from vires.interfaces import ForwardModelProviderInterface
 from vires.time_util import decimal_year_to_datetime, naive_to_utc
+from vires.util import cached_property
 
 DG2RAD = math.pi / 180.0
 
@@ -265,7 +266,7 @@ class BaseForwardModel(Component):
             naive_to_utc(decimal_year_to_datetime(dy)) for dy in model.validity
         ]
 
-    @property
+    @cached_property
     def time_validity(self):
         """ Get the validity interval of the model. """
         return self._time_validity(self.model)
