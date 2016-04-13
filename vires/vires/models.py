@@ -1,6 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer <http://eoxserver.org>
+# VirES specific Djnago DB models.
+#
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -24,7 +26,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-
 
 from django.core.exceptions import ValidationError
 from django.contrib.gis.db import models
@@ -54,7 +55,7 @@ class Product(Coverage):
 
     @property
     def duration(self):
-        return (self.end_time - self.begin_time)
+        return self.end_time - self.begin_time
 
 EO_OBJECT_TYPE_REGISTRY[201] = Product
 

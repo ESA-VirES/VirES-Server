@@ -1,8 +1,9 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
+# CHAOS 5 - CORE, STATIC and Combined magnetic models
+#
+# Project: VirES
+# Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
@@ -26,18 +27,45 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod.shc
-import vires.util as ut
-
-
+from eoxmagmod import (
+    read_model_shc, DATA_CHAOS5_CORE_V4, DATA_CHAOS5_STATIC,
+)
 from vires.forward_models.base import BaseForwardModel
+from vires.util import cached_property
 
-
-class IGRF12Model(BaseForwardModel):
-    """ Forward model calculator for the IGRF12 field.
+class CHAOS5CoreForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-5 core field.
     """
+    identifier = "CHAOS-5-Core"
 
-    identifier = "IGRF12"
+    @cached_property
+    def model(self):
+        return read_model_shc(DATA_CHAOS5_CORE_V4)
 
-    def get_model(self, data_item):
-		return eoxmagmod.shc.read_model_shc(ut.DATA_IGRF12)
+
+class CHAOS5StaticForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-5 static field.
+    """
+    identifier = "CHAOS-5-Static"
+
+    @cached_property
+    def model(self):
+        return read_model_shc(DATA_CHAOS5_STATIC)
+
+
+class CHAOS5CombinedForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-5 Combined field.
+    """
+    identifier = "CHAOS-5-Combined"
+
+    @cached_property
+    def model(self):
+        return (
+            read_model_shc(DATA_CHAOS5_CORE_V4) +
+            read_model_shc(DATA_CHAOS5_STATIC)
+        )
+
+    @cached_property
+    def time_validity(self):
+        """ Get the validity interval of the model. """
+        return self._time_validity(read_model_shc(DATA_CHAOS5_CORE_V4))

@@ -165,21 +165,47 @@ class RetrieveDataFiltered(Component):
         """ Parse filters' string. """
         try:
             filter_ = {}
-            if filter_string:
+            if filter_string.strip():
                 for item in filter_string.split(";"):
                     name, bounds = item.split(":")
+                    name = name.strip()
+                    if not name:
+                        raise ValueError("Invalid empty filter name!")
                     lower, upper = [float(v) for v in bounds.split(",")]
                     filter_[name] = (lower, upper)
         except ValueError as exc:
             raise InvalidInputValueError("filters", exc)
         return filter_
 
+    def parse_models(self, model_ids, shc):
+        """ Parse filters' string. """
+        models = OrderedDict()
+        if model_ids.strip():
+            for model_id in (id_.strip() for id_ in model_ids.split(",")):
+                model = get_model(model_id)
+                if model is None:
+                    raise InvalidInputValueError(
+                        "model_ids",
+                        "Invalid model identifier '%s'!" % model_id
+                    )
+                models[model_id] = model
+        if shc:
+            try:
+                models["Custom_Model"] = mm.read_model_shc(shc)
+            except ValueError:
+                raise InvalidInputValueError(
+                    "shc", "Failed to parse the custom model coefficients."
+                )
+        return models
 
     def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
                 filters, sampling_step, csv_time_format, output, **kwarg):
-
         # get configurations
         conf_sys = SystemConfigReader()
+
+        # parse models and filters
+        models = self.parse_models(model_ids, shc)
+        filters = self.parse_filters(filters)
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
@@ -190,19 +216,6 @@ class RetrieveDataFiltered(Component):
         collections = db_models.ProductCollection.objects.filter(
             identifier__in=collection_ids
         )
-
-        filters = self.parse_filters(filters)
-
-
-        # collect models
-        models = OrderedDict(
-            (name, model) for name, model in (
-                (name, get_model(name)) for name
-                in (model_ids.split(",") if model_ids else [])
-            ) if model is not None
-        )
-        if shc:
-            models["Custom_Model"] = mm.read_model_shc(shc)
 
         data_fields = [
             field.identifier for field in collections[0].range_type

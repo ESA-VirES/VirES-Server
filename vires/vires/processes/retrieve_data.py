@@ -36,7 +36,9 @@ import numpy as np
 from django.conf import settings
 from eoxserver.core import Component, implements
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
-from eoxserver.services.ows.wps.exceptions import ExecuteError
+from eoxserver.services.ows.wps.exceptions import (
+    ExecuteError, InvalidInputValueError,
+)
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, AllowedRange, BoundingBoxData,
     CDFileWrapper,
@@ -154,8 +156,32 @@ class RetrieveData(Component):
         )),
     ]
 
+    def parse_models(self, model_ids, shc):
+        """ Parse filters' string. """
+        models = OrderedDict()
+        if model_ids.strip():
+            for model_id in (id_.strip() for id_ in model_ids.split(",")):
+                model = get_model(model_id)
+                if model is None:
+                    raise InvalidInputValueError(
+                        "model_ids",
+                        "Invalid model identifier '%s'!" % model_id
+                    )
+                models[model_id] = model
+        if shc:
+            try:
+                models["Custom_Model"] = mm.read_model_shc(shc)
+            except ValueError:
+                raise InvalidInputValueError(
+                    "shc", "Failed to parse the custom model coefficients."
+                )
+        return models
+
     def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
                 bbox, sampling_step, csv_time_format, output, **kwarg):
+        # parse models
+        models = self.parse_models(model_ids, shc)
+
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
@@ -174,16 +200,6 @@ class RetrieveData(Component):
                 ("X-EOX-Output-Data-Sampling-Period", json.dumps({})),
             )
             return CDFileWrapper(output_fobj, headers=http_headers, **output)
-
-        # collect models
-        models = OrderedDict(
-            (name, model) for name, model in (
-                (name, get_model(name)) for name
-                in (model_ids.split(",") if model_ids else [])
-            ) if model is not None
-        )
-        if shc:
-            models["Custom_Model"] = mm.read_model_shc(shc)
 
         # TODO: assert that the range_type is equal for all collections
         # prepare fields

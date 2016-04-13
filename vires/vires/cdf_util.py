@@ -31,7 +31,7 @@
 from os.path import exists
 from math import ceil, floor
 from numpy import (
-    nan, vectorize, object as dt_object, float64 as dt_float64,
+    amin, amax, nan, vectorize, object as dt_object, float64 as dt_float64,
 )
 import scipy
 from scipy.interpolate import interp1d
@@ -51,7 +51,7 @@ def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
     function.
     """
     if cdf_type is None:
-        cdf_type == CDF_DOUBLE_TYPE
+        cdf_type = CDF_DOUBLE_TYPE
     def _get_formater(shape, dtype, cdf_type):
         if len(shape) > 1:
             value_formater = _get_formater(shape[1:], dtype, cdf_type)
@@ -138,14 +138,8 @@ def cdf_rawtime_to_decimal_year(raw_time, cdf_type):
     return v_mjd2000_to_decimal_year(cdf_rawtime_to_mjd2000(raw_time, cdf_type))
 
 
-def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
-    """ Extract subset of the listed `fields` from a CDF data file.
-    The extracted range of values match times which lie within the given
-    closed time interval. The time interval is defined by the MDJ2000 `start`
-    and `stop` values.
-    The `margin` parameter is used to extend the index range by N surrounding
-    elements. Negative margin is allowed.
-    """
+def _cdf_time_slice(cdf, start, stop, margin=0, time_field='time'):
+    """ Get sub-setting slice bounds. """
     time = cdf.raw_var(time_field)
     idx_start, idx_stop = 0, time.shape[0]
 
@@ -169,6 +163,20 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
         if idx_stop > 0:
             idx_stop = max(0, idx_stop + margin)
 
+    return idx_start, idx_stop
+
+
+def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
+    """ Extract subset of the listed `fields` from a CDF data file.
+    The extracted range of values match times which lie within the given
+    closed time interval. The time interval is defined by the MDJ2000 `start`
+    and `stop` values.
+    The `margin` parameter is used to extend the index range by N surrounding
+    elements. Negative margin is allowed.
+    """
+    idx_start, idx_stop = _cdf_time_slice(
+        cdf, start, stop, margin, time_field
+    )
     return [(field, cdf[field][idx_start:idx_stop]) for field in fields]
 
 
@@ -189,10 +197,19 @@ def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
 
     cdf_time = cdf.raw_var(time_field)
 
-    # check minimal length required by the chosen kind of interpolation
+    # if possible get subset of the time data
     if time.size > 0 and cdf_time.shape[0] > min_len:
+        idx_start, idx_stop = _cdf_time_slice(
+            cdf, amin(time), amax(time), min_len//2, time_field
+        )
+        cdf_time = cdf_time[idx_start:idx_stop]
+
+    # check minimal length required by the chosen kind of interpolation
+    if time.size > 0 and cdf_time.shape[0] >= min_len:
         return [
-            (field, interp1d(cdf_time, cdf[field], **interp1d_prm)(time))
+            (field, interp1d(
+                cdf_time, cdf[field][idx_start:idx_stop], **interp1d_prm
+            )(time))
             for field in fields
         ]
     else:
