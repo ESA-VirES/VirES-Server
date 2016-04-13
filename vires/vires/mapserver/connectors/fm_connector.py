@@ -4,6 +4,7 @@
 #
 # Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
+#          Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
@@ -75,8 +76,8 @@ class ForwardModelConnector(Component):
         )
 
         with log_duration("model evaluation", logger):
-            # evaluate model
-            pixel_array = model_provider.evaluate(
+            # fast Cubic Spline model interpolation
+            pixel_array = model_provider.evaluate_int(
                 data_item, band.identifier, bbox, size_x, size_y, elevation,
                 time, coeff_min, coeff_max
             )
