@@ -43,13 +43,13 @@ from allauth.account.signals import user_signed_up
 from django.dispatch import receiver
 
 
-my_countries = list(chain((('', '-------'),), countries))
+my_countries = list(chain((('', '(select country)'),), countries))
 
 class ProfileForm(ModelForm):
-     class Meta:
-         model = UserProfile
-         fields = ['title', 'institution', 'country', 'study_area', 'executive_summary']
-         widgets = {'country': CountrySelectWidget()}
+    class Meta:
+        model = UserProfile
+        fields = ['title', 'institution', 'country', 'study_area', 'executive_summary']
+        widgets = {'country': CountrySelectWidget()}
 
 
 class ESASignupForm(forms.Form):
@@ -66,7 +66,14 @@ class ESASignupForm(forms.Form):
         widget=CountrySelectWidget())
 
     study_area = forms.CharField(max_length=200, required=False)
-    executive_summary = forms.CharField(max_length=3000, required=False)
+    executive_summary = forms.CharField(
+        max_length=3000,
+        widget=forms.Textarea(attrs={
+            'placeholder': 'We intend to use the SWARM data as part of ...',
+            'rows': 4
+        }),
+        required=False
+    )
 
 
     def signup(self, request, user):

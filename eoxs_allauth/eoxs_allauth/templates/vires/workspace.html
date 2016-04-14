@@ -11,14 +11,7 @@
 {% if user.is_authenticated %}
 
   {% load staticfiles %}
-  <style type="text/css">
-    .inputwide input {
-      width: 100%;
-    }
-    .inputwide input[type=checkbox] {
-      width: auto;
-    }
-  </style>
+  <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
 
   <!-- Page Content -->
@@ -112,7 +105,6 @@
 
   {% else %}
 
-
     <style type="text/css">
       /* Loading image related styles inside template to use template tags*/
 
@@ -140,42 +132,6 @@
           background-size: cover;
       }
 
-      /* Special form styling*/
-      .inputwide input{
-          width: 100%;
-      }
-      .inputwide input[type=checkbox]{
-          width: auto;
-      }
-      #formcontainer {
-        padding: 25px;
-      }
-      .help-inline.error{
-        color: #CC4C4C;
-        display: inline;
-        font-size: 0.9em;
-        padding: 0;
-        list-style-type: none;
-      }
-      .help-inline{
-        color: #333;
-        font-size: 0.9em;
-        padding: 0;
-      }
-      .helptext{
-        color: #777;
-        font-size: 0.8em;
-        padding: 0;
-      }
-
-      .control-label.required {
-        font-weight: 700;
-      }
-
-      .control-label{
-        font-weight: 500;
-      }
-
     </style>
 
     <!-- Start landing page -->
@@ -184,9 +140,8 @@
 
     <link href="{% static 'workspace/bower_components/bootstrap/dist/css/bootstrap.min.css'%}" rel="stylesheet">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet">
-    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
-   
-
+    <link href="{% static 'css/landing_page.css' %}" rel="stylesheet">
+    <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
 
         <!-- Wrap all page content here -->
     <div id="wrap">
@@ -370,7 +325,7 @@
           <hr>
 
           <div style="text-align: center">
-            <p style="text-align: center;">Sign-up using your preferred social provider (No need to remember new passwords!):</p>
+            <p style="text-align: center;">Sign-up using your preferred social provider (no need to remember new passwords!):</p>
             <ul class="socialaccount_providers">
               {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
             </ul>
@@ -444,7 +399,7 @@
                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
            {% endif %}
            <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-               <button type="submit" class="btn btn-primary">{% trans "Login" %}</button>
+               <button type="submit" class="linkbutton">{% trans "Login" %}</button>
            </div>
           </fieldset>
         </form>
@@ -463,9 +418,15 @@
     <div id="footer">
       <div class="container">
         <div style="float:left;">
-          <p class="text-muted">Copyright ©2014 ACME, Inc.</p>
+          <a href="http://eox.at" target="_blank">
+            <img style="margin-top: 5px;height:30px; float: left;" src="{% static 'images/EOX_Logo_inverted.png' %}">
+          </a>
+          <p style="margin-top: 9px; margin-left: 20px; float: left;" class="text-muted">service for</p>
+          <a href="http://esa.int" target="_blank">
+            <img style="height: 50px; margin-top: -5px; margin-left: 20px; float: left;" src="{% static 'images/esa_logo_white.png' %}">
+          </a>
         </div> 
-        <div style="float:right;">
+        <div style="float:right;margin-top: 9px;">
           <a href="/accounts/tos" target="_blank_">Terms of Service</a>
         </div>
       </div>
@@ -481,7 +442,7 @@
 
     <script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
     <script src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js'%}"></script>
-    <script src="{% static 'js/scripts.js' %}"></script>
+    <script src="{% static 'js/landing_page.js' %}"></script>
 
     <!-- End landing page -->
 
