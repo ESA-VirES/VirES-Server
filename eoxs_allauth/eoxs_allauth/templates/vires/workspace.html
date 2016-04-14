@@ -2,19 +2,18 @@
 {% load i18n %}
 {% block title %}
   <title>VirES for Swarm</title>
-  <style type="text/css">
-    .inputwide input {
-      width: 100%;
-    }
-    .inputwide input[type=checkbox] {
-      width: auto;
-    }
-  </style>
 {% endblock %}
 {% block content %}
-{% load staticfiles %}
-<link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
+
+
+
+
 {% if user.is_authenticated %}
+
+  {% load staticfiles %}
+  <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
+
   <!-- Page Content -->
   <div id="content">
     <div id="main"></div>
@@ -99,144 +98,354 @@
       </div>
     </div>
     <script data-main="{% static 'workspace/scripts/init.js' %}" src="{% static 'workspace/bower_components/requirejs/require.js' %}"></script>
+
+
+
+
+
   {% else %}
-    
+
+    <style type="text/css">
+      /* Loading image related styles inside template to use template tags*/
+
+      .bg-1 {
+        background: url('{% static 'images/Core_and_crust_from_Swarm.jpg' %}') no-repeat center center fixed; 
+          -webkit-background-size: cover;
+          -moz-background-size: cover;
+          -o-background-size: cover;
+          background-size: cover;
+      }
+
+      .bg-2 {
+        background: url('{% static 'images/VirES_Swarm_banner2.jpg' %}') no-repeat center center fixed; 
+          -webkit-background-size: cover;
+          -moz-background-size: cover;
+          -o-background-size: cover;
+          background-size: cover;
+      }
+
+      .bg-3 {
+        background: url('{% static 'images/Group_Picture_full.jpg' %}') no-repeat center center fixed; 
+          -webkit-background-size: cover;
+          -moz-background-size: cover;
+          -o-background-size: cover;
+          background-size: cover;
+      }
+
+    </style>
+
+    <!-- Start landing page -->
     {% load i18n %}
     {% load account socialaccount %}
 
-    
-    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <link href="{% static 'workspace/bower_components/bootstrap/dist/css/bootstrap.min.css'%}" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet">
+    <link href="{% static 'css/landing_page.css' %}" rel="stylesheet">
+    <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
 
-    <div class="background-image toggle-image first-image show"></div>
-    <div class="background-image toggle-image second-image"></div>
-    <div class="background-image toggle-image third-image"></div>
+        <!-- Wrap all page content here -->
+    <div id="wrap">
 
-    <style type="text/css">
-      body {background-color: #fff !important;}
-      /* Basic background image styling. */
-      .background-image {
-        background-position: center center;
-        background-repeat: no-repeat;
-        /*background-size: cover;*/
-      }
+     
+    <header class="masthead">
 
-      /* Styles for the alternating / transition effect. */
-      .toggle-image {
-        position: absolute;
-        width: 80%;
-        top: 0;
-        right: -30%;
-        height: 100%;
-        transition: opacity 1s ease-in-out;
-      }
+        <!-- Carousel
+        ================================================== -->
+        <div id="myCarousel" class="carousel slide">
+          
+          <div class="carousel-inner">
+          <div class="carousel-inner">
+            <div class="item active">
+              <img src="{% static 'images/VirES_Swarm_banner1.jpg' %}">
+              <div class="image-attribution">&copy; ESA/AOES Medialab</div>
+              <div class="container">
+                <div class="carousel-caption">
+                </div>
+              </div>
+            </div>
+          </div><!-- /.carousel-inner -->
+          
+         
+        </div>
+        <!-- /.carousel -->
+      
+    </header>
+      
+      
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-custom navbar-inverse navbar-static-top" id="nav">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+          <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav nav-justified">
+              <li><a href="#section1">Features</a></li>
+              <li><a href="#section2">Data</a></li>
+              <li><a href="#section3">Sign-up</a></li>
+              <li><a href="#section4">Login</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div><!--/.container -->
+    </div><!--/.navbar -->
+      
+    <!-- Begin page content -->
 
-      /* Styles for the specific images. */
-      .first-image {
-        background: -webkit-radial-gradient(top right, ellipse cover, rgba(0,0,0,0) 10%,rgba(255,255,255,1) 80%), url('https://eox.at/wp-content/uploads/2015/10/Selection_083-1024x527.png') no-repeat;
-        z-index: -3;
-        opacity: 0;
-      }
+    <div class="divider"></div>
 
-      .second-image {
-        background: -webkit-radial-gradient(top right, ellipse cover, rgba(0,0,0,0) 10%,rgba(255,255,255,1) 80%), url('https://eox.at/wp-content/uploads/2015/10/VirES_Globe_Visualizations.png') no-repeat;
-        z-index: -2;
-        opacity: 0;
-      }
+    <div class="container">
+      
 
-      .third-image {
-       background: -webkit-radial-gradient(top right, ellipse cover, rgba(0,0,0,0) 10%,rgba(255,255,255,1) 80%), url('https://eox.at/wp-content/uploads/2015/10/Selection_094.png') no-repeat;
-        z-index: -1;
-        opacity: 0;
-      }
+      <div class="page-header text-center">
+        <h1>Earth magnetic field as observed by satellite</h1>
+        <h3>ESA Swarm data is available for anyone to use via the virtual research platform VirES</h3>
+      </div>
 
-      .first-image.show {
-        opacity: 0.4;
-      }
+        <p class="lead text-center"> 
+          VirES for Swarm is a visual interface to
+          the Swarm mission magnetic products officially released by the European
+          Space Agency. It includes tools to study Earth magnetic models, make comparisons
+          with the satellite measurements, and consider solar activity. 
+        </p> 
+        
+        <hr>
 
-      .second-image.show {
-        opacity: 0.4;
-      }
+      </div>
+    </div>
 
-      .third-image.show {
-        opacity: 0.4;
-      }
-    </style>
 
+    <section class="bg-1">
+      <div class="image-attribution">&copy; ESA/DTU Space/ATG medialab</div>
+      <div class="col-sm-6 col-sm-offset-3 text-center"></div>
+    </section>
+      
+    <div class="divider" id="section1"></div>
+
+    <div class="row">
+        <div class="col-sm-6 col-sm-offset-3 larger">
+          <h1>Features</h1>
+
+          <hr>
+            <p>
+              Here is a demonstration of the VirES for Swarm tools and main features. 
+            </p>
+
+          <div class="divider"></div>
+
+          <div class="videowrapper">
+            <iframe src="https://www.youtube.com/embed/VXb6JfMTq5U" allowfullscreen></iframe>
+          </div>
+
+          <div class="divider"></div>
+
+          <p>
+              Swarm product data are visualized at the platform plotted over the map and
+              shown in the analytics view. The time-slider and various controls offer the
+              possibility to make selections and set criteria for data filtering and visualization
+              which immediately take effect on the display. The subset of Swarm data
+              selected by the user in this way can be downloaded in different encoding
+              formats. In addition, the Swarm data can be visually and numerically compared
+              to geomagnetic models, analysed with respect to Solar activity situation,
+              and publication-ready plots and diagrammes be generated.
+          </p> 
+          
+          <hr>
+        
+        </div><!--/col-->
+    </div><!--/container-->
+
+    <div class="divider" id="section2"></div>
+
+    <section class="bg-2">
+      <div class="image-attribution">&copy; ESA–P. Carril, 2013</div>
+    </section>
 
 
     <div class="row">
-      <div class="col-md-4 col-md-offset-4" id="formcontainer">
+        <div class="col-sm-6 col-sm-offset-3 larger">
+          <h1>Data</h1>
+          
+          <hr>
+         
+          <p>
+            The complete sets of magnetic vector and scalar data at 1 Hz rate at exact UTC seconds is provided for the A, B, and C Swarm satellites (<a target="_blank" href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_1b_Product_Definitions">Swarm Level 1b Products MAGX_LR_1B</a>).
+          </p>
+          <p>The following models of the Earth's magnetic field and its time variation are pre-loaded:</p>
+          <ul>
+            <li style="list-style-type: circle;"> 
+              The Swarm Initial Field Model for 2014 derived from the first year of data from the Swarm satellite trio (<a target="_blank" href="http://onlinelibrary.wiley.com/doi/10.1002/2014GL062659/abstract">SIFM</a>)
+            </li>
+            <li style="list-style-type: circle;"> 
+              The 12th Generation International Geomagnetic Reference Field (<a target="_blank" href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0228-9">IGRF 12</a>) released in 2015 by the International Association of Geomagnetism and Aeronomy
+            </li>
+            <li style="list-style-type: circle;"> 
+              The CHAOS-5 high resolution geomagnetic field model, derived primarily from Swarm, CHAMP, and Ørsted satellite magnetic data along with ground observatory data (<a target="_blank" href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0274-3">CHAOS-5</a>)
+            </li>
+          </ul>
+          <p>Users can also work with Custom Models and upload Spherical Harmonic Expansion coefficients (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-5/SHC-Format-Decsription.pdf">SHC file format</a>)</p>
+          <p>The global context of space weather is provided in form of:</p>
+          <ul>
+            <li style="list-style-type: circle;"> 
+              The Disturbance storm time index (<a target="_blank" href="https://en.wikipedia.org/wiki/Disturbance_storm_time_index">Dst Index</a>)
+            </li>
+            <li style="list-style-type: circle;">
+              The Disturbances in the horizontal component of earth's magnetic field (<a target="_blank" href="https://en.wikipedia.org/wiki/K-index">planetary Kp Index</a>)
+            </li>
+          </ul>
 
-        <div><h3>Welcome to VirES Services, this is a placeholder screen, please sign up or login to continue</h3></div>
-          {% get_providers as socialaccount_providers %}
-          {% if socialaccount_providers %}
-            <p>
-              {% blocktrans with site.name as site_name %}Login with following services or sign up
-              below{% endblocktrans %}
-            </p>
-            <div class="socialaccount_ballot">
-              <ul class="socialaccount_providers">
-                {% include "socialaccount/snippets/provider_list.html" with process="login" %}
-              </ul>
+        </div><!--/col-->
+    </div><!--/container-->
+
+    <div class="divider"></div>
+
+    <div class="divider" id="section3"></div>
+
+    <section class="bg-3">
+      <div class="image-attribution">&copy; ESA–P. Carril, 2013</div>
+    </section>
+
+
+    <div class="row">
+        <div class="col-sm-6 col-sm-offset-3 larger">
+          <h1>Sign-up</h1>
+          
+          <hr>
+         
+          <p>
+            Swarm for VirES service and data are 100% free. To access Swarm data you
+            need to sign-up (register) as a user by providing user profile information
+            such as user name, email address, title, country, institution, and an executive
+            description of the the project in which your Swarm data is being used. 
+          </p>
+          
+          <hr>
+
+          <div style="text-align: center">
+            <p style="text-align: center;">Sign-up using your preferred social provider (no need to remember new passwords!):</p>
+            <ul class="socialaccount_providers">
+              {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
+            </ul>
+            <p style="text-align: center;">or sign-up directly:</p>
+            <div style="margin-top: 2em;">
+              <a class="linkbutton" href="{% url 'account_signup' %}">Sign-up</a>
             </div>
-            {% include "socialaccount/snippets/login_extra.html" %}
-          <h3>{% trans "Sign up" %}</h3>
-          <p>Already have an account? Then please <a href="{% url 'account_login' %}">Login</a>.</p>
-          <form class="form-horizontal inputwide" method="POST" action="{% url 'account_signup' %}">
-            {% csrf_token %}
-            <fieldset>
-              {% for field in signup_form.visible_fields %}
-                {% if field.errors %}
-                  <div class="control-group error">
-                    <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    <span class="help-inline error">
-                      {% for error in  field.errors %}{{ error }}{% endfor %}
-                    </span>
-                  </div>
-                {% else %}
-                  <div class="control-group">
-                    <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}
-                      <p class="help-inline"><small>{{ field.help_text }}</small></p>
-                    {% endif %}
-                  </div>
-                {% endif %}
-              {% endfor %}
-              {% if redirect_field_value %}
-                  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-              {% endif %}
-              <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-                  <button type="submit" class="btn btn-primary">{% trans "Sign up" %} &raquo;</button>
-              </div>
-            </fieldset>
-          </form>
+          </div>
+          
+          <div class="divider"></div>
+          
+        </div><!--/col-->
+    </div><!--/container-->
+    <div class="row form-group">
+        <div class="col-xs-10">
+          
+        </div>
+    </div>
+      
+  
+    <div class="divider" id="section4"></div>
+
+    <div class="row">
+      
+      <hr>
+      
+      <div class="col-sm-6 col-sm-offset-3 larger">
+          
+        <div class="row form-group">
+          <h1>Login</h1>
+        </div>
+      
+      </div><!--/row-->
+
+     <div class="col-sm-4 col-sm-offset-4 larger">
+      <p style="text-align: center;">Login using your preferred social provider:</p>
+      <ul class="socialaccount_providers">
+        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+      </ul>
+      <p style="text-align: center;">or directly with your account credentials here:</p>
+      <form class="form-horizontal inputwide" method="POST" action="{% url 'account_login' %}">
+          {% csrf_token %}
+          <fieldset>
+           {% if form.errors %}
+             <p class="help-inline error">
+               Incorrect login or password.<br>
+               Please try again.<br>
+               Note that both fields are case sensitive.
+             </p>
+           {% endif %}
+           {% for field in login_form %}
+             {% if field.errors %}
+               <div class="control-group error">
+                 <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                 {{ field }}
+                 <span class="help-inline error">
+                   {% for error in  field.errors %}{{ error }}{% endfor %}
+                 </span>
+               </div>
+             {% else %}
+               <div class="control-group">
+                 <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                 {{ field }}
+                 {% if field.help_text %}
+                     <p class="help-inline"><small>{{ field.help_text }}</small></p>
+                 {% endif %}
+               </div>
+             {% endif %}
+           {% endfor %}
+           {% if redirect_field_value %}
+               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+           {% endif %}
+           <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
+               <button style="border: none;" type="submit" class="linkbutton">{% trans "Login" %}</button>
+           </div>
+          </fieldset>
+        </form>
+        <div class="divider"></div>
+     </div>
+      
+    <div class="container">
+        <div class="col-sm-8 col-sm-offset-2 text-center">
+
+          
+        </div><!--/col-->
+    </div><!--/container-->
+      
+    </div><!--/wrap-->
+
+    <div id="footer">
+      <div class="container">
+        <div style="float:left;">
+          <a href="http://eox.at" target="_blank">
+            <img style="margin-top: 5px;height:30px; float: left;" src="{% static 'images/EOX_Logo_inverted.png' %}">
+          </a>
+          <p style="margin-top: 9px; margin-left: 20px; float: left;" class="text-muted">service for</p>
+          <a href="http://esa.int" target="_blank">
+            <img style="height: 50px; margin-top: -5px; margin-left: 20px; float: left;" src="{% static 'images/esa_logo_white.png' %}">
+          </a>
+        </div> 
+        <div style="float:right;margin-top: 9px;">
+          <a href="/accounts/tos" target="_blank_">Terms of Service</a>
         </div>
       </div>
-      <script type="text/javascript">
-        function cycleBackgrounds() {
-          var index = 0;
+    </div>
 
-          $imageEls = $('.toggle-image'); // Get the images to be cycled.
+    <ul class="nav pull-right scroll-top">
+      <li><a href="#" title="Scroll to top"><i class="glyphicon glyphicon-chevron-up"></i></a></li>
+    </ul>
 
-          setInterval(function () {
-            // Get the next index.  If at end, restart to the beginning.
-            index = index + 1 < $imageEls.length ? index + 1 : 0;
-            // Show the next image.
-            $imageEls.eq(index).addClass('show');
-            // Hide the previous image.
-            $imageEls.eq(index - 1).removeClass('show');
 
-          }, 4000);
-        };
+    <!-- script references -->
+    {% load staticfiles %}
 
-        // Document Ready.
-        $(function () {
-          cycleBackgrounds();
-        });
-      </script>
-    {% endif %}
+    <script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
+    <script src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js'%}"></script>
+    <script src="{% static 'js/landing_page.js' %}"></script>
+
+    <!-- End landing page -->
+
   {% endif %}
   
 {% endblock %}

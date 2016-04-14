@@ -9,80 +9,8 @@
   {% block title %}
   <title>VirES for Swarm</title>
   {% endblock %}
+
   <style type="text/css">
-  	.socialaccount_providers li{
-  		display: inline;
-  		margin-left: 1em;
-  	}
-    
-  	.socialaccount_providers{
-      padding-left: 0px;
-      text-align: center;
-    }
-
-    .socialaccount_provider.facebook  { 
-      font-size: 0;
-      text-decoration: none;
-    }
-    .socialaccount_provider.facebook::before { 
-      font-family: FontAwesome;
-      content: "\f082";
-      font-size: 40px;
-    }
-
-
-    .socialaccount_provider.twitter  { 
-      font-size: 0;
-      text-decoration: none;
-    }
-    .socialaccount_provider.twitter::before { 
-      font-family: FontAwesome;
-      content: "\f081";
-      font-size: 40px;
-    }
-
-
-    .socialaccount_provider.github  { 
-      font-size: 0;
-      text-decoration: none;
-    }
-    .socialaccount_provider.github::before { 
-      font-family: FontAwesome;
-      content: "\f092";
-      font-size: 40px;
-    }
-
-
-    .socialaccount_provider.dropbox  { 
-      font-size: 0;
-      text-decoration: none;
-    }
-    .socialaccount_provider.dropbox::before { 
-      font-family: FontAwesome;
-      content: "\f16b";
-      font-size: 40px;
-    }
-
-    .socialaccount_provider.linkedin_oauth2  { 
-      font-size: 0;
-      text-decoration: none;
-    }
-    .socialaccount_provider.linkedin_oauth2::before { 
-      font-family: FontAwesome;
-      content: "\f08c";
-      font-size: 40px;
-    }
-
-    .socialaccount_provider.google  { 
-      font-size: 0;
-      text-decoration: none;
-    }
-    .socialaccount_provider.google::before { 
-      font-family: FontAwesome;
-      content: "\f0d4";
-      font-size: 40px;
-    }
-
     /*Styling for messages div to be on top and
      floating over all elements */
     #messagescontainer{
@@ -92,9 +20,8 @@
       right: 0;
       top: 66px;
     }
-
-    
   </style>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/social_providers.css' %}" />
 </head>
 <body>
 	{% block messages %}

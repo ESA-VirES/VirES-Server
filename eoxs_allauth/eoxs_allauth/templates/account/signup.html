@@ -4,7 +4,7 @@
 {% block content %}
   <h2>{% trans "Sign up" %}</h2>
   <p>{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">Login</a>.{% endblocktrans %}</p>
-  <p class="help-inline"><small>(*)Required fields; Please help us getting to know you by filling out non required fields.</small></p>
+  <p class="help-inline" style="font-size: 1em;">(*) Required fields; Please help us getting to know you by filling out non required fields.</p>
   <form class="form-horizontal inputwide" method="POST" action="{% url 'account_signup' %}">
     {% csrf_token %}
     <fieldset>
@@ -38,9 +38,9 @@
           <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
       {% endif %}
       <div class="checkbox">
-          <label>
+          <label style="font-weight: bold;">
               <input id="tosagree" style="width: auto;" type="checkbox" value="">
-              I agree to the <a href="/accounts/tos" target="_blank_">Terms of Service</a>
+              I Read and Accept the <a href="/accounts/tos" target="_blank_">Term and Conditions</a> *
           </label>
       </div>
       <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">

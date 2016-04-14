@@ -1,0 +1,38 @@
+/* Special form styling*/
+.inputwide input{
+    width: 100%;
+}
+.inputwide input[type=checkbox]{
+    width: auto;
+}
+.inputwide textarea {
+  width: 100%;
+}
+#formcontainer {
+  padding: 25px;
+}
+.help-inline.error{
+  color: #CC4C4C;
+  display: inline;
+  font-size: 0.9em;
+  padding: 0;
+  list-style-type: none;
+}
+.help-inline{
+  color: #333;
+  font-size: 0.9em;
+  padding: 0;
+}
+.helptext{
+  color: #777;
+  font-size: 0.8em;
+  padding: 0;
+}
+
+.control-label.required {
+  font-weight: 700;
+}
+
+.control-label{
+  font-weight: 500;
+}
