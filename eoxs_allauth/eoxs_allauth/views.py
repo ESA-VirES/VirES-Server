@@ -28,7 +28,10 @@
 
 from django.conf import settings
 from django.shortcuts import render
+
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+
 from django.views.generic.edit import UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.forms.models import modelform_factory
@@ -67,6 +70,7 @@ def workspace(request):
     })
 
 @login_required
+@csrf_exempt
 def wrapped_ows(request):
     """ EOxServer/allauth wrapper of the ows endpoint. """
     return ows(request)
