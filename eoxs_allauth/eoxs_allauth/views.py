@@ -59,8 +59,10 @@ def workspace(request):
     """
     # TODO: check if request.method is set to "POST"
     # if yes then login or signup user then do redirect or whatever
+    login_form = LoginForm()
+    del login_form.fields["login"].widget.attrs["autofocus"]
     return render(request, WORKSPACE_TEMPLATE, {
-        "login_form": LoginForm(),
+        "login_form": login_form,
         "signup_form": SignupForm()
     })
 
