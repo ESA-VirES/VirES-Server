@@ -1,4 +1,4 @@
-@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700,600);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700,600);
 
 html,
 body {
@@ -24,14 +24,7 @@ body {
   padding: 0 0 60px;
 }
 
-/* Set the fixed height of the footer here */
-#footer {
-  height: 70px;
-  background-color: #f5f5f5;
-  margin-top:50px;
-  padding-top:15px;
-  padding-bottom:15px;
-}
+
 
 
 /* Custom page CSS
@@ -73,6 +66,15 @@ body {
 }
 .container .credit {
   margin: 20px 0;
+}
+
+ /* Set the fixed height of the footer here */
+#footer {
+  min-height: 70px;
+  background-color: #414141;
+  margin-top:50px;
+  padding-top:15px;
+  padding-bottom:15px;
 }
 
 #footer {

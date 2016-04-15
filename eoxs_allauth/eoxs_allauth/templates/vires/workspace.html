@@ -305,7 +305,7 @@
     <div class="divider" id="section3"></div>
 
     <section class="bg-3">
-      <div class="image-attribution">&copy; ESA–P. Carril, 2013</div>
+      <div class="image-attribution">&copy; DTU Space-P-E. Holmdahl-Olsen, 2014</div>
     </section>
 
 
@@ -417,17 +417,29 @@
 
     <div id="footer">
       <div class="container">
-        <div style="float:left;">
-          <a href="http://eox.at" target="_blank">
-            <img style="margin-top: 5px;height:30px; float: left;" src="{% static 'images/EOX_Logo_inverted.png' %}">
-          </a>
-          <p style="margin-top: 9px; margin-left: 20px; float: left;" class="text-muted">service for</p>
-          <a href="http://esa.int" target="_blank">
-            <img style="height: 50px; margin-top: -5px; margin-left: 20px; float: left;" src="{% static 'images/esa_logo_white.png' %}">
-          </a>
-        </div> 
-        <div style="float:right;margin-top: 9px;">
-          <a href="/accounts/tos" target="_blank_">Terms of Service</a>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="row">
+
+                <a href="http://eox.at" target="_blank" style="text-decoration: none;">
+                  <img style="height:30px; display:inline;" src="{% static 'images/EOX_Logo_inverted.png' %}">
+                </a>
+
+
+                <p class="text-muted" style="display:inline;">service for</p>
+
+
+                <a href="http://esa.int" target="_blank" style="text-decoration: none;">
+                  <img style="height:50px;  display:inline; margin-left:4px;" src="{% static 'images/esa_logo_white.png' %}">
+                </a>
+
+            </div>
+          </div>
+
+          <div class="col-md-6 text-muted" style="text-align: center; margin-top:15px;">
+            <a style="display:inline; margin-right:5px;" href="/accounts/datatc" target="_blank_">ESA Data Terms</a> | 
+            <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a>
+          </div>
         </div>
       </div>
     </div>
