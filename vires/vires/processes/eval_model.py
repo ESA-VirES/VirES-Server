@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Magnetic models' difference evaluation
+# Magnetic model evaluation
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>

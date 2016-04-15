@@ -30,7 +30,7 @@ import json
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from itertools import izip
-import cStringIO
+from cStringIO import StringIO
 import numpy as np
 
 from django.conf import settings
@@ -56,7 +56,7 @@ from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
 )
 
-import eoxmagmod as mm
+from eoxmagmod import read_model_shc, GEOCENTRIC_SPHERICAL, eval_apex
 
 # TODO: Make following parameters configurable.
 # Limit response size (equivalent to 1/2 daily SWARM LR product).
@@ -170,7 +170,7 @@ class RetrieveData(Component):
                 models[model_id] = model
         if shc:
             try:
-                models["Custom_Model"] = mm.read_model_shc(shc)
+                models["Custom_Model"] = read_model_shc(shc)
             except ValueError:
                 raise InvalidInputValueError(
                     "shc", "Failed to parse the custom model coefficients."
@@ -186,7 +186,7 @@ class RetrieveData(Component):
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
 
-        output_fobj = cStringIO.StringIO()
+        output_fobj = StringIO()
 
         collection_ids = collection_ids.split(",") if collection_ids else []
 
@@ -351,7 +351,7 @@ class RetrieveData(Component):
         data.update(query_kp_int(settings.VIRES_AUX_DB_KP, mjd2000_times))
 
         # get Quasi-dipole Latitude and Magnetic Local Time
-        data["qdlat"], _, data["mlt"] = mm.eval_apex(
+        data["qdlat"], _, data["mlt"] = eval_apex(
             data["Latitude"],
             data["Longitude"],
             data["Radius"] * 1e-3, # radius in km
@@ -372,7 +372,8 @@ class RetrieveData(Component):
                 model_data = model.eval(
                     coords_sph,
                     datetime_to_decimal_year(time_mean),
-                    mm.GEOCENTRIC_SPHERICAL,
+                    GEOCENTRIC_SPHERICAL,
+                    GEOCENTRIC_SPHERICAL,
                     check_validity=False
                 )
                 model_data[:, 2] *= -1
