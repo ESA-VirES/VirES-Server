@@ -25,6 +25,9 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+# NOTE: Loading of this process component is disabled and the code is scheduled
+#       for removal. See the eval_model_diff instead.
+
 import os 
 from uuid import uuid4
 import os.path
@@ -54,8 +57,6 @@ from eoxserver.services.ows.wps.parameters import (
     AllowedRange, UnitLinear,
 )
 
-
-
 from vires.util import get_total_seconds
 from vires.util import get_color_scale
 from vires.util import get_model
@@ -72,7 +73,6 @@ import tempfile
 os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 
 from matplotlib import pyplot
-
 
 
 def toYearFraction(dt_start, dt_end):
@@ -98,6 +98,7 @@ class calc_diff(Component):
     """ Process to retrieve registered data (focused on Swarm data)
     """
     implements(ProcessInterface)
+    abstract = True
 
     identifier = "calc_diff"
     title = "Calculate the difference between registered models or uploaded shc file"

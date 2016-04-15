@@ -25,6 +25,9 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+# NOTE: Loading of this process component is disabled and the code is scheduled
+#       for removal. See the eval_model instead.
+
 import os 
 from uuid import uuid4
 import os.path
@@ -108,6 +111,7 @@ class load_shc(Component):
     """ Process to retrieve registered data (focused on Swarm data)
     """
     implements(ProcessInterface)
+    abstract = True
 
     identifier = "load_shc"
     title = "Load and process SHC coefficient file returning image of resulting harmonic expansion"
