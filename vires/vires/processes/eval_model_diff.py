@@ -34,29 +34,22 @@ from os.path import join, exists
 from logging import getLogger, DEBUG
 from uuid import uuid4
 from datetime import datetime
-from numpy import (
-    flipud, empty, linspace, meshgrid, amin, amax,
-)
-from matplotlib import pyplot
-from eoxmagmod import (
-    GEODETIC_ABOVE_WGS84, vnorm, read_model_shc,
-)
+from numpy import empty, linspace, meshgrid, amin, amax
+from matplotlib.colors import Normalize
+from eoxmagmod import GEODETIC_ABOVE_WGS84, vnorm
 from eoxserver.core import Component, implements
-from eoxserver.contrib import gdal
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
-from eoxserver.services.ows.wps.exceptions import (
-    ExecuteError, InvalidInputValueError,
-)
+from eoxserver.services.ows.wps.exceptions import ExecuteError
 from eoxserver.services.ows.wps.parameters import (
     BoundingBox, BoundingBoxData, ComplexData, CDFile,
     FormatText, FormatBinaryRaw, FormatBinaryBase64,
     LiteralData, AllowedRange
 )
 from vires.config import SystemConfigReader
-from vires.util import get_color_scale, get_model
 from vires.time_util import datetime_to_decimal_year, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.forward_models.base import EVAL_VARIABLE
+from vires.processes.util import parse_model, parse_style, data_to_png
 
 logger = getLogger("vires.processes.%s" % __name__.split(".")[-1])
 
@@ -103,9 +96,9 @@ class EvalModelDiff(Component):
             #TODO: list available models.
         )),
         ("variable", LiteralData(
-            "variable", str, optional=True, default="F",
+            "variable", str, optional=True, default="F_vect",
             abstract="Variable to be evaluated.",
-            allowed_values=tuple(EVAL_VARIABLE.keys()),
+            allowed_values=tuple(["F_vect"] + EVAL_VARIABLE.keys()),
         )),
         ("elevation", LiteralData(
             "elevation", float, optional=True, uoms=(("km", 1.0), ("m", 1e-3)),
@@ -145,22 +138,16 @@ class EvalModelDiff(Component):
         )),
     ]
 
-    def parse_model(self, model_id, shc, input_id):
-        if model_id == "Custom_Model":
-            model = read_model_shc(shc)
-        else:
-            model = get_model(model_id)
-            if model is None:
-                raise InvalidInputValueError(
-                    input_id, "Invalid model identifier %r!" % model_id
-                )
-        return model
-
     def execute(self, model1_id, model2_id, shc, variable, begin_time, end_time,
                 elevation, range_max, range_min, bbox, width, height,
                 style, output, **kwarg):
         # get configurations
         conf_sys = SystemConfigReader()
+
+        # parse models and styles
+        color_map = parse_style("style", style)
+        model1 = parse_model("model", model1_id, shc)
+        model2 = parse_model("reference_model", model2_id, shc)
 
         # convert bounding box to a simple easting/nothing tuple
         bbox = (bbox[0][1], bbox[0][0], bbox[1][1], bbox[1][0])
@@ -171,11 +158,6 @@ class EvalModelDiff(Component):
         mean_decimal_year = datetime_to_decimal_year(
             (end_time - begin_time)/2 + begin_time
         )
-
-        color_map = get_color_scale(style)
-
-        model1 = self.parse_model(model1_id, shc, "model")
-        model2 = self.parse_model(model2_id, shc, "reference_model")
 
         hd_x = (0.5 / width) * (bbox[2] - bbox[0])
         hd_y = (0.5 / height) * (bbox[1] - bbox[3])
@@ -218,55 +200,35 @@ class EvalModelDiff(Component):
                 check_validity=False
             )
 
-        # TODO: show also vnorm(model1_field - model2_field)
-        pixel_array = (
-            EVAL_VARIABLE[variable](model1_field, coord_gdt) -
-            EVAL_VARIABLE[variable](model2_field, coord_gdt)
-        )
+        logger.debug("requested variable: %s", variable)
+        if variable == "F_vect":
+            pixel_array = vnorm(model1_field - model2_field)
+        else:
+            pixel_array = (
+                EVAL_VARIABLE[variable](model1_field, coord_gdt) -
+                EVAL_VARIABLE[variable](model2_field, coord_gdt)
+            )
 
         range_min = amin(pixel_array) if range_min is None else range_min
         range_max = amax(pixel_array) if range_max is None else range_max
         if range_max < range_min:
             range_max, range_min = range_min, range_max
-        logger.debug("range: %s", (range_min, range_max))
-
-        # scale pixel values
-        scale_factor = 255.0 / (range_max - range_min)
-        pixel_array = scale_factor * (pixel_array - range_min)
+        logger.debug("output data range: %s", (range_min, range_max))
+        data_norm = Normalize(range_min, range_max)
 
         # the output image
         temp_basename = uuid4().hex
         temp_filename = join(conf_sys.path_temp, temp_basename + ".png")
 
         try:
-            array_to_colormap_png(temp_filename, pixel_array, color_map)
-            #array_to_png(temp_filename, pixel_array)
-
+            data_to_png(temp_filename, pixel_array, data_norm, color_map)
             result = CDFile(temp_filename, **output)
-
         except Exception as exc:
             if exists(temp_filename):
                 remove(temp_filename)
-            raise ExecuteError(exc)
+            raise
 
         return {
             "output": result,
             "style_range": "%s,%s,%s"%(style, range_min, range_max),
         }
-
-
-def array_to_colormap_png(filename, data, color_map):
-    """ Convert an array to coloured PNG. """
-    fig = pyplot.imshow(flipud(data), vmin=0, vmax=256, origin="lower")
-    fig.set_cmap(color_map)
-    fig.write_png(filename, True)
-
-
-def array_to_grayscale_png(filename, data):
-    """ Convert an array to PNG """
-    height, width = data.shape
-    mem_driver = gdal.GetDriverByName('MEM')
-    png_driver = gdal.GetDriverByName('PNG')
-    mem_ds = mem_driver.Create('', width, height, 1, gdal.GDT_Byte)
-    mem_ds.GetRasterBand(1).WriteArray(data)
-    png_driver.CreateCopy(filename, mem_ds, 0)
