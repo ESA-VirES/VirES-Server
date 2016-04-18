@@ -98,7 +98,7 @@ class EvalModelDiff(Component):
         ("variable", LiteralData(
             "variable", str, optional=True, default="F_vect",
             abstract="Variable to be evaluated.",
-            allowed_values=tuple(["F_vect"] + EVAL_VARIABLE.keys()),
+            allowed_values=tuple(["F_vect", "H_vect"] + EVAL_VARIABLE.keys()),
         )),
         ("elevation", LiteralData(
             "elevation", float, optional=True, uoms=(("km", 1.0), ("m", 1e-3)),
@@ -182,38 +182,55 @@ class EvalModelDiff(Component):
         coord_gdt[:, :, 1] = lons
         coord_gdt[:, :, 2] = elevation
 
-        with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
-            model1_id, variable, width, height
-        ), logger, DEBUG):
-            model1_field = model1.eval(
-                coord_gdt,
-                mean_decimal_year,
-                GEODETIC_ABOVE_WGS84,
-                GEODETIC_ABOVE_WGS84,
-                secvar=False,
-                maxdegree=coeff_min,
-                mindegree=coeff_max,
-                check_validity=False
-            )
-
-        with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
-            model2_id, variable, width, height
-        ), logger, DEBUG):
-            model2_field = model2.eval(
-                coord_gdt,
-                mean_decimal_year,
-                GEODETIC_ABOVE_WGS84,
-                GEODETIC_ABOVE_WGS84,
-                secvar=False,
-                maxdegree=coeff_min,
-                mindegree=coeff_max,
-                check_validity=False
-            )
-
+        logger.debug("coefficient range: %s", (coeff_min, coeff_max))
         logger.debug("requested variable: %s", variable)
-        if variable == "F_vect":
-            pixel_array = vnorm(model1_field - model2_field)
+
+        if variable in ("F_vect", "H_vect", "X", "Y", "Z"):
+            with ElapsedTimeLogger("(%s - %s).%s %dx%dpx evaluated in" % (
+                model1_id, model2_id, variable, width, height
+            ), logger, DEBUG):
+                model_field_diff = (model1 - model2).eval(
+                    coord_gdt,
+                    mean_decimal_year,
+                    GEODETIC_ABOVE_WGS84,
+                    GEODETIC_ABOVE_WGS84,
+                    secvar=False,
+                    maxdegree=coeff_min,
+                    mindegree=coeff_max,
+                    check_validity=False
+                )
+
+            pixel_array = EVAL_VARIABLE[variable[0]](model_field_diff, None)
+
         else:
+            with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
+                model1_id, variable, width, height
+            ), logger, DEBUG):
+                model1_field = model1.eval(
+                    coord_gdt,
+                    mean_decimal_year,
+                    GEODETIC_ABOVE_WGS84,
+                    GEODETIC_ABOVE_WGS84,
+                    secvar=False,
+                    maxdegree=coeff_min,
+                    mindegree=coeff_max,
+                    check_validity=False
+                )
+
+            with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
+                model2_id, variable, width, height
+            ), logger, DEBUG):
+                model2_field = model2.eval(
+                    coord_gdt,
+                    mean_decimal_year,
+                    GEODETIC_ABOVE_WGS84,
+                    GEODETIC_ABOVE_WGS84,
+                    secvar=False,
+                    maxdegree=coeff_min,
+                    mindegree=coeff_max,
+                    check_validity=False
+                )
+
             pixel_array = (
                 EVAL_VARIABLE[variable](model1_field, coord_gdt) -
                 EVAL_VARIABLE[variable](model2_field, coord_gdt)
