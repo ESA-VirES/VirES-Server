@@ -108,6 +108,16 @@ class EvalModel(Component):
             "range_max", float, optional=True, default=None,
             abstract="Maximum displayed value."
         )),
+        ("coeff_min", LiteralData(
+            "coeff_min", int, optional=True, default=-1,
+            allowed_values=AllowedRange(-1., None, dtype=int),
+            abstract="The lower limit of the applied model coefficients."
+        )),
+        ("coeff_max", LiteralData(
+            "coeff_max", int, optional=True, default=-1,
+            allowed_values=AllowedRange(-1., None, dtype=int),
+            abstract="The upper limit of the applied model coefficients."
+        )),
         ("shc", ComplexData(
             "shc", title="SHC file data", optional=True,
             formats=(FormatText("text/plain"),),
@@ -135,7 +145,7 @@ class EvalModel(Component):
 
     def execute(self, model_id, shc, variable, begin_time, end_time,
                 elevation, range_max, range_min, bbox, width, height,
-                style, output, **kwarg):
+                style, output, coeff_min, coeff_max, **kwarg):
         # get configurations
         conf_sys = SystemConfigReader()
 
@@ -166,6 +176,9 @@ class EvalModel(Component):
         coord_gdt[:, :, 1] = lons
         coord_gdt[:, :, 2] = elevation
 
+        logger.debug("coefficient range: %s", (coeff_min, coeff_max))
+        logger.debug("requested variable: %s", variable)
+
         with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
             model_id, variable, width, height
         ), logger, DEBUG):
@@ -175,12 +188,11 @@ class EvalModel(Component):
                 GEODETIC_ABOVE_WGS84,
                 GEODETIC_ABOVE_WGS84,
                 secvar=False,
-                maxdegree=-1,
-                mindegree=-1,
+                maxdegree=coeff_min,
+                mindegree=coeff_max,
                 check_validity=False
             )
 
-        logger.debug("requested variable: %s", variable)
         pixel_array = EVAL_VARIABLE[variable](model_field, coord_gdt)
 
         range_min = amin(pixel_array) if range_min is None else range_min

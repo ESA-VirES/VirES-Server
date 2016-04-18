@@ -113,6 +113,16 @@ class EvalModelDiff(Component):
             "range_max", float, optional=True, default=None,
             abstract="Maximum displayed value."
         )),
+        ("coeff_min", LiteralData(
+            "coeff_min", int, optional=True, default=-1,
+            allowed_values=AllowedRange(-1., None, dtype=int),
+            abstract="The lower limit of the applied model coefficients."
+        )),
+        ("coeff_max", LiteralData(
+            "coeff_max", int, optional=True, default=-1,
+            allowed_values=AllowedRange(-1., None, dtype=int),
+            abstract="The upper limit of the applied model coefficients."
+        )),
         ("shc", ComplexData(
             "shc", title="SHC file data", optional=True,
             formats=(FormatText("text/plain"),),
@@ -140,7 +150,7 @@ class EvalModelDiff(Component):
 
     def execute(self, model1_id, model2_id, shc, variable, begin_time, end_time,
                 elevation, range_max, range_min, bbox, width, height,
-                style, output, **kwarg):
+                style, output, coeff_min, coeff_max, **kwarg):
         # get configurations
         conf_sys = SystemConfigReader()
 
@@ -181,8 +191,8 @@ class EvalModelDiff(Component):
                 GEODETIC_ABOVE_WGS84,
                 GEODETIC_ABOVE_WGS84,
                 secvar=False,
-                maxdegree=-1,
-                mindegree=-1,
+                maxdegree=coeff_min,
+                mindegree=coeff_max,
                 check_validity=False
             )
 
@@ -195,8 +205,8 @@ class EvalModelDiff(Component):
                 GEODETIC_ABOVE_WGS84,
                 GEODETIC_ABOVE_WGS84,
                 secvar=False,
-                maxdegree=-1,
-                mindegree=-1,
+                maxdegree=coeff_min,
+                mindegree=coeff_max,
                 check_validity=False
             )
 
