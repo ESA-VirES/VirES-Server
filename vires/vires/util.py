@@ -31,6 +31,7 @@
 from os.path import dirname, join
 from math import ceil, floor
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.cm import get_cmap
 
 import eoxmagmod as mm
 
@@ -64,11 +65,6 @@ class cached_property(object):
 def between(data, lower_bound, upper_bound):
     """ Get mask of values within the given closed interval. """
     return (data >= lower_bound) & (data <= upper_bound)
-
-
-def datetime_mean(start, stop):
-    """ Get arithmetic mean of two `datetime` values. """
-    return (stop - start)/2 + start
 
 
 # TODO: To be removed.
@@ -268,4 +264,5 @@ def get_color_scale(name):
         ])
 
     else:
-        return name
+        # get standard colour-map
+        return get_cmap(name)

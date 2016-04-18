@@ -38,6 +38,11 @@ DT_2000 = datetime(2000, 1, 1)
 
 TZ_UTC = utc
 
+def datetime_mean(start, stop):
+    """ Get arithmetic mean of two `datetime.datetime` values. """
+    return (stop - start)/2 + start
+
+
 def naive_to_utc(dt_obj):
     """ Convert naive `datetime.datetime` to UTC time-zone aware one. """
     if dt_obj.tzinfo is None:

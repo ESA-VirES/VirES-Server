@@ -41,9 +41,16 @@ from vires.time_util import (
     unix_epoch_to_mjd2000, mjd2000_to_unix_epoch,
     datetime_to_decimal_year, decimal_year_to_datetime,
     mjd2000_to_decimal_year, decimal_year_to_mjd2000,
+    datetime_mean,
 )
 
 class TestTimeUtils(unittest.TestCase):
+
+    def test_datetime_mean(self):
+        self.assertEqual(
+            datetime_mean(datetime(2016, 3, 10), datetime(2016, 3, 11)),
+            datetime(2016, 3, 10, 12, 0)
+        )
 
     def test_mjd2000_to_decimal_year(self):
         test_values = [
