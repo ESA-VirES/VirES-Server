@@ -121,7 +121,7 @@ class GetIndices(Component):
 
         if csv_time_format == "ISO date-time":
             time_format = "%s"
-            time = vectorize(mjd2000_to_datetime)(time)
+            time = vectorize(mjd2000_to_datetime, otypes=(object,))(time)
         elif csv_time_format == "Unix epoch":
             time_format = "%.14g"
             time = mjd2000_to_unix_epoch(time)
