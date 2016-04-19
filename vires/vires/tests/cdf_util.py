@@ -33,7 +33,9 @@ from os import remove
 from os.path import exists
 from StringIO import StringIO
 from datetime import datetime, timedelta
-from numpy import arange, linspace, vectorize, isnan, logical_not
+from numpy import (
+    arange, linspace, vectorize, isnan, logical_not, float64, array,
+)
 from scipy.interpolate import interp1d
 from spacepy import pycdf
 
@@ -116,7 +118,8 @@ class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):
                     cdf.raw_var('time')[:], CDF_EPOCH_TYPE
                 ), v_datetime_to_decimal_year(cdf['time'][:]), 1e-5
             )
-
+        # empty array test
+        cdf_rawtime_to_decimal_year(array([]), CDF_EPOCH_TYPE)
 
 class TestCDFEpochTimeBase01(TestCDFEpochTime00):
     FILE = "./test_tmp_cdf_epoch1.cdf"

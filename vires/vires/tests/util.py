@@ -34,8 +34,7 @@ from numpy import array
 from matplotlib.colors import LinearSegmentedColormap
 from vires.tests import ArrayMixIn
 from vires.util import (
-    between, datetime_mean,
-    float_array_slice, datetime_array_slice,
+    between, float_array_slice, datetime_array_slice,
     get_total_seconds, get_color_scale, get_model,
 )
 
@@ -46,7 +45,10 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
         "IGRF", "IGRF11", "IGRF12", "SIFM",
     ]
 
-    COLOR_MAPS = ["blackwhite", "coolwarm", "rainbow", "custom2", "custom1"]
+    COLOR_MAPS = [
+        "blackwhite", "coolwarm", "rainbow", "custom2", "custom1",
+        "prism",
+    ]
 
     def test_color_scale(self):
         for cm_id in self.COLOR_MAPS:
@@ -57,7 +59,9 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             except:
                 print "Test failed for colormap %r!" % cm_id
                 raise
-        self.assertEqual(get_color_scale("-invalid-"), "-invalid-")
+
+        with self.assertRaises(ValueError):
+            get_color_scale("-invalid-")
 
     def test_model(self):
         for model_id in self.MODELS:
@@ -72,12 +76,6 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
         self.assertAllEqual(
             between(array([1.0, 2.0, 3.0, 4.0]), 1.5, 3.5),
             array([False, True, True, False])
-        )
-
-    def test_datetime_mean(self):
-        self.assertEqual(
-            datetime_mean(datetime(2016, 3, 10), datetime(2016, 3, 11)),
-            datetime(2016, 3, 10, 12, 0)
         )
 
     def test_total_seconds(self):

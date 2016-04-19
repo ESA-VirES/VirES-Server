@@ -1,7 +1,10 @@
 #-------------------------------------------------------------------------------
 #
+# Data retrieval WPS process
+#
 # Project: VirES
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
+#          Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
@@ -30,33 +33,29 @@ import json
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from itertools import izip
-import cStringIO
+from cStringIO import StringIO
 import numpy as np
-
 from django.conf import settings
 from eoxserver.core import Component, implements
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
-from eoxserver.services.ows.wps.exceptions import (
-    ExecuteError, InvalidInputValueError,
-)
+from eoxserver.services.ows.wps.exceptions import ExecuteError
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, AllowedRange, BoundingBoxData,
     CDFileWrapper,
 )
-
 from eoxserver.backends.access import connect
 from vires import models as db_models
 from vires.aux import query_kp_int, query_dst_int
-from vires.util import (
-    get_model, datetime_array_slice, between, datetime_mean,
+from vires.util import datetime_array_slice, between
+from vires.time_util import (
+    datetime_to_decimal_year, naive_to_utc, datetime_mean,
 )
-from vires.time_util import datetime_to_decimal_year, naive_to_utc
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
 )
-
-import eoxmagmod as mm
+from vires.processes.util import parse_models
+from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
 
 # TODO: Make following parameters configurable.
 # Limit response size (equivalent to 1/2 daily SWARM LR product).
@@ -156,37 +155,16 @@ class RetrieveData(Component):
         )),
     ]
 
-    def parse_models(self, model_ids, shc):
-        """ Parse filters' string. """
-        models = OrderedDict()
-        if model_ids.strip():
-            for model_id in (id_.strip() for id_ in model_ids.split(",")):
-                model = get_model(model_id)
-                if model is None:
-                    raise InvalidInputValueError(
-                        "model_ids",
-                        "Invalid model identifier '%s'!" % model_id
-                    )
-                models[model_id] = model
-        if shc:
-            try:
-                models["Custom_Model"] = mm.read_model_shc(shc)
-            except ValueError:
-                raise InvalidInputValueError(
-                    "shc", "Failed to parse the custom model coefficients."
-                )
-        return models
-
     def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
                 bbox, sampling_step, csv_time_format, output, **kwarg):
         # parse models
-        models = self.parse_models(model_ids, shc)
+        models = parse_models("model_ids", model_ids, shc)
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
 
-        output_fobj = cStringIO.StringIO()
+        output_fobj = StringIO()
 
         collection_ids = collection_ids.split(",") if collection_ids else []
 
@@ -351,7 +329,7 @@ class RetrieveData(Component):
         data.update(query_kp_int(settings.VIRES_AUX_DB_KP, mjd2000_times))
 
         # get Quasi-dipole Latitude and Magnetic Local Time
-        data["qdlat"], _, data["mlt"] = mm.eval_apex(
+        data["qdlat"], _, data["mlt"] = eval_apex(
             data["Latitude"],
             data["Longitude"],
             data["Radius"] * 1e-3, # radius in km
@@ -372,13 +350,14 @@ class RetrieveData(Component):
                 model_data = model.eval(
                     coords_sph,
                     datetime_to_decimal_year(time_mean),
-                    mm.GEOCENTRIC_SPHERICAL,
+                    GEOCENTRIC_SPHERICAL,
+                    GEOCENTRIC_SPHERICAL,
                     check_validity=False
                 )
                 model_data[:, 2] *= -1
                 # store residuals
                 # TODO: check if the residual evaluation is correct
-                data["F_res_%s" % model_id] = data["F"] - mm.vnorm(model_data)
+                data["F_res_%s" % model_id] = data["F"] - vnorm(model_data)
                 data["B_NEC_%s" % model_id] = data["B_NEC"] - model_data
 
         return data, len(data['Timestamp']), cdf_type

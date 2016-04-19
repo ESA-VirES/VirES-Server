@@ -70,6 +70,33 @@ def dist_ew(coord_gdt):
     dist = diff_lon * col_coord_sph[:, 2] * cos(col_coord_sph[:, 0])
     return tile(dist.reshape(dist.size, 1), (1, coord_gdt.shape[0]))
 
+# field evaluators
+EVAL_VARIABLE = {
+    # magnetic field intensity
+    "F": lambda f, c: vnorm(f),
+    # intensity of the ground tangential magnetic field component
+    "H": lambda f, c: vnorm(f[..., 0:2]),
+    # easting magnetic field component
+    "X": lambda f, c: f[..., 0],
+    # northing magnetic field component
+    "Y": lambda f, c: f[..., 1],
+    # down-pointing magnetic field component
+    "Z": lambda f, c: -f[..., 2],
+    # magnetic field inclination
+    "I": lambda f, c: vincdecnorm(f)[0],
+    # magnetic field inclination
+    "D": lambda f, c: vincdecnorm(f)[1],
+    # easting magnetic field component derivative
+    # along the easting coordinate
+    "X_EW": lambda f, c: diff_row(f[..., 0]) / dist_ew(c),
+    # northing magnetic field component derivative
+    # along the easting coordinate
+    "Y_EW": lambda f, c: diff_row(f[..., 1]) / dist_ew(c),
+    # northing magnetic field component derivative
+    # along the easting coordinate
+    "Z_EW": lambda f, c: diff_row(-f[..., 2]) / dist_ew(c),
+}
+
 
 class BaseForwardModel(Component):
     """ Abstract base class for forward model providers using the eoxmagmod
@@ -77,33 +104,6 @@ class BaseForwardModel(Component):
     """
     implements(ForwardModelProviderInterface)
     abstract = True
-
-    # field evaluators
-    FIELD_EVAL = {
-        # magnetic field intensity
-        "F": lambda f, c: vnorm(f),
-        # intensity of the ground tangential magnetic field component
-        "H": lambda f, c: vnorm(f[..., 0:2]),
-        # easting magnetic field component
-        "X": lambda f, c: f[..., 0],
-        # northing magnetic field component
-        "Y": lambda f, c: f[..., 1],
-        # down-pointing magnetic field component
-        "Z": lambda f, c: -f[..., 2],
-        # magnetic field inclination
-        "I": lambda f, c: vincdecnorm(f)[0],
-        # magnetic field inclination
-        "D": lambda f, c: vincdecnorm(f)[1],
-        # easting magnetic field component derivative
-        # along the easting coordinate
-        "X_EW": lambda f, c: diff_row(f[..., 0]) / dist_ew(c),
-        # northing magnetic field component derivative
-        # along the easting coordinate
-        "Y_EW": lambda f, c: diff_row(f[..., 1]) / dist_ew(c),
-        # northing magnetic field component derivative
-        # along the easting coordinate
-        "Z_EW": lambda f, c: diff_row(-f[..., 2]) / dist_ew(c),
-    }
 
 
     def evaluate(self, data_item, field, bbox, size_x, size_y, elevation,
@@ -162,7 +162,7 @@ class BaseForwardModel(Component):
         )
 
         try:
-            return self.FIELD_EVAL[field](field_components, coord_gdt)
+            return EVAL_VARIABLE[field](field_components, coord_gdt)
         except IndexError:
             raise Exception("Invalid field '%s'." % field)
 
@@ -257,7 +257,7 @@ class BaseForwardModel(Component):
             )(-lats1, lons1)
 
         try:
-            return self.FIELD_EVAL[field](field_components, coord_gdt)
+            return EVAL_VARIABLE[field](field_components, coord_gdt)
         except IndexError:
             raise Exception("Invalid field '%s'." % field)
 

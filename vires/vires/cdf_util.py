@@ -134,7 +134,9 @@ def cdf_rawtime_to_decimal_year_fast(raw_time, cdf_type, year):
 def cdf_rawtime_to_decimal_year(raw_time, cdf_type):
     """ Convert array of CDF raw time values to array of decimal years.
     """
-    v_mjd2000_to_decimal_year = vectorize(mjd2000_to_decimal_year)
+    v_mjd2000_to_decimal_year = vectorize(
+        mjd2000_to_decimal_year, otypes=(dt_float64,)
+    )
     return v_mjd2000_to_decimal_year(cdf_rawtime_to_mjd2000(raw_time, cdf_type))
 
 
