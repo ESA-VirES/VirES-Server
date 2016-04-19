@@ -44,6 +44,7 @@ from eoxserver.core import Component, implements
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, BoundingBoxData, ComplexData, CDFileWrapper, FormatText,
+    AllowedRange,
 )
 from vires.time_util import (
     datetime_to_decimal_year, naive_to_utc, datetime_mean,
@@ -65,10 +66,6 @@ class RetrieveFieldLines(Component):
     profiles = ["vires"]
 
     inputs = [
-        ("bbox", BoundingBoxData(
-            "bbox", crss=(4326,), optional=False, title="Area of interest",
-            abstract="Mandatory area of interest encoded as WPS bounding box.",
-        )),
         ("model_ids", LiteralData(
             'model_ids', str, optional=False,
             abstract="String input for model identifiers (comma separator)",
@@ -91,30 +88,44 @@ class RetrieveFieldLines(Component):
             'end_time', datetime, optional=False,
             abstract="End of the time interval",
         )),
-        ("log_scale", LiteralData(
-            'logarithmic', bool, optional=True, default=False,
-            abstract="Apply logarithmic scale field line colouring.",
+        ("elevation", LiteralData(
+            "elevation", float, optional=True, uoms=(("km", 1.0), ("m", 1e-3)),
+            default=0.0, allowed_values=AllowedRange(-1., 1000., dtype=float),
+            abstract="Height above WGS84 ellipsoid used to evaluate the model.",
         )),
-        ("resolution", LiteralData(
-            'resolution', int, optional=True, default=4, title="Resolution",
+        ("bbox", BoundingBoxData(
+            "bbox", crss=(4326,), optional=False, title="Area of interest",
+            abstract="Mandatory area of interest encoded as WPS bounding box.",
+        )),
+        ("lines_per_col", LiteralData(
+            'lines_per_col', int, optional=True, default=4, title="Resolution",
             abstract=(
                 "This parameter sets the number of the generated field "
-                "lines per each bounding-box dimension."
+                "lines per northing extent of the bounding box."
             ),
+        )),
+        ("lines_per_row", LiteralData(
+            'lines_per_row', int, optional=True, default=4, title="Resolution",
+            abstract=(
+                "This parameter sets the number of the generated field "
+                "lines per easing extent of the bounding box."
+            ),
+        )),
+        ("log_scale", LiteralData(
+            'log_scale', bool, optional=True, default=False,
+            abstract="Apply logarithmic scale field line colouring.",
+        )),
+        ("range_min", LiteralData(
+            "range_min", float, optional=True, default=None,
+            abstract="Minimum displayed value."
+        )),
+        ("range_max", LiteralData(
+            "range_max", float, optional=True, default=None,
+            abstract="Maximum displayed value."
         )),
         ("style", LiteralData(
             'style', str, optional=True, default="jet",
             abstract="Colour-map to be applied to visualization",
-        )),
-        # TODO: range_min, range_max
-        ("dim_range", LiteralData(
-            'dim_range', str, optional=True, default="30000,60000",
-            abstract="Range dimension for visualized parameter",
-        )),
-        # TODO: Remove the colors parameter from the client.
-        ("colors", LiteralData(
-            'colors', str, optional=True, default="30000,60000",
-            abstract="Not used.",
         )),
     ]
 
@@ -126,8 +137,9 @@ class RetrieveFieldLines(Component):
         )),
     ]
 
-    def execute(self, model_ids, shc, begin_time, end_time, bbox, log_scale,
-                resolution, style, dim_range, output, **kwarg):
+    def execute(self, model_ids, shc, begin_time, end_time, elevation,
+                bbox, lines_per_col, lines_per_row, style, range_min,
+                range_max, log_scale, output, **kwarg):
         # parse model and style
         models = parse_models("model_ids", model_ids, shc)
         color_map = parse_style("style", style)
@@ -140,27 +152,23 @@ class RetrieveFieldLines(Component):
         )
 
         # parse range bounds
-        range_min, range_max = [float(x) for x in dim_range.split(",")]
         logger.debug(
             "output %s data range: %s",
             "logarithmic" if log_scale else "linear",
             (range_min, range_max)
         )
 
-        #TODO: Set these parameters from the inputs.
-        elevation = 0
-        size_lat, size_lon = resolution, resolution
-
         def generate_field_lines():
-            coord_gdt = empty((size_lat, size_lon, 3))
+            n_lines = lines_per_row * lines_per_col
+            coord_gdt = empty((lines_per_col, lines_per_row, 3))
             coord_gdt[:, :, 1], coord_gdt[:, :, 0] = meshgrid(
-                linspace(bbox.lower[1], bbox.upper[1], size_lon),
-                linspace(bbox.lower[0], bbox.upper[0], size_lat)
+                linspace(bbox.lower[1], bbox.upper[1], lines_per_row),
+                linspace(bbox.lower[0], bbox.upper[0], lines_per_col)
             )
             coord_gdt[:, :, 2] = elevation
 
             for model_id, model in models.iteritems():
-                for point in coord_gdt.reshape((size_lon * size_lat, 3)):
+                for point in coord_gdt.reshape((n_lines, 3)):
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
                         "%s field line " % model_id, logger, DEBUG
