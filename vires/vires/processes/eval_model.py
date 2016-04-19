@@ -188,8 +188,8 @@ class EvalModel(Component):
                 GEODETIC_ABOVE_WGS84,
                 GEODETIC_ABOVE_WGS84,
                 secvar=False,
-                maxdegree=coeff_min,
-                mindegree=coeff_max,
+                mindegree=coeff_min,
+                maxdegree=coeff_max,
                 check_validity=False
             )
 
