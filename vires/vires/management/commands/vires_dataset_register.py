@@ -253,9 +253,7 @@ class Command(CommandOutputMixIn, BaseCommand):
                 semantics = ["bands[%d]" % i for i in range(len(datas))]
 
         for data, semantic in zip(datas, semantics):
-            print "DATA: ", data
             storage, package, format_, location = self._get_location_chain(data)
-            print "LOCATION_CHAIN: ", (storage, package, format_, location)
             data_item = backends.DataItem(
                 location=location, format=format_ or "", semantic=semantic,
                 storage=storage, package=package,
