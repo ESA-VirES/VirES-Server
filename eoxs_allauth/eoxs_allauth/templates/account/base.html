@@ -1,64 +1,32 @@
+{% extends "vires/base.html" %}
 {% load i18n %}
+{% block title %}
+  <title>VirES for Swarm</title>
+{% endblock %}
+
+
 {% load url from future %}
 {% load staticfiles %}
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% block title %}
-    <title>VirES for Swarm</title>
+
+    {% block additional_headers %}
+      <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
+      <script type="text/javascript" src="{% static 'workspace/bower_components/jquery/jquery.min.js' %}"></script>
+      <script type="text/javascript" src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+      <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
+      <link href="{% static 'css/social_providers.css' %}" rel="stylesheet">
+
+      <style type="text/css">
+        body {
+          background-color: #fff!important;
+          margin: 0;
+          padding: 0;
+        }
+      </style>
+
     {% endblock %}
-    <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
-    <script type="text/javascript" src="{% static 'workspace/bower_components/jquery/jquery.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js' %}"></script>
-    <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
-    <link href="{% static 'css/social_providers.css' %}" rel="stylesheet">
 
-    <style type="text/css">
-      body {
-        background-color: #fff!important;
-        margin: 0;
-        padding: 0;
-      }
-      /*Styling for messages div to be on top and
-       floating over all elements */
-      #messagescontainer{
-        position: absolute;
-        z-index: 2;
-        left: 0;
-        right: 0;
-        top: 66px;
-      }
-    </style>
 
-</head>
-<body>
-  {% block messages %}
-    {% if messages %}
-      <div class="container" id="messagescontainer">
-        <div class="row">
-          <div class="col-xs-12">
-            <div>
-              {% for message in messages %}
-              <div class="alert alert-{% if message.tags %}{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}{% else %}success{% endif %} fade in"><!-- alert-warning alert-danger -->
-                <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">&times;</a>
-                {{ message|capfirst }}
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-      </div>
-      <script type="text/javascript">
-        setTimeout(function(){
-          if ($('.alert').length > 0) {
-            $('.alert').remove();
-          }
-        }, 5000)
-      </script>
-    {% endif %}
-  {% endblock messages %}
+  {% block accounts_content %}
   <div class="navbar navbar-inverse navbar-fixed-top not-selectable" style="position:relative; margin-bottom: 0px">
     <div class="container">
       <div class="navbar-header">
@@ -132,5 +100,5 @@
       </div>
     </div>
   {% endif %}
-</body>
-</html>
+  {% endblock accounts_content %}
+

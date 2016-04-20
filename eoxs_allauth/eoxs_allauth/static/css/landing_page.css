@@ -48,17 +48,19 @@ body {
 }
 
 /* Declare heights because of positioning of img element */
+
+
+/*
 #myCarousel  .item {
   height: 60%;
   background-color:#bbb;
 }
 #myCarousel img {
-  /*position: absolute;*/
   top: 0;
   left: 0;
   min-height: 60%;
   
-}
+}*/
 
 
 #wrap > .container {
@@ -86,7 +88,7 @@ body {
 }
 
 header {
-  background: #333;
+  background: #090A0C;;
   color:#555;
 }
 
