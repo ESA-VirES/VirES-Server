@@ -1,11 +1,12 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
-# Authors: Fabian Schindler <fabian.schindler@eox.at>
+# Miscellaneous data files.
+#
+# Project: VirES
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,16 +27,9 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import eoxmagmod.shc
+from os.path import join, dirname
 
-from vires.forward_models.base import BaseForwardModel
+_DIRNAME = dirname(__file__)
 
-
-class CHAOS5CombinedForwardModel(BaseForwardModel):
-    """ Forward model calculator for the CHAOS-5 Combined field.
-    """
-
-    identifier = "CHAOS-5-Combined"
-
-    def get_model(self, data_item):
-		return eoxmagmod.shc.read_model_shc(eoxmagmod.shc.DATA_CHAOS5_CORE) + eoxmagmod.shc.read_model_shc(eoxmagmod.shc.DATA_CHAOS5_STATIC)
+# range-types used by the VirES-Server
+RANGE_TYPES = join(_DIRNAME, "range_types.json")

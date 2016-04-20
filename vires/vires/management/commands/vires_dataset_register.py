@@ -1,7 +1,8 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
+# Products management - product registration
+#
+# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #
 #-------------------------------------------------------------------------------
@@ -25,16 +26,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=fixme, import-error, no-self-use
+# pylint: disable=missing-docstring,too-many-arguments,unused-argument
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements
+# pylint: disable=too-few-public-methods
 
 from optparse import make_option
-from itertools import tee, izip
+import numpy as np
 
+from django.contrib.gis import geos
 from django.core.management import call_command
 from django.core.management.base import CommandError, BaseCommand
 from django.utils.dateparse import parse_datetime
-from django.utils.timezone import make_aware, utc
-from django.contrib.gis import geos
-from spacepy import pycdf
 from eoxserver.core import env
 from eoxserver.backends import models as backends
 from eoxserver.backends.component import BackendComponent
@@ -47,6 +50,8 @@ from eoxserver.resources.coverages.management.commands import (
 )
 
 from vires.models import Product
+from vires.cdf_util import cdf_open
+from vires.time_util import naive_to_utc
 
 def _variable_args_cb_list(option, opt_str, value, parser):
     """ Helper function for optparse module. Allows variable number of option
@@ -67,63 +72,79 @@ def _variable_args_cb_list(option, opt_str, value, parser):
 
 class Command(CommandOutputMixIn, BaseCommand):
     option_list = BaseCommand.option_list + (
-        make_option("-i", "--identifier", "--coverage-id", dest="identifier",
+        make_option(
+            "-i", "--identifier", "--coverage-id", dest="identifier",
             action="store", default=None,
-            help=("Override identifier.")
+            help=(
+                "Optional custom product identifier overriding the default "
+                " identifier of the dataset."
+            )
         ),
-        make_option("-d", "--data", dest="data",
+        make_option(
+            "-d", "--data", dest="data",
             action="callback", callback=_variable_args_cb_list, default=[],
-            help=("Add a data item to the dataset. Format is: "
-                  "[storage_type:url] [package_type:location]* format:location"
-                 )
+            help=(
+                "One or more data items of the dataset. The format is: "
+                "[storage_type:url] [package_type:location]* format:location"
+            )
         ),
-        make_option("-s", "--semantic", dest="semantics",
+        make_option(
+            "-s", "--semantic", dest="semantics",
             action="callback", callback=_variable_args_cb, default=None,
-            help=("Optional band semantics. If given, one band "
-                  "semantics 'band[*]' must be present for each '--data' "
-                  "option.")
+            help=(
+                "Optional band semantics. If given, one band "
+                "semantics 'band[*]' must be present for each data item."
+            )
         ),
-        make_option("-m", "--meta-data", dest="metadata",
+        make_option(
+            "-m", "--meta-data", dest="metadata",
             action="callback", callback=_variable_args_cb_list, default=[],
-            help=("Optional. [storage_type:url] [package_type:location]* "
-                  "format:location")
+            help=(
+                "One or more metadata items of the dataset. The format is: "
+                "[storage_type:url] [package_type:location]* format:location"
+            )
         ),
-        make_option("-r", "--range-type", dest="range_type_name",
-            help=("Mandatory. Name of the stored range type. ")
-        ),
-
-        make_option("--size", dest="size",
-            action="store", default=None,
-            help=("Override size. Comma separated list of <size-x>,<size-y>.")
+        make_option(
+            "-r", "--range-type", dest="range_type_name",
+            help="Mandatory range type name."
         ),
 
-        make_option("--begin-time", dest="begin_time",
-            action="store", default=None,
-            help=("Override begin time. Format is ISO8601 datetime strings.")
+        make_option(
+            "--size", dest="size", action="store", default=None,
+            help="Custom dataset size encoded as <size-x>,<size-y>"
+        ),
+        make_option(
+            "--begin-time", dest="begin_time", action="store", default=None,
+            help="Custom begin time encoded as ISO8601 datetime strings."
         ),
 
-        make_option("--end-time", dest="end_time",
-            action="store", default=None,
-            help=("Override end time. Format is ISO8601 datetime strings.")
+        make_option(
+            "--end-time", dest="end_time", action="store", default=None,
+            help="Custom end time. Format is ISO8601 datetime strings."
         ),
 
-        make_option("--visible", dest="visible",
-            action="store_true", default=False,
-            help=("Set the coverage to be 'visible', which means it is "
-                  "advertised in GetCapabilities responses.")
+        make_option(
+            "--visible", dest="visible", action="store_true", default=False,
+            help=(
+                "Set the dataset to be 'visible', i.e, to be advertised "
+                "in OWS capabilities."
+            )
         ),
 
-        make_option("--collection", dest="collection_ids",
+        make_option(
+            "--collection", dest="collection_ids",
             action='callback', callback=_variable_args_cb, default=None,
-            help=("Optional. Link to one or more collection(s).")
+            help="Optional list of collection the dataset should be linked to."
         ),
 
-        make_option('--ignore-missing-collection',
-            dest='ignore_missing_collection',
+        make_option(
+            '--ignore-missing-collection', dest='ignore_missing_collection',
             action="store_true", default=False,
-            help=("Optional. Proceed even if the linked collection "
-                  "does not exist. By defualt, a missing collection "
-                  "will result in an error.")
+            help=(
+                "This flag indicates that the registration should proceed "
+                "even if the linked collection does not exist ."
+                "By default a missing collection will result in an error."
+            )
         )
     )
 
@@ -145,7 +166,7 @@ class Command(CommandOutputMixIn, BaseCommand):
 
     help = """
         Registers a Dataset.
-        A dataset is a collection of data and metadata items. When beeing
+        A dataset is a collection of data and metadata items. When being
         registered, as much metadata as possible is extracted from the supplied
         (meta-)data items. If some metadata is still missing, it needs to be
         supplied via the specific override options.
@@ -187,32 +208,33 @@ class Command(CommandOutputMixIn, BaseCommand):
         )
 
         for metadata in metadatas:
-            storage, package, format, location = self._get_location_chain(
+            storage, package, format_, location = self._get_location_chain(
                 metadata
             )
             data_item = backends.DataItem(
-                location=location, format=format or "", semantic="metadata",
+                location=location, format=format_ or "", semantic="metadata",
                 storage=storage, package=package,
             )
             data_item.full_clean()
             data_item.save()
             all_data_items.append(data_item)
 
-            with open(connect(data_item, cache)) as f:
-                content = f.read()
-                reader = metadata_component.get_reader_by_test(content)
-                if reader:
-                    values = reader.read(content)
+            with open(connect(data_item, cache)) as fobj:
+                content = fobj.read()
 
-                    format = values.pop("format", None)
-                    if format:
-                        data_item.format = format
-                        data_item.full_clean()
-                        data_item.save()
+            reader = metadata_component.get_reader_by_test(content)
+            if reader:
+                values = reader.read(content)
 
-                    for key, value in values.items():
-                        if key in metadata_keys:
-                            retrieved_metadata.setdefault(key, value)
+                format_ = values.pop("format", None)
+                if format_:
+                    data_item.format = format_
+                    data_item.full_clean()
+                    data_item.save()
+
+                for key, value in values.items():
+                    if key in metadata_keys:
+                        retrieved_metadata.setdefault(key, value)
 
         if len(datas) < 1:
             raise CommandError("No data files specified.")
@@ -231,32 +253,26 @@ class Command(CommandOutputMixIn, BaseCommand):
                 semantics = ["bands[%d]" % i for i in range(len(datas))]
 
         for data, semantic in zip(datas, semantics):
-            storage, package, format, location = self._get_location_chain(data)
+            storage, package, format_, location = self._get_location_chain(data)
             data_item = backends.DataItem(
-                location=location, format=format or "", semantic=semantic,
+                location=location, format=format_ or "", semantic=semantic,
                 storage=storage, package=package,
             )
             data_item.full_clean()
             data_item.save()
             all_data_items.append(data_item)
 
-
-            # TODO: read meta-data
-            ds = pycdf.CDF(connect(data_item, cache))
-            reader = VirESMetadataReader()
-            if reader:
-                values = reader.read(ds)
-
-                format = values.pop("format", None)
-                if format:
-                    data_item.format = format
+            # TODO: read XML meta-data
+            with cdf_open(connect(data_item, cache)) as dataset:
+                values = VirESMetadataReader.read(dataset)
+                format_ = values.pop("format", None)
+                if format_:
+                    data_item.format = format_
                     data_item.full_clean()
                     data_item.save()
-
                 for key, value in values.items():
                     if key in metadata_keys:
                         retrieved_metadata.setdefault(key, value)
-            ds = None
 
         if len(metadata_keys - set(retrieved_metadata.keys())):
             raise CommandError(
@@ -286,18 +302,19 @@ class Command(CommandOutputMixIn, BaseCommand):
             # link with collection(s)
             if kwargs["collection_ids"]:
                 ignore_missing_collection = kwargs["ignore_missing_collection"]
-                call_command("eoxs_collection_link",
+                call_command(
+                    "eoxs_collection_link",
                     collection_ids=kwargs["collection_ids"],
                     add_ids=[coverage.identifier],
                     ignore_missing_collection=ignore_missing_collection
                 )
 
-        except Exception as e:
-            self.print_traceback(e, kwargs)
-            raise CommandError("Dataset registration failed: %s" % e)
+        except Exception as exc:
+            self.print_traceback(exc, kwargs)
+            raise CommandError("Dataset registration failed: %s" % exc)
 
         self.print_msg(
-            "Dataset with ID '%s' registered sucessfully."
+            "Dataset with ID '%s' registered successfully."
             % coverage.identifier
         )
 
@@ -314,7 +331,7 @@ class Command(CommandOutputMixIn, BaseCommand):
             overrides["identifier"] = identifier
 
         if extent:
-            overrides["extent"] = map(float, extent.split(","))
+            overrides["extent"] = [float(v) for v in extent.split(",")]
 
         if size:
             overrides["size"] = int(size)
@@ -383,17 +400,15 @@ class Command(CommandOutputMixIn, BaseCommand):
                     % type_or_format
                 )
 
-        format, location = self._split_location(items[-1])
-        return storage, package, format, location
+        format_, location = self._split_location(items[-1])
+        return storage, package, format_, location
 
     def _split_location(self, item):
         """ Splits string as follows: <format>:<location> where format can be
             None.
         """
-        p = item.find(":")
-        if p == -1:
-            return None, item
-        return item[:p], item[p + 1:]
+        idx = item.find(":")
+        return (None, item) if idx == -1 else (item[:idx], item[idx + 1:])
 
 
 def save(model):
@@ -402,40 +417,62 @@ def save(model):
     return model
 
 
-def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = tee(iterable)
-    next(b, None)
-    return izip(a, b)
-
 
 class VirESMetadataReader(object):
-    def read(self, ds):
-        previous_lon = None
-        current = []
-        path = []
-        for lon, lat in izip(ds["Longitude"][:], ds["Latitude"][:]):
-            #print lon, lat
-            if previous_lon is not None and lon < previous_lon \
-                    and (previous_lon - lon) > 1.:
-                if current:
-                    try:
-                        path.append(geos.LineString(current))
-                    except:
-                        print current
-                        raise
-                current = []
-            current.append((lon, lat))
-            previous_lon = lon
 
-        ground_path = geos.MultiLineString(path).simplify(0.01)
+    @classmethod
+    def get_coords(cls, data):
+        coords = np.empty((len(data["Longitude"]), 2))
+        coords[:, 0] = data["Longitude"][:]
+        coords[:, 1] = data["Latitude"][:]
+        return coords
+
+    @classmethod
+    def get_ground_path(cls, coords, threshold=0.1):
+        # split line segments
+        segments = []
+        idx_wrap = (np.abs(coords[1:, 0] - coords[:-1, 0]) > 180.0).nonzero()[0]
+        idx_last = 0
+        for idx in idx_wrap + 1:
+            segments.append(
+                geos.LineString(coords[idx_last:idx, :]).simplify(threshold)
+            )
+            idx_last = idx
+        segments.append(
+            geos.LineString(coords[idx_last:, :]).simplify(threshold)
+        )
+        return geos.MultiLineString(segments)
+
+    @classmethod
+    def get_bounding_box(cls, coords):
+        lon_min, lat_min = np.floor(np.amin(coords, 0))
+        lon_max, lat_max = np.ceil(np.amax(coords, 0))
+        return (lon_min, lat_min, lon_max, lat_max)
+
+    @classmethod
+    def read(cls, data):
+        # NOTE: For sake of simplicity we take geocentric (ITRF) coordinates
+        #       as geodetic coordinates.
+        size = (len(data["Timestamp"]), 0)
+        coords = cls.get_coords(data)
+        #ground_path = cls.get_ground_path(coords)
+        #bbox = ground_path.extent
+        #footprint = geos.MultiPolygon(ground_path.buffer(0.01))
+        bbox = cls.get_bounding_box(coords)
+        ground_path = geos.MultiLineString([])
+        footprint = geos.MultiPolygon(
+            geos.Polygon((
+                (bbox[0], bbox[1]), (bbox[2], bbox[1]),
+                (bbox[2], bbox[3]), (bbox[0], bbox[3]), (bbox[0], bbox[1]),
+            ))
+        )
 
         return {
-            "begin_time": make_aware(ds["Timestamp"][0], utc),
-            "end_time": make_aware(ds["Timestamp"][-1], utc),
-            "ground_path": ground_path,
-            "footprint": geos.MultiPolygon(ground_path.buffer(0.01)),
             "format": "CDF",
-            "size": (len(ds["Timestamp"]), 0),
-            "extent": ground_path.extent
+            "size": size,
+            "extent": bbox,
+            "footprint": footprint,
+            "ground_path": ground_path,
+            "begin_time": naive_to_utc(data["Timestamp"][0]),
+            "end_time": naive_to_utc(data["Timestamp"][-1]),
         }

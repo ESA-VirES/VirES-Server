@@ -1,3 +1,4 @@
 eoxs_allauth/MANIFEST.in
 include README.md
 recursive-include eoxs_allauth/templates *
+recursive-include eoxs_allauth/static *

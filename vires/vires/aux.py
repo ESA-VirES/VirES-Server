@@ -53,7 +53,8 @@ def parse_kp(src_file):
     """ Parse Kp index text file. """
     data = loadtxt(src_file, converters={3: lambda v: float(KP_FLAGS[v])})
     return (
-        data[:, 0], data[:, 1], data[:, 2], array(data[:, 3], 'uint8')
+        data[:, 0], array(data[:, 1], 'uint16'), array(data[:, 2], 'uint16'),
+        array(data[:, 3], 'uint8')
     )
 
 

@@ -28,7 +28,10 @@
 
 from django.conf import settings
 from django.shortcuts import render
+
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+
 from django.views.generic.edit import UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.forms.models import modelform_factory
@@ -59,12 +62,15 @@ def workspace(request):
     """
     # TODO: check if request.method is set to "POST"
     # if yes then login or signup user then do redirect or whatever
+    login_form = LoginForm()
+    del login_form.fields["login"].widget.attrs["autofocus"]
     return render(request, WORKSPACE_TEMPLATE, {
-        "login_form": LoginForm(),
+        "login_form": login_form,
         "signup_form": SignupForm()
     })
 
 @login_required
+@csrf_exempt
 def wrapped_ows(request):
     """ EOxServer/allauth wrapper of the ows endpoint. """
     return ows(request)

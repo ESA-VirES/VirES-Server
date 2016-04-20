@@ -1,5 +1,6 @@
 #-------------------------------------------------------------------------------
-# $Id$
+#
+# Forward models management - Add one model with arbitrary identifier.
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
@@ -25,101 +26,74 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, too-few-public-methods
 
 from optparse import make_option
-
 from django.core.management.base import CommandError, BaseCommand
-from django.contrib.gis import geos
-from eoxserver.core import env, Component, ExtensionPoint
 from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, nested_commit_on_success
+    CommandOutputMixIn,
 )
 from eoxserver.resources.coverages import models
-from eoxserver.backends import models as backends
-
-from vires.models import ForwardModel
-from vires.interfaces import ForwardModelProviderInterface
-
-
-class Providers(Component):
-    forward_models = ExtensionPoint(ForwardModelProviderInterface)
-
+from vires.forward_models.util import get_forward_model_providers
+from vires.management.commands.vires_model_add import register_forward_model
 
 class Command(CommandOutputMixIn, BaseCommand):
+    help = "Register one forward model with a custom coverage identifier."
+
     @property
     def option_list(self):
-        providers = Providers(env)
-        forward_model_ids = [m.identifier for m in providers.forward_models]
-
-        option_list = BaseCommand.option_list + (
-            make_option("-i", "--identifier", "--coverage-id",
+        provider_names = list(get_forward_model_providers())
+        return BaseCommand.option_list + (
+            make_option(
+                "-i", "--identifier", "--coverage-id",
                 dest="identifier", action="store", default=None,
-                help=("Mandatory. Forward model identifier.")
+                help="Mandatory forward model identifier."
             ),
-            make_option("-r", "--range-type", dest="range_type_name",
+            make_option(
+                "-r", "--range-type", dest="range_type_name",
                 default="MagneticModel",
-                help=("Optional. Name of the stored range type. Defaults to "
-                      "'MagneticModel'.")
-            ),
-            make_option("-m", "--model", dest="model_type",
-                choices=forward_model_ids,
                 help=(
-                    "Mandatory. Identifier for the forward model to use. "
-                    "One of: %s" % ", ".join(forward_model_ids)
+                    "Optional name of the model range type. "
+                    "Defaults to 'MagneticModel'."
+                )
+            ),
+            make_option(
+                "-m", "--model", dest="provider_name", choices=provider_names,
+                help=(
+                    "Mandatory forward model provider name. The allowed values "
+                    "are: %s" % ", ".join(provider_names)
                 )
             )
         )
-        return option_list
 
-    @nested_commit_on_success
     def handle(self, *args, **kwargs):
         identifier = kwargs["identifier"]
         range_type_name = kwargs["range_type_name"]
+        provider_name = kwargs["provider_name"]
 
         if not identifier:
-            raise CommandError("No identifier specified.")
+            raise CommandError("Missing the mandatory model identifier!")
+
+        if not provider_name:
+            raise CommandError(
+                "Missing the mandatory forward model provider name!"
+            )
 
         try:
             range_type = models.RangeType.objects.get(name=range_type_name)
         except models.RangeType.DoesNotExist:
             raise CommandError(
-                "Invalid range type name '%s'." % range_type_name
+                "Invalid range type name '%s'!" % range_type_name
             )
 
-        model_type = kwargs["model_type"]
-        if not model_type:
-            raise CommandError("No model specified.")
+        try:
+            provider = get_forward_model_providers()[provider_name]
+        except IndexError:
+            raise CommandError(
+                "Invalid forward model provider name '%s'!" % provider_name
+            )
 
-        providers = Providers(env)
-        for forward_model_provider in providers.forward_models:
-            if forward_model_provider.identifier == model_type:
-                begin_time, end_time = forward_model_provider.time_validity
-                break
-
-        forward_model = ForwardModel()
-        forward_model.identifier = identifier
-        forward_model.range_type = range_type
-
-        forward_model.srid = 4326
-        forward_model.min_x = -180
-        forward_model.min_y = -90
-        forward_model.max_x = 180
-        forward_model.max_y = 90
-        forward_model.size_x = 1
-        forward_model.size_y = 1
-        forward_model.begin_time = begin_time
-        forward_model.end_time = end_time
-
-        forward_model.footprint = geos.MultiPolygon(
-            geos.Polygon.from_bbox((-180, -90, 180, 90))
+        self.print_msg(
+            "Registering model %s [%s] ... " % (identifier, provider.identifier)
         )
-
-        forward_model.full_clean()
-        forward_model.save()
-
-        data_item = backends.DataItem(
-            dataset=forward_model, semantic="coefficients",
-            location="none", format=model_type
-        )
-        data_item.full_clean()
-        data_item.save()
+        register_forward_model(identifier, provider, range_type)

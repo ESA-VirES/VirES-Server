@@ -7,6 +7,7 @@
     You are about to use your {{provider_name}} account to login to
     {{site_name}}. As a final step, please complete the following form:{% endblocktrans %}
   </p>
+  <p class="help-inline" style="font-size: 1em;">(*) Required fields; Please help us getting to know you by filling out non required fields.</p>
   <form class="form-horizontal inputwide" method="POST" action="{% url 'socialaccount_signup' %}">
     {% csrf_token %}
     <fieldset>
@@ -42,9 +43,13 @@
             <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
         {% endif %}
         <div class="checkbox">
-            <label>
+            <label style="font-weight: bold;">
                 <input id="tosagree" style="width: auto;" type="checkbox" value="">
-                I agree to the <a href="/accounts/tos" target="_blank_">Terms of Service</a>
+                I read and accept the 
+                  <a style="display:inline;" href="/accounts/datatc" target="_blank_">ESA Data Terms</a>
+                  and the 
+                  <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a>
+                  *
             </label>
         </div>
         <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">

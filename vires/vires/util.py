@@ -31,6 +31,7 @@
 from os.path import dirname, join
 from math import ceil, floor
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.cm import get_cmap
 
 import eoxmagmod as mm
 
@@ -45,14 +46,25 @@ except ImportError:
         return arr
 
 
+# NOTE: We deliberately break the python naming convention here.
+class cached_property(object):
+    """ Decorator converting a given method with a single self argument
+     into a property cached on the instance.
+    """
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, type=None):
+        if instance is None:
+            return self
+        value = self.func(instance)
+        instance.__dict__[self.func.__name__] = value
+        return value
+
+
 def between(data, lower_bound, upper_bound):
     """ Get mask of values within the given closed interval. """
     return (data >= lower_bound) & (data <= upper_bound)
-
-
-def datetime_mean(start, stop):
-    """ Get arithmetic mean of two `datetime` values. """
-    return (stop - start)/2 + start
 
 
 # TODO: To be removed.
@@ -252,4 +264,5 @@ def get_color_scale(name):
         ])
 
     else:
-        return name
+        # get standard colour-map
+        return get_cmap(name)

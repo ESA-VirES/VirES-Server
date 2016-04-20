@@ -1,7 +1,10 @@
 #-------------------------------------------------------------------------------
 #
+# Filtered data retrieval
+#
 # Project: VirES
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
+#          Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
@@ -25,6 +28,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, missing-docstring
+# pylint: disable=no-self-use, too-many-branches
 
 from os import remove
 from os.path import join, exists
@@ -33,31 +37,27 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 from itertools import izip
 import numpy as np
-
 from django.conf import settings
 from eoxserver.core import Component, implements
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
-from eoxserver.services.ows.wps.exceptions import (
-    ExecuteError, InvalidInputValueError,
-)
+from eoxserver.services.ows.wps.exceptions import ExecuteError
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, AllowedRange, CDFile, FormatBinaryRaw,
 )
-
 from eoxserver.backends.access import connect
 from vires import models as db_models
 from vires.aux import query_kp_int, query_dst_int
 from vires.config import SystemConfigReader
-from vires.util import (
-    get_model, datetime_array_slice, between, datetime_mean,
+from vires.util import datetime_array_slice, between
+from vires.time_util import (
+    datetime_to_decimal_year, naive_to_utc, TZ_UTC, datetime_mean,
 )
-from vires.time_util import datetime_to_decimal_year, naive_to_utc, TZ_UTC
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
 )
-
-import eoxmagmod as mm
+from vires.processes.util import parse_models, parse_filters
+from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
 
 # TODO: Make the limits configurable.
 # Limit response size (equivalent to 5 daily SWARM LR products).
@@ -161,51 +161,14 @@ class RetrieveDataFiltered(Component):
         )),
     ]
 
-    def parse_filters(self, filter_string):
-        """ Parse filters' string. """
-        try:
-            filter_ = {}
-            if filter_string.strip():
-                for item in filter_string.split(";"):
-                    name, bounds = item.split(":")
-                    name = name.strip()
-                    if not name:
-                        raise ValueError("Invalid empty filter name!")
-                    lower, upper = [float(v) for v in bounds.split(",")]
-                    filter_[name] = (lower, upper)
-        except ValueError as exc:
-            raise InvalidInputValueError("filters", exc)
-        return filter_
-
-    def parse_models(self, model_ids, shc):
-        """ Parse filters' string. """
-        models = OrderedDict()
-        if model_ids.strip():
-            for model_id in (id_.strip() for id_ in model_ids.split(",")):
-                model = get_model(model_id)
-                if model is None:
-                    raise InvalidInputValueError(
-                        "model_ids",
-                        "Invalid model identifier '%s'!" % model_id
-                    )
-                models[model_id] = model
-        if shc:
-            try:
-                models["Custom_Model"] = mm.read_model_shc(shc)
-            except ValueError:
-                raise InvalidInputValueError(
-                    "shc", "Failed to parse the custom model coefficients."
-                )
-        return models
-
     def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
                 filters, sampling_step, csv_time_format, output, **kwarg):
         # get configurations
         conf_sys = SystemConfigReader()
 
         # parse models and filters
-        models = self.parse_models(model_ids, shc)
-        filters = self.parse_filters(filters)
+        models = parse_models("model_ids", model_ids, shc)
+        filters = parse_filters("filters", filters)
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
@@ -366,7 +329,7 @@ class RetrieveDataFiltered(Component):
         appex_fields = set(filters) & set(("qdlat", "mlt"))
 
         if appex_fields:
-            qdlat, qdlon, mlt = mm.eval_apex(
+            qdlat, qdlon, mlt = eval_apex(
                 data["Latitude"][index],
                 data["Longitude"][index],
                 data["Radius"][index] * 1e-3, # radius in km
@@ -408,7 +371,7 @@ class RetrieveDataFiltered(Component):
             model_data = model.eval(
                 coords_sph,
                 datetime_to_decimal_year(time_mean),
-                mm.GEOCENTRIC_SPHERICAL,
+                GEOCENTRIC_SPHERICAL,
                 check_validity=False
             )
             model_data[:, 2] *= -1
@@ -419,7 +382,7 @@ class RetrieveDataFiltered(Component):
 
                 if field.startswith("F"):
                     mask &= between(
-                        data["F"][index] - mm.vnorm(model_data),
+                        data["F"][index] - vnorm(model_data),
                         bounds[0], bounds[1]
                     )
 

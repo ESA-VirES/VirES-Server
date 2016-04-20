@@ -1,11 +1,12 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
-# Project: EOxServer <http://eoxserver.org>
-# Authors: Fabian Schindler <fabian.schindler@eox.at>
+# Forward Model utilities
+#
+# Project: VirES
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,17 +26,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-few-public-methods
 
-import eoxmagmod.shc
+from collections import OrderedDict
+from eoxserver.core import env, Component, ExtensionPoint
+from vires.interfaces import ForwardModelProviderInterface
 
-from vires.forward_models.base import BaseForwardModel
-
-
-class CHAOS5CoreForwardModel(BaseForwardModel):
-    """ Forward model calculator for the CHAOS-5 core field.
+class ForwardModelProviders(Component):
+    """ Component providing list of forward models through the extension point.
     """
+    forward_models = ExtensionPoint(ForwardModelProviderInterface)
 
-    identifier = "CHAOS-5-Core"
-
-    def get_model(self, data_item):
-        return eoxmagmod.shc.read_model_shc(eoxmagmod.shc.DATA_CHAOS5_CORE)
+def get_forward_model_providers():
+    """ Get list of model providers. """
+    return OrderedDict(
+        (item.identifier, item)
+        for item in ForwardModelProviders(env).forward_models
+    )

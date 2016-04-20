@@ -1,0 +1,262 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+{% block head_title %}{% trans "Terms of Service" %}{% endblock %}
+{% block content %}
+<style type="text/css">
+	.roman li{
+		list-style-type: upper-roman;
+		list-style-position: outside;
+	}
+
+	.square > li{
+		list-style-type: square;
+		list-style-position: outside;
+	}
+
+	.circle > li{
+		list-style-type: circle;
+		list-style-position: outside;
+	}
+
+	.latin > li {
+		list-style-type: lower-latin;
+		list-style-position: outside;
+	}
+
+	.upper_latin > li {
+		list-style-type: upper-latin;
+		list-style-position: outside;
+	}
+
+	.decimal > li {
+		list-style-type: decimal; 
+		list-style-position: outside;
+	}
+	.emptylist h3 {
+		margin-left: -1em;
+	}
+
+	.emptylist h3 a:hover {
+		text-decoration: none;
+		color: #428bca;
+	}
+	
+</style>
+<div style="text-align: center;">
+	<h2>VirES Service Terms</h2>
+	<h4>"Terms and Conditions"</h4>
+	<p>Version of 05/06/16</p>
+</div>
+
+<div>
+	<ol class="emptylist">
+		<li><h3><a name="Introduction">1 Introduction</a></h3>
+			<p>
+			These "Terms and Conditions" govern the use of the virtual research environment "VirES for Swarm", a service website implemented and operated by
+			<a href="https://eox.at/" target="_blank">EOX IT Services GmbH</a> (EOX), as realization of ideas and specifications, and using funds of the Earth 
+			Observation Directorate of the <a href="http://esa.int/" target="_blank">European Space Agency</a>(ESA).
+			</p>
+			<p>
+			The website is a visual interface to the Earth Explorer <a target="_blank" href="//http:/www.esa.int/Our_Activities/Observing_the_Earth/The_Living_Planet_Programme/Earth_Explorers/Swarm/ESA_s_magnetic_field_mission_Swarm">Swarm constellation mission</a> and its magnetic products which are officially released by ESA. It allows the searching for, the analysis of, and the download of Swarm data selected by the user. It includes tools for studying various Earth magnetic models in comparison to the Swarm satellite measurements at given solar activity level. It furthermore includes functions for diagram generation and other means of communication.
+			</p>
+			<p>
+				The "User" is any person who signs-up (self-registers) to the service and expressly accepts:
+			</p>
+			<ul class="circle">
+				<li>the present Terms and Conditions which govern the use of the VirES for Swarm Service and its website (in short "VirES Service Terms");</li>
+				<li>the <a href="/accounts/datatc">Terms and Conditions for the Utilisation of ESA’s Earth Observation Data</a> which specifically govern the use of the Swarm data available through VirES (in short "ESA Data Terms").</li>
+			</ul>
+			<p>
+				EOX are committed to safeguarding the privacy of the VirES for Swarm Users and website visitors; the <a href="#Personal_data_privacy">Privacy Policy</a> sets out how EOX will treat User information.
+			</p>
+		</li>
+		<li>
+			<h3><a name="Copyrights">2 Copyrights</a></h3>
+			<p>
+				All material published on the VirES for Swarm website is protected by copyright and owned or controlled by EOX or the party explicitly credited in the <a href="#Attribution">Attribution</a> as the provider of the content, software or other material. All the copyright and other intellectual property rights in the VirES for Swarm website and the material thereon are reserved.
+			</p>
+		</li>
+		<li>
+			<h3> <a name="Use_of_vires_service">3 Use of VirES for Swarm service</a></h3>
+			<p>
+				EOX grants permission to users to visit the VirES for Swarm site by means of a web browser in order to view pages, download pages for caching, print pages, stream audio and video files, save diagrams and map views as images, and download Swarm products, subject to the other provisions of these Terms and Conditions.
+			</p>
+			<p>
+				The user must accept that the VirES for Swarm Service is intended for non-commercial use. EOX does not grant the right to sell, rent, sub-license or redistribute any information, documents, images or material from this website or to compile or create derivative works from material on this website.  Notwithstanding, the User may redistribute diagrams produced with the "Save as Image" function of the Service in print and electronic form to any person.
+			</p>
+			<p>
+				EOX reserve the right to restrict access to areas of the VirES for Swarm website, or indeed the whole website, at EOX’ own discretion. Users must not circumvent or bypass any access restriction measures on the website.
+			</p>
+			<p>
+				The User shall act in good faith and shall not misuse or interfere the Service of the website. The User shall not interact with the website using any robot, spider or other automated means.
+			</p>
+		</li>
+		<li>
+			<h3> <a name="User_sign_up"> 4 User sign-up </a></h3>
+			<p>
+				To access Swarm data at the VirES for Swarm website, a User needs to sign-up (register) for an account. The User can either opt for a login natively with the VirES Service or can use an existing account in a social network. In any case,  the sign-up form must be completed with “User Profile Information” such as user name, email address, title, country, institution, and executive description of the user’s project in which Swarm data are being used. The sign-up will be completed by submitting the form and clicking on the verification link in the email that the website will send to the User.
+			</p>
+			<p>
+				After that the User may edit the User Profile Information to the extent permitted using the editing functionality made available on the website. 
+			</p>
+			<p>
+				The User Profile Information must not contain illegal, unlawful, obscene or indecent material, must not infringe any person's legal rights or privacy, and must not constitute spam.
+			</p>
+			<p>
+				OX may suspend, block and/or cancel a User account at any time in EOX’ sole discretion without notice or explanation. Also the User may cancel the account using the User profile control panel on the website or send an email to <a href="mailto:support@vires.services" target="_top">support@vires.services</a> requesting account deletion.
+			</p>
+		</li>
+		<li>
+			<h3><a name="Personal_data_privacy">5 Personal data privacy and use of cookies</a></h3>
+			<p>
+			The collected User Profile Information (see above) is never shared with a third party with the only exception of the Swarm Mission Management at ESA. The email address is only used to contact the User in a very limited fashion to inform about changes of the VirES Service or to inquire about the user's interest in this service. The User agrees to receiving those emails.
+			</p>
+			<p>
+			User Profile Information is stored and processed in Austria and Germany.
+			</p>
+			<p>
+			EOX is taking reasonable technical and organisational precautions to prevent the loss, misuse, or alteration of User Profile Information. All requests and responses particularly sign up and log in are encrypted using SSL technology.
+			</p>
+			<p>
+			Users are responsible for keeping their password and User details confidential. EOX never asks Users for their passwords, except, of course, in the log in form of the VirES Service. Passwords are never stored unencrypted.
+			</p>
+			<p>
+			Users can provide model coefficient data in order to let the service calculate custom magnetic field models. These coefficients are never stored and cannot be viewed or utilized by EOX or other users.
+			</p>
+			<p>
+			Cookies are pieces of information that a website stores on a visitor's device. We distinguish cookies required for the functioning of the service, cookies for statistical analysis (tracking), and third party cookies.
+			</p>
+			<p>
+			The required cookies are those used for user authentication which are basically one named "sessionid" and one named "csrftoken". Users not accepting those cookies cannot use the VirES Service for technical reasons. Note that passwords are never stored in cookies.
+			</p>
+			<p>
+			EOX uses a self-hosted Piwik installation for statistical analysis. Collected information is never shared with a third party. Only aggregated statistical reports are shared. The collected information is used by EOX to better understand user behaviour and needs. EOX respects the Do Not Track preference configured in user browsers which can be used to opt out of tracking.
+			</p>
+			<p>
+			Third party cookies are set by external web pages such as YouTube for their purposes and are neither controlled nor read by EOX.
+			</p>
+			<p>
+			The VirES Service stores the following common log data for every request: remote Internet protocol (IP) address, time, requested URL, status, response size, referer if present, and user-agent. The log data is only used for monitoring the VirES Service and never shared with a third party.
+			</p>
+			<p>
+			Log data as well as tracking data are deleted monthly after generating aggregated statistical reports. These reports do not allow to reconstruct individual user activities. They are used for reporting and communication towards ESA internal bodies, ESA Member States, and the general public regarding the distribution and use of Swarm data.
+			</p>
+			<p>
+			EOX is not responsible for the privacy policies or practices of third party websites the VirES Service links to.
+			</p>
+			<p>
+			VirES is registered at Austrian data security authorities under DVR 4015915.
+			</p>
+		</li>
+		<li>
+			<h3><a name="Availability_service">6 Availability of the Service</a></h3>
+			<p>
+			EOX will make best efforts to provide the Swarm data access service through the VirES for Swarm website. It is understood and recognised by all individuals and entities having accepted the present Terms and Conditions that EOX is not in a position to guarantee the availability of Swarm data through the VirES for Swarm website. In particular, EOX reserves the right to review, modify, suspend or terminate the provision of Swarm data through the VirES for Swarm website at any time in the event of technical capacity constraints due to the number of user requests of lack of sufficient funding for sustaining the VirES for Swarm service, and associated facilities and activities, that satellite or ground system failure occurs, that planned activities of related Swarm systems and facilities are suspended, modified or cancelled.
+			</p>
+		</li>
+		<li>
+			<h3><a name="Availability_service">7 Waiver of Liability</a></h3>
+			<p>
+			With regard to the service offered by EOX through the VirES for Swarm website, the User shall have no claim against EOX, its employees, related entities or employees of such entities, with respect to any injury to, or death of its own employees or employees of related entities or for damage to or loss of its own property or that of its related entities, whether such injury, death, damage or loss arise through negligence or otherwise.
+			</p>
+			<p>
+			Through the VirES for Swarm website, Users are able to link to other websites which are not under the control of EOX who have no control over the nature, content and availability of those sites. The inclusion of any links does not necessarily imply a recommendation or endorse the views expressed within them.
+			</p>
+			<p>
+			Every effort is made to keep the website up and running smoothly. However, EOX takes no responsibility for, and will not be liable for, the website being temporarily unavailable due to technical issues beyond EOX’ control.
+			</p>
+			<p>
+			The information contained in the VirES for Swarm website is for general information purposes only. The information is provided by EOX who endeavour to keep the information up to date and correct. EOX make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the website or the information, products, services, or related graphics contained on the website for any purpose. Any reliance placed on such information is therefore strictly at the user’s own risk.
+			</p>
+		</li>
+		<li>
+			<h3><a name="Variation">8 Variation</a></h3>
+			<p>
+			EOX may revise the present Terms and Conditions from time to time. They shall apply to the use of the Service from the date of publication of the revised version on the website. By accepting the present Terms and Conditions Users waive any right they may otherwise have to be notified of, or to consent to, revisions.
+			</p>
+			<p>
+			EOX will ask Users by sending them email to express their agreement to any revision of these Terms and Conditions. If Users disagree with the revision Users must delete their account on the website, and stop using the Service.
+			</p>
+		</li>
+		<li>
+			<h3><a name="Assignment">9 Assignment</a></h3>
+			<p>
+			EOX may assign, transfer, sub-contract or otherwise deal with their rights and/or obligations under these Terms and Conditions.
+			</p>
+		</li>
+		<li>
+			<h3><a name="Assignment">10 Law and jurisdiction</h3></a>
+			<p>
+			These Terms and Conditions shall be construed in accordance with and governed by Austrian law. 
+			</p>
+		</li>
+		<li>
+			<h3><a name="Attribution">11 Attribution</a></h3>
+			<p>
+			The provided magnetic data are served by the VirES for Swarm Service with these attributions:
+			</p>
+			<ul class="circle">
+				<li><a href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_1b_Product_Definitions" target="_blank">Swarm Level 1b Products MAGX_LR_1B</a> magnetic vector and scalar data at 1 Hz rate at exact UTC seconds provided for the A, B, and C Swarm satellites { Data &copy; European Space Agency – ESA }</li>
+			</ul>
+			<p style="margin-top: 10px;">
+				The following models of the Earth's magnetic field and its time variation are pre-loaded:
+			</p>
+			<ul class="circle">
+				<li>The <a href="http://onlinelibrary.wiley.com/doi/10.1002/2014GL062659/abstract" target="_blank">Swarm Initial Field Model</a> (SIFM)for 2014 derived from the first year of data from the Swarm satellite trio { publication by Nils Olsen, DTU Space, National Space Institute, Technical University of Denmark, et al. }</li>
+				<li>The <a href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0228-9" target="_blank">12th Generation International Geomagnetic Reference Field</a> (IGRF 12) released in 2015 { Data &copy;  International Association of Geomagnetism and Aeronomy }</li>
+				<li>The <a href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0274-3" target="_blank">CHAOS-5</a> high resolution geomagnetic field model, derived primarily from Swarm, CHAMP, and Ørsted satellite magnetic data along with ground observatory data { publication by Christopher C Finlay, DTU Space, National Space Institute, Technical University of Denmark, et al. }</li>
+			</ul>
+			<p style="margin-top: 10px;">
+				The global context of space weather is provided in form of:
+			</p>
+			<ul class="circle">
+				<li>The Disturbance storm time index (<a href="https://en.wikipedia.org/wiki/Disturbance_storm_time_index" target="_blank">Dst Index</a>) { Data published by DTU Space, National Space Institute, Technical University of Denmark }</li>
+				<li>The Disturbances in the horizontal component of earth's magnetic field (planetary <a href="https://en.wikipedia.org/wiki/K-index" target="_blank">Kp Index</a>) { Data published by DTU Space, National Space Institute, Technical University of Denmark }</li>
+			</ul>
+			<p style="margin-top: 10px;">
+				The provided map layers are served by EOX::Maps with these attributions:
+			</p>
+			<ul class="circle">
+				<li>Terrain &amp; Terrain Light: Data &copy; OpenStreetMap contributors and others, Rendering &copy; EOX</li>
+				<li>Overlay &amp; Overlay Bright: Data &copy; OpenStreetMap contributors, Rendering &copy; EOX and MapServer</li>
+				<li>OpenStreetMap (OSM): Data &copy; OpenStreetMap contributors, Rendering &copy; MapServer and EOX</li>
+			</ul>
+			<p style="margin-top: 10px;">
+				The imagery at the Landing Page are provided by ESA with these attributions:
+			</p>
+			<ul class="circle">
+				<li>Photo: &copy; ESA/AOES Medialab; Image: Swarm products (Id 274858)</li>
+				<li>Photo: &copy; ESA/DTU Space/ATG Medialab, Image: Core and crust from Swarm (Id 342395)</li>
+				<li>Photo: &copy; ESA–P. Carril, 2013, Image: Artist's view of Swarm (Id 298905)</li>
+				<li>Photo: &copy; DTU Space-P-E. Holmdahl-Olsen, 2014, Image: Group picture from The 3rd Swarm Science Meeting held on 19 and 20 June 2014 in Copenhagen, Denmark</li>
+			</ul>
+		</li>
+		<li>
+			<h3><a name="EOX_company_details">12 EOX Company Details</a></h3>
+			<p>
+				EOX IT Services is a „Gesellschaft mit beschränkter Haftung (GmbH)“, i. e. it a limited liability company according to the laws of Austria having its principal place of business in Thurngasse 8/4, 1090 Vienna, Austria. The Managing Director is Dr. Gerhard Triebnig. The Registration Number is at the Austrian Chamber of Commerce is 312068z.
+			</p>
+			<p>
+				EOX can be contacted by post using the postal address given above, using the contact form on the EOX website <a href="https://eox.at" target="_blank">https://eox.at</a>, by telephone on the contact number or by email on the address published on this EOX website.
+			</p>
+			<p>
+				For information or requests specifically related to the VirES for Swarm service users may use the email address <a href="mailto:support@vires.services" target="_top">support@vires.services</a>.
+			</p>
+		</li>
+		<li>
+			<h3><a name="Changelog">13 Changelog</a></h3>
+			<ul class="circle">
+				<li>First appearance 05/06/16</li>
+			</ul>
+		</li>
+		<p style="margin-top: 15px; margin-bottom: 20px;">
+			&copy; EOX IT Services GmbH 2016 All Right Reserved
+		</p>
+	</ol>
+
+</div>
+  
+
+  
+{% endblock %}
