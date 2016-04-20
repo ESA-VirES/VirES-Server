@@ -60,7 +60,19 @@
     <!-- Piwik -->
     <script type="text/javascript">
      var _paq = _paq || [];
-     _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+
+     // Check if the title was set already somewhere else
+     var documentTitleSet = false;
+     for (var i = _paq.length - 1; i >= 0; i--) {
+     	if (_paq[i][0]=="setDocumentTitle"){
+     		documentTitleSet = true;
+     	}
+     }
+     // only if it is not set set it here with the default
+     if(!documentTitleSet){
+     	_paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+     }
+
      _paq.push(["setDoNotTrack", true]);
      _paq.push(['trackPageView']);
      _paq.push(['enableLinkTracking']);
@@ -74,6 +86,6 @@
     </script>
     <noscript><p><img src="//nix.eox.at/piwik/piwik.php?idsite=4" style="border:0;" alt="" /></p></noscript>
     <!-- End Piwik Code -->
-        
+
 </body>
 </html>
