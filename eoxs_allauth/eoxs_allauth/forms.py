@@ -104,7 +104,7 @@ class ESASignupForm(forms.Form):
                 if 'location' in ed:
                     self.initial['country'] = ed['location']['country']['code'].upper()
                 if 'emailAddress' in ed:
-                    self.initial['username'] = ed['emailAddress'].split('@')[0]
+                    self.initial['username'] = filter( str.isalnum, str(ed['emailAddress'].split('@')[0]) )
                 if 'positions' in ed:
                     for i in range(0, len(ed['positions'])-1):
                         if ed['positions']['values'][i]['isCurrent']:

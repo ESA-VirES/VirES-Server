@@ -2,6 +2,7 @@
 {% load i18n %}
 {% block head_title %}{% trans "Signup" %}{% endblock %}
 {% block content %}
+{% load staticfiles %}
   <h2>{% trans "Sign up" %}</h2>
   <p>{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">Login</a>.{% endblocktrans %}</p>
   <p class="help-inline" style="font-size: 1em;">(*) Required fields; Please help us getting to know you by filling out non required fields.</p>
@@ -41,9 +42,9 @@
           <label style="font-weight: bold;">
               <input id="tosagree" style="width: auto;" type="checkbox" value="">
               I read and accept the 
-              <a style="display:inline;" href="/accounts/datatc" target="_blank_">ESA Data Terms</a>
-              and the 
-              <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a>
+              <a style="display:inline;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a>
+              <!--and the 
+              <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a>-->
               *
           </label>
       </div>
