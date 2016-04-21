@@ -247,7 +247,10 @@ class RetrieveDataFiltered(WPSProcess):
 
                     yield collection_id, product, result, cdf_type, count
 
-            self.access_logger.info("total count: %d samples", total_count)
+            self.access_logger.info(
+                "response: count: %d samples, mime-type: %s",
+                total_count, output['mime_type']
+            )
 
 
         if output['mime_type'] == "text/csv":

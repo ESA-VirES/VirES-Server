@@ -165,16 +165,16 @@ class RetrieveData(WPSProcess):
 
         collection_ids = collection_ids.split(",") if collection_ids else []
 
-        collections = ProductCollection.objects.filter(
-            identifier__in=collection_ids
-        )
-
         self.access_logger.info(
-            "request parameters: toi: (%s, %s), aoi: %s, collections: (%s), "
+            "request: toi: (%s, %s), aoi: %s, collections: (%s), "
             "models: (%s), ",
             begin_time.isoformat("T"), end_time.isoformat("T"),
             bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
             ", ".join(collection_ids), ", ".join(models),
+        )
+
+        collections = ProductCollection.objects.filter(
+            identifier__in=collection_ids
         )
 
         if not collections or end_time < begin_time:
@@ -296,7 +296,10 @@ class RetrieveData(WPSProcess):
                     )
                     output_fobj.write("\r\n")
 
-        self.access_logger.info("total count: %d samples", total_count)
+        self.access_logger.info(
+            "response: count: %d samples, mime-type: %s",
+            total_count, output['mime_type']
+        )
 
         # HTTP headers
         http_headers = (
