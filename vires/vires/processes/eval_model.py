@@ -31,15 +31,12 @@
 
 from os import remove
 from os.path import join, exists
-from logging import getLogger, DEBUG
+from logging import DEBUG
 from uuid import uuid4
 from datetime import datetime
 from numpy import empty, linspace, meshgrid, amin, amax
 from matplotlib.colors import Normalize
 from eoxmagmod import GEODETIC_ABOVE_WGS84
-from eoxserver.core import Component, implements
-from eoxserver.services.ows.wps.interfaces import ProcessInterface
-from eoxserver.services.ows.wps.exceptions import ExecuteError
 from eoxserver.services.ows.wps.parameters import (
     BoundingBox, BoundingBoxData, ComplexData, CDFile,
     FormatText, FormatBinaryRaw, FormatBinaryBase64,
@@ -49,15 +46,13 @@ from vires.config import SystemConfigReader
 from vires.time_util import datetime_to_decimal_year, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.forward_models.base import EVAL_VARIABLE
+from vires.processes.base import WPSProcess
 from vires.processes.util import parse_model, parse_style, data_to_png
 
-logger = getLogger("vires.processes.%s" % __name__.split(".")[-1])
 
-class EvalModel(Component):
+class EvalModel(WPSProcess):
     """ This process calculates difference of two magnetic models.
     """
-    implements(ProcessInterface)
-
     identifier = "eval_model"
     title = "Evaluate model"
     metadata = {}
@@ -153,9 +148,6 @@ class EvalModel(Component):
         color_map = parse_style("style", style)
         model = parse_model("model", model_id, shc)
 
-        # convert bounding box to a simple easting/nothing tuple
-        bbox = (bbox[0][1], bbox[0][0], bbox[1][1], bbox[1][0])
-
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
@@ -163,11 +155,20 @@ class EvalModel(Component):
             (end_time - begin_time)/2 + begin_time
         )
 
-        hd_x = (0.5 / width) * (bbox[2] - bbox[0])
-        hd_y = (0.5 / height) * (bbox[1] - bbox[3])
+        self.access_logger.info(
+            "request: toi: (%s, %s), aoi: %s, elevation: %g, "
+            "model: %s, coeff_range: (%d, %d), variable: %s",
+            begin_time.isoformat("T"), end_time.isoformat("T"),
+            bbox[0] + bbox[1] if bbox else (-90, -180, 90, 180), elevation,
+            model_id, coeff_min, coeff_max, variable,
+        )
+
+        (y_min, x_min), (y_max, x_max) = bbox
+        hd_x = (0.5 / width) * (x_max - x_min)
+        hd_y = (0.5 / height) * (y_min - y_max)
         lons, lats = meshgrid(
-            linspace(bbox[0] + hd_x, bbox[2] - hd_x, width, endpoint=True),
-            linspace(bbox[3] + hd_y, bbox[1] - hd_y, height, endpoint=True)
+            linspace(x_min + hd_x, x_max - hd_x, width, endpoint=True),
+            linspace(y_max + hd_y, y_min - hd_y, height, endpoint=True)
         )
 
         # Geodetic coordinates with elevation above the WGS84 ellipsoid.
@@ -176,12 +177,11 @@ class EvalModel(Component):
         coord_gdt[:, :, 1] = lons
         coord_gdt[:, :, 2] = elevation
 
-        logger.debug("coefficient range: %s", (coeff_min, coeff_max))
-        logger.debug("requested variable: %s", variable)
+        self.logger.debug("coefficient range: %s", (coeff_min, coeff_max))
 
         with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
             model_id, variable, width, height
-        ), logger, DEBUG):
+        ), self.logger, DEBUG):
             model_field = model.eval(
                 coord_gdt,
                 mean_decimal_year,
@@ -199,8 +199,13 @@ class EvalModel(Component):
         range_max = amax(pixel_array) if range_max is None else range_max
         if range_max < range_min:
             range_max, range_min = range_min, range_max
-        logger.debug("output data range: %s", (range_min, range_max))
+        self.logger.debug("output data range: %s", (range_min, range_max))
         data_norm = Normalize(range_min, range_max)
+
+        self.access_logger.info(
+            "response: image-size: (%d, %d), mime-type: %s",
+            width, height, output['mime_type'],
+        )
 
         # the output image
         temp_basename = uuid4().hex
@@ -209,7 +214,7 @@ class EvalModel(Component):
         try:
             data_to_png(temp_filename, pixel_array, data_norm, color_map)
             result = CDFile(temp_filename, **output)
-        except Exception as exc:
+        except Exception:
             if exists(temp_filename):
                 remove(temp_filename)
             raise

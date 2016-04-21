@@ -30,7 +30,7 @@
 # pylint: disable=missing-docstring, too-many-arguments, too-many-locals
 # pylint: disable=too-few-public-methods, no-self-use
 
-from logging import getLogger, DEBUG
+from logging import DEBUG
 from itertools import izip
 from cStringIO import StringIO
 from datetime import datetime
@@ -40,8 +40,6 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize, LogNorm
 
 from eoxmagmod import GEODETIC_ABOVE_WGS84, GEOCENTRIC_CARTESIAN, vnorm
-from eoxserver.core import Component, implements
-from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, BoundingBoxData, ComplexData, CDFileWrapper, FormatText,
     AllowedRange,
@@ -50,16 +48,14 @@ from vires.time_util import (
     datetime_to_decimal_year, naive_to_utc, datetime_mean,
 )
 from vires.perf_util import ElapsedTimeLogger
+from vires.processes.base import WPSProcess
 from vires.processes.util import parse_models, parse_style
 
-logger = getLogger("vires.processes.%s" % __name__.split(".")[-1])
 
-class RetrieveFieldLines(Component):
+class RetrieveFieldLines(WPSProcess):
     """ This process generates a set of field lines passing trough the given
     area of interest.
     """
-    implements(ProcessInterface)
-
     identifier = "retrieve_field_lines"
     title = "Generate field lines"
     metadata = {}
@@ -151,8 +147,16 @@ class RetrieveFieldLines(Component):
             datetime_mean(begin_time, begin_time)
         )
 
+        self.access_logger.info(
+            "request: toi: (%s, %s), aoi: %s, elevation: %g, "
+            "models: (%s), grid: (%d, %d)",
+            begin_time.isoformat("T"), end_time.isoformat("T"),
+            bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180), elevation,
+            ", ".join(models), lines_per_col, lines_per_row,
+        )
+
         # parse range bounds
-        logger.debug(
+        self.logger.debug(
             "output %s data range: %s",
             "logarithmic" if log_scale else "linear",
             (range_min, range_max)
@@ -167,11 +171,13 @@ class RetrieveFieldLines(Component):
             )
             coord_gdt[:, :, 2] = elevation
 
+            total_count = 0
             for model_id, model in models.iteritems():
+                model_count = 0
                 for point in coord_gdt.reshape((n_lines, 3)):
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
-                        "%s field line " % model_id, logger, DEBUG
+                        "%s field line " % model_id, self.logger, DEBUG
                     ) as etl:
                         line_coords, line_field = get_field_line(
                             model, point, mean_decimal_year
@@ -184,10 +190,23 @@ class RetrieveFieldLines(Component):
                     # get scalar field strength
                     line_values = vnorm(line_field)
                     yield model_id, line_coords, line_values
+                    model_count += len(line_values)
+
+                self.access_logger.info(
+                    "model: %s, lines: %d, points: %d",
+                    model_id, n_lines, model_count,
+                )
+                total_count += model_count
+
+            self.access_logger.info(
+                "response: lines: %d, points: %d, mime-type: %s",
+                n_lines * len(models), total_count, output['mime_type'],
+            )
 
         # data colouring
         norm = LogNorm if log_scale else Normalize
         color_scale = ScalarMappable(norm(range_min, range_max), color_map)
+
         # CSV text output
         output_fobj = StringIO()
         output_fobj.write('id,color_r,color_g,color_b,pos_x,pos_y,pos_z\r\n')
