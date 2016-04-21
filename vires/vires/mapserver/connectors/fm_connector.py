@@ -31,7 +31,7 @@
 
 from os.path import join
 from uuid import uuid4
-from logging import getLogger, DEBUG
+from logging import getLogger
 from django.contrib.gis import geos
 from eoxserver.core import Component, implements
 from eoxserver.contrib import vsi, gdal
@@ -77,7 +77,7 @@ class ForwardModelConnector(Component):
 
         with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
             model_id, band.identifier, size_x, size_y
-        ), logger, DEBUG):
+        ), logger):
             # fast Cubic Spline model interpolation
             pixel_array = model_provider.evaluate_int(
                 data_item, band.identifier, bbox, size_x, size_y, elevation,

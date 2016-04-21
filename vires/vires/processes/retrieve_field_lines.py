@@ -30,7 +30,6 @@
 # pylint: disable=missing-docstring, too-many-arguments, too-many-locals
 # pylint: disable=too-few-public-methods, no-self-use
 
-from logging import DEBUG
 from itertools import izip
 from cStringIO import StringIO
 from datetime import datetime
@@ -177,7 +176,7 @@ class RetrieveFieldLines(WPSProcess):
                 for point in coord_gdt.reshape((n_lines, 3)):
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
-                        "%s field line " % model_id, self.logger, DEBUG
+                        "%s field line " % model_id, self.logger
                     ) as etl:
                         line_coords, line_field = get_field_line(
                             model, point, mean_decimal_year

@@ -31,7 +31,6 @@
 
 from os import remove
 from os.path import join, exists
-from logging import DEBUG
 from uuid import uuid4
 from datetime import datetime
 from numpy import empty, linspace, meshgrid, amin, amax
@@ -189,7 +188,7 @@ class EvalModelDiff(WPSProcess):
         if variable in ("F_vect", "H_vect", "X", "Y", "Z"):
             with ElapsedTimeLogger("(%s - %s).%s %dx%dpx evaluated in" % (
                 model1_id, model2_id, variable, width, height
-            ), self.logger, DEBUG):
+            ), self.logger):
                 model_field_diff = (model1 - model2).eval(
                     coord_gdt,
                     mean_decimal_year,
@@ -206,7 +205,7 @@ class EvalModelDiff(WPSProcess):
         else:
             with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
                 model1_id, variable, width, height
-            ), self.logger, DEBUG):
+            ), self.logger):
                 model1_field = model1.eval(
                     coord_gdt,
                     mean_decimal_year,
@@ -220,7 +219,7 @@ class EvalModelDiff(WPSProcess):
 
             with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
                 model2_id, variable, width, height
-            ), self.logger, DEBUG):
+            ), self.logger):
                 model2_field = model2.eval(
                     coord_gdt,
                     mean_decimal_year,

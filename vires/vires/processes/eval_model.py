@@ -31,7 +31,6 @@
 
 from os import remove
 from os.path import join, exists
-from logging import DEBUG
 from uuid import uuid4
 from datetime import datetime
 from numpy import empty, linspace, meshgrid, amin, amax
@@ -181,7 +180,7 @@ class EvalModel(WPSProcess):
 
         with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
             model_id, variable, width, height
-        ), self.logger, DEBUG):
+        ), self.logger):
             model_field = model.eval(
                 coord_gdt,
                 mean_decimal_year,
