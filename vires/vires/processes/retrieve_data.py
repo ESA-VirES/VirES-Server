@@ -28,6 +28,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, missing-docstring
+# pylint: disable=too-many-statements, no-self-use
 
 import json
 from collections import OrderedDict
@@ -52,6 +53,7 @@ from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
 )
 from vires.models import ProductCollection, Product
+from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
 from vires.processes.util import parse_models
 from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
@@ -245,9 +247,17 @@ class RetrieveData(WPSProcess):
                     begin_time, end_time, time_first, time_last,
                     product.sampling_period, TIME_TOLERANCE
                 )
-                data, count, cdf_type = self.handle(
-                    product, data_fields, low, high, step, models, bbox
+                filtered_fraction = (
+                    float(high - low) / (float(step) * float(product.size_x))
                 )
+                with ElapsedTimeLogger("%.2g%% of %s extracted in" % (
+                    100.0 * filtered_fraction, product.identifier,
+                ), self.logger) as etl:
+                    data, count, cdf_type = self.handle(
+                        product, data_fields, low, high, step, models, bbox
+                    )
+                    etl.message = ("%d samples from " % count) + etl.message
+
                 total_count += count
                 collection_count += count
 

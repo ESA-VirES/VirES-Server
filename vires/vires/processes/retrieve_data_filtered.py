@@ -54,6 +54,7 @@ from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
 )
 from vires.models import ProductCollection, Product
+from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
 from vires.processes.util import parse_models, parse_filters
 from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
@@ -221,10 +222,18 @@ class RetrieveDataFiltered(WPSProcess):
                         product.sampling_period, TIME_TOLERANCE
                     )
 
-                    result, count, cdf_type = self.handle(
-                        product, data_fields, low, high, sampling_step,
-                        models, filters
+                    filtered_fraction = float(high - low) / (
+                        float(sampling_step) * float(product.size_x)
                     )
+                    with ElapsedTimeLogger("%.2g%% of %s extracted in" % (
+                        100.0 * filtered_fraction, product.identifier,
+                    ), self.logger) as etl:
+                        result, count, cdf_type = self.handle(
+                            product, data_fields, low, high, sampling_step,
+                            models, filters
+                        )
+                        etl.message = ("%d samples from " % count) + etl.message
+
                     self.access_logger.info(
                         "collection: %s, product: %s, count: %d"
                         " sampling: %gs",
