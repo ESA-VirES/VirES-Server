@@ -26,6 +26,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+from logging import INFO, WARNING
 from django.conf import settings
 from django.shortcuts import render
 
@@ -43,6 +44,7 @@ from django_countries.widgets import CountrySelectWidget
 
 from eoxs_allauth.models import UserProfile
 from eoxs_allauth.forms import ProfileForm
+from eoxs_allauth.decorators import log_access
 
 
 
@@ -56,6 +58,8 @@ if hasattr(settings, 'EOXS_ALLAUTH_WORKSPACE_TEMPLATE'):
 else:
     WORKSPACE_TEMPLATE = "eoxs_allauth/workspace.html"
 
+
+@log_access(INFO, INFO)
 def workspace(request):
     """ EOxServer/allauth workspace.
     Note that the work space is used as the actual landing page.
@@ -69,6 +73,7 @@ def workspace(request):
         "signup_form": SignupForm()
     })
 
+@log_access(INFO, WARNING)
 @login_required
 @csrf_exempt
 def wrapped_ows(request):
