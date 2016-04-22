@@ -163,10 +163,10 @@ class EvalModelDiff(WPSProcess):
         self.access_logger.info(
             "request: toi: (%s, %s), aoi: %s, elevation: %g, "
             "model: %s, reference-model: %s, coeff_range: (%d, %d), "
-            "variable: %s",
+            "variable: %s, image-size: (%d, %d), mime-type: %s",
             begin_time.isoformat("T"), end_time.isoformat("T"),
-            bbox[0] + bbox[1] if bbox else (-90, -180, 90, 180), elevation,
-            model1_id, model2_id, coeff_min, coeff_max, variable,
+            bbox[0] + bbox[1], model1_id, model2_id, coeff_min, coeff_max,
+            variable, width, height, output['mime_type'],
         )
 
         (y_min, x_min), (y_max, x_max) = bbox
@@ -186,8 +186,9 @@ class EvalModelDiff(WPSProcess):
         self.logger.debug("coefficient range: %s", (coeff_min, coeff_max))
 
         if variable in ("F_vect", "H_vect", "X", "Y", "Z"):
-            with ElapsedTimeLogger("(%s - %s).%s %dx%dpx evaluated in" % (
-                model1_id, model2_id, variable, width, height
+            with ElapsedTimeLogger("(%s - %s).%s %dx%dpx %s evaluated in" % (
+                model1_id, model2_id, variable, width, height,
+                bbox[0] + bbox[1],
             ), self.logger):
                 model_field_diff = (model1 - model2).eval(
                     coord_gdt,
@@ -203,8 +204,8 @@ class EvalModelDiff(WPSProcess):
             pixel_array = EVAL_VARIABLE[variable[0]](model_field_diff, None)
 
         else:
-            with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
-                model1_id, variable, width, height
+            with ElapsedTimeLogger("%s.%s %dx%dpx %s evaluated in" % (
+                model1_id, variable, width, height, bbox[0] + bbox[1],
             ), self.logger):
                 model1_field = model1.eval(
                     coord_gdt,
@@ -217,8 +218,8 @@ class EvalModelDiff(WPSProcess):
                     check_validity=False
                 )
 
-            with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
-                model2_id, variable, width, height
+            with ElapsedTimeLogger("%s.%s %dx%dpx %s evaluated in" % (
+                model2_id, variable, width, height, bbox[0] + bbox[1],
             ), self.logger):
                 model2_field = model2.eval(
                     coord_gdt,
@@ -242,11 +243,6 @@ class EvalModelDiff(WPSProcess):
             range_max, range_min = range_min, range_max
         self.logger.debug("output data range: %s", (range_min, range_max))
         data_norm = Normalize(range_min, range_max)
-
-        self.access_logger.info(
-            "response: image-size: (%d, %d), mime-type: %s",
-            width, height, output['mime_type'],
-        )
 
         # the output image
         temp_basename = uuid4().hex
