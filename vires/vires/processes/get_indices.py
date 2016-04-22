@@ -31,8 +31,6 @@ from itertools import izip
 from cStringIO import StringIO
 from numpy import amax, amin, vectorize, choose
 from django.conf import settings
-from eoxserver.core import Component, implements
-from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, CDFileWrapper,
 )
@@ -40,6 +38,7 @@ from vires.aux import query_dst, query_kp
 from vires.time_util import (
     mjd2000_to_datetime, mjd2000_to_unix_epoch, naive_to_utc,
 )
+from vires.processes.base import WPSProcess
 
 
 def abs_amax(arr, axis):
@@ -56,12 +55,10 @@ AUX_INDEX = {
 }
 
 
-class GetIndices(Component):
+class GetIndices(WPSProcess):
     """Retrieve auxiliary indices within the given time interval.
     Empty response is returned if there is no value matched.
     """
-    implements(ProcessInterface)
-
     identifier = "get_indices"
     title = "Auxiliary index retrieval."
     metadata = {}
@@ -104,6 +101,11 @@ class GetIndices(Component):
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
 
+        self.access_logger.info(
+            "request: index: %s, toi: (%s, %s)",
+            index_id, begin_time.isoformat("T"), end_time.isoformat("T"),
+        )
+
         query, filename, lessen, data_format = AUX_INDEX[index_id]
         aux_data = query(filename, begin_time, end_time)
 
@@ -118,6 +120,11 @@ class GetIndices(Component):
             data = lessen(data[:size].reshape(shape), 1)
             time = time[:size].reshape(shape)
             time = 0.5 * (time[:, 0] + time[:, -1])
+
+        self.access_logger.info(
+            "response: index: %s, count: %s values, mime-type: %s",
+            index_id, len(time), output['mime_type'],
+        )
 
         if csv_time_format == "ISO date-time":
             time_format = "%s"

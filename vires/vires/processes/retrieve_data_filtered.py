@@ -38,14 +38,11 @@ from datetime import datetime, timedelta
 from itertools import izip
 import numpy as np
 from django.conf import settings
-from eoxserver.core import Component, implements
-from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.exceptions import ExecuteError
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, AllowedRange, CDFile, FormatBinaryRaw,
 )
 from eoxserver.backends.access import connect
-from vires import models as db_models
 from vires.aux import query_kp_int, query_dst_int
 from vires.config import SystemConfigReader
 from vires.util import datetime_array_slice, between
@@ -56,6 +53,9 @@ from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
 )
+from vires.models import ProductCollection, Product
+from vires.perf_util import ElapsedTimeLogger
+from vires.processes.base import WPSProcess
 from vires.processes.util import parse_models, parse_filters
 from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
 
@@ -85,13 +85,11 @@ CDF_RAW_TIME_CONVERTOR = {
 }
 
 
-class RetrieveDataFiltered(Component):
+class RetrieveDataFiltered(WPSProcess):
     """ Process retrieving subset of the registered Swarm data based
     on collection, time interval and optional additional custom filters.
     This precess is designed to be used for the data download.
     """
-    implements(ProcessInterface)
-
     identifier = "retrieve_data_filtered"
     title = "Retrieve filtered Swarm data."
     metadata = {}
@@ -176,9 +174,20 @@ class RetrieveDataFiltered(Component):
 
         collection_ids = collection_ids.split(",") if collection_ids else []
 
-        collections = db_models.ProductCollection.objects.filter(
+        self.access_logger.info(
+            "request parameters: toi: (%s, %s), collections: (%s), "
+            "models: (%s), filters: {%s}",
+            begin_time.isoformat("T"), end_time.isoformat("T"),
+            ", ".join(collection_ids), ", ".join(models), ", ".join(
+                "%s: (%g, %g)" % (k, v[0], v[1]) for k, v in filters.iteritems()
+            )
+        )
+
+        collections = ProductCollection.objects.filter(
             identifier__in=collection_ids
         )
+
+        # TODO: Graceful handling of an empty collection list.
 
         data_fields = [
             field.identifier for field in collections[0].range_type
@@ -200,7 +209,7 @@ class RetrieveDataFiltered(Component):
             """ Result generator. """
             total_count = 0
             for collection_id in collection_ids:
-                products_qs = db_models.Product.objects.filter(
+                products_qs = Product.objects.filter(
                     collections__identifier=collection_id,
                     begin_time__lte=(end_time + TIME_TOLERANCE),
                     end_time__gte=(begin_time - TIME_TOLERANCE),
@@ -213,13 +222,32 @@ class RetrieveDataFiltered(Component):
                         product.sampling_period, TIME_TOLERANCE
                     )
 
-                    result, count, cdf_type = self.handle(
-                        product, data_fields, low, high, sampling_step,
-                        models, filters
+                    filtered_fraction = float(high - low) / (
+                        float(sampling_step) * float(product.size_x)
+                    )
+                    with ElapsedTimeLogger("%.2g%% of %s extracted in" % (
+                        100.0 * filtered_fraction, product.identifier,
+                    ), self.logger) as etl:
+                        result, count, cdf_type = self.handle(
+                            product, data_fields, low, high, sampling_step,
+                            models, filters
+                        )
+                        etl.message = ("%d samples from " % count) + etl.message
+
+                    self.access_logger.info(
+                        "collection: %s, product: %s, count: %d"
+                        " sampling: %gs",
+                        collection_id, product.identifier, count,
+                        product.sampling_period.total_seconds() * sampling_step
                     )
 
                     total_count += count
                     if total_count > MAX_SAMPLES_COUNT:
+                        self.access_logger.error(
+                            "The sample count %d exceeds the maximum allowed "
+                            "count of %d samples!",
+                            total_count, MAX_SAMPLES_COUNT,
+                        )
                         raise ExecuteError(
                             "Requested data is too large and exceeds the "
                             "maximum limit of %d records! Please refine "
@@ -227,6 +255,11 @@ class RetrieveDataFiltered(Component):
                         )
 
                     yield collection_id, product, result, cdf_type, count
+
+            self.access_logger.info(
+                "response: count: %d samples, mime-type: %s",
+                total_count, output['mime_type']
+            )
 
 
         if output['mime_type'] == "text/csv":

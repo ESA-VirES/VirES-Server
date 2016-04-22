@@ -31,17 +31,17 @@
 
 from os.path import join
 from uuid import uuid4
-from logging import getLogger, DEBUG
+from logging import getLogger
 from django.contrib.gis import geos
 from eoxserver.core import Component, implements
 from eoxserver.contrib import vsi, gdal
 from eoxserver.resources.coverages import models
 from eoxserver.services.subset import Trim, Slice
 from eoxserver.services.mapserver.interfaces import ConnectorInterface
+from vires.util import cached_property
 from vires.forward_models.util import get_forward_model_providers
 from vires.perf_util import ElapsedTimeLogger
 
-logger = getLogger("vires.mapserver.connectors.fm_connector")
 
 class ForwardModelConnector(Component):
     """ Connects a CDF file.
@@ -75,9 +75,19 @@ class ForwardModelConnector(Component):
             band, options["dimensions"].get("range")
         )
 
-        with ElapsedTimeLogger("%s.%s %dx%dpx evaluated in" % (
-            model_id, band.identifier, size_x, size_y
-        ), logger, DEBUG):
+        self.access_logger.info(
+            "request: toi: %s, aoi: %s, elevation: %g, "
+            "model: %s, coeff_range: (%d, %d), variable: %s, "
+            "image-size: (%d, %d)",
+            time.isoformat("T"), (bbox[1], bbox[0], bbox[3], bbox[2]),
+            elevation, model_id, coeff_min, coeff_max, band.identifier,
+            size_x, size_y,
+        )
+
+        with ElapsedTimeLogger("%s.%s %dx%dpx %s evaluated in" % (
+            model_id, band.identifier, size_x, size_y,
+            (bbox[1], bbox[0], bbox[3], bbox[2]),
+        ), self.logger):
             # fast Cubic Spline model interpolation
             pixel_array = model_provider.evaluate_int(
                 data_item, band.identifier, bbox, size_x, size_y, elevation,
@@ -97,11 +107,21 @@ class ForwardModelConnector(Component):
         ))
         dataset.GetRasterBand(1).WriteArray(pixel_array)
         layer.data = path
-        logger.debug("Created tempfile %s", layer.data)
+        self.logger.debug("Created tempfile %s", layer.data)
 
     def disconnect(self, coverage, data_items, layer, options):
-        logger.debug("Removing tempfile %s", layer.data)
+        self.logger.debug("Removing tempfile %s", layer.data)
         vsi.remove(layer.data)
+
+    @cached_property
+    def access_logger(self):
+        """ Get access logger. """
+        return getLogger("access.wms.fm_connector")
+
+    @cached_property
+    def logger(self):
+        """ Get an ordinary logger. """
+        return getLogger("vires.mapserver.connectors.fm_connector")
 
     def get_model_provider(self, identifier):
         try:
