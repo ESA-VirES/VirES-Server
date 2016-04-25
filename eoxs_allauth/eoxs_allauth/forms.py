@@ -24,47 +24,50 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, unused-argument
 
-from itertools import chain
+import re
+from logging import getLogger
 from django import forms
-from django.contrib.auth.models import User
-
 from django.forms import ModelForm
-from eoxs_allauth.models import UserProfile
-
-from django_countries.fields import LazyTypedChoiceField
-from django_countries.fields import CountryField
 from django_countries import countries
+from django_countries.fields import LazyTypedChoiceField
 from django_countries.widgets import CountrySelectWidget
+from .models import UserProfile
 
+# Regular expression filter used to remove invalid user-name characters.
+RE_USER_NAME_FILTER = re.compile('[^a-zA-Z0-9_.]+')
 
-# When account is created via social, fire django-allauth signal to populate Django User record.
-from allauth.account.signals import user_signed_up
-from django.dispatch import receiver
+# FIXME: Is this still relevant? If not remove it!
+# When account is created via social, fire django-allauth signal to populate
+# Django User record.
+#from django.dispatch import receiver
+#from django.contrib.auth.models import User
+#from allauth.account.signals import user_signed_up
 
-
-my_countries = list(chain((('', '(select country)'),), countries))
 
 class ProfileForm(ModelForm):
-    class Meta:
+    class Meta: # pylint: disable=old-style-class, no-init, too-few-public-methods
         model = UserProfile
-        fields = ['title', 'institution', 'country', 'study_area', 'executive_summary']
-        widgets = {'country': CountrySelectWidget()}
+        fields = [
+            'title', 'institution', 'country', 'study_area',
+            'executive_summary',
+        ]
+        widgets = {
+            'country': CountrySelectWidget(),
+        }
 
 
 class ESASignupForm(forms.Form):
-
     first_name = forms.CharField(max_length=30, required=False)
     last_name = forms.CharField(max_length=30, required=False)
-
     title = forms.CharField(max_length=100, required=False)
     institution = forms.CharField(max_length=100, required=False)
-
     country = LazyTypedChoiceField(
-        choices=my_countries,
+        choices=[('', '(select country)')] + list(countries),
         required=False,
-        widget=CountrySelectWidget())
-
+        widget=CountrySelectWidget(),
+    )
     study_area = forms.CharField(max_length=200, required=False)
     executive_summary = forms.CharField(
         max_length=3000,
@@ -72,53 +75,84 @@ class ESASignupForm(forms.Form):
             'placeholder': 'We intend to use the SWARM data as part of ...',
             'rows': 4
         }),
-        required=False
+        required=False,
     )
-
 
     def signup(self, request, user):
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
         user.save()
-
         user_profile = UserProfile(
-            user = user,
-            title = self.cleaned_data['title'],
-            institution = self.cleaned_data['institution'],
-            country = self.cleaned_data['country'],
-            study_area = self.cleaned_data['study_area'],
-            executive_summary = self.cleaned_data['executive_summary'],
+            user=user,
+            title=self.cleaned_data['title'],
+            institution=self.cleaned_data['institution'],
+            country=self.cleaned_data['country'],
+            study_area=self.cleaned_data['study_area'],
+            executive_summary=self.cleaned_data['executive_summary'],
         )
-
         user_profile.full_clean()
         user_profile.save()
-    
 
     def __init__(self, *args, **kwargs):
         super(ESASignupForm, self).__init__(*args, **kwargs)
         if hasattr(self, 'sociallogin'):
+            provider = self.sociallogin.account.provider
+            extra_data = self.sociallogin.account.extra_data
+            getLogger(__name__).debug("%s: %s", provider, extra_data)
+            if provider == 'linkedin_oauth2':
+                initial = self.extract_linkedin(extra_data)
+            elif provider == 'facebook':
+                initial = self.extract_facebook(extra_data)
+            elif provider == 'google':
+                initial = self.extract_google(extra_data)
+            elif provider == 'twitter':
+                initial = self.extract_twitter(extra_data)
+            else:
+                initial = {}
+            self.initial.update(initial)
 
-            ed = self.sociallogin.account.extra_data
+    @classmethod
+    def email_to_username(cls, email):
+        """ Extract user-name from an e-mail address. """
+        return RE_USER_NAME_FILTER.sub('', email.partition("@")[0])
 
-            if self.sociallogin.account.provider == 'linkedin_oauth2':
-                if 'location' in ed:
-                    self.initial['country'] = ed['location']['country']['code'].upper()
-                if 'emailAddress' in ed:
-                    self.initial['username'] = filter( str.isalnum, str(ed['emailAddress'].split('@')[0]) )
-                if 'positions' in ed:
-                    for i in range(0, len(ed['positions'])-1):
-                        if ed['positions']['values'][i]['isCurrent']:
-                            self.initial['institution'] = ed['positions']['values'][i]['company']['name']
-                            self.initial['title'] = ed['positions']['values'][i]['title']
-                            self.initial['study_area'] = ed['positions']['values'][i]['summary']
-            
-            # TODO: Need to activate and review app by facebook in order to get 
-            # more information from user
-            #if self.sociallogin.account.provider == 'facebook':
-            #if self.sociallogin.account.provider == 'google':
-            #    self.initial['institution'] = ed
-            #if self.sociallogin.account.provider == 'twitter':
+    @classmethod
+    def extract_linkedin(cls, extra_data):
+        """ Extract user info form the LinkedIn social login. """
+        data = {}
+        if 'location' in extra_data:
+            data['country'] = extra_data['location']['country']['code'].upper()
+        if 'emailAddress' in extra_data:
+            data['username'] = cls.email_to_username(extra_data['emailAddress'])
+        if 'positions' in extra_data:
+            for position in extra_data['positions']['values']:
+                if 'isCurrent' in position and position['isCurrent']:
+                    if 'company' in position:
+                        data['institution'] = position['company']['name']
+                    if 'title' in position:
+                        data['title'] = position['title']
+                    if 'summary' in position:
+                        data['study_area'] = position['summary']
+                    break
+        return data
 
-                            
+    @classmethod
+    def extract_google(cls, extra_data):
+        """ Extract user info form the Google social login. """
+        data = {}
+        if 'email' in extra_data:
+            data['username'] = cls.email_to_username(extra_data['email'])
+        return data
 
-                
+    @classmethod
+    def extract_facebook(cls, extra_data):
+        """ Extract user info form the LinkedIn social login. """
+        data = {}
+        if 'email' in extra_data:
+            data['username'] = cls.email_to_username(extra_data['email'])
+        return data
+
+    @classmethod
+    def extract_twitter(cls, extra_data):
+        """ Extract user info form the Twitter social login. """
+        return {}
