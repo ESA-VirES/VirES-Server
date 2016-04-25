@@ -30,6 +30,7 @@ from django.db.models.signals import post_migrate
 from django.contrib.auth.models import User
 
 from eoxs_allauth.models import UserProfile
+from eoxs_allauth import signals # needed to initialize signal receivers
 
 
 def create_profiles(sender, **kwargs):
@@ -38,10 +39,10 @@ def create_profiles(sender, **kwargs):
             UserProfile.objects.get_or_create(user=u)
     pass
 
+
 class EOxServerAllauthConfig(AppConfig):
     name = 'eoxs_allauth'
     verbose_name = "EOxServer allauth"
 
     def ready(self):
         post_migrate.connect(create_profiles, sender=self)
-
