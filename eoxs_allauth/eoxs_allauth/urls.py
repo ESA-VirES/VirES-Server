@@ -24,9 +24,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, invalid-name
 
-from .views import wrapped_ows
 from django.conf.urls import url
+from .views import wrapped_ows
 
 urlpatterns = [
     url(r'^$', wrapped_ows, name='ows'),

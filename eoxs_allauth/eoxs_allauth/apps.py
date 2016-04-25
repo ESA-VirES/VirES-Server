@@ -29,8 +29,8 @@
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 from django.contrib.auth.models import User
-from eoxs_allauth.models import UserProfile
-from eoxs_allauth import signals # needed to initialize signal receivers
+from .models import UserProfile
+from . import signals # needed to initialize signal receivers
 
 
 class EOxServerAllauthConfig(AppConfig):
