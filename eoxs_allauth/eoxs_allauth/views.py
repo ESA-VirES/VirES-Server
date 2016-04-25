@@ -88,5 +88,14 @@ class ProfileUpdate(ModelFormWidgetMixin, SuccessMessageMixin, UpdateView):
     success_url = '/accounts/profile'
     success_message = "Profile was updated successfully"
     template_name = 'account/userprofile_update_form.html'
+
     def get_object(self):
         return UserProfile.objects.get(user=self.request.user)
+
+    @classmethod
+    def as_view(cls, *args, **kwargs):
+        return log_access(INFO, WARNING)(
+            login_required(
+                super(ProfileUpdate, cls).as_view(*args, **kwargs)
+            )
+        )
