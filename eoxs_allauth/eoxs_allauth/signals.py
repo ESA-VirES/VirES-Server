@@ -39,7 +39,7 @@ from allauth.socialaccount.signals import (
     pre_social_login, social_account_added, social_account_removed,
 )
 
-LOGGER = getLogger("eoxs_allauth")
+LOGGER = getLogger("eoxs_allauth.allauth")
 
 
 @receiver(user_logged_in)
@@ -104,6 +104,9 @@ def receive_email_confirmation_sent(confirmation, **kwargs):
 
 @receiver(pre_social_login)
 def receive_pre_social_login(request, sociallogin, **kwargs):
+    LOGGER.debug(
+        "%s: %s, %s", sociallogin, sociallogin.user, sociallogin.email_addresses
+    )
     # TODO: find a better way how to guess the user's identity
     user_id = str(sociallogin.user)
     emails = ", ".join(addr.email for addr in sociallogin.email_addresses)

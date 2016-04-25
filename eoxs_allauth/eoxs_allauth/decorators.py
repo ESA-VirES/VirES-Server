@@ -26,10 +26,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
+
 from functools import wraps
 from logging import getLogger, INFO, WARNING
 
-LOGGER = getLogger("eoxs_allauth")
+LOGGER = getLogger("eoxs_allauth.access")
+
 
 def log_access(level_auth=INFO, level_unauth=WARNING):
     """ Log access decorator. """
