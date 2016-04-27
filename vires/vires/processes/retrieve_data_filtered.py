@@ -350,7 +350,7 @@ class RetrieveDataFiltered(WPSProcess):
                     filename, cdf_rawtime_to_mjd2000(
                         data['Timestamp'][index], cdf_type['Timestamp']
                     )
-                )
+                )[field]
 
             else: # skip unknown filters
                 continue
