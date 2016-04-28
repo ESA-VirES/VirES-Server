@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Auxiliary views decorators.
+#  Auxiliary middle-ware classes
 #
 # Project: EOxServer - django-allauth integration.
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -26,35 +26,34 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, no-self-use, unused-argument
 
-from functools import wraps
-from logging import getLogger, NOTSET
-from django.core.exceptions import PermissionDenied
+from logging import getLogger, INFO, WARNING
 
 LOGGER = getLogger("eoxs_allauth.access")
 
 
-def log_access(level_auth=NOTSET, level_unauth=NOTSET):
-    """ Set the level for the request logging made by the access logging
-    middleware.
+class AccessLoggingMiddleware(object):
+    """ Middleware that logs access to the service.
+
+    This middleware makes use of the view attributes to decide the logging
+    level of the authenticated and non-authenticated requests.
     """
-    def _decorator_(view_func):
-        @wraps(view_func)
-        def _wrapper_(request, *args, **kwargs):
-            return view_func(request, *args, **kwargs)
-        _wrapper_.log_level_auth = level_auth
-        _wrapper_.log_level_unauth = level_unauth
-        return _wrapper_
-    return _decorator_
 
-
-def authenticated_only(view_func):
-    """ Allow only authenticated users or deny access. """
-    @wraps(view_func)
-    def _wrapper_(request, *args, **kwargs):
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        """ Access logging. """
         if request.user.is_authenticated():
-            return view_func(request, *args, **kwargs)
+            type_, level = "A", getattr(view_func, 'log_level_auth', INFO)
         else:
-            raise PermissionDenied
-    return _wrapper_
+            type_, level = "N", getattr(view_func, 'log_level_unauth', INFO)
+        LOGGER.log(level, "%s %s %s", type_, request.method, request.path)
+
+    def process_response(self, request, response):
+        """ Log response status. """
+        # Warn in case of an error.
+        level = WARNING if response.status_code >= 400 else INFO
+        LOGGER.log(
+            level, "R %s %s %s %s ", request.method, request.path,
+            response.status_code, response.reason_phrase,
+        )
+        return response
