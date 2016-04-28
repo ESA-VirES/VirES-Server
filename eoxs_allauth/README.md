@@ -3,5 +3,17 @@
 [`django-allauth`](http://www.intenct.nl/projects/django-allauth)
 authentication.
 
-To use custom workspace template location set the 
-`EOXS_ALLAUTH_WORKSPACE_TEMPLATE` in the instance `settings.py` file.
+# Configuration options
+These are the `settings.py` configuration options:
+
+`WORKSPACE_TEMPLATE`
+Custom workspace template location.
+
+`PROFILE_UPDATE_TEMPLATE`
+Custom profile update template location.
+
+`PROFILE_UPDATE_SUCCESS_URL`
+URL to be displayed by a successful profile update.
+
+`PROFILE_UPDATE_SUCCESS_MESSAGE`
+Message to be displayed after successful profile update.

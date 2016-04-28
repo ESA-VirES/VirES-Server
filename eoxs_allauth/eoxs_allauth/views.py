@@ -31,6 +31,7 @@ from logging import INFO, WARNING
 from django.conf import settings
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
@@ -39,15 +40,19 @@ from django_countries.widgets import CountrySelectWidget
 from allauth.account.forms import LoginForm, SignupForm
 from eoxserver.services.views import ows
 from .models import UserProfile
-from .decorators import log_access
-
-if hasattr(settings, 'EOXS_ALLAUTH_WORKSPACE_TEMPLATE'):
-    WORKSPACE_TEMPLATE = settings.EOXS_ALLAUTH_WORKSPACE_TEMPLATE
-else:
-    WORKSPACE_TEMPLATE = "eoxs_allauth/workspace.html"
+from .decorators import log_access, authenticated_only
 
 
-@log_access(INFO, INFO)
+@log_access(INFO, WARNING)
+@authenticated_only
+@csrf_exempt
+def wrapped_ows(request):
+    """The EOxServer's OWS end-point view wrapped with the necessary decorators.
+    """
+    return ows(request)
+
+
+@require_GET
 def workspace(request):
     """ EOxServer/allauth workspace.
     Note that the work space is used as the actual landing page.
@@ -56,18 +61,14 @@ def workspace(request):
     # if yes then login or signup user then do redirect or whatever
     login_form = LoginForm()
     del login_form.fields["login"].widget.attrs["autofocus"]
-    return render(request, WORKSPACE_TEMPLATE, {
-        "login_form": login_form,
-        "signup_form": SignupForm(),
-    })
-
-
-@log_access(INFO, WARNING)
-@login_required
-@csrf_exempt
-def wrapped_ows(request):
-    """ EOxServer/allauth wrapper of the ows endpoint. """
-    return ows(request)
+    return render(
+        request, getattr(
+            settings, 'WORKSPACE_TEMPLATE', "eoxs_allauth/workspace.html"
+        ), {
+            "login_form": login_form,
+            "signup_form": SignupForm(),
+        }
+    )
 
 
 class ProfileUpdate(SuccessMessageMixin, UpdateView):
@@ -79,9 +80,20 @@ class ProfileUpdate(SuccessMessageMixin, UpdateView):
     widgets = {
         'country': CountrySelectWidget(),
     }
-    success_url = '/accounts/profile'
-    success_message = "Profile was updated successfully"
-    template_name = 'account/userprofile_update_form.html'
+
+    success_url = getattr(
+        settings, 'PROFILE_UPDATE_SUCCESS_URL', '/accounts/profile/'
+    )
+
+    success_message = getattr(
+        settings, 'PROFILE_UPDATE_SUCCESS_MESSAGE',
+        'Profile was updated successfully.'
+    )
+
+    template_name = getattr(
+        settings, 'PROFILE_UPDATE_TEMPLATE',
+        'account/userprofile_update_form.html'
+    )
 
     def get_form_class(self):
         """ Get form class to be used by this view. """
