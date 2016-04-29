@@ -24,10 +24,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, invalid-name
 
-from .views import wrapped_ows
+from logging import INFO, WARNING
 from django.conf.urls import url
+from allauth.urls import urlpatterns as allauth_urlpatterns
+from .views import ProfileUpdate
+from .url_tools import decorate
+from .decorators import log_access
 
-urlpatterns = [
-    url(r'^$', wrapped_ows, name='ows'),
+# for the following URLs patterns a warning is logged in case
+# on an unauthenticated access
+WATCHED_URLS = [
+    'account_logout',
+    'account_change_password',
+    'account_set_password',
+    'account_inactive',
+    'account_email',
+    'socialaccount_connections',
+]
+
+# include AllAuth URL patters and wrap selected views
+urlpatterns = decorate(
+    allauth_urlpatterns, log_access(INFO, WARNING),
+    lambda obj: obj.name in WATCHED_URLS
+)
+
+# additional patterns
+urlpatterns += [
+    url(r'^profile/$', ProfileUpdate.as_view(), name='account_change_profile'),
 ]
