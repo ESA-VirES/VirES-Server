@@ -38,3 +38,6 @@ class UserProfile(models.Model):
     study_area = models.CharField(max_length=200, blank=True)
     # TODO: Change executive_summary type to TextField.
     executive_summary = models.CharField(max_length=3000, blank=True)
+
+    def __str__(self):
+        return "<UserProfile: %s>" % self.user
