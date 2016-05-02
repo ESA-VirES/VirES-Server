@@ -132,12 +132,17 @@ class VerboseOutput(object):
     def extract_user_profile(cls, profile):
         social_accounts = list(profile.user.socialaccount_set.all())
         emails = list(profile.user.emailaddress_set.all())
-        date_joined = max(profile.user.date_joined, max(
+        date_joined = min(profile.user.date_joined, min(
             item.date_joined for item in social_accounts
         ))
-        last_login = max(profile.user.last_login, max(
-            item.date_joined for item in social_accounts
-        ))
+        last_logins = [
+            item.last_login for item in social_accounts
+            if item.last_login is not None
+        ]
+        if profile.user.last_login is not None:
+            last_logins.append(profile.user.last_login)
+
+        last_login = max(last_logins) if last_logins else None
         providers = [item.provider for item in social_accounts]
         primary_emails = [item.email for item in emails if item.primary]
         other_emails = [item.email for item in emails if not item.primary]
@@ -154,8 +159,8 @@ class VerboseOutput(object):
         yield ("primary email", ", ".join(primary_emails))
         yield ("other emails", ", ".join(other_emails))
         yield ("social accts.", ", ".join(providers))
-        yield ("date joined", date_joined.isoformat('T'))
-        yield ("last login", last_login.isoformat('T'))
+        yield ("date joined", datetime_to_string(date_joined))
+        yield ("last login", datetime_to_string(last_login))
 
 
 class JSONOutput(object):
@@ -190,8 +195,8 @@ class JSONOutput(object):
         if user.password:
             yield ("password", user.password)
         yield ("is_active", user.is_active)
-        yield ("date_joined", user.date_joined.isoformat('T'))
-        yield ("last_login", user.last_login.isoformat('T'))
+        yield ("date_joined", datetime_to_string(user.date_joined))
+        yield ("last_login", datetime_to_string(user.last_login))
         if user.first_name:
             yield ("first_name", user.first_name)
         if user.last_name:
@@ -222,7 +227,10 @@ class JSONOutput(object):
         #    yield ("primary", emailaddress.primary)
         yield ("uid", socialaccount.uid)
         yield ("provider", socialaccount.provider)
-        yield ("date_joined", socialaccount.date_joined.isoformat('T'))
-        yield ("last_login", socialaccount.last_login.isoformat('T'))
+        yield ("date_joined", datetime_to_string(socialaccount.date_joined))
+        yield ("last_login", datetime_to_string(socialaccount.last_login))
         if socialaccount.extra_data:
             yield ("extra_data", socialaccount.extra_data)
+
+def datetime_to_string(dtobj):
+    return dtobj if dtobj is None else dtobj.isoformat('T')
