@@ -29,6 +29,7 @@
 # pylint: disable=missing-docstring, no-self-use, unused-argument
 
 from logging import getLogger, INFO, WARNING
+from django.contrib.auth import logout
 
 LOGGER = getLogger("eoxs_allauth.access")
 
@@ -57,3 +58,14 @@ class AccessLoggingMiddleware(object):
             response.status_code, response.reason_phrase,
         )
         return response
+
+
+class InactiveUserLogoutMiddleware(object):
+    """ Middleware that terminates sessions for authenticated but inactive
+    users.
+    """
+
+    def process_request(self, request):
+        """ Log out inactive users. """
+        if request.user.is_authenticated() and not request.user.is_active:
+            logout(request)
