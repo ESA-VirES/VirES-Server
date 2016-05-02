@@ -132,17 +132,23 @@ class VerboseOutput(object):
     def extract_user_profile(cls, profile):
         social_accounts = list(profile.user.socialaccount_set.all())
         emails = list(profile.user.emailaddress_set.all())
-        date_joined = min(profile.user.date_joined, min(
+
+        dates_joined = [
             item.date_joined for item in social_accounts
-        ))
+            if item.date_joined is not None
+        ]
+        if profile.user.date_joined is not None:
+            dates_joined.append(profile.user.date_joined)
+        date_joined = max(dates_joined) if dates_joined else None
+
         last_logins = [
             item.last_login for item in social_accounts
             if item.last_login is not None
         ]
         if profile.user.last_login is not None:
             last_logins.append(profile.user.last_login)
-
         last_login = max(last_logins) if last_logins else None
+
         providers = [item.provider for item in social_accounts]
         primary_emails = [item.email for item in emails if item.primary]
         other_emails = [item.email for item in emails if not item.primary]
