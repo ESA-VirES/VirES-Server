@@ -2,6 +2,7 @@
 {% load i18n %}
 {% block head_title %}{% trans "Sign up" %}{% endblock %}
 {% block content %}
+{% load staticfiles %}
   <h2>{% trans "Sign Up" %}</h2>
   <p>{% blocktrans with provider_name=account.get_provider.name site_name=site.name %}
     You are about to use your {{provider_name}} account to login to
@@ -46,9 +47,10 @@
             <label style="font-weight: bold;">
                 <input id="tosagree" style="width: auto;" type="checkbox" value="">
                 I read and accept the 
-                  <a style="display:inline;" href="/accounts/datatc" target="_blank_">ESA Data Terms</a>
-                  and the 
+                  <a style="display:inline;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a>
+                  <!--and the 
                   <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a>
+                  -->
                   *
             </label>
         </div>

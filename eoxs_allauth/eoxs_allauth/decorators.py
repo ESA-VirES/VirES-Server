@@ -1,7 +1,9 @@
 #-------------------------------------------------------------------------------
 #
+#  Auxiliary views decorators.
+#
 # Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
@@ -26,15 +28,33 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from django.db import models
-from django.contrib.auth.models import User
-from django_countries.fields import CountryField
+from functools import wraps
+from logging import getLogger, NOTSET
+from django.core.exceptions import PermissionDenied
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User)
-    title = models.CharField(max_length=100, blank=True)
-    institution = models.CharField(max_length=100, blank=True)
-    country = CountryField(blank=True, blank_label='(select country)')
-    study_area = models.CharField(max_length=200, blank=True)
-    # TODO: Change executive_summary type to TextField.
-    executive_summary = models.CharField(max_length=3000, blank=True)
+LOGGER = getLogger("eoxs_allauth.access")
+
+
+def log_access(level_auth=NOTSET, level_unauth=NOTSET):
+    """ Set the level for the request logging made by the access logging
+    middleware.
+    """
+    def _decorator_(view_func):
+        @wraps(view_func)
+        def _wrapper_(request, *args, **kwargs):
+            return view_func(request, *args, **kwargs)
+        _wrapper_.log_level_auth = level_auth
+        _wrapper_.log_level_unauth = level_unauth
+        return _wrapper_
+    return _decorator_
+
+
+def authenticated_only(view_func):
+    """ Allow only authenticated users or deny access. """
+    @wraps(view_func)
+    def _wrapper_(request, *args, **kwargs):
+        if request.user.is_authenticated():
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    return _wrapper_

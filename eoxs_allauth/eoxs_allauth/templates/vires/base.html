@@ -9,6 +9,8 @@
   {% block title %}
   <title>VirES for Swarm</title>
   {% endblock %}
+  {% block additional_headers %}
+  {% endblock %}
 
   <style type="text/css">
     /*Styling for messages div to be on top and
@@ -49,7 +51,41 @@
 		  </script>
 	  {% endif %}
   {% endblock messages %}
-  {% block content %}
-  {% endblock content %}
+
+  {% block accounts_content %}
+	  {% block content %}
+	  {% endblock content %}
+  {% endblock accounts_content %}
+
+    <!-- Piwik -->
+    <script type="text/javascript">
+     var _paq = _paq || [];
+
+     // Check if the title was set already somewhere else
+     var documentTitleSet = false;
+     for (var i = _paq.length - 1; i >= 0; i--) {
+     	if (_paq[i][0]=="setDocumentTitle"){
+     		documentTitleSet = true;
+     	}
+     }
+     // only if it is not set set it here with the default
+     if(!documentTitleSet){
+     	_paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+     }
+
+     _paq.push(["setDoNotTrack", true]);
+     _paq.push(['trackPageView']);
+     _paq.push(['enableLinkTracking']);
+     (function() {
+       var u="//nix.eox.at/piwik/";
+       _paq.push(['setTrackerUrl', u+'piwik.php']);
+       _paq.push(['setSiteId', 4]);
+       var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+       g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+     })();
+    </script>
+    <noscript><p><img src="//nix.eox.at/piwik/piwik.php?idsite=4" style="border:0;" alt="" /></p></noscript>
+    <!-- End Piwik Code -->
+
 </body>
 </html>

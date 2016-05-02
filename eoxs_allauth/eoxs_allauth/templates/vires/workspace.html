@@ -3,16 +3,24 @@
 {% block title %}
   <title>VirES for Swarm</title>
 {% endblock %}
+
+
 {% block content %}
-
-
-
 
 {% if user.is_authenticated %}
 
   {% load staticfiles %}
+  {% load account %}
+
   <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
+
+  <script type="text/javascript">
+    var _paq = _paq || [];
+    _paq.push(['setUserId', '{% user_display user %}']);
+    _paq.push(['trackGoal', 3]);
+    _paq.push(['setDocumentTitle', "Workspace"]);
+  </script>
 
   <!-- Page Content -->
   <div id="content">
@@ -59,7 +67,7 @@
     // Used to display/hide terrain attribution
     function toggle(e) { e.style.display = (e.style.display == 'block' ? 'none' : 'block'); }
   </script>
-    {% load account %}
+    
     <script type="text/javascript">
       this.NAVBARITEMS = [{
         "name": "{% user_display user %}",
@@ -105,8 +113,52 @@
 
   {% else %}
 
+    <script type="text/javascript">
+      var _paq = _paq || [];
+      _paq.push(['setDocumentTitle', "Landing Page"]);
+    </script>
+
     <style type="text/css">
+    /*! suit-flex-embed v1.4.0 | MIT License | github.com/suitcss */
+
+      .FlexEmbed {
+        display: block;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .FlexEmbed:before {
+        content: "";
+        display: block;
+        width: 100%;
+      }
+
+      .FlexEmbed--3by1:before {
+        padding-bottom: 33.33333%;
+      }
+
+      .FlexEmbed--2by1:before {
+        padding-bottom: 50%;
+      }
+
+      .FlexEmbed--16by9:before {
+        padding-bottom: 56.25%;
+      }
+
+      .FlexEmbed--4by3:before {
+        padding-bottom: 75%;
+      }
+
+      .CoverImage {
+        background-position: 50%;
+        background-repeat: no-repeat;
+        background-size: cover;
+        margin: 0 auto 0em;
+        max-width: 2048px;
+        max-height: 648px;
+      }
       /* Loading image related styles inside template to use template tags*/
+
 
       .bg-1 {
         background: url('{% static 'images/Core_and_crust_from_Swarm.jpg' %}') no-repeat center center fixed; 
@@ -148,26 +200,15 @@
 
      
     <header class="masthead">
+        <!--<section id="header-image">
+          <div class="image-attribution">&copy; ESA/AOES Medialab</div>
+        </section>-->
 
-        <!-- Carousel
-        ================================================== -->
-        <div id="myCarousel" class="carousel slide">
-          
-          <div class="carousel-inner">
-          <div class="carousel-inner">
-            <div class="item active">
-              <img src="{% static 'images/VirES_Swarm_banner1.jpg' %}">
-              <div class="image-attribution">&copy; ESA/AOES Medialab</div>
-              <div class="container">
-                <div class="carousel-caption">
-                </div>
-              </div>
-            </div>
-          </div><!-- /.carousel-inner -->
-          
-         
-        </div>
-        <!-- /.carousel -->
+        <div class="CoverImage FlexEmbed FlexEmbed--3by1"
+           style="background-image:url('{% static 'images/VirES_Swarm_banner1.jpg' %}');"
+        ></div>
+
+        
       
     </header>
       
@@ -184,18 +225,16 @@
           </div>
           <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav nav-justified">
-              <li><a href="#section1">Features</a></li>
-              <li><a href="#section2">Data</a></li>
-              <li><a href="#section3">Sign-up</a></li>
-              <li><a href="#section4">Login</a></li>
+              <li><a href="#Features">Features</a></li>
+              <li><a href="#Data">Data</a></li>
+              <li><a href="#Signup">Sign-up</a></li>
+              <li><a href="#Login">Login</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div><!--/.container -->
     </div><!--/.navbar -->
       
     <!-- Begin page content -->
-
-    <div class="divider"></div>
 
     <div class="container">
       
@@ -205,11 +244,8 @@
         <h3>ESA Swarm data is available for anyone to use via the virtual research platform VirES</h3>
       </div>
 
-        <p class="lead text-center"> 
-          VirES for Swarm is a visual interface to
-          the <a href="http://www.esa.int/Our_Activities/Observing_the_Earth/The_Living_Planet_Programme/Earth_Explorers/Swarm/ESA_s_magnetic_field_mission_Swarm" target="_blank">Swarm mission</a> magnetic products officially released by the European
-          Space Agency. It includes tools to study Earth magnetic models, make comparisons
-          with the satellite measurements, and consider solar activity. 
+        <p class="lead text-center">
+          VirES for Swarm is a highly interactive data manipulation and retrieval interface for the <a href="https://earth.esa.int/swarm" target="_blank">ESA Swarm constellation mission</a> magnetic products. It includes tools for studying various Earth magnetic models by comparing them to the Swarm satellite measurements at given solar activity levels.
         </p> 
         
         <hr>
@@ -223,7 +259,7 @@
       <div class="col-sm-6 col-sm-offset-3 text-center"></div>
     </section>
       
-    <div class="divider" id="section1"></div>
+    <div class="divider" id="Features"></div>
 
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3 larger">
@@ -237,7 +273,7 @@
           <div class="divider"></div>
 
           <div class="videowrapper">
-            <iframe src="https://www.youtube.com/embed/VXb6JfMTq5U" allowfullscreen></iframe>
+            <iframe src="https://www.youtube.com/embed/SPRPEg7lp80?rel=0" allowfullscreen></iframe>
           </div>
 
           <div class="divider"></div>
@@ -258,7 +294,7 @@
         </div><!--/col-->
     </div><!--/container-->
 
-    <div class="divider" id="section2"></div>
+    <div class="divider" id="Data"></div>
 
     <section class="bg-2">
       <div class="image-attribution">&copy; ESA–P. Carril, 2013</div>
@@ -302,11 +338,12 @@
 
     <div class="divider"></div>
 
-    <div class="divider" id="section3"></div>
 
     <section class="bg-3">
       <div class="image-attribution">&copy; DTU Space-P-E. Holmdahl-Olsen, 2014</div>
     </section>
+
+    <div class="divider" id="Signup"></div>
 
 
     <div class="row">
@@ -325,7 +362,7 @@
           <hr>
 
           <div style="text-align: center">
-            <p style="text-align: center;">Sign-up using your preferred social provider (no need to remember new passwords!):</p>
+            <p style="text-align: center;">Sign-up using your preferred social provider:</p>
             <ul class="socialaccount_providers">
               {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
             </ul>
@@ -346,7 +383,7 @@
     </div>
       
   
-    <div class="divider" id="section4"></div>
+    <div class="divider" id="Login"></div>
 
     <div class="row">
       
@@ -437,9 +474,9 @@
           </div>
 
           <div class="col-md-6 text-muted" style="text-align: center; margin-top:15px;">
-            <a style="display:inline; margin-right:5px;" href="/accounts/datatc" target="_blank_">ESA Data Terms</a> | 
+            <a style="display:inline; margin-right:5px;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a> | 
             <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a> |
-            <a href="http://www.esa.int/Our_Activities/Observing_the_Earth/The_Living_Planet_Programme/Earth_Explorers/Swarm/ESA_s_magnetic_field_mission_Swarm" target="_blank">Swarm mission</a>
+            <a href="https://earth.esa.int/swarm" target="_blank">Swarm mission</a>
           </div>
         </div>
       </div>

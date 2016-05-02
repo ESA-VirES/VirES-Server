@@ -28,6 +28,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, missing-docstring
+# pylint: disable=too-many-statements, no-self-use
 
 import json
 from collections import OrderedDict
@@ -36,15 +37,12 @@ from itertools import izip
 from cStringIO import StringIO
 import numpy as np
 from django.conf import settings
-from eoxserver.core import Component, implements
-from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.exceptions import ExecuteError
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, AllowedRange, BoundingBoxData,
     CDFileWrapper,
 )
 from eoxserver.backends.access import connect
-from vires import models as db_models
 from vires.aux import query_kp_int, query_dst_int
 from vires.util import datetime_array_slice, between
 from vires.time_util import (
@@ -54,6 +52,9 @@ from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
 )
+from vires.models import ProductCollection, Product
+from vires.perf_util import ElapsedTimeLogger
+from vires.processes.base import WPSProcess
 from vires.processes.util import parse_models
 from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
 
@@ -85,13 +86,11 @@ CDF_RAW_TIME_CONVERTOR = {
 }
 
 
-class RetrieveData(Component):
+class RetrieveData(WPSProcess):
     """ Process retrieving registered Swarm data based on collection, time
     interval and additional optional parameters.
     This precess is designed to be used by the web-client.
     """
-    implements(ProcessInterface)
-
     identifier = "retrieve_data"
     title = "Retrieve Swarm data"
     metadata = {}
@@ -168,11 +167,20 @@ class RetrieveData(Component):
 
         collection_ids = collection_ids.split(",") if collection_ids else []
 
-        collections = db_models.ProductCollection.objects.filter(
+        self.access_logger.info(
+            "request: toi: (%s, %s), aoi: %s, collections: (%s), "
+            "models: (%s), ",
+            begin_time.isoformat("T"), end_time.isoformat("T"),
+            bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
+            ", ".join(collection_ids), ", ".join(models),
+        )
+
+        collections = ProductCollection.objects.filter(
             identifier__in=collection_ids
         )
 
         if not collections or end_time < begin_time:
+            self.access_logger.info("total count: 0 samples")
             http_headers = (
                 ("X-EOX-Source-Data-Sampling-Period", json.dumps({})),
                 ("X-EOX-Output-Data-Sampling-Period", json.dumps({})),
@@ -205,7 +213,7 @@ class RetrieveData(Component):
 
         for collection_id in collection_ids:
             collection_count = 0
-            products_qs = db_models.Product.objects.filter(
+            products_qs = Product.objects.filter(
                 collections__identifier=collection_id,
                 begin_time__lte=(end_time + TIME_TOLERANCE),
                 end_time__gte=(begin_time - TIME_TOLERANCE),
@@ -239,17 +247,36 @@ class RetrieveData(Component):
                     begin_time, end_time, time_first, time_last,
                     product.sampling_period, TIME_TOLERANCE
                 )
-                data, count, cdf_type = self.handle(
-                    product, data_fields, low, high, step, models, bbox
+                filtered_fraction = (
+                    float(high - low) / (float(step) * float(product.size_x))
                 )
+                with ElapsedTimeLogger("%.2g%% of %s extracted in" % (
+                    100.0 * filtered_fraction, product.identifier,
+                ), self.logger) as etl:
+                    data, count, cdf_type = self.handle(
+                        product, data_fields, low, high, step, models, bbox
+                    )
+                    etl.message = ("%d samples from " % count) + etl.message
+
                 total_count += count
                 collection_count += count
 
+                self.access_logger.info(
+                    "collection: %s, product: %s, count: %d, sampling: "
+                    "%gs", collection_id, product.identifier,
+                    count, output_sampling_period[collection_id],
+                )
+
                 # Check current amount of features and decide if to continue
                 if collection_count > MAX_SAMPLES_COUNT_PER_COLLECTION:
+                    self.access_logger.error(
+                        "The sample count %d exceeds the maximum allowed count "
+                        "of %d samples per collection!", collection_count,
+                        MAX_SAMPLES_COUNT_PER_COLLECTION
+                    )
                     raise ExecuteError(
-                        "Requested data is too large and exceeds the "
-                        "maximum limit of %d records per collection!" %
+                        "Requested data is too large exceeding the "
+                        "maximum limit of %d samples per collection!" %
                         MAX_SAMPLES_COUNT_PER_COLLECTION
                     )
 
@@ -278,6 +305,11 @@ class RetrieveData(Component):
                         ",".join(f(v) for f, v in zip(formatters, row))
                     )
                     output_fobj.write("\r\n")
+
+        self.access_logger.info(
+            "response: count: %d samples, mime-type: %s",
+            total_count, output['mime_type']
+        )
 
         # HTTP headers
         http_headers = (

@@ -24,24 +24,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, unused-argument
 
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 from django.contrib.auth.models import User
+from .models import UserProfile
+from . import signals # needed to initialize signal receivers
 
-from eoxs_allauth.models import UserProfile
-
-
-def create_profiles(sender, **kwargs):
-    if sender.name == "eoxs_allauth":
-        for u in User.objects.all():
-            UserProfile.objects.get_or_create(user=u)
-    pass
 
 class EOxServerAllauthConfig(AppConfig):
     name = 'eoxs_allauth'
     verbose_name = "EOxServer allauth"
 
     def ready(self):
-        post_migrate.connect(create_profiles, sender=self)
 
+        def create_profiles(sender, **kwargs):
+            if sender.name == self.name:
+                for user in User.objects.all():
+                    UserProfile.objects.get_or_create(user=user)
+
+        post_migrate.connect(create_profiles, sender=self)

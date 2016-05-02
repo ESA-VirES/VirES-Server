@@ -1,7 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
+# Base VirES WPS process class
+#
+# Project: VirES
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
@@ -26,15 +28,29 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from django.db import models
-from django.contrib.auth.models import User
-from django_countries.fields import CountryField
+from logging import getLogger
+from eoxserver.core import Component, implements
+from eoxserver.services.ows.wps.interfaces import ProcessInterface
+from vires.util import cached_property
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User)
-    title = models.CharField(max_length=100, blank=True)
-    institution = models.CharField(max_length=100, blank=True)
-    country = CountryField(blank=True, blank_label='(select country)')
-    study_area = models.CharField(max_length=200, blank=True)
-    # TODO: Change executive_summary type to TextField.
-    executive_summary = models.CharField(max_length=3000, blank=True)
+class WPSProcess(Component):
+    """ Process retrieving registered Swarm data based on collection, time
+    interval and additional optional parameters.
+    This precess is designed to be used by the web-client.
+    """
+    implements(ProcessInterface)
+    abstract = True
+
+    @cached_property
+    def access_logger(self):
+        """ Get access logger. """
+        return getLogger(
+            "access.wps.%s" % self.__class__.__module__.split(".")[-1]
+        )
+
+    @cached_property
+    def logger(self):
+        """ Get an ordinary logger. """
+        return getLogger(
+            "vires.processes.%s" % self.__class__.__module__.split(".")[-1]
+        )
