@@ -4,7 +4,7 @@
 {% block content %}
   <h2>{% trans "Account Connections" %}</h2>
   {% if form.accounts %}
-    <p>{% blocktrans %}You can login to your account using any of the following third party accounts:{% endblocktrans %}</p>
+    <p>{% blocktrans %}You can log in to your account using any of the following third party accounts:{% endblocktrans %}</p>
     <form method="post" action="{% url 'socialaccount_connections' %}">
       {% csrf_token %}
       <fieldset>

@@ -1,15 +1,15 @@
 {% extends "account/base.html" %}
 {% load i18n %}
 {% load account socialaccount %}
-{% block head_title %}{% trans "Login" %}{% endblock %}
+{% block head_title %}{% trans "Log in" %}{% endblock %}
 {% block content %}
-  <h2>{% trans "Login" %}</h2>
+  <h2>{% trans "Log in" %}</h2>
   {% get_providers as socialaccount_providers %}
   {% if socialaccount_providers %}
     <p>
-      {% blocktrans with site.name as site_name %}Please login with one
+      {% blocktrans with site.name as site_name %}Please log in with one
       of your existing third party accounts. Or, <a href="{{ signup_url }}">sign up</a>
-      for a {{ site_name }} account and login below:{% endblocktrans %}
+      for a {{ site_name }} account and log in below:{% endblocktrans %}
     </p>
     <div class="socialaccount_ballot">
       <ul class="socialaccount_providers">
@@ -27,7 +27,7 @@
   <fieldset>
    {% if form.errors %}
      <p class="help-inline error">
-       Incorrect login or password.<br>
+       Incorrect user credentials or password.<br>
        Please try again.<br>
        Note that both fields are case sensitive.
      </p>
@@ -55,7 +55,7 @@
        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
    {% endif %}
    <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-       <button type="submit" class="btn btn-primary">{% trans "Login" %}</button>
+       <button type="submit" class="btn btn-primary">{% trans "Log in" %}</button>
    </div>
    <p><a href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a></p>
    <p><a href="{{ signup_url }}">Need an account?</a></p>

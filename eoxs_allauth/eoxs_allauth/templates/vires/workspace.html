@@ -74,7 +74,7 @@
         "icon": "fa-user",
         "eventToRaise": "modal:accountSettingsModal",
       },{
-        "name": "Logout",
+        "name": "Log out",
         "icon": "fa-sign-out",
         "url": "{% url 'account_logout' %}",
       }];
@@ -200,13 +200,11 @@
 
      
     <header class="masthead">
-        <!--<section id="header-image">
-          <div class="image-attribution">&copy; ESA/AOES Medialab</div>
-        </section>-->
 
         <div class="CoverImage FlexEmbed FlexEmbed--3by1"
-           style="background-image:url('{% static 'images/VirES_Swarm_banner1.jpg' %}');"
-        ></div>
+           style="background-image:url('{% static 'images/VirES_Swarm_banner1.jpg' %}');">
+           <div class="image-attribution">&copy; ESA/EOX/AOES Medialab</div>
+        </div>
 
         
       
@@ -228,7 +226,7 @@
               <li><a href="#Features">Features</a></li>
               <li><a href="#Data">Data</a></li>
               <li><a href="#Signup">Sign-up</a></li>
-              <li><a href="#Login">Login</a></li>
+              <li><a href="#Login">Log in</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div><!--/.container -->
@@ -319,7 +317,7 @@
               The 12th Generation International Geomagnetic Reference Field (<a target="_blank" href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0228-9">IGRF 12</a>) released in 2015 by the International Association of Geomagnetism and Aeronomy
             </li>
             <li style="list-style-type: circle;"> 
-              The CHAOS-5 high resolution geomagnetic field model, derived primarily from Swarm, CHAMP, and Ørsted satellite magnetic data along with ground observatory data (<a target="_blank" href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0274-3">CHAOS-5</a>)
+              The CHAOS-5 high resolution geomagnetic field model, derived primarily from Swarm, CHAMP, and Ørsted satellite magnetic data along with ground observatory data (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-5/">CHAOS-5x_v4</a>)
             </li>
           </ul>
           <p>Users can also work with Custom Models and upload Spherical Harmonic Expansion coefficients (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-5/SHC-Format-Decsription.pdf">SHC file format</a>)</p>
@@ -329,7 +327,7 @@
               The Disturbance storm time index (<a target="_blank" href="https://en.wikipedia.org/wiki/Disturbance_storm_time_index">Dst Index</a>)
             </li>
             <li style="list-style-type: circle;">
-              The Disturbances in the horizontal component of earth's magnetic field (<a target="_blank" href="https://en.wikipedia.org/wiki/K-index">planetary Kp Index</a>)
+              The disturbances in the horizontal component of the Earth's magnetic field (<a target="_blank" href="https://en.wikipedia.org/wiki/K-index">planetary Kp Index</a>)
             </li>
           </ul>
 
@@ -392,13 +390,13 @@
       <div class="col-sm-6 col-sm-offset-3 larger">
           
         <div class="row form-group">
-          <h1>Login</h1>
+          <h1>Log in</h1>
         </div>
       
       </div><!--/row-->
 
      <div class="col-sm-4 col-sm-offset-4 larger">
-      <p style="text-align: center;">Login using your preferred social provider:</p>
+      <p style="text-align: center;">Log in using your preferred social provider:</p>
       <ul class="socialaccount_providers">
         {% include "socialaccount/snippets/provider_list.html" with process="login" %}
       </ul>
@@ -408,7 +406,7 @@
           <fieldset>
            {% if form.errors %}
              <p class="help-inline error">
-               Incorrect login or password.<br>
+               Incorrect user credentials or password.<br>
                Please try again.<br>
                Note that both fields are case sensitive.
              </p>
@@ -436,7 +434,7 @@
                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
            {% endif %}
            <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-               <button style="border: none;" type="submit" class="linkbutton">{% trans "Login" %}</button>
+               <button style="border: none;" type="submit" class="linkbutton">{% trans "Log in" %}</button>
            </div>
           </fieldset>
         </form>
