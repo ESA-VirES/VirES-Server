@@ -74,7 +74,7 @@
         "icon": "fa-user",
         "eventToRaise": "modal:accountSettingsModal",
       },{
-        "name": "Logout",
+        "name": "Log out",
         "icon": "fa-sign-out",
         "url": "{% url 'account_logout' %}",
       }];
@@ -226,7 +226,7 @@
               <li><a href="#Features">Features</a></li>
               <li><a href="#Data">Data</a></li>
               <li><a href="#Signup">Sign-up</a></li>
-              <li><a href="#Login">Login</a></li>
+              <li><a href="#Login">Log in</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div><!--/.container -->
@@ -390,13 +390,13 @@
       <div class="col-sm-6 col-sm-offset-3 larger">
           
         <div class="row form-group">
-          <h1>Login</h1>
+          <h1>Log in</h1>
         </div>
       
       </div><!--/row-->
 
      <div class="col-sm-4 col-sm-offset-4 larger">
-      <p style="text-align: center;">Login using your preferred social provider:</p>
+      <p style="text-align: center;">Log in using your preferred social provider:</p>
       <ul class="socialaccount_providers">
         {% include "socialaccount/snippets/provider_list.html" with process="login" %}
       </ul>
@@ -406,7 +406,7 @@
           <fieldset>
            {% if form.errors %}
              <p class="help-inline error">
-               Incorrect login or password.<br>
+               Incorrect user credentials or password.<br>
                Please try again.<br>
                Note that both fields are case sensitive.
              </p>
@@ -434,7 +434,7 @@
                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
            {% endif %}
            <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-               <button style="border: none;" type="submit" class="linkbutton">{% trans "Login" %}</button>
+               <button style="border: none;" type="submit" class="linkbutton">{% trans "Log in" %}</button>
            </div>
           </fieldset>
         </form>

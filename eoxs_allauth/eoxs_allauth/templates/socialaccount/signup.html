@@ -5,7 +5,7 @@
 {% load staticfiles %}
   <h2>{% trans "Sign Up" %}</h2>
   <p>{% blocktrans with provider_name=account.get_provider.name site_name=site.name %}
-    You are about to use your {{provider_name}} account to login to
+    You are about to use your {{provider_name}} account to log in to
     {{site_name}}. As a final step, please complete the following form:{% endblocktrans %}
   </p>
   <p class="help-inline" style="font-size: 1em;">(*) Required fields; Please help us getting to know you by filling out non required fields.</p>
