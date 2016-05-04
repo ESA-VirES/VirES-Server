@@ -48,6 +48,7 @@ from vires.config import SystemConfigReader
 from vires.util import datetime_array_slice, between
 from vires.time_util import (
     datetime_to_decimal_year, naive_to_utc, TZ_UTC, datetime_mean,
+    timedelta_to_iso_duration,
 )
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
@@ -63,11 +64,14 @@ from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
 # Limit response size (equivalent to 5 daily SWARM LR products).
 MAX_SAMPLES_COUNT = 432000
 
-# time selection tolerance (10us)
+# time selection tolerance
 TIME_TOLERANCE = timedelta(microseconds=10)
 
 # display sample period
 DISPLAY_SAMPLE_PERIOD = timedelta(seconds=5)
+
+# maximum allowed time selection period
+MAX_TIME_SELECTION = timedelta(days=16)
 
 # Auxiliary data query function and file sources
 AUX_INDEX = {
@@ -171,6 +175,15 @@ class RetrieveDataFiltered(WPSProcess):
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
+
+        # check the time-selection limit
+        if (end_time - begin_time) > MAX_TIME_SELECTION:
+            message = (
+                "Time selection limit (%s) has been exceeded!" %
+                timedelta_to_iso_duration(MAX_TIME_SELECTION)
+            )
+            self.access_logger.error(message)
+            raise ExecuteError(message)
 
         collection_ids = collection_ids.split(",") if collection_ids else []
 

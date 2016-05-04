@@ -89,10 +89,39 @@
 <div class="panel panel-default">
   <div class="panel-heading">6. <a name="sampling">Not all Swarm data points are shown – what is the sampling?</a></div>
   <div class="panel-body">
-    <p>For performance reasons only limited subset of the SWARM measurements can be loaded to the client. The size of the data passed from the server to the client depends on spatial and temporal selection and a simple adaptive algorithm is employed by the server to guess the optimal data sampling.</p>
-    <p>In short, if no Area-of-Interest (AoI) is selected the data sampling is kept at 5s for time selection up to 3 days and the size of the transferred data rises proportionally to the size of the interval. For time selections over 3 days the size of the data is fixed and the data sampling period rises proportionally to the time selection.</p>
-    <p>If an AoI is selected, the sampling period is decreased proportionally to the fraction of the AoI to the global cover in the latitude/longitude coordinates. I.e., for a sufficiently small AoI the data sampling will the same as that of the SWARM product.</p>
-    <p>Each satellite collection is treated independently and therefore when selecting all three A, B, C satellites the transferred data is 3x larger than when selecting only, e.g., the A satellite.</p>
+    <p>
+      For performance reasons only limited subset of the SWARM measurements can
+      be loaded to the client. The size of the data passed from the server
+      to the client depends on spatial and temporal selection and a simple
+      adaptive algorithm is employed by the server to guess the optimal data
+      sampling.
+    </p>
+    <p>
+      In short, if no Area-of-Interest (AoI) is selected the data sampling
+      is kept at 5s for time selection up to 3 days and the size
+      of the transferred data rises proportionally to the size
+      of the interval. For time selections over 3 days the size of the data
+      is fixed and the data sampling period rises proportionally
+      to the time selection.
+    </p>
+    <p>
+      If an AoI is selected, the sampling period is decreased proportionally
+      to the fraction of the AoI to the global cover in the latitude/longitude
+      coordinates. I.e., for a sufficiently small AoI the data sampling will
+      the same as that of the SWARM product.
+    </p>
+    <p>
+      Each satellite collection is treated independently and therefore when
+      selecting all three A, B, C satellites the transferred data is 3x larger
+      than when selecting only, e.g., the A satellite.
+    </p>
+    <p>
+      Please note that the sub-sampling is applied only to the data
+      visualized in the client (displayed on the map and/or
+      in the Visual Analytics panel). The data downloaded as a file
+      are not sub-sampled and contain all measurements matched
+      by the applied filters.
+    </p>
   </div>
 </div>
 <div class="panel panel-default">
