@@ -47,6 +47,7 @@ from vires.aux import query_kp_int, query_dst_int
 from vires.util import datetime_array_slice, between
 from vires.time_util import (
     datetime_to_decimal_year, naive_to_utc, datetime_mean,
+    timedelta_to_iso_duration,
 )
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
@@ -62,11 +63,14 @@ from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
 # Limit response size (equivalent to 1/2 daily SWARM LR product).
 MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
 
-# time selection tolerance (10us)
+# time selection tolerance
 TIME_TOLERANCE = timedelta(microseconds=10)
 
 # display sample period
 DISPLAY_SAMPLE_PERIOD = timedelta(seconds=15)
+
+# maximum allowed time selection period
+MAX_TIME_SELECTION = timedelta(days=16)
 
 REQUIRED_FIELDS = [
     "Timestamp", "Latitude", "Longitude", "Radius", "F", "F_error", "B_NEC",
@@ -162,6 +166,15 @@ class RetrieveData(WPSProcess):
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
+
+        # check the time-selection limit
+        if (end_time - begin_time) > MAX_TIME_SELECTION:
+            message = (
+                "Time selection limit (%s) has been exceeded!" %
+                timedelta_to_iso_duration(MAX_TIME_SELECTION)
+            )
+            self.access_logger.error(message)
+            raise ExecuteError(message)
 
         output_fobj = StringIO()
 
