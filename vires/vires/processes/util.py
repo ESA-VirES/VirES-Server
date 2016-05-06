@@ -81,7 +81,7 @@ def parse_models(input_id, model_ids, shc, shc_input_id="shc"):
 def parse_filters(input_id, filter_string):
     """ Parse filters' string. """
     try:
-        filter_ = {}
+        filter_ = OrderedDict()
         if filter_string.strip():
             for item in filter_string.split(";"):
                 name, bounds = item.split(":")
@@ -93,6 +93,14 @@ def parse_filters(input_id, filter_string):
     except ValueError as exc:
         raise InvalidInputValueError(input_id, exc)
     return filter_
+
+
+def format_filters(filters):
+    """ Convert filters to string. """
+    return "; ".join(
+        "%s: %g,%g" % (key, vmin, vmax)
+        for key, (vmin, vmax) in filters.iteritems()
+    )
 
 
 def data_to_png(filename, data, norm, cmap=None, ignore_alpha=True):

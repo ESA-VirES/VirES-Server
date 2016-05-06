@@ -35,15 +35,25 @@ from numpy import (
 )
 import scipy
 from scipy.interpolate import interp1d
+import spacepy
 from spacepy import pycdf
+from . import FULL_PACKAGE_NAME
 from .util import full
-from .time_util import mjd2000_to_decimal_year, year_to_day2k, days_per_year
+from .time_util import (
+    mjd2000_to_decimal_year, year_to_day2k, days_per_year,
+    datetime, naive_to_utc,
+)
 
 CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
 CDF_DOUBLE_TYPE = pycdf.const.CDF_DOUBLE.value
 
 CDF_EPOCH_1970 = 62167219200000.0
 CDF_EPOCH_2000 = 63113904000000.0
+
+CDF_CREATOR = "%s [%s-%s, libcdf-%s]" % (
+    FULL_PACKAGE_NAME, spacepy.__name__, spacepy.__version__,
+    "%s.%s.%s-%s" % pycdf.lib.version
+)
 
 
 def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
@@ -89,6 +99,11 @@ def cdf_open(filename, mode="r"):
             cdf.readonly(False)
         else:
             cdf = pycdf.CDF(filename, "")
+            # add extra attributes
+            cdf.attrs.update({
+                "CREATOR": CDF_CREATOR,
+                "CREATED": naive_to_utc(datetime.utcnow()).isoformat(),
+            })
     else:
         raise ValueError("Invalid mode value %r!" % mode)
     return cdf

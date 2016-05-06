@@ -57,7 +57,7 @@ from vires.cdf_util import (
 from vires.models import ProductCollection, Product
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_models, parse_filters
+from vires.processes.util import parse_models, parse_filters, format_filters
 from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
 
 # TODO: Make the limits configurable.
@@ -314,9 +314,11 @@ class RetrieveDataFiltered(WPSProcess):
             if exists(temp_filename):
                 remove(temp_filename)
 
+            product_list = []
             with cdf_open(temp_filename, 'w') as cdf:
                 for item in generate_results():
                     collection_id, product, result, cdf_type, count = item
+                    product_list.append(product.identifier)
                     if initialize:
                         initialize = False
                         for field, values in result.iteritems():
@@ -324,7 +326,16 @@ class RetrieveDataFiltered(WPSProcess):
                     else:
                         for field, values in result.iteritems():
                             cdf[field].extend(values)
-
+                # add the global attributes
+                cdf.attrs.update({
+                    "TITLE": result_filename,
+                    "DESCRIPTION": "VirES filtered data selection.",
+                    "DATA_TIMESPAN": ("%s/%s" % (
+                        begin_time.isoformat(), end_time.isoformat()
+                    )).replace("+00:00", "Z"),
+                    "DATA_FILTERS": format_filters(filters),
+                    "ORIGINAL_PRODUCT_NAMES:": product_list,
+                })
         else:
             ExecuteError(
                 "Unexpected output format %r requested!" % output['mime_type']
