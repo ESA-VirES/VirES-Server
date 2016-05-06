@@ -241,7 +241,7 @@ class RetrieveDataFiltered(WPSProcess):
                     with ElapsedTimeLogger("%.2g%% of %s extracted in" % (
                         100.0 * filtered_fraction, product.identifier,
                     ), self.logger) as etl:
-                        result, count, cdf_type = self.handle(
+                        result, count, cdf_vars = self.handle(
                             product, data_fields, low, high, sampling_step,
                             models, filters
                         )
@@ -267,7 +267,7 @@ class RetrieveDataFiltered(WPSProcess):
                             "your filters." % MAX_SAMPLES_COUNT
                         )
 
-                    yield collection_id, product, result, cdf_type, count
+                    yield collection_id, product, result, cdf_vars, count
 
             self.access_logger.info(
                 "response: count: %d samples, mime-type: %s",
@@ -282,11 +282,11 @@ class RetrieveDataFiltered(WPSProcess):
 
             with open(temp_filename, "w") as fout:
                 for item in generate_results():
-                    collection_id, product, result, cdf_type, count = item
+                    collection_id, product, result, cdf_vars, count = item
                     # convert the time format
                     result['Timestamp'] = (
                         CDF_RAW_TIME_CONVERTOR[csv_time_format](
-                            result['Timestamp'], cdf_type['Timestamp']
+                            result['Timestamp'], cdf_vars['Timestamp']['type']
                         )
                     )
 
@@ -296,7 +296,9 @@ class RetrieveDataFiltered(WPSProcess):
                         initialize = False
 
                     formatters = [
-                        get_formatter(result[field], cdf_type.get(field))
+                        get_formatter(
+                            result[field], cdf_vars.get(field, {}).get('type')
+                        )
                         for field in result
                     ]
 
@@ -317,19 +319,24 @@ class RetrieveDataFiltered(WPSProcess):
             product_list = []
             with cdf_open(temp_filename, 'w') as cdf:
                 for item in generate_results():
-                    collection_id, product, result, cdf_type, count = item
+                    collection_id, product, result, cdf_vars, count = item
                     product_list.append(product.identifier)
                     if initialize:
                         initialize = False
                         for field, values in result.iteritems():
-                            cdf.new(field, values, cdf_type.get(field))
+                            cdf.new(
+                                field, values,
+                                cdf_vars.get(field, {}).get('type')
+                            )
+                            cdf[field].attrs.update(
+                                cdf_vars.get(field, {}).get('attrs', {})
+                            )
                     else:
                         for field, values in result.iteritems():
                             cdf[field].extend(values)
                 # add the global attributes
                 cdf.attrs.update({
                     "TITLE": result_filename,
-                    "DESCRIPTION": "VirES filtered data selection.",
                     "DATA_TIMESPAN": ("%s/%s" % (
                         begin_time.isoformat(), end_time.isoformat()
                     )).replace("+00:00", "Z"),
@@ -347,13 +354,16 @@ class RetrieveDataFiltered(WPSProcess):
         """ Single product retrieval. """
 
         # read initial subset of the CDF data
-        cdf_type = {}
+        cdf_vars = {}
         data = OrderedDict()
         with cdf_open(connect(product.data_items.all()[0])) as cdf:
             time_mean = datetime_mean(cdf['Timestamp'][0], cdf['Timestamp'][-1])
             for field in fields:
                 cdf_var = cdf.raw_var(field)
-                cdf_type[field] = cdf_var.type()
+                cdf_vars[field] = {
+                    'type': cdf_var.type(),
+                    'attrs': dict(cdf_var.attrs),
+                }
                 data[field] = cdf_var[low:high:step]
 
         # initialize full index array
@@ -372,7 +382,7 @@ class RetrieveDataFiltered(WPSProcess):
                 query, filename = AUX_INDEX[field]
                 filtered_data = query(
                     filename, cdf_rawtime_to_mjd2000(
-                        data['Timestamp'][index], cdf_type['Timestamp']
+                        data['Timestamp'][index], cdf_vars['Timestamp']['type']
                     )
                 )[field]
 
@@ -391,7 +401,7 @@ class RetrieveDataFiltered(WPSProcess):
                 data["Longitude"][index],
                 data["Radius"][index] * 1e-3, # radius in km
                 cdf_rawtime_to_decimal_year_fast(
-                    data["Timestamp"], cdf_type['Timestamp'],
+                    data["Timestamp"], cdf_vars['Timestamp']['type'],
                     time_mean.year
                 )
             )
@@ -458,4 +468,4 @@ class RetrieveDataFiltered(WPSProcess):
             (field, values[index]) for field, values in data.iteritems()
         )
 
-        return data, len(data['Timestamp']), cdf_type
+        return data, len(data['Timestamp']), cdf_vars
