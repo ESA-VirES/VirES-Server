@@ -178,8 +178,12 @@ class RetrieveFieldLines(WPSProcess):
                     with ElapsedTimeLogger(
                         "%s field line " % model_id, self.logger
                     ) as etl:
-                        line_coords, line_field = get_field_line(
-                            model, point, mean_decimal_year
+                        line_coords, line_field = model.field_line(
+                            point,
+                            mean_decimal_year,
+                            GEODETIC_ABOVE_WGS84,
+                            GEOCENTRIC_CARTESIAN,
+                            check_validity=False
                         )
                         etl.message += (
                             "with %d points integrated in" % len(line_coords)
@@ -220,23 +224,3 @@ class RetrieveFieldLines(WPSProcess):
                 )
 
         return CDFileWrapper(output_fobj, **output)
-
-
-def get_field_line(model, point, date):
-    # NOTE: The second returned value will be changed from scalar to vector.
-    coords, _ = model.field_line(
-        point,
-        date,
-        GEODETIC_ABOVE_WGS84,
-        GEOCENTRIC_CARTESIAN,
-        check_validity=False
-    )
-    field = model.eval(
-        coords,
-        date,
-        GEOCENTRIC_CARTESIAN,
-        GEOCENTRIC_CARTESIAN,
-        secvar=False,
-        check_validity=False
-    )
-    return coords, field

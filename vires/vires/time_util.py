@@ -38,6 +38,18 @@ DT_2000 = datetime(2000, 1, 1)
 
 TZ_UTC = utc
 
+def timedelta_to_iso_duration(tdobj):
+    """ Convert `datetime.timedelta` object to ISO-8601 duration string. """
+    days = "%dD" % tdobj.days if tdobj.days != 0 else ""
+    if tdobj.microseconds != 0:
+        seconds = "T%fS" % (tdobj.seconds + 1e-6 * tdobj.microseconds)
+    elif tdobj.seconds != 0 or tdobj.days == 0:
+        seconds = "T%dS" % tdobj.seconds
+    else:
+        seconds = ""
+    return "P%s%s" % (days, seconds)
+
+
 def datetime_mean(start, stop):
     """ Get arithmetic mean of two `datetime.datetime` values. """
     return (stop - start)/2 + start

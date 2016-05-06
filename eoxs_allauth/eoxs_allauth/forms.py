@@ -124,7 +124,7 @@ class ESASignupForm(forms.Form):
             data['country'] = extra_data['location']['country']['code'].upper()
         if 'emailAddress' in extra_data:
             data['username'] = cls.email_to_username(extra_data['emailAddress'])
-        if 'positions' in extra_data:
+        if 'positions' in extra_data and 'values' in extra_data['positions']:
             for position in extra_data['positions']['values']:
                 if 'isCurrent' in position and position['isCurrent']:
                     if 'company' in position:
