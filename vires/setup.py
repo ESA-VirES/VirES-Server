@@ -40,7 +40,7 @@ setup(
     package_data={'vires': ['data/*.json']},
     scripts=[],
     install_requires=[
-        'EOxServer', 'eoxmagmod>=0.3.1',
+        'EOxServer', 'eoxmagmod>=0.3.2',
     ],
     zip_safe=False,
 
