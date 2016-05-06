@@ -102,7 +102,9 @@ def cdf_open(filename, mode="r"):
             # add extra attributes
             cdf.attrs.update({
                 "CREATOR": CDF_CREATOR,
-                "CREATED": naive_to_utc(datetime.utcnow()).isoformat(),
+                "CREATED": naive_to_utc(
+                    datetime.utcnow().replace(microsecond=0)
+                ).isoformat().replace("+00:00", "Z"),
             })
     else:
         raise ValueError("Invalid mode value %r!" % mode)
