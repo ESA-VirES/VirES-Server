@@ -401,7 +401,8 @@ class RetrieveDataFiltered(WPSProcess):
                 data["Longitude"][index],
                 data["Radius"][index] * 1e-3, # radius in km
                 cdf_rawtime_to_decimal_year_fast(
-                    data["Timestamp"], cdf_vars['Timestamp']['type'],
+                    data["Timestamp"][index],
+                    cdf_vars['Timestamp']['type'],
                     time_mean.year
                 )
             )
