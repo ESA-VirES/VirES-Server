@@ -57,7 +57,8 @@ from vires.models import ProductCollection, Product
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
 from vires.processes.util import parse_models
-from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
+from eoxmagmod import vnorm, GEOCENTRIC_SPHERICAL
+from eoxmagmod.qd import eval_qdlatlon, eval_mlt
 
 # TODO: Make following parameters configurable.
 # Limit response size (equivalent to 1/2 daily SWARM LR product).
@@ -374,7 +375,7 @@ class RetrieveData(WPSProcess):
         data.update(query_kp_int(settings.VIRES_AUX_DB_KP, mjd2000_times))
 
         # get Quasi-dipole Latitude and Magnetic Local Time
-        data["qdlat"], _, data["mlt"] = eval_apex(
+        data["qdlat"], qdlon = eval_qdlatlon(
             data["Latitude"],
             data["Longitude"],
             data["Radius"] * 1e-3, # radius in km
@@ -382,6 +383,7 @@ class RetrieveData(WPSProcess):
                 data["Timestamp"], cdf_type['Timestamp'], time_mean.year
             )
         )
+        data["mlt"] = eval_mlt(qdlon, mjd2000_times)
 
         # evaluate models
         if models:
