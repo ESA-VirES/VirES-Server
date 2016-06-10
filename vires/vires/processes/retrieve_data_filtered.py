@@ -58,7 +58,8 @@ from vires.models import ProductCollection, Product
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
 from vires.processes.util import parse_models, parse_filters, format_filters
-from eoxmagmod import eval_apex, vnorm, GEOCENTRIC_SPHERICAL
+from eoxmagmod import vnorm, GEOCENTRIC_SPHERICAL
+from eoxmagmod.qd import eval_qdlatlon, eval_mlt
 
 # TODO: Make the limits configurable.
 # Limit response size (equivalent to 5 daily SWARM LR products).
@@ -396,7 +397,7 @@ class RetrieveDataFiltered(WPSProcess):
         appex_fields = set(filters) & set(("qdlat", "mlt"))
 
         if appex_fields:
-            qdlat, qdlon, mlt = eval_apex(
+            qdlat, qdlon = eval_qdlatlon(
                 data["Latitude"][index],
                 data["Longitude"][index],
                 data["Radius"][index] * 1e-3, # radius in km
@@ -404,6 +405,13 @@ class RetrieveDataFiltered(WPSProcess):
                     data["Timestamp"][index],
                     cdf_vars['Timestamp']['type'],
                     time_mean.year
+                )
+            )
+            mlt = eval_mlt(
+                qdlon,
+                cdf_rawtime_to_mjd2000(
+                    data["Timestamp"][index],
+                    cdf_vars['Timestamp']['type']
                 )
             )
 
