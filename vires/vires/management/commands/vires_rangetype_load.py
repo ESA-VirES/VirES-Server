@@ -49,9 +49,22 @@ class Command(eoxs_rangetype_load.Command):
                 "are used."
             )
         ),
+        make_option(
+            '--do-not-update', dest='update',
+            action='store_false', default=True,
+            help=(
+                "This option prevents the script from updating the existing "
+                "range-types. By default the existing range-types get updated "
+                "automatically."
+            )
+        ),
     )
 
     help = (
         "Load range-types stored in JSON file or from the default package's \n"
-        "range type definitions stores in: \n\t%s" % RANGE_TYPES
+        "range type definitions stores in: \n    %s\n\n"
+        "If the any of the loaded range-types already exists in the data-base\n"
+        "than this range-type gets updated. The default automatic range-type\n"
+        "update can be prevented with the '--do-not-update' option."
+        "" % RANGE_TYPES
     )
