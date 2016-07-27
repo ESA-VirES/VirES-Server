@@ -114,6 +114,16 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
+            "description": "Sun induced stray magnetic field correction vector subtracted from measurements, VFM frame",
+            "identifier": "dB_Sun",
+            "name": "dB_Sun",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
             "description": "Magnetic stray field correction vector of AOCS magneto-torquer coils, VFM frame",
             "identifier": "dB_AOCS",
             "name": "dB_AOCS",

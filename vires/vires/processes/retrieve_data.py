@@ -80,8 +80,8 @@ REQUIRED_FIELDS = [
 
 DROPPED_FIELDS = [
     "B_VFM", "SyncStatus", "q_NEC_CRF", "Att_error", "Flags_F", "Flags_B",
-    "Flags_q", "Flags_Platform", "ASM_Freq_Dev", "dB_AOCS", "dB_other",
-    "dF_AOCS", "dF_other"
+    "Flags_q", "Flags_Platform", "ASM_Freq_Dev", "dB_Sun", "dB_AOCS",
+    "dB_other", "dF_AOCS", "dF_other"
 ]
 
 CDF_RAW_TIME_CONVERTOR = {
