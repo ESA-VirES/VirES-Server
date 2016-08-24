@@ -50,40 +50,76 @@ class ForwardModelLayerFactory(BaseCoverageLayerFactory):
         layer = self._create_layer(
             forward_model, forward_model.identifier, extent
         )
+
+        ran = [float(s) for s in options['dimensions']['range'][0].split(',')] 
+        interval = (ran[1]-ran[0])/40
+        layer.type = ms.MS_LAYER_LINE
+        layer.setConnectionType(ms.MS_RASTER + 4, "")  # CONTOUR
         #self.set_render_options(layer, offsite, options)
-        self._apply_styles(layer, 0, 256)
+        layer.tileitem = None
+        #layer.units = ms.MS_PIXELS
+        layer.status = ms.MS_DEFAULT
+        layer.setProcessing("BANDS=1")
+        layer.setProcessing("CONTOUR_ITEM=elevation")
+        layer.setProcessing("CONTOUR_INTERVAL=%s"%interval)
+        layer.labelitem = "elevation"
+
+        self._apply_styles(layer, ran[0], ran[1])
         yield layer, data_items
 
     def _apply_styles(self, layer, minvalue, maxvalue):
 
         def create_linear_style(name, layer, colors, minvalue, maxvalue):
-            cls = ms.classObj()
-            cls.group = name
             step = (maxvalue - minvalue) / float(len(colors) - 1)
             for i, (color_a, color_b) in enumerate(pairwise_iterative(colors)):
+                cls = ms.classObj()
+                cls.setExpression("([elevation] >= %s AND [elevation] < %s)"%((minvalue + i * step),(minvalue + (i + 1) * step)))
+                cls.group = name
+
                 style = ms.styleObj()
+                style.width = 2
                 style.mincolor = color_a
                 style.maxcolor = color_b
                 style.minvalue = minvalue + i * step
                 style.maxvalue = minvalue + (i + 1) * step
-                style.rangeitem = ""
+                style.rangeitem = "elevation"
+
+                label = ms.labelObj()
+                label.color = ms.colorObj(255, 255, 255)
+                label.outlinecolor = ms.colorObj(0, 0, 0)
+                label.position = ms.MS_AUTO
+                label.buffer = 10
+                label.anglemode = ms.MS_FOLLOW
+                label.partials = ms.MS_FALSE
+                label.setText("(tostring([elevation],'%.2f'))")
+
+                cls.addLabel(label)
+
                 cls.insertStyle(style)
-            layer.insertClass(cls)
+                layer.insertClass(cls)
 
         def create_style(name, layer, colors, minvalue, maxvalue):
-            cls = ms.classObj()
-            cls.group = name
             interval = (maxvalue - minvalue)
             for item in pairwise_iterative(colors):
+                cls = ms.classObj()
+                cls.group = name
                 (color_a, perc_a), (color_b, perc_b) = item
+                cls.setExpression("([elevation] >= %s AND [elevation] < %s)"%((minvalue + perc_a * interval),(minvalue + perc_b * interval)))
+
                 style = ms.styleObj()
+                style.width = 2
                 style.mincolor = color_a
                 style.maxcolor = color_b
                 style.minvalue = minvalue + perc_a * interval
                 style.maxvalue = minvalue + perc_b * interval
-                style.rangeitem = ""
+                style.rangeitem = "elevation"
+
+                label = ms.labelObj()
+                label.color = ms.colorObj(255, 255, 255)
+                cls.addLabel(label)
+
                 cls.insertStyle(style)
-            layer.insertClass(cls)
+                layer.insertClass(cls)
 
         create_linear_style("blackwhite", layer, (
             ms.colorObj(0, 0, 0),
