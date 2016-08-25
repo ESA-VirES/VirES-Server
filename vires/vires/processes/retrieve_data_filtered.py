@@ -136,6 +136,13 @@ class RetrieveDataFiltered(WPSProcess):
                 "E.g., 'F:10000,20000;Latitude:-50,50'"
             ),
         )),
+        ("parameters", LiteralData(
+            'parameters', str, optional=True, default="",
+            abstract=(
+                "Set of semi-colon-separated parameters which define " 
+                "parameters requested to be in the resultung download file"
+            ),
+        )),
         ("sampling_step", LiteralData(
             'sampling_step', int, optional=True, title="Data sampling step.",
             allowed_values=AllowedRange(1, None, dtype=int), default=1,
@@ -164,8 +171,9 @@ class RetrieveDataFiltered(WPSProcess):
         )),
     ]
 
-    def execute(self, collection_ids, shc, model_ids, begin_time, end_time,
-                filters, sampling_step, csv_time_format, output, **kwarg):
+    def execute(self, collection_ids, shc, model_ids, begin_time, end_time, 
+                filters, parameters, sampling_step, csv_time_format, output, 
+                **kwarg):
         # get configurations
         conf_sys = SystemConfigReader()
 
@@ -206,6 +214,13 @@ class RetrieveDataFiltered(WPSProcess):
         data_fields = [
             field.identifier for field in collections[0].range_type
         ]
+
+        # If custom parameters are specified remove all data_fields not 
+        # contained in provided parameter list
+        if (parameters!=""):
+            parameters = parameters.split(";")
+            #data_fields = [x for x in data_fields if x in parameters]
+            data_fields = parameters
 
         # TODO: assert that the range_type is equal for all collections
 
@@ -285,11 +300,12 @@ class RetrieveDataFiltered(WPSProcess):
                 for item in generate_results():
                     collection_id, product, result, cdf_vars, count = item
                     # convert the time format
-                    result['Timestamp'] = (
-                        CDF_RAW_TIME_CONVERTOR[csv_time_format](
-                            result['Timestamp'], cdf_vars['Timestamp']['type']
+                    if 'Timestamp' in result:
+                        result['Timestamp'] = (
+                            CDF_RAW_TIME_CONVERTOR[csv_time_format](
+                                result['Timestamp'], cdf_vars['Timestamp']['type']
+                            )
                         )
-                    )
 
                     if initialize:
                         fout.write(",".join(result.keys()))
@@ -357,23 +373,45 @@ class RetrieveDataFiltered(WPSProcess):
         # read initial subset of the CDF data
         cdf_vars = {}
         data = OrderedDict()
+
+        # dict to save data that is required to compute other parameter
+        req_fields = ["Latitude", "Longitude", "Radius", "Timestamp", "F",
+                      "B_NEC"]
+        req_data = OrderedDict()
+
         with cdf_open(connect(product.data_items.all()[0])) as cdf:
             time_mean = datetime_mean(cdf['Timestamp'][0], cdf['Timestamp'][-1])
             for field in fields:
-                cdf_var = cdf.raw_var(field)
-                cdf_vars[field] = {
-                    'type': cdf_var.type(),
-                    'attrs': dict(cdf_var.attrs),
-                }
-                data[field] = cdf_var[low:high:step]
+                if field in cdf:
+                    cdf_var = cdf.raw_var(field)
+                    cdf_vars[field] = {
+                        'type': cdf_var.type(),
+                        'attrs': dict(cdf_var.attrs),
+                    }
+                    data[field] = cdf_var[low:high:step]
+
+            for field in req_fields:
+                if field in cdf:
+                    cdf_var = cdf.raw_var(field)
+                    cdf_vars[field] = {
+                        'type': cdf_var.type(),
+                        'attrs': dict(cdf_var.attrs),
+                    }
+                    req_data[field] = cdf_var[low:high:step]
 
         # initialize full index array
-        index = np.arange(len(data['Timestamp']))
+        if data:
+            index = np.arange(len(data[data.keys()[0]]))
+        else:
+            # If no parameters from the rangetype are requested use length of
+            # required parameters
+            index = np.arange(len(req_data[req_data.keys()[0]]))
 
         # apply data filters
         for field, bounds in filters.items():
             if field in fields: # filter scalar data field
-                filtered_data = data[field][index]
+                if field in data:
+                    filtered_data = data[field][index]
 
             elif field in B_NEC_COMPONENTS: # filter vector component
                 cidx = B_NEC_COMPONENTS[field]
@@ -391,18 +429,23 @@ class RetrieveDataFiltered(WPSProcess):
                 continue
 
             # update index array
-            index = index[between(filtered_data, bounds[0], bounds[1])]
+            if 'filtered_data' in locals():
+                index = index[between(filtered_data, bounds[0], bounds[1])]
 
         # apply Quasi-dipole Latitude and Magnetic Local Time filters
         appex_fields = set(filters) & set(("qdlat", "mlt"))
+        # Check if custom parameters/fields are provided for download 
+        appex_download_fields = set(fields) & set(("qdlat", "qdlon", "mlt"))
 
-        if appex_fields:
+        # If filtering or download is requested for appex fields they need to be
+        # calculated
+        if appex_fields or appex_download_fields:
             qdlat, qdlon = eval_qdlatlon(
-                data["Latitude"][index],
-                data["Longitude"][index],
-                data["Radius"][index] * 1e-3, # radius in km
+                req_data["Latitude"][index],
+                req_data["Longitude"][index],
+                req_data["Radius"][index] * 1e-3, # radius in km
                 cdf_rawtime_to_decimal_year_fast(
-                    data["Timestamp"][index],
+                    req_data["Timestamp"][index],
                     cdf_vars['Timestamp']['type'],
                     time_mean.year
                 )
@@ -410,11 +453,13 @@ class RetrieveDataFiltered(WPSProcess):
             mlt = eval_mlt(
                 qdlon,
                 cdf_rawtime_to_mjd2000(
-                    data["Timestamp"][index],
+                    req_data["Timestamp"][index],
                     cdf_vars['Timestamp']['type']
                 )
             )
 
+        # Filtering for appex data
+        if appex_fields:
             mask = True
             if "qdlat" in appex_fields:
                 bounds = filters["qdlat"]
@@ -427,54 +472,81 @@ class RetrieveDataFiltered(WPSProcess):
             # update index array
             index = index[mask]
 
+        # Add appex data to result output
+        if appex_download_fields:
+            if "qdlat" in appex_download_fields:
+                data["qdlat"] = qdlat
+            if "qdlon" in appex_download_fields:
+                data["qdlon"] = qdlon
+            if "mlt" in appex_download_fields:
+                data["mlt"] = mlt
+                
+
+
         # apply model filters
         for model_id, model in models.iteritems():
+
             model_res_fields = set(filters) & set(
                 "%s_res_%s" % (var_id, model_id)
                 for var_id in ("B_N", "B_E", "B_C", "F")
             )
-
-            # skip model evaluation if no residual filter is requested
-            if not model_res_fields:
-                continue
-
-            coords_sph = np.vstack((
-                data["Latitude"][index],
-                data["Longitude"][index],
-                data["Radius"][index] * 1e-3, # radius in km
-            )).T
-
-            model_data = model.eval(
-                coords_sph,
-                datetime_to_decimal_year(time_mean),
-                GEOCENTRIC_SPHERICAL,
-                check_validity=False
+            model_res_download_fields = set(fields) & set(
+                "%s_res_%s" % (var_id, model_id)
+                for var_id in ("B_NEC", "F")
             )
-            model_data[:, 2] *= -1
+            # skip model evaluation if no residual filter is requested
+            # residuals not requested as custom download parameters
+            if model_res_fields or model_res_download_fields:
+                coords_sph = np.vstack((
+                    req_data["Latitude"][index],
+                    req_data["Longitude"][index],
+                    req_data["Radius"][index] * 1e-3, # radius in km
+                )).T
 
-            mask = True
-            for field in model_res_fields:
-                bounds = filters[field]
+                model_data = model.eval(
+                    coords_sph,
+                    datetime_to_decimal_year(time_mean),
+                    GEOCENTRIC_SPHERICAL,
+                    check_validity=False
+                )
+                model_data[:, 2] *= -1
 
-                if field.startswith("F"):
-                    mask &= between(
-                        data["F"][index] - vnorm(model_data),
-                        bounds[0], bounds[1]
-                    )
+            if model_res_fields:
+                mask = True
+                for field in model_res_fields:
+                    bounds = filters[field]
 
-                elif field[:3] in B_NEC_COMPONENTS:
-                    cidx = B_NEC_COMPONENTS[field[:3]]
-                    mask &= between(
-                        data["B_NEC"][index, cidx] - model_data[:, cidx],
-                        bounds[0], bounds[1]
-                    )
+                    if field.startswith("F"):
+                        mask &= between(
+                            req_data["F"][index] - vnorm(model_data),
+                            bounds[0], bounds[1]
+                        )
 
-            # update index array
-            index = index[mask]
+                    elif field[:3] in B_NEC_COMPONENTS:
+                        cidx = B_NEC_COMPONENTS[field[:3]]
+                        mask &= between(
+                            req_data["B_NEC"][index, cidx] - model_data[:, cidx],
+                            bounds[0], bounds[1]
+                        )
+
+                # update index array
+                index = index[mask]
+
+            # Include all requested parameters for download
+            if model_res_download_fields:
+                for field in model_res_download_fields:
+
+                    if field.startswith("F"):
+                        data[field] = req_data["F"][index] - vnorm(model_data)
+
+                    elif field[:5] in "B_NEC":
+                        # with ElapsedTimeLogger("%.2g%% of %s extracted in" % (100, "bla",), self.logger) as etl:
+                        #     etl.message = ("%s" % field[:5])
+                        data[field] = req_data["B_NEC"] - model_data
 
         # filter the actual data
         data = OrderedDict(
             (field, values[index]) for field, values in data.iteritems()
         )
 
-        return data, len(data['Timestamp']), cdf_vars
+        return data, len(data[data.keys()[0]]), cdf_vars
