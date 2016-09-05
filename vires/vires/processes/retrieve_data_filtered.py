@@ -211,9 +211,33 @@ class RetrieveDataFiltered(WPSProcess):
 
         # TODO: Graceful handling of an empty collection list.
 
-        data_fields = [
-            field.identifier for field in collections[0].range_type
-        ]
+        # Check if we have collections with different range types
+        # If not unique we need to handle merging the types together
+        range_types = [d.range_type.id for d in collections]
+        unique_range_types = all(p == range_types[0] for p in range_types)
+
+        if not unique_range_types:
+            for collection_id in collection_ids:
+                products_qs = Product.objects.filter(
+                    collections__identifier=collection_id,
+                    begin_time__lte=(end_time + TIME_TOLERANCE),
+                    end_time__gte=(begin_time - TIME_TOLERANCE),
+                ).order_by('begin_time')
+
+                p = products_qs.first().cast()
+                step = p.sampling_period.total_seconds()
+
+                with ElapsedTimeLogger("", self.logger) as etl:
+                    etl.message = ("% 2.10f" % step)
+
+
+        # Integrating fields of all rangetypes
+        data_fields = []
+        for collection in collections:
+            for field in collection.range_type:
+                if field.identifier not in data_fields:
+                    data_fields.append(field.identifier)
+
 
         # If custom parameters are specified remove all data_fields not 
         # contained in provided parameter list
@@ -226,8 +250,7 @@ class RetrieveDataFiltered(WPSProcess):
 
         total_count = 0
 
-        # FIXME: Product type in the file name!
-        result_basename = "%s_%s_%s_MDR_MAG_Filtered" % (
+        result_basename = "%s_%s_%s_Filtered" % (
             "_".join(collection_ids),
             begin_time.astimezone(TZ_UTC).strftime("%Y%m%dT%H%M%S"),
             end_time.astimezone(TZ_UTC).strftime("%Y%m%dT%H%M%S"),
@@ -431,6 +454,17 @@ class RetrieveDataFiltered(WPSProcess):
             # update index array
             if 'filtered_data' in locals():
                 index = index[between(filtered_data, bounds[0], bounds[1])]
+
+        # If aux data is requested as dowonload parameter include it to data
+
+        if set(fields) & set(("dst", "kp")):
+            mjd2000_times = cdf_rawtime_to_mjd2000(
+                req_data['Timestamp'], cdf_vars['Timestamp']['type']
+            )
+            if set(fields) & set(("dst",)):
+                data.update(query_dst_int(settings.VIRES_AUX_DB_DST, mjd2000_times))
+            if set(fields) & set(("kp",)):
+                data.update(query_kp_int(settings.VIRES_AUX_DB_KP, mjd2000_times))
 
         # apply Quasi-dipole Latitude and Magnetic Local Time filters
         appex_fields = set(filters) & set(("qdlat", "mlt"))

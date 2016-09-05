@@ -75,7 +75,7 @@ MAX_TIME_SELECTION = timedelta(days=16)
 
 REQUIRED_FIELDS = [
     "Timestamp", "Latitude", "Longitude", "Radius", "F", "F_error", "B_NEC",
-    "B_error"
+    "B_error", "n", "U_SC", "T_elec", "v_SC", "Bubble_Probability"
 ]
 
 DROPPED_FIELDS = [
@@ -349,7 +349,22 @@ class RetrieveData(WPSProcess):
             for field in fields:
                 cdf_var = cdf.raw_var(field)
                 cdf_type[field] = cdf_var.type()
+
+                if "Bubble_Probability" in fields:
+                    step = 1
+
                 data[field] = cdf_var[low:high:step]
+
+        # Some tests filtering out data not flagged with bubble index
+        if "Bubble_Probability" in fields:
+            # initialize indices
+            index = np.arange(len(data['Bubble_Probability']))
+            # filter the indices
+            index = index[ data["Bubble_Probability"][index] >= 0.1 ] 
+            # data update
+            data = OrderedDict(
+                (field, values[index]) for field, values in data.iteritems()
+            )
 
         # bounding box filter
         if bbox:
