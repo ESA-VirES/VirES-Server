@@ -30,6 +30,7 @@ from logging import INFO, WARNING
 from django.conf.urls import url
 from allauth.urls import urlpatterns as allauth_urlpatterns
 from .views import ProfileUpdate
+from django.views.generic import TemplateView
 from .url_tools import decorate
 from .decorators import log_access
 
@@ -53,4 +54,5 @@ urlpatterns = decorate(
 # additional patterns
 urlpatterns += [
     url(r'^profile/$', ProfileUpdate.as_view(), name='account_change_profile'),
+    url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
 ]
