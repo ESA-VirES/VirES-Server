@@ -78,7 +78,7 @@ def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
             if dtype == dt_float64:
                 return lambda v: "%.14g" % v
             elif dtype == dt_object:
-                return lambda v: v.isoformat(" ")
+                return lambda v: v.isoformat("T") + "Z"
             else:
                 return str
         else:
