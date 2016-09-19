@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Process utilities
+# Process Utilities - Input Parsers
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -27,13 +27,13 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 from collections import OrderedDict
-from numpy import array
-#from osgeo import gdal; gdal.UseExceptions()
-from eoxserver.contrib import gdal
-from matplotlib.cm import ScalarMappable
 from eoxmagmod import read_model_shc
-from vires.util import get_color_scale, get_model
+from eoxserver.contrib import gdal
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from vires.util import get_color_scale, get_model
+from vires.models import ProductCollection
+from .time_series_product import ProductTimeSeries
+
 
 def parse_style(input_id, style):
     """ Parse style value and return the corresponding colour-map object. """
@@ -45,6 +45,67 @@ def parse_style(input_id, style):
         raise InvalidInputValueError(
             input_id, "Invalid style identifier %r!" % style
         )
+
+
+def parse_collections(input_id, source):
+    """ Parse input collections definitions. """
+    result = {}
+    if not isinstance(source, dict):
+        raise InvalidInputValueError(
+            input_id, "JSON object expected!"
+        )
+    # resolve collection ids
+    for label, collection_ids in source.iteritems():
+        if not isinstance(collection_ids, (list, tuple)):
+            raise InvalidInputValueError(
+                input_id, "A list of collection identifiers expected for "
+                "label %r!" % label
+            )
+        available_collections = dict(
+            (obj.identifier, obj) for obj in ProductCollection.objects.filter(
+                identifier__in=collection_ids
+            )
+        )
+        try:
+            result[label] = [
+                available_collections[id_] for id_ in collection_ids
+            ]
+        except KeyError as exc:
+            raise InvalidInputValueError(
+                input_id, "Invalid collection identifier %r! (label: %r)" %
+                (exc.args[0], label)
+            )
+    # check the collection counts and range types
+    if result:
+        labels = iter(result)
+        label = labels.next()
+        collections = result[label]
+        count = len(collections)
+        rtypes = tuple(col.range_type for col in collections)
+        if len(set(rtypes)) < len(rtypes):
+            raise InvalidInputValueError(
+                input_id, "Non-unique collection range-types! (label: %r; )" %
+                label
+            )
+        for label in labels:
+            collections = result[label]
+            # check count
+            if len(collections) != count:
+                raise InvalidInputValueError(
+                    input_id, "Collection count mismatch! (label: %r; )" %
+                    label
+                )
+            # check range types
+            if tuple(col.range_type for col in collections) != rtypes:
+                raise InvalidInputValueError(
+                    input_id, "Collection range-type mismatch! (label: %r; )" %
+                    label
+                )
+    # convert collections to product time-series
+    return dict(
+        (label, [ProductTimeSeries(collection) for collection in collections])
+        for label, collections in result.iteritems()
+    )
 
 
 def parse_model(input_id, model_id, shc, shc_input_id="shc"):
@@ -93,45 +154,3 @@ def parse_filters(input_id, filter_string):
     except ValueError as exc:
         raise InvalidInputValueError(input_id, exc)
     return filter_
-
-
-def format_filters(filters):
-    """ Convert filters to string. """
-    return "; ".join(
-        "%s: %g,%g" % (key, vmin, vmax)
-        for key, (vmin, vmax) in filters.iteritems()
-    )
-
-
-def data_to_png(filename, data, norm, cmap=None, ignore_alpha=True):
-    """ Convert 2-D array of scalar values to PNG image.
-    The data are normalised by means of the provided normaliser (see,
-    e.g., http://matplotlib.org/users/colormapnorms.html.
-    If provided colour map is used to colour the values. Unless explicitly
-    requested the alpha channel of the colour-map is ignored.
-    """
-    if cmap:
-        colors = ScalarMappable(norm, cmap).to_rgba(data, bytes=True)
-        if ignore_alpha:
-            colors = colors[:, :, :3]
-    else:
-        colors = norm(data)
-        colors[colors < 0.0] = 0.0
-        colors[colors > 1.0] = 1.0
-        colors = array(255.0 * colors, dtype='uint8')
-    array_to_png(filename, colors)
-
-
-def array_to_png(filename, data):
-    """ Convert an array to a PNG. """
-    height, width = data.shape[:2]
-    nbands = 1 if len(data.shape) == 2 else data.shape[2]
-    mem_driver = gdal.GetDriverByName('MEM')
-    png_driver = gdal.GetDriverByName('PNG')
-    mem_ds = mem_driver.Create('', width, height, nbands, gdal.GDT_Byte)
-    if len(data.shape) == 2:
-        mem_ds.GetRasterBand(1).WriteArray(data)
-    else:
-        for idx in xrange(nbands):
-            mem_ds.GetRasterBand(idx + 1).WriteArray(data[:, :, idx])
-    png_driver.CreateCopy(filename, mem_ds, 0)

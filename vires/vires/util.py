@@ -32,6 +32,7 @@ from os.path import dirname, join
 from math import ceil, floor
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cm import get_cmap
+from itertools import ifilter, ifilterfalse
 
 import eoxmagmod as mm
 
@@ -44,6 +45,28 @@ except ImportError:
         arr = empty(shape, dtype, order)
         arr.fill(value)
         return arr
+
+
+def unique(iterable):
+    """ Remove duplicates from an iterable preserving the order."""
+    items = set()
+    for item in ifilterfalse(items.__contains__, iterable):
+        yield item
+        items.add(item)
+
+
+def exclude(iterable, excluded):
+    """ Remove items from the `iterable` which are present among the
+    elements of the `excluded` set.
+    """
+    return ifilterfalse(set(excluded).__contains__, iterable)
+
+
+def include(iterable, included):
+    """ Remove items from the `iterable` which are not present among the
+    elements of the `included` set.
+    """
+    return ifilter(set(included).__contains__, iterable)
 
 
 # NOTE: We deliberately break the python naming convention here.

@@ -1,0 +1,64 @@
+#-------------------------------------------------------------------------------
+#
+# Data Source - base time-series class
+#
+# Project: VirES
+# Authors: Martin Paces <martin.paces@eox.at>
+#
+#-------------------------------------------------------------------------------
+# Copyright (C) 2016 EOX IT Services GmbH
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies of this Software or works derived from this Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#-------------------------------------------------------------------------------
+
+from vires.cdf_util import CDF_EPOCH_TYPE
+
+class TimeSeries(object):
+    """ Base time-series data source class. """
+
+    @property
+    def variables(self):
+        """ Get list of the provided variables. """
+        raise NotImplementedError
+
+    def subset(self, start, stop, variables=None, subsampler=None):
+        """ Generate a sequence of datasets matched by the
+        temporal subset of a time-series.
+        Optionally, the returned variables can be restricted by the user defined
+        list of variables.
+        The optional subsampler can be used to get a subset of the matched
+        times.
+        The start and stop UTC times should be instances of the
+        datetime.datetime object.
+        The output time-stamps are encoded as CDF-epoch times.
+        """
+        raise NotImplementedError
+
+    def interpolate(self, times, variables=None, interp1d_methods=None,
+                    cdf_type=CDF_EPOCH_TYPE):
+        """ Get time-series interpolated from the provided time-line.
+        Optionally, the returned variables can be restricted by the user defined
+        list of variables.
+        The default nearest neighbour interpolation method is used to
+        interpolate the variables. Alternative interpolation methods
+        can be specified for selected variables via the interp1d_methods
+        dictionary.
+        The input and output time-stamps are encoded as CDF-epoch times.
+        """
+        raise NotImplementedError

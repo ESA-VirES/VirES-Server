@@ -32,6 +32,7 @@ from os.path import exists
 from math import ceil, floor
 from numpy import (
     amin, amax, nan, vectorize, object as dt_object, float64 as dt_float64,
+    ndarray,
 )
 import scipy
 from scipy.interpolate import interp1d
@@ -111,10 +112,24 @@ def cdf_open(filename, mode="r"):
     return cdf
 
 
+def datetime_to_cdf_rawtime(time, cdf_type):
+    """ Convert `datetime.datetime` object to CDF raw time. """
+    if cdf_type == CDF_EPOCH_TYPE:
+        if isinstance(time, ndarray):
+            return pycdf.lib.v_datetime_to_epoch(time)
+        else:
+            return pycdf.lib.datetime_to_epoch(time)
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
 def cdf_rawtime_to_datetime(raw_time, cdf_type):
     """ Convert array of CDF raw time values to array of `dateitme`. """
     if cdf_type == CDF_EPOCH_TYPE:
-        return pycdf.lib.v_epoch_to_datetime(raw_time)
+        if isinstance(raw_time, ndarray):
+            return pycdf.lib.v_epoch_to_datetime(raw_time)
+        else:
+            return pycdf.lib.epoch_to_datetime(raw_time)
     else:
         raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 

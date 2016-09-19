@@ -46,7 +46,7 @@ from vires.cdf_util import (
     CDF_EPOCH_TYPE, cdf_open, cdf_time_subset, cdf_time_interp,
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
     cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year,
-    cdf_rawtime_to_decimal_year_fast,
+    cdf_rawtime_to_decimal_year_fast, datetime_to_cdf_rawtime,
 )
 from vires.aux import parse_dst
 from vires.tests import ArrayMixIn
@@ -84,6 +84,27 @@ class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):
             self.assertAllEqual(
                 self.START + self.STEP * arange(0, time.size),
                 cdf['time'][:]
+            )
+
+    def test_datetime_to_cdf_rawtime_scalar(self):
+        with cdf_open(self.FILE) as cdf:
+            self.assertAllEqual(array([
+                datetime_to_cdf_rawtime(dt, CDF_EPOCH_TYPE)
+                for dt in cdf['time']
+            ]), cdf.raw_var('time')[:])
+
+    def test_cdf_rawtime_to_datetime_scalar(self):
+        with cdf_open(self.FILE) as cdf:
+            self.assertAllEqual(array([
+                cdf_rawtime_to_datetime(rt, CDF_EPOCH_TYPE)
+                for rt in cdf.raw_var('time')[:]
+            ]), cdf['time'][:])
+
+    def test_datetime_to_cdf_rawtime(self):
+        with cdf_open(self.FILE) as cdf:
+            self.assertAllEqual(
+                datetime_to_cdf_rawtime(cdf['time'][:], CDF_EPOCH_TYPE),
+                cdf.raw_var('time')[:]
             )
 
     def test_cdf_rawtime_to_datetime(self):
