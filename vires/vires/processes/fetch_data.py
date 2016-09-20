@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+
 #
 # WPS process fetching data from multiple collection to the client.
 #
@@ -27,7 +27,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments, too-many-locals
+# pylint: disable=too-many-arguments, too-many-locals, too-many-branches
 
 from itertools import chain, izip
 from datetime import datetime, timedelta
@@ -52,10 +52,10 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models,
+    parse_collections, parse_models2,
     IndexKp, IndexDst,
+    MagneticModelResidual,
 )
-
 
 # maximum allowed time selection period
 MAX_TIME_SELECTION = timedelta(days=16)
@@ -70,7 +70,6 @@ CDF_RAW_TIME_CONVERTOR = {
     "MJD2000": cdf_rawtime_to_mjd2000,
     "Unix epoch": cdf_rawtime_to_unix_epoch,
 }
-
 
 class FetchData(WPSProcess):
     """ Process retrieving registered Swarm data based on collection, time
@@ -147,7 +146,7 @@ class FetchData(WPSProcess):
         """ Execute process """
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
-        models = parse_models("model_ids", model_ids, shc)
+        models = parse_models2("model_ids", model_ids, shc)
         if requested_variables is None:
             requested_variables = None
         else:
@@ -177,7 +176,7 @@ class FetchData(WPSProcess):
             bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
             ", ".join(
                 s.collection.identifier for l in sources.values() for s in l
-            ), ", ".join(models),
+            ), ", ".join(model.name for model in models),
         )
 
         # prepare list of the extracted non-mandatory variables
@@ -185,19 +184,40 @@ class FetchData(WPSProcess):
             available_variables = list(exclude(unique(chain.from_iterable(
                 source.variables for source in sources.itervalues().next()
             )), REQUIRED_VARIABLES)) + ['Kp', 'Dst']
+            model_residuals = []
+            for model in models:
+                available_variables.extend(model.variables)
+                # prepare residuals' sources
+                for variable in model.BASE_VARIABLES:
+                    model_residual = MagneticModelResidual(model.name, variable)
+                    model_residuals.append(model_residual)
+                    available_variables.extend(model_residual.variables)
 
             if requested_variables is not None:
                 # make sure the requested variables exist and the minimum
                 # required variables are present
-                variables = list(include(
-                    requested_variables, available_variables
+                output_variables = list(include(
+                    unique(requested_variables), available_variables
                 ))
             else:
                 # by default all variables are returned
-                variables = available_variables
+                output_variables = available_variables
+
+            # handle sources dependencies by adding intermediate variables
+            _varset = set(output_variables)
+            for model_residual in model_residuals:
+                if _varset.intersection(model_residual.variables):
+                    _varset.update(model_residual.required_variables)
+            variables = list(_varset)
+
+            self.logger.debug("available variables: %s", available_variables)
+            self.logger.debug("evaluated variables: %s", variables)
+            self.logger.debug("returned variables: %s", output_variables)
+            self.logger.debug("models: %s", models)
+            self.logger.debug("residuals: %s", model_residuals)
         else:
             # no collection selected
-            variables = []
+            output_variables = variables = []
 
         def _generate_data_():
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
@@ -223,7 +243,13 @@ class FetchData(WPSProcess):
                     dataset.merge(
                         index_dst.interpolate(times, variables, None, cdf_type)
                     )
-                    yield label, dataset
+                    # models
+                    for model in models:
+                        dataset.merge(model.eval(dataset, variables))
+                    # model residuals
+                    for model_residual in model_residuals:
+                        dataset.merge(model_residual.eval(dataset, variables))
+                    yield label, dataset.extract(output_variables)
 
         # write the output
         output_fobj = StringIO()

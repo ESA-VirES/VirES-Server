@@ -33,7 +33,7 @@ from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.util import get_color_scale, get_model
 from vires.models import ProductCollection
 from .time_series_product import ProductTimeSeries
-
+from .model_magmod import MagneticModel
 
 def parse_style(input_id, style):
     """ Parse style value and return the corresponding colour-map object. """
@@ -137,6 +137,14 @@ def parse_models(input_id, model_ids, shc, shc_input_id="shc"):
                 input_id, model_id, shc, shc_input_id
             )
     return models
+
+
+def parse_models2(input_id, model_ids, shc, shc_input_id="shc"):
+    """ Parse model identifiers and returns an ordered dictionary
+    the corresponding models.
+    """
+    models = parse_models(input_id, model_ids, shc, shc_input_id)
+    return [MagneticModel(id_, model) for id_, model in models.iteritems()]
 
 
 def parse_filters(input_id, filter_string):

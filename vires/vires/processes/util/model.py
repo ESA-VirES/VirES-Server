@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities
+# Data Source - model base class
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -27,30 +27,23 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .dataset import Dataset
-from .time_series import TimeSeries
-from .time_series_product import ProductTimeSeries
-from .time_series_aux import  IndexKp, IndexDst
-from .model import Model
-from .model_magmod import MagneticModelResidual, MagneticModel
-from .interpolate import Interp1D
-from .input_parsers import (
-    parse_style,
-    parse_collections,
-    parse_model,
-    parse_models,
-    parse_models2,
-    parse_filters,
-)
-from .png_output import (
-    data_to_png,
-    array_to_png,
-)
+class Model(object):
+    """ Base model source class. """
 
-# other miscellaneous utilities
-def format_filters(filters):
-    """ Convert filters to string. """
-    return "; ".join(
-        "%s: %g,%g" % (key, vmin, vmax)
-        for key, (vmin, vmax) in filters.iteritems()
-    )
+    @property
+    def variables(self):
+        """ Get list of the provided variables. """
+        raise NotImplementedError
+
+    @property
+    def required_variables(self):
+        """ Get list of the required input dataset variables. """
+        raise NotImplementedError
+
+    def eval(self, dataset, variables=None, **kwargs):
+        """ Evaluate model for the given dataset.
+        Optionally the content of the output dataset can be controlled
+        by the list of the output variables.
+        Specific models can define additional keyword parameters.
+        """
+        raise NotImplementedError
