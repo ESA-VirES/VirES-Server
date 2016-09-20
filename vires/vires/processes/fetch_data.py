@@ -152,8 +152,9 @@ class FetchData(WPSProcess):
             requested_variables = None
         else:
             requested_variables = [
-                var.strip() for var in requested_variables.strip()
+                var.strip() for var in requested_variables.split(',')
             ]
+        self.logger.debug("requested variables: %s", requested_variables)
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
@@ -209,12 +210,12 @@ class FetchData(WPSProcess):
                 )
                 for dataset in dataset_iterator:
                     times = dataset[ts_master.TIME_VARIABLE]
-                    time_cdf_type = dataset.cdf_type[ts_master.TIME_VARIABLE]
+                    cdf_type = dataset.cdf_type[ts_master.TIME_VARIABLE]
                     # subordinate interpolated datasets
                     for ts_slave in ts_slaves:
-                        dataset.merge(ts_slave.interpolate(
-                            times, variables, {}, cdf_type
-                        ))
+                        dataset.merge(
+                            ts_slave.interpolate(times, variables, {}, cdf_type)
+                        )
                     # auxiliary datasets
                     dataset.merge(
                         index_kp.interpolate(times, variables, None, cdf_type)
