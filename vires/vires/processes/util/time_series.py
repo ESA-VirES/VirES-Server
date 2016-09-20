@@ -50,15 +50,17 @@ class TimeSeries(object):
         """
         raise NotImplementedError
 
-    def interpolate(self, times, variables=None, interp1d_methods=None,
-                    cdf_type=CDF_EPOCH_TYPE):
+    def interpolate(self, times, variables=None, interp1d_kinds=None,
+                    cdf_type=CDF_EPOCH_TYPE, valid_only=False):
         """ Get time-series interpolated from the provided time-line.
         Optionally, the returned variables can be restricted by the user defined
         list of variables.
         The default nearest neighbour interpolation method is used to
         interpolate the variables. Alternative interpolation methods
-        can be specified for selected variables via the interp1d_methods
+        can be specified for selected variables via the interp1d_kinds
         dictionary.
+        Set valid_only to True to remove invalid records (NaNs due to the
+        out-of-bounds interpolation).
         The input and output time-stamps are encoded as CDF-epoch times.
         """
         raise NotImplementedError

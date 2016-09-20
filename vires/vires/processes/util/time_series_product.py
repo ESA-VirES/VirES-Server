@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities
+# Data Source - product time-series class
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -59,20 +59,9 @@ class ProductTimeSeries(TimeSeries):
 
     @property
     def variables(self):
-        """ Get list of the provided variables. """
         return [band.identifier for band in self.collection.range_type]
 
     def subset(self, start, stop, variables=None, subsampler=None):
-        """ Generate a sequence of datasets matched by the
-        temporal subset of a time-series.
-        Optionally, the returned variables can be restricted by the user defined
-        list of variables.
-        The optional subsampler can be used to get a subset of the matched
-        times.
-        The start and stop UTC times should be instances of the
-        datetime.datetime object.
-        The output time-stamps are encoded as CDF-epoch times.
-        """
         products_qs = Product.objects.filter(
             collections=self.collection,
             begin_time__lte=(stop + self.TIME_TOLERANCE),
@@ -135,17 +124,8 @@ class ProductTimeSeries(TimeSeries):
 
             yield dataset
 
-    def interpolate(self, times, variables=None, interp1d_methods=None,
-                    cdf_type=CDF_EPOCH_TYPE):
-        """ Get time-series interpolated from the provided time-line.
-        Optionally, the returned variables can be restricted by the user defined
-        list of variables.
-        The default nearest neighbour interpolation method is used to
-        interpolate the variables. Alternative interpolation methods
-        can be specified for selected variables via the interp1d_methods
-        dictionary.
-        The input and output time-stamps are encoded as CDF-epoch times.
-        """
+    def interpolate(self, times, variables=None, interp1d_kinds=None,
+                    cdf_type=CDF_EPOCH_TYPE, valid_only=False):
         # TODO: support for different CDF time types
         if cdf_type != CDF_EPOCH_TYPE:
             raise TypeError("Unsupported CDF time type %r !" % cdf_type)
@@ -162,17 +142,17 @@ class ProductTimeSeries(TimeSeries):
         )
 
         self.logger.debug(
-            "%s: requested time-span %s, %s",
+            "requested time-span %s, %s",
             cdf_rawtime_to_datetime(start, cdf_type),
             cdf_rawtime_to_datetime(stop, cdf_type)
         )
-        self.logger.debug("%s: requested dataset length %s", len(times))
+        self.logger.debug("requested dataset length %s", len(times))
 
         dataset = Dataset()
         for item in dataset_iterator:
             if item:
                 self.logger.debug(
-                    "%s: item time-span %s, %s",
+                    "item time-span %s, %s",
                     cdf_rawtime_to_datetime(item[self.TIME_VARIABLE].min(), cdf_type),
                     cdf_rawtime_to_datetime(item[self.TIME_VARIABLE].max(), cdf_type),
                 )

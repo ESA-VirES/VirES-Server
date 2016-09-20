@@ -32,6 +32,7 @@
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from cStringIO import StringIO
+from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData,
     BoundingBoxData,
@@ -52,6 +53,7 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models,
+    IndexKp, IndexDst,
 )
 
 
@@ -181,7 +183,7 @@ class FetchData(WPSProcess):
         if sources:
             available_variables = list(exclude(unique(chain.from_iterable(
                 source.variables for source in sources.itervalues().next()
-            )), REQUIRED_VARIABLES))
+            )), REQUIRED_VARIABLES)) + ['Kp', 'Dst']
 
             if requested_variables is not None:
                 # make sure the requested variables exist and the minimum
@@ -197,6 +199,8 @@ class FetchData(WPSProcess):
             variables = []
 
         def _generate_data_():
+            index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
+            index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             for label, merged_sources in sources.iteritems():
                 ts_master, ts_slaves = merged_sources[0], merged_sources[1:]
                 # NOTE: the mandatory variables are always taken from the master
@@ -204,11 +208,20 @@ class FetchData(WPSProcess):
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
                 for dataset in dataset_iterator:
+                    times = dataset[ts_master.TIME_VARIABLE]
+                    time_cdf_type = dataset.cdf_type[ts_master.TIME_VARIABLE]
+                    # subordinate interpolated datasets
                     for ts_slave in ts_slaves:
                         dataset.merge(ts_slave.interpolate(
-                            dataset[ts_master.TIME_VARIABLE], variables, {},
-                            dataset.cdf_type[ts_master.TIME_VARIABLE]
+                            times, variables, {}, cdf_type
                         ))
+                    # auxiliary datasets
+                    dataset.merge(
+                        index_kp.interpolate(times, variables, None, cdf_type)
+                    )
+                    dataset.merge(
+                        index_dst.interpolate(times, variables, None, cdf_type)
+                    )
                     yield label, dataset
 
         # write the output

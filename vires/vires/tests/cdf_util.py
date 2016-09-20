@@ -47,6 +47,7 @@ from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
     cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year,
     cdf_rawtime_to_decimal_year_fast, datetime_to_cdf_rawtime,
+    mjd2000_to_cdf_rawtime,
 )
 from vires.aux import parse_dst
 from vires.tests import ArrayMixIn
@@ -122,6 +123,17 @@ class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):
                 v_datetime_to_mjd2000(cdf['time'][:]), 1e-9
             )
 
+    def test_mjd2000_to_cdf_rawtime(self):
+        with cdf_open(self.FILE) as cdf:
+            time_cdf_epoch = cdf.raw_var('time')[:]
+            time_mjd2000 = cdf_rawtime_to_mjd2000(
+                time_cdf_epoch, CDF_EPOCH_TYPE
+            )
+            self.assertAllEqual(
+                mjd2000_to_cdf_rawtime(time_mjd2000, CDF_EPOCH_TYPE),
+                time_cdf_epoch
+            )
+
     def test_cdf_rawtime_to_unix_epoch(self):
         v_datetime_to_unix_epoch = vectorize(datetime_to_unix_epoch)
         with cdf_open(self.FILE) as cdf:
@@ -141,6 +153,7 @@ class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):
             )
         # empty array test
         cdf_rawtime_to_decimal_year(array([]), CDF_EPOCH_TYPE)
+
 
 class TestCDFEpochTimeBase01(TestCDFEpochTime00):
     FILE = "./test_tmp_cdf_epoch1.cdf"

@@ -30,6 +30,7 @@
 from .dataset import Dataset
 from .time_series import TimeSeries
 from .time_series_product import ProductTimeSeries
+from .time_series_aux import  IndexKp, IndexDst
 from .interpolate import Interp1D
 from .input_parsers import (
     parse_style,

@@ -47,6 +47,8 @@ from .time_util import (
 
 CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
 CDF_DOUBLE_TYPE = pycdf.const.CDF_DOUBLE.value
+CDF_UINT1_TYPE = pycdf.const.CDF_UINT1.value
+CDF_UINT2_TYPE = pycdf.const.CDF_UINT2.value
 
 CDF_EPOCH_1970 = 62167219200000.0
 CDF_EPOCH_2000 = 63113904000000.0
@@ -146,6 +148,14 @@ def cdf_rawtime_to_mjd2000(raw_time, cdf_type):
     """ Convert array of CDF raw time values to array of MJD2000 values. """
     if cdf_type == CDF_EPOCH_TYPE:
         return (raw_time - CDF_EPOCH_2000) / 86400000.0
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def mjd2000_to_cdf_rawtime(time, cdf_type):
+    """ Convert array of CDF raw time values to array of MJD2000 values. """
+    if cdf_type == CDF_EPOCH_TYPE:
+        return CDF_EPOCH_2000 + time * 86400000.0
     else:
         raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
