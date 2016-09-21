@@ -115,7 +115,7 @@ class ProductTimeSeries(TimeSeries):
                 dataset = Dataset()
                 for variable in extracted_variables:
                     cdf_var = cdf.raw_var(variable)
-                    data = cdf_var[low:high]
+                    data = cdf_var[low:high:20] # TODO: FIXME!!!
                     if subset_idx is not None:
                         data = data[subset_idx]
                     dataset.set(variable, data, cdf_var.type())
