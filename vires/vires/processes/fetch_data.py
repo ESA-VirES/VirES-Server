@@ -210,6 +210,9 @@ class FetchData(WPSProcess):
                     _varset.update(model_residual.required_variables)
             variables = list(_varset)
 
+            # make sure the mandatory variables in the output
+            output_variables = REQUIRED_VARIABLES + output_variables
+
             self.logger.debug("available variables: %s", available_variables)
             self.logger.debug("evaluated variables: %s", variables)
             self.logger.debug("returned variables: %s", output_variables)
