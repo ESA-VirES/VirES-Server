@@ -97,7 +97,7 @@ class Dataset(OrderedDict):
         for variable in variables:
             if variable in self:
                 dataset.set(
-                    variable, self[variable], dataset.cdf_type.get(variable)
+                    variable, self[variable], self.cdf_type.get(variable)
                 )
         return dataset
 

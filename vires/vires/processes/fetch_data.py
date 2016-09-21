@@ -260,19 +260,13 @@ class FetchData(WPSProcess):
         initialize = True
         for label, dataset in _generate_data_():
 
-            # time-format conversion
-#            for variable, data in dataset.iteritems():
-#                cdf_type = dataset.cdf_type.get(variable)
-#                if cdf_type == CDF_EPOCH_TYPE:
-#                    dataset[variable] = CDF_RAW_TIME_CONVERTOR[csv_time_format](
-#                        data, cdf_type
-#                    )
-            variable = 'Timestamp'
-            data = dataset[variable]
-            dataset.cdf_type[variable] = CDF_EPOCH_TYPE
-            dataset[variable] = CDF_RAW_TIME_CONVERTOR[csv_time_format](
-                data, CDF_EPOCH_TYPE
-            )
+            # convert all time variables to the target file-format
+            for variable, data in dataset.iteritems():
+                cdf_type = dataset.cdf_type.get(variable)
+                if cdf_type == CDF_EPOCH_TYPE:
+                    dataset[variable] = CDF_RAW_TIME_CONVERTOR[csv_time_format](
+                        data, cdf_type
+                    )
 
             if initialize:
                 output_fobj.write("id,")
