@@ -57,6 +57,10 @@ from vires.processes.util import (
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
 )
 
+# TODO: Make following parameters configurable.
+# Limit response size (equivalent to 1/2 daily SWARM MAG LR product).
+MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
+
 # maximum allowed time selection period
 MAX_TIME_SELECTION = timedelta(days=16)
 
@@ -233,13 +237,34 @@ class FetchData(WPSProcess):
             output_variables = variables = []
 
         def _generate_data_():
+            total_count = 0
+
             for label, merged_sources in sources.iteritems():
+                collection_count = 0
+
                 ts_master, ts_slaves = merged_sources[0], merged_sources[1:]
                 # NOTE: the mandatory variables are always taken from the master
                 dataset_iterator = ts_master.subset(
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
                 for dataset in dataset_iterator:
+                    # check the retrieval limits
+                    total_count += dataset.length
+                    collection_count += dataset.length
+
+                    # Check current amount of features and decide if to continue
+                    if collection_count > MAX_SAMPLES_COUNT_PER_COLLECTION:
+                        self.access_logger.error(
+                            "The sample count %d exceeds the maximum allowed "
+                            "count of %d samples per collection!",
+                            collection_count, MAX_SAMPLES_COUNT_PER_COLLECTION
+                        )
+                        raise ExecuteError(
+                            "Requested data exceeds the maximum limit of %d "
+                            "samples per collection!" %
+                            MAX_SAMPLES_COUNT_PER_COLLECTION
+                        )
+
                     times = dataset[ts_master.TIME_VARIABLE]
                     cdf_type = dataset.cdf_type[ts_master.TIME_VARIABLE]
                     # subordinate interpolated datasets
@@ -264,6 +289,11 @@ class FetchData(WPSProcess):
                     for model_residual in model_residuals:
                         dataset.merge(model_residual.eval(dataset, variables))
                     yield label, dataset.extract(output_variables)
+
+            self.access_logger.info(
+                "response: count: %d samples, mime-type: %s, variables: (%s)",
+                total_count, output['mime_type'], ", ".join(output_variables)
+            )
 
         # write the output
         output_fobj = StringIO()
