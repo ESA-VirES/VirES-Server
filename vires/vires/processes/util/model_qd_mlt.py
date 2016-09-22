@@ -82,7 +82,7 @@ class QuasiDipoleCoordinates(Model):
                 dataset[var] for var in self.required_variables
             )
             cdf_type = dataset.cdf_type.get(self.required_variables[0], None)
-            if times:
+            if times.size > 0:
                 year = cdf_rawtime_to_datetime(times[0], cdf_type).year
             else:
                 year = 2000 # default if not time-stamp value is available
