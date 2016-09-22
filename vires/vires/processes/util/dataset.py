@@ -86,10 +86,11 @@ class Dataset(OrderedDict):
 
     def subset(self, index):
         """ Get subset of the dataset defined by the array of indices. """
-        return Dataset(
+        dataset = Dataset(
             ((var, data[index]) for var, data in self.iteritems()),
-            self.cdf_type
         )
+        dataset.cdf_type.update(self.cdf_type)
+        return dataset
 
     def extract(self, variables):
         """ Get new subset containing only the selected variables. """

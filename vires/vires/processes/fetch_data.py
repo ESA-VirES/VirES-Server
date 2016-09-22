@@ -54,6 +54,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2,
     IndexKp, IndexDst,
+    BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
 )
 
@@ -189,6 +190,10 @@ class FetchData(WPSProcess):
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
+            if bbox:
+                filter_bbox = BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
+            else:
+                filter_bbox = None
 
             available_variables = list(exclude(unique(chain.from_iterable(
                 source.variables for source in sources.itervalues().next()
@@ -230,8 +235,6 @@ class FetchData(WPSProcess):
             self.logger.debug("available variables: %s", available_variables)
             self.logger.debug("evaluated variables: %s", variables)
             self.logger.debug("returned variables: %s", output_variables)
-            self.logger.debug("models: %s", models)
-            self.logger.debug("residuals: %s", model_residuals)
         else:
             # no collection selected
             output_variables = variables = []
@@ -248,11 +251,13 @@ class FetchData(WPSProcess):
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
                 for dataset in dataset_iterator:
-                    # check the retrieval limits
+                    # apply the optional bounding box filter
+                    if filter_bbox:
+                        dataset = dataset.subset(filter_bbox.filter(dataset))
+
+                    # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     collection_count += dataset.length
-
-                    # Check current amount of features and decide if to continue
                     if collection_count > MAX_SAMPLES_COUNT_PER_COLLECTION:
                         self.access_logger.error(
                             "The sample count %d exceeds the maximum allowed "
@@ -265,9 +270,9 @@ class FetchData(WPSProcess):
                             MAX_SAMPLES_COUNT_PER_COLLECTION
                         )
 
+                    # subordinate interpolated datasets
                     times = dataset[ts_master.TIME_VARIABLE]
                     cdf_type = dataset.cdf_type[ts_master.TIME_VARIABLE]
-                    # subordinate interpolated datasets
                     for ts_slave in ts_slaves:
                         dataset.merge(
                             ts_slave.interpolate(times, variables, {}, cdf_type)
