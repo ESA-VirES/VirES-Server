@@ -63,7 +63,7 @@ from vires.processes.util import (
 MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
 
 # maximum allowed time selection period
-MAX_TIME_SELECTION = timedelta(days=16)
+MAX_TIME_SELECTION = timedelta(days=31)
 
 # set of the minimum required variables
 REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
