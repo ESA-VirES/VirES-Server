@@ -66,7 +66,9 @@ MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
 MAX_TIME_SELECTION = timedelta(days=31)
 
 # maximum allowed time selection period
-BASE_SAMPLIG_RATE = timedelta(seconds=20)
+BASE_SAMPLIG_STEP = timedelta(seconds=20)
+BASE_MIN_STEP = timedelta(seconds=0)
+BASE_TIME_UNIT = timedelta(days=1)
 
 # set of the minimum required variables
 REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
@@ -165,7 +167,7 @@ class FetchData(WPSProcess):
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
-        end_time = naive_to_utc(end_time)
+        end_time = max(naive_to_utc(end_time), begin_time)
 
         # check the time-selection limit
         if (end_time - begin_time) > MAX_TIME_SELECTION:
@@ -187,7 +189,31 @@ class FetchData(WPSProcess):
             ), ", ".join(model.name for model in models),
         )
 
-        # TODO: calculate the optimal sampling rate
+        # TODO: calculate the optimal sampling step
+
+        if bbox:
+            relative_area = abs(
+                (bbox.upper[0] - bbox.lower[0]) *
+                (bbox.upper[1] - bbox.lower[1])
+            ) / 64800.0
+        else:
+            relative_area = 1.0
+
+        relative_time = (
+            (end_time - begin_time).total_seconds() /
+            BASE_TIME_UNIT.total_seconds()
+        )
+
+        self.logger.debug("relative area: %s", relative_area)
+        self.logger.debug("relative time: %s", relative_time)
+
+        samplig_step = timedelta(seconds=(
+            BASE_MIN_STEP.total_seconds() +
+            relative_area * relative_time *
+            (BASE_SAMPLIG_STEP - BASE_MIN_STEP).total_seconds()
+        ))
+
+        self.logger.debug("sampling step: %s", samplig_step)
 
         # prepare list of the extracted non-mandatory variables
         if sources:
@@ -196,7 +222,7 @@ class FetchData(WPSProcess):
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
-                BASE_SAMPLIG_RATE, CDF_EPOCH_TYPE
+                samplig_step, CDF_EPOCH_TYPE
             ))
             if bbox:
                 filter_bbox = BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
