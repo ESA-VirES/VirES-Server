@@ -30,6 +30,7 @@
 
 from os.path import exists
 from math import ceil, floor
+from datetime import timedelta
 from numpy import (
     amin, amax, nan, vectorize, object as dt_object, float64 as dt_float64,
     ndarray,
@@ -112,6 +113,24 @@ def cdf_open(filename, mode="r"):
     else:
         raise ValueError("Invalid mode value %r!" % mode)
     return cdf
+
+
+def cdf_rawtime_to_timedelta(raw_time_delta, cdf_type):
+    """ Covert a CDF raw time difference to `datetime.timedelta` object """
+    if cdf_type == CDF_EPOCH_TYPE:
+        # TODO: handle vectors
+        return timedelta(seconds=raw_time_delta*1e-3)
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def timedelta_to_cdf_rawtime(time_delta, cdf_type):
+    """ Covert `datetime.timedelta` object to CDF raw time scale. """
+    if cdf_type == CDF_EPOCH_TYPE:
+        # TODO: handle vectors
+        return time_delta.total_seconds() * 1e3
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def datetime_to_cdf_rawtime(time, cdf_type):

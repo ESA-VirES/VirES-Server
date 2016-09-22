@@ -46,13 +46,11 @@ class TimeSeries(object):
             # get an applicable subset of the requested variables
             return list(include(unique(variables), self.variables))
 
-    def subset(self, start, stop, variables=None, subsampler=None):
-        """ Generate a sequence of datasets matched by the
-        temporal subset of a time-series.
+    def subset(self, start, stop, variables=None):
+        """ Generate a sequence of datasets holding the requested temporal
+        subset of the time-series.
         Optionally, the returned variables can be restricted by the user defined
         list of variables.
-        The optional subsampler can be used to get a subset of the matched
-        times.
         The start and stop UTC times should be instances of the
         datetime.datetime object.
         The output time-stamps are encoded as CDF-epoch times.

@@ -84,12 +84,15 @@ class Dataset(OrderedDict):
                 for variable, data in dataset.iteritems():
                     self.set(variable, data, dataset.cdf_type.get(variable))
 
-    def subset(self, index):
+    def subset(self, index, always_copy=True):
         """ Get subset of the dataset defined by the array of indices. """
-        dataset = Dataset(
-            ((var, data[index]) for var, data in self.iteritems()),
-        )
-        dataset.cdf_type.update(self.cdf_type)
+        if index is None: # no-index means select all
+            dataset = Dataset(self) if always_copy else self
+        else:
+            dataset = Dataset(
+                ((var, data[index]) for var, data in self.iteritems()),
+            )
+            dataset.cdf_type.update(self.cdf_type)
         return dataset
 
     def extract(self, variables):

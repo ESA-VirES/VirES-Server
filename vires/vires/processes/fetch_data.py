@@ -48,13 +48,13 @@ from vires.time_util import (
 )
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
-    get_formatter, CDF_EPOCH_TYPE,
+    timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE,
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2,
     IndexKp, IndexDst,
-    BoundingBoxFilter,
+    BoundingBoxFilter, MinStepSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
 )
 
@@ -64,6 +64,9 @@ MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
 
 # maximum allowed time selection period
 MAX_TIME_SELECTION = timedelta(days=31)
+
+# maximum allowed time selection period
+BASE_SAMPLIG_RATE = timedelta(seconds=20)
 
 # set of the minimum required variables
 REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
@@ -184,12 +187,17 @@ class FetchData(WPSProcess):
             ), ", ".join(model.name for model in models),
         )
 
+        # TODO: calculate the optimal sampling rate
+
         # prepare list of the extracted non-mandatory variables
         if sources:
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
+            sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
+                BASE_SAMPLIG_RATE, CDF_EPOCH_TYPE
+            ))
             if bbox:
                 filter_bbox = BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
             else:
@@ -251,9 +259,12 @@ class FetchData(WPSProcess):
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
                 for dataset in dataset_iterator:
+                    # sub-sample data
+                    index = sampler.filter(dataset)
                     # apply the optional bounding box filter
                     if filter_bbox:
-                        dataset = dataset.subset(filter_bbox.filter(dataset))
+                        index = filter_bbox.filter(dataset, index)
+                    dataset = dataset.subset(index)
 
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length

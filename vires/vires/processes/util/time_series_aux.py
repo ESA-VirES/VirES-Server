@@ -68,8 +68,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
     def variables(self):
         return self._varmap.values()
 
-    def subset(self, start, stop, variables=None, subsampler=None):
-        # TODO: sub-sampling ?
+    def subset(self, start, stop, variables=None):
         variables = self.get_extracted_variables(variables)
         self.logger.debug("subset: %s %s", start, stop)
         self.logger.debug("variables: %s", variables)

@@ -26,13 +26,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, too-many-arguments
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
 from numpy import empty
 from eoxserver.backends.access import connect
-from vires.util import include, between
+from vires.util import between
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
     CDF_EPOCH_TYPE,
@@ -62,7 +62,7 @@ class ProductTimeSeries(TimeSeries):
     def variables(self):
         return [band.identifier for band in self.collection.range_type]
 
-    def subset(self, start, stop, variables=None, subsampler=None):
+    def subset(self, start, stop, variables=None):
         products_qs = Product.objects.filter(
             collections=self.collection,
             begin_time__lte=(stop + self.TIME_TOLERANCE),
@@ -97,12 +97,6 @@ class ProductTimeSeries(TimeSeries):
 
                 self.logger.debug("product slice %s:%s", low, high)
 
-                # sub-sampling
-                if subsampler:
-                    subset_idx = subsampler(times[low:high], time_type)
-                else:
-                    subset_idx = None
-
                 # prepare list of variables
                 extracted_variables = self.get_extracted_variables(variables)
 
@@ -112,9 +106,7 @@ class ProductTimeSeries(TimeSeries):
                 dataset = Dataset()
                 for variable in extracted_variables:
                     cdf_var = cdf.raw_var(variable)
-                    data = cdf_var[low:high:20] # TODO: FIXME!!!
-                    if subset_idx is not None:
-                        data = data[subset_idx]
+                    data = cdf_var[low:high]
                     dataset.set(variable, data, cdf_var.type())
 
             self.logger.debug("dataset length: %s ", dataset.length)
