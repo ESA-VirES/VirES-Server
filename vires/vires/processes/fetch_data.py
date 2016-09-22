@@ -54,7 +54,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2,
     IndexKp, IndexDst,
-    MagneticModelResidual,
+    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
 )
 
 # maximum allowed time selection period
@@ -181,9 +181,17 @@ class FetchData(WPSProcess):
 
         # prepare list of the extracted non-mandatory variables
         if sources:
+            index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
+            index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
+            model_qdc = QuasiDipoleCoordinates()
+            model_mlt = MagneticLocalTime()
+
             available_variables = list(exclude(unique(chain.from_iterable(
                 source.variables for source in sources.itervalues().next()
-            )), REQUIRED_VARIABLES)) + ['Kp', 'Dst']
+            )), REQUIRED_VARIABLES)) + [
+                'Kp', 'Dst', 'QDLat', 'QDLon', 'MLT'
+            ]
+
             model_residuals = []
             for model in models:
                 available_variables.extend(model.variables)
@@ -203,11 +211,13 @@ class FetchData(WPSProcess):
                 # by default all variables are returned
                 output_variables = available_variables
 
-            # handle sources dependencies by adding intermediate variables
+            # handle sources' dependencies by adding intermediate variables
             _varset = set(output_variables)
             for model_residual in model_residuals:
                 if _varset.intersection(model_residual.variables):
                     _varset.update(model_residual.required_variables)
+            if _varset.intersection(model_mlt.variables):
+                _varset.update(model_mlt.required_variables)
             variables = list(_varset)
 
             # make sure the mandatory variables in the output
@@ -223,8 +233,6 @@ class FetchData(WPSProcess):
             output_variables = variables = []
 
         def _generate_data_():
-            index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
-            index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             for label, merged_sources in sources.iteritems():
                 ts_master, ts_slaves = merged_sources[0], merged_sources[1:]
                 # NOTE: the mandatory variables are always taken from the master
@@ -246,7 +254,10 @@ class FetchData(WPSProcess):
                     dataset.merge(
                         index_dst.interpolate(times, variables, None, cdf_type)
                     )
-                    # models
+                    # quasi-dipole coordinates and magnetic local time
+                    dataset.merge(model_qdc.eval(dataset, variables))
+                    dataset.merge(model_mlt.eval(dataset, variables))
+                    # spherical harmonics expansion models
                     for model in models:
                         dataset.merge(model.eval(dataset, variables))
                     # model residuals

@@ -33,6 +33,7 @@ from .time_series_product import ProductTimeSeries
 from .time_series_aux import  IndexKp, IndexDst
 from .model import Model
 from .model_magmod import MagneticModelResidual, MagneticModel
+from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
 from .interpolate import Interp1D
 from .input_parsers import (
     parse_style,

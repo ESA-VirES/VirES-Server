@@ -84,7 +84,7 @@ class MagneticModelResidual(Model):
 
 class MagneticModel(Model):
     """ Forward spherical expansion model. """
-    DEAFULT_REQUIRED_VARIABLES = [
+    DEFAULT_REQUIRED_VARIABLES = [
         "Timestamp", "Latitude", "Longitude", "Radius",
     ]
     BASE_VARIABLES = ["F", "B_NEC"]
@@ -96,15 +96,10 @@ class MagneticModel(Model):
     def __init__(self, model_name, model, logger=None, varmap=None):
         self.name = model_name
         self.model = model
-        if varmap:
-            # optional variable re-mapping
-            self._required_variables = [
-                varmap.get(var, var) for var in self.DEAFULT_REQUIRED_VARIABLES
-            ]
-        else:
-            # default required variables
-            self._required_variables = self.DEAFULT_REQUIRED_VARIABLES
-
+        varmap = varmap or {}
+        self._required_variables = [
+            varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
+        ]
         self._provided_variables = [
             "%s_%s" % (variable, model_name) for variable in self.BASE_VARIABLES
         ]
