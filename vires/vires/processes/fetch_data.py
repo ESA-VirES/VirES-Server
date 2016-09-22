@@ -67,7 +67,7 @@ MAX_TIME_SELECTION = timedelta(days=31)
 
 # maximum allowed time selection period
 BASE_SAMPLIG_STEP = timedelta(seconds=20)
-BASE_MIN_STEP = timedelta(seconds=0)
+BASE_MIN_STEP = timedelta(seconds=7)
 BASE_TIME_UNIT = timedelta(days=1)
 
 # set of the minimum required variables
