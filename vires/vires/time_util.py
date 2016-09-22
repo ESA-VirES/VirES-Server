@@ -62,6 +62,13 @@ def naive_to_utc(dt_obj):
     return dt_obj
 
 
+def utc_to_naive(dt_obj):
+    """ Convert naive `datetime.datetime` to UTC time-zone aware one. """
+    if dt_obj.tzinfo:
+        dt_obj = dt_obj.astimezone(TZ_UTC).replace(tzinfo=None)
+    return dt_obj
+
+
 def is_leap_year(year):
     """ Return boolean flag indicating whether the given year is a leap year
     or not.
@@ -157,6 +164,7 @@ def year_to_day2k(year):
 
 def datetime_to_mjd2000(dt_obj):
     """ Convert `datetime.datetime` object to Modified Julian Date 2000. """
+    dt_obj = utc_to_naive(dt_obj)
     day_fraction = time_to_day_fraction(
         dt_obj.hour, dt_obj.minute, dt_obj.second, dt_obj.microsecond
     )
@@ -176,7 +184,7 @@ def datetime_to_unix_epoch(dt_obj):
     """ Convert `datetime.datetime` object to number of UTC seconds since
     1970-01-01.
     """
-    return (dt_obj - DT_1970).total_seconds()
+    return (utc_to_naive(dt_obj) - DT_1970).total_seconds()
 
 
 def unix_epoch_to_datetime(ux_epoch):
@@ -201,6 +209,7 @@ def mjd2000_to_unix_epoch(mjd2k):
 
 def datetime_to_decimal_year(dt_obj):
     """ Convert `datetime.datetime` object to year fraction. """
+    dt_obj = utc_to_naive(dt_obj)
     d_fraction = time_to_day_fraction(
         dt_obj.hour, dt_obj.minute, dt_obj.second, dt_obj.microsecond
     )
