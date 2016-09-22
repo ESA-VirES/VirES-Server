@@ -28,6 +28,7 @@
 #-------------------------------------------------------------------------------
 
 from vires.cdf_util import CDF_EPOCH_TYPE
+from vires.util import include, unique
 
 class TimeSeries(object):
     """ Base time-series data source class. """
@@ -36,6 +37,14 @@ class TimeSeries(object):
     def variables(self):
         """ Get list of the provided variables. """
         raise NotImplementedError
+
+    def get_extracted_variables(self, variables):
+        """ Expand/filter input variables into applicable variables. """
+        if variables is None:
+            return self.variables # get all available variables
+        else:
+            # get an applicable subset of the requested variables
+            return list(include(unique(variables), self.variables))
 
     def subset(self, start, stop, variables=None, subsampler=None):
         """ Generate a sequence of datasets matched by the

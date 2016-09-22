@@ -131,15 +131,19 @@ class MagneticModel(Model):
             if cdf_type != CDF_EPOCH_TYPE:
                 raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
-            start = cdf_rawtime_to_datetime(min(times), cdf_type)
-            stop = cdf_rawtime_to_datetime(max(times), cdf_type)
-            mean_time = datetime_mean(start, stop)
-            mean_time_dy = datetime_to_decimal_year(mean_time)
-            self.logger.debug("requested time-span %s, %s", start, stop)
             self.logger.debug("requested dataset length %s", len(times))
-            self.logger.debug(
-                "applied mean time %s (%s)", mean_time, mean_time_dy
-            )
+            if len(times) > 0:
+                start = cdf_rawtime_to_datetime(min(times), cdf_type)
+                stop = cdf_rawtime_to_datetime(max(times), cdf_type)
+                mean_time = datetime_mean(start, stop)
+                mean_time_dy = datetime_to_decimal_year(mean_time)
+                self.logger.debug("requested time-span %s, %s", start, stop)
+                self.logger.debug(
+                    "applied mean time %s (%s)", mean_time, mean_time_dy
+                )
+            else:
+                mean_time_dy = 2000.0 # default in case of an empty time array
+
             # extract variable names
             # evaluate model
             model_data = self.model.eval(

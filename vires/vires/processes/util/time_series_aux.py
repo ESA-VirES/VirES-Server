@@ -30,7 +30,7 @@
 # TODO: replace query_* and query_*_int functions
 
 from logging import getLogger, LoggerAdapter
-from numpy import array
+from numpy import array, empty
 from vires.util import include
 from vires.cdf_util import (
     mjd2000_to_cdf_rawtime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_datetime,
@@ -70,10 +70,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
 
     def subset(self, start, stop, variables=None, subsampler=None):
         # TODO: sub-sampling ?
-        variables = list(
-            include(variables, self.variables) if variables is not None else
-            self.variables
-        )
+        variables = self.get_extracted_variables(variables)
         self.logger.debug("subset: %s %s", start, stop)
         self.logger.debug("variables: %s", variables)
         dataset = Dataset()
@@ -94,6 +91,13 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         # TODO: support for different CDF time types
         if cdf_type != CDF_EPOCH_TYPE:
             raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+        if len(times) == 0: # return an empty dataset
+            return Dataset(
+                (variable, empty(0))
+                for variable in self.get_extracted_variables(variables)
+            )
+
         variables = list(
             include(variables, self.variables) if variables is not None else
             self.variables

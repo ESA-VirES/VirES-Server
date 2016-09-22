@@ -30,6 +30,7 @@
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
+from numpy import empty
 from eoxserver.backends.access import connect
 from vires.util import include, between
 from vires.cdf_util import (
@@ -103,11 +104,7 @@ class ProductTimeSeries(TimeSeries):
                     subset_idx = None
 
                 # prepare list of variables
-                if variables is None:
-                    extracted_variables = list(cdf) # get all available variables
-                else:
-                    # get applicable subset of the requested variables
-                    extracted_variables = list(include(variables, cdf))
+                extracted_variables = self.get_extracted_variables(variables)
 
                 self.logger.debug("extracted variables %s", extracted_variables)
 
@@ -129,6 +126,12 @@ class ProductTimeSeries(TimeSeries):
         # TODO: support for different CDF time types
         if cdf_type != CDF_EPOCH_TYPE:
             raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+        if len(times) == 0: # return an empty dataset
+            return Dataset(
+                (variable, empty(0))
+                for variable in self.get_extracted_variables(variables)
+            )
 
         # get the time bounds
         start, stop = min(times), max(times)
