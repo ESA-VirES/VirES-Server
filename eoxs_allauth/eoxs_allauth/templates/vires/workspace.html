@@ -238,12 +238,12 @@
       
 
       <div class="page-header text-center">
-        <h1>Earth magnetic field as observed by satellite</h1>
-        <h3>ESA Swarm data is available for anyone to use via the virtual research platform VirES</h3>
+        <h1>Earth's magnetic field as observed by satellite</h1>
+        <h3>ESA Swarm data available for anyone to use via the virtual research platform VirES</h3>
       </div>
 
         <p class="lead text-center">
-          VirES for Swarm is a highly interactive data manipulation and retrieval interface for the <a href="https://earth.esa.int/swarm" target="_blank">ESA Swarm constellation mission</a> magnetic products. It includes tools for studying various Earth magnetic models by comparing them to the Swarm satellite measurements at given solar activity levels.
+          VirES for Swarm is a highly interactive data manipulation and retrieval interface for the <a href="https://earth.esa.int/swarm" target="_blank">ESA Swarm constellation mission</a> magnetic products. It includes tools for studying various geomagnetic models by comparing them to the Swarm satellite measurements at given space weather and ionospheric conditions.
         </p> 
         
         <hr>
@@ -277,14 +277,21 @@
           <div class="divider"></div>
 
           <p>
-              Swarm product data are visualized at the platform plotted over the map and
-              shown in the analytics view. The time-slider and various controls offer the
+              Magnetic and plasmatic Swarm product data can be visualized on the platform 
+              plotted over the globe and shown in a scatterplot. The scatterplot allows for dual y-axes with independent zoom and panning features.
+              The time slider and various controls offer the
               possibility to make selections and set criteria for data filtering and visualization
-              which immediately take effect on the display. The subset of Swarm data
-              selected by the user in this way can be downloaded in different encoding
-              formats. In addition, the Swarm data can be visually and numerically compared
-              to geomagnetic models, analysed with respect to Solar activity situation,
-              and publication-ready plots and diagrammes be generated.
+              which immediately take effect on the display.
+          </p>
+          <p>
+              The subset of Swarm data selected by the user in this way can be downloaded in different encoding
+              formats. The data downloaded can be combined to fit your use case. 
+          </p>
+          <p>
+              VirES enables 
+              visual and numerical comparison with geomagnetic models, analysis with respect to 
+              various ancillary data and generation of publication-ready plots and diagrammes in an
+              intuitive and powerful yet customizable inteface.
           </p> 
           
           <hr>
@@ -305,9 +312,18 @@
           
           <hr>
          
-          <p>
-            The complete sets of magnetic vector and scalar data at 1 Hz rate at exact UTC seconds is provided for the A, B, and C Swarm satellites (<a target="_blank" href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_1b_Product_Definitions">Swarm Level 1b Products MAGX_LR_1B</a>).
-          </p>
+          <p>The following products are taken from all three Swarm Satellites:</p>
+          <ul>
+            <li style="list-style-type: circle;"> 
+            The magnetic vector and scalar data at a 1 Hz at exact UTC seconds (<a target="_blank" href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_1b_Product_Definitions#MAGX_LR_1B_Product">Swarm MAGX_LR_1B</a>).
+            </li>
+            <li style="list-style-type: circle;">
+            The official plasma data including electron temperature and density at 2 Hz (<a target="_blank" href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_1b_Product_Definitions#EFIX_PL_1B_Product">Swarm EFIX_PL_1B</a>).
+            <li style="list-style-type: circle;">
+            The ionospheric bubble index data (<a target="_blank" href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_2_Product_Definitions">Swarm IBIxTMS_2F</a>).
+            </li>
+          </ul>
+          
           <p>The following models of the Earth's magnetic field and its time variation are pre-loaded:</p>
           <ul>
             <li style="list-style-type: circle;"> 
@@ -330,6 +346,10 @@
               The disturbances in the horizontal component of the Earth's magnetic field (<a target="_blank" href="https://en.wikipedia.org/wiki/K-index">planetary Kp Index</a>)
             </li>
           </ul>
+          
+          <p>
+            The data accessible on VirES consists of the newest versions available and any new data will appear within 4 hours of generation.
+          </p>
 
         </div><!--/col-->
     </div><!--/container-->
@@ -346,30 +366,29 @@
 
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3 larger">
-          <h1>Sign-up</h1>
+          <h1>Sign up</h1>
           
           <hr>
          
           <p>
-            Swarm for VirES service and data are 100% free. To access Swarm data you
-            need to sign-up (register) as a user by providing user profile information
-            such as user name, email address, title, country, institution, and an executive
-            description of the the project in which your Swarm data is being used. 
+            To access Swarm data you simply sign up (register) as a user by providing user profile information
+            such as username, email and optionally title, country, institution and an executive
+            description of the the project in which your Swarm data is being used.
           </p>
           
           <hr>
 
           <div style="text-align: center">
-            <p style="text-align: center;">Sign-up using your preferred social provider:</p>
-            <ul class="socialaccount_providers">
-              {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
-            </ul>
-            <p style="text-align: center;">or sign-up directly:</p>
+            <p style="text-align: center;">Sign up directly:</p>
             <div style="margin-top: 2em;">
               <a class="linkbutton" href="{% url 'account_signup' %}">Sign-up</a>
             </div>
+            <p style="text-align: center;">or sign up using your preferred social provider:</p>
+            <ul class="socialaccount_providers">
+              {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
+            </ul>
             <div class="divider"></div>
-            <p style="text-align: center;">Google Chrome is the recommended browser.</p>
+            <p style="text-align: center;">The service will work on most modern browsers, but using the service on Google Chrome has been found to give the best results. We therefore recommend the use of Chrome.</p>
           </div>
           
         </div><!--/col-->
