@@ -380,10 +380,10 @@
 
           <div style="text-align: center">
             <p style="text-align: center;">Sign up directly:</p>
-            <div style="margin-top: 2em;">
+            <div>
               <a class="linkbutton" href="{% url 'account_signup' %}">Sign-up</a>
             </div>
-            <p style="text-align: center;">or sign up using your preferred social provider:</p>
+            <p style="text-align: center; margin-top: 2em;">or sign up using your preferred social provider:</p>
             <ul class="socialaccount_providers">
               {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
             </ul>
