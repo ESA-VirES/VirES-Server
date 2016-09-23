@@ -59,7 +59,7 @@ def naive_to_utc(dt_obj):
     """ Convert naive `datetime.datetime` to UTC time-zone aware one. """
     if dt_obj.tzinfo is None:
         dt_obj = dt_obj.replace(tzinfo=TZ_UTC)
-    return dt_obj
+    return dt_obj.astimezone(TZ_UTC)
 
 
 def utc_to_naive(dt_obj):

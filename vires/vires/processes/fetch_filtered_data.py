@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# WPS process fetching data from multiple collection to the client.
+# WPS fetch filtered download data
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -27,20 +27,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments, too-many-locals, too-many-branches
+# pylint: disable=too-many-arguments, too-many-locals, too-many-branches,
+# pylint: disable=too-many-branches, too-many-statements
 
+from os import remove
+from os.path import join, exists
+from uuid import uuid4
 from itertools import chain, izip
 from datetime import datetime, timedelta
-from cStringIO import StringIO
 from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData,
-    BoundingBoxData,
     ComplexData,
-    FormatText, FormatJSON,
-    CDFileWrapper,
+    FormatText, FormatJSON, FormatBinaryRaw,
+    CDFile,
 )
 from eoxserver.services.ows.wps.exceptions import ExecuteError
+from vires.config import SystemConfigReader
 from vires.util import unique, exclude, include
 from vires.time_util import (
     naive_to_utc,
@@ -48,27 +51,21 @@ from vires.time_util import (
 )
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
-    timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE,
+    get_formatter, CDF_EPOCH_TYPE, cdf_open,
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2,
+    parse_collections, parse_models2, parse_filters,
     IndexKp, IndexDst,
-    BoundingBoxFilter, MinStepSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
 )
 
-# TODO: Make following parameters configurable.
-# Limit response size (equivalent to 1/2 daily SWARM MAG LR product).
-MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
+# TODO: Make the limits configurable.
+# Limit response size (equivalent to 5 daily SWARM LR products).
+MAX_SAMPLES_COUNT = 432000
 
 # maximum allowed time selection period
 MAX_TIME_SELECTION = timedelta(days=31)
-
-# maximum allowed time selection period
-BASE_SAMPLIG_STEP = timedelta(seconds=20)
-BASE_MIN_STEP = timedelta(seconds=7)
-BASE_TIME_UNIT = timedelta(days=1)
 
 # set of the minimum required variables
 REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
@@ -81,12 +78,13 @@ CDF_RAW_TIME_CONVERTOR = {
     "Unix epoch": cdf_rawtime_to_unix_epoch,
 }
 
-class FetchData(WPSProcess):
-    """ Process retrieving registered Swarm data based on collection, time
-    interval and additional optional parameters.
-    This process is designed to be used by the web-client.
+
+class FetchFilteredData(WPSProcess):
+    """ Process retrieving subset of the registered Swarm data based
+    on collection, time interval and optional additional custom filters.
+    This process is designed to be used for the data download.
     """
-    identifier = "vires:fetch_data"
+    identifier = "vires:fetch_filtered_data"
     title = "Fetch merged SWARM products."
     metadata = {}
     profiles = ["vires"]
@@ -109,9 +107,14 @@ class FetchData(WPSProcess):
             'end_time', datetime, optional=False, title="End time",
             abstract="End of the selection time interval",
         )),
-        ("bbox", BoundingBoxData(
-            "bbox", crss=(4326,), optional=True, title="Bounding box",
-            abstract="Optional selection bounding box.", default=None,
+        ("filters", LiteralData(
+            'filters', str, optional=True, default="",
+            abstract=(
+                "Set of semi-colon-separated filters. The identifier and "
+                "extent are separated by a colon and the range bounds "
+                "are separated by a comma. "
+                "E.g., 'F:10000,20000;Latitude:-50,50'"
+            ),
         )),
         ("requested_variables", LiteralData(
             'variables', str, optional=True, default=None,
@@ -146,17 +149,23 @@ class FetchData(WPSProcess):
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Output data", formats=FormatText('text/csv')
+            'output', title="Output data", formats=(
+                FormatText('text/csv'),
+                FormatBinaryRaw("application/cdf"),
+                FormatBinaryRaw("application/x-cdf"),
+            )
         )),
     ]
 
-    def execute(self, collection_ids, begin_time, end_time, bbox,
+    def execute(self, collection_ids, begin_time, end_time, filters,
                 requested_variables, model_ids, shc,
                 csv_time_format, output, **kwarg):
         """ Execute process """
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
         models = parse_models2("model_ids", model_ids, shc)
+        filters = parse_filters("filters", filters)
+
         if requested_variables is not None:
             requested_variables = [
                 var.strip() for var in requested_variables.split(',')
@@ -178,41 +187,17 @@ class FetchData(WPSProcess):
 
         # log the request
         self.access_logger.info(
-            "request: toi: (%s, %s), aoi: %s, collections: (%s), "
-            "models: (%s), ",
+            "request parameters: toi: (%s, %s), collections: (%s), "
+            "models: (%s), filters: {%s}",
             begin_time.isoformat("T"), end_time.isoformat("T"),
-            bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
             ", ".join(
                 s.collection.identifier for l in sources.values() for s in l
             ),
             ", ".join(model.name for model in models),
+            ", ".join(
+                "%s: (%g, %g)" % (k, v[0], v[1]) for k, v in filters.iteritems()
+            )
         )
-
-        # TODO: calculate the optimal sampling step
-
-        if bbox:
-            relative_area = abs(
-                (bbox.upper[0] - bbox.lower[0]) *
-                (bbox.upper[1] - bbox.lower[1])
-            ) / 64800.0
-        else:
-            relative_area = 1.0
-
-        relative_time = (
-            (end_time - begin_time).total_seconds() /
-            BASE_TIME_UNIT.total_seconds()
-        )
-
-        self.logger.debug("relative area: %s", relative_area)
-        self.logger.debug("relative time: %s", relative_time)
-
-        samplig_step = timedelta(seconds=(
-            BASE_MIN_STEP.total_seconds() +
-            relative_area * relative_time *
-            (BASE_SAMPLIG_STEP - BASE_MIN_STEP).total_seconds()
-        ))
-
-        self.logger.debug("sampling step: %s", samplig_step)
 
         # prepare list of the extracted non-mandatory variables
         if sources:
@@ -220,13 +205,6 @@ class FetchData(WPSProcess):
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
-            sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
-                samplig_step, CDF_EPOCH_TYPE
-            ))
-            if bbox:
-                filter_bbox = BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
-            else:
-                filter_bbox = None
 
             available_variables = list(exclude(unique(chain.from_iterable(
                 source.variables for source in sources.itervalues().next()
@@ -276,34 +254,30 @@ class FetchData(WPSProcess):
             total_count = 0
 
             for label, merged_sources in sources.iteritems():
-                collection_count = 0
-
                 ts_master, ts_slaves = merged_sources[0], merged_sources[1:]
                 # NOTE: the mandatory variables are always taken from the master
                 dataset_iterator = ts_master.subset(
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
                 for dataset in dataset_iterator:
-                    # sub-sample data
-                    index = sampler.filter(dataset)
-                    # apply the optional bounding box filter
-                    if filter_bbox:
-                        index = filter_bbox.filter(dataset, index)
-                    dataset = dataset.subset(index)
+
+                    # TODO: complete filtering implementation
+                    #index = None
+                    #for filter_ in filters:
+                    #    index = filtert_.filter(dataset)
+                    #dataset = dataset.subset(index)
 
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
-                    collection_count += dataset.length
-                    if collection_count > MAX_SAMPLES_COUNT_PER_COLLECTION:
+                    if total_count > MAX_SAMPLES_COUNT:
                         self.access_logger.error(
                             "The sample count %d exceeds the maximum allowed "
-                            "count of %d samples per collection!",
-                            collection_count, MAX_SAMPLES_COUNT_PER_COLLECTION
+                            "count of %d samples!",
+                            total_count, MAX_SAMPLES_COUNT,
                         )
                         raise ExecuteError(
                             "Requested data exceeds the maximum limit of %d "
-                            "samples per collection!" %
-                            MAX_SAMPLES_COUNT_PER_COLLECTION
+                            "records!" % MAX_SAMPLES_COUNT
                         )
 
                     # subordinate interpolated datasets
@@ -329,44 +303,103 @@ class FetchData(WPSProcess):
                     # model residuals
                     for model_residual in model_residuals:
                         dataset.merge(model_residual.eval(dataset, variables))
-                    yield label, dataset.extract(output_variables)
+                    # TODO: product list
+                    yield label, [], dataset.extract(output_variables)
 
             self.access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
                 total_count, output['mime_type'], ", ".join(output_variables)
             )
 
-        # write the output
-        output_fobj = StringIO()
+        # === OUTPUT ===
 
-        initialize = True
-        for label, dataset in _generate_data_():
+        # get configurations
+        conf_sys = SystemConfigReader()
+        temp_basename = join(conf_sys.path_temp, "vires_" + uuid4().hex)
+        result_basename = "%s_%s_%s_MDR_MAG_Filtered" % (
+            "_".join(
+                s.collection.identifier for l in sources.values() for s in l
+            ),
+            begin_time.strftime("%Y%m%dT%H%M%S"),
+            end_time.strftime("%Y%m%dT%H%M%S"),
+        )
 
-            # convert all time variables to the target file-format
-            for variable, data in dataset.iteritems():
-                cdf_type = dataset.cdf_type.get(variable)
-                if cdf_type == CDF_EPOCH_TYPE:
-                    dataset[variable] = CDF_RAW_TIME_CONVERTOR[csv_time_format](
-                        data, cdf_type
-                    )
+        if output['mime_type'] == "text/csv":
+            temp_filename = temp_basename + ".csv"
+            result_filename = result_basename + ".csv"
+            time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
+            initialize = True
 
-            if initialize:
-                output_fobj.write("id,")
-                output_fobj.write(",".join(dataset.iterkeys()))
-                output_fobj.write("\r\n")
-                formatters = [
-                    get_formatter(data, dataset.cdf_type.get(variable))
-                    for variable, data in dataset.iteritems()
-                ]
-                initialize = False
+            with open(temp_filename, "wb") as output_fobj:
 
-            label_prefix = "%s," % label
-            for row in izip(*dataset.itervalues()):
-                output_fobj.write(label_prefix)
-                output_fobj.write(
-                    ",".join(f(v) for f, v in zip(formatters, row))
-                )
-                output_fobj.write("\r\n")
+                for label, _, dataset in _generate_data_():
+                    # convert all time variables to the target file-format
+                    for variable, data in dataset.iteritems():
+                        cdf_type = dataset.cdf_type.get(variable)
+                        if cdf_type == CDF_EPOCH_TYPE:
+                            dataset[variable] = time_convertor(data, cdf_type)
 
-        http_headers = ()
-        return CDFileWrapper(output_fobj, headers=http_headers, **output)
+                    if initialize:
+                        output_fobj.write("id,")
+                        output_fobj.write(",".join(dataset.iterkeys()))
+                        output_fobj.write("\r\n")
+                        formatters = [
+                            get_formatter(data, dataset.cdf_type.get(variable))
+                            for variable, data in dataset.iteritems()
+                        ]
+                        initialize = False
+
+                    label_prefix = "%s," % label
+                    for row in izip(*dataset.itervalues()):
+                        output_fobj.write(label_prefix)
+                        output_fobj.write(
+                            ",".join(f(v) for f, v in zip(formatters, row))
+                        )
+                        output_fobj.write("\r\n")
+
+
+        elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
+            temp_filename = temp_basename + ".cdf"
+            result_filename = result_basename + ".cdf"
+            initialize = True
+
+            if exists(temp_filename):
+                remove(temp_filename)
+
+            product_list = []
+            labels = []
+            with cdf_open(temp_filename, 'w') as cdf:
+                for label, products, dataset in _generate_data_():
+                    labels.append(label)
+                    product_list.extend(products)
+
+                    if initialize: # write the first dataset
+                        initialize = False
+                        for variable, values in dataset.iteritems():
+                            cdf.new(
+                                variable, values, dataset.cdf_type.get(variable)
+                            )
+                            cdf[variable].attrs.update(
+                                dataset.cdf_attr.get(variable, {})
+                            )
+                    else: # write follow-on dataset
+                        for field, values in dataset.iteritems():
+                            cdf[field].extend(values)
+
+                # add the global attributes
+                cdf.attrs.update({
+                    "TITLE": result_filename,
+                    "DATA_TIMESPAN": ("%s/%s" % (
+                        begin_time.isoformat(), end_time.isoformat()
+                    )).replace("+00:00", "Z"),
+                    #"DATA_FILTERS": format_filters(filters), #TODO: filter formatting
+                    "SOURCES": labels,
+                    "ORIGINAL_PRODUCT_NAMES:": product_list,
+                })
+
+        else:
+            ExecuteError(
+                "Unexpected output format %r requested!" % output['mime_type']
+            )
+
+        return CDFile(temp_filename, filename=result_filename, **output)
