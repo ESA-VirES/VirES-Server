@@ -26,10 +26,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments
 
 from logging import getLogger, LoggerAdapter
-from numpy import arange
 from vires.util import between
+
+def apply_filters(dataset, filters, filters_applied=None, index=None):
+    """ Apply list of filters to a dataset.
+    The function returns a new dataset subset, list of applied filters,
+    and list of filters not applied due to the missing required dataset
+    variables.
+    """
+    applied = [] if filters_applied is None else list(filters_applied)
+    remaining = []
+    varset = set(dataset)
+    for filter_ in filters:
+        if varset.issuperset(filter_.required_variables):
+            index = filter_.filter(dataset, index)
+            applied.append(filter_)
+        else:
+            remaining.append(filter_)
+    return dataset.subset(index), applied, remaining
 
 
 class Filter(object):
@@ -48,37 +65,82 @@ class Filter(object):
         raise NotImplementedError
 
 
-class ScalarRangeFilter(Filter):
-    """ Simple scalar value range filter. """
+class BaseRangeFilter(Filter):
+    """ Base scalar value range filter. """
+    # pylint: disable=abstract-method
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return 'filter %s: %s' % (self.extra["variable"], msg), kwargs
 
-    def __init__(self, variable, vmin, vmax, logger=None):
+    def __init__(self, variable, vmin, vmax, logger):
         self.variable = variable
         self.vmin = vmin
         self.vmax = vmax
-        self.logger = self._LoggerAdapter(
-            logger or getLogger(__name__), {"variable": self.variable}
-        )
+        self.logger = logger
+
+    @property
+    def label(self):
+        """ Get filter label. """
+        return self.variable
 
     @property
     def required_variables(self):
         return [self.variable]
 
-    def filter(self, dataset, index=None):
+    def _filter(self, data):
+        """ Low level filter. """
         self.logger.debug("value range: %s %s", self.vmin, self.vmax)
-        return self._filter(dataset[self.variable], index)
+        self.logger.debug("initial size: %d", data.shape[0])
+        return between(data, self.vmin, self.vmax)
 
-    def _filter(self, data, index):
-        """ Low-level range filter. """
+    def __str__(self):
+        return "%s:%.17g,%.17g" % (self.label, self.vmin, self.vmax)
+
+
+class ScalarRangeFilter(BaseRangeFilter):
+    """ Simple scalar value range filter. """
+
+    def __init__(self, variable, vmin, vmax, logger=None):
+        BaseRangeFilter.__init__(
+            self, variable, vmin, vmax, self._LoggerAdapter(
+                logger or getLogger(__name__), {"variable": variable}
+            )
+        )
+
+    def filter(self, dataset, index=None):
+        data = dataset[self.variable]
         if index is None:
-            self.logger.debug("initial size: %d", data.size)
-            index = between(data, self.vmin, self.vmax).nonzero()[0]
-        else:
-            self.logger.debug("initial size: %d", index.size)
-            index = index[between(data[index], self.vmin, self.vmax)]
+            index = self._filter(data).nonzero()[0]
+        if index is None:
+            index = index[self._filter(data[index])]
+        self.logger.debug("filtered size: %d", index.size)
+        return index
+
+
+class VectorComponentRangeFilter(BaseRangeFilter):
+    """ Single vector component range filter. """
+
+    def __init__(self, variable, component, vmin, vmax, logger=None):
+        BaseRangeFilter.__init__(
+            self, variable, vmin, vmax, self._LoggerAdapter(
+                logger or getLogger(__name__), {
+                    "variable": "%s[%s]" % (variable, component)
+                }
+            )
+        )
+        self.component = component
+
+    @property
+    def label(self):
+        return "%s[%d]" % (self.variable, self.component)
+
+    def filter(self, dataset, index=None):
+        data = dataset[self.variable]
+        if index is None:
+            index = self._filter(data[:, self.component]).nonzero()[0]
+        if index is None:
+            index = index[self._filter(data[index, self.component])]
         self.logger.debug("filtered size: %d", index.size)
         return index
 
@@ -101,3 +163,6 @@ class BoundingBoxFilter(Filter):
         for filter_ in self.filters:
             index = filter_.filter(dataset, index)
         return index
+
+    def __str__(self):
+        ";".join(str(filter_) for filter_ in self.filters)

@@ -101,6 +101,10 @@ class Dataset(OrderedDict):
         """ Get subset of the dataset defined by the array of indices. """
         if index is None: # no-index means select all
             dataset = Dataset(self) if always_copy else self
+        elif self.length == 0 and index.size == 0:
+            # Older Numpy versions fail to apply zero subset of a zero size
+            # multi-dimensional array.
+            dataset = Dataset(self)
         else:
             dataset = Dataset(
                 ((var, data[index]) for var, data in self.iteritems()),

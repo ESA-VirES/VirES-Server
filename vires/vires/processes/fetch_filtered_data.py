@@ -55,7 +55,7 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2, parse_filters,
+    parse_collections, parse_models2, parse_filters2, apply_filters,
     IndexKp, IndexDst,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
 )
@@ -164,7 +164,10 @@ class FetchFilteredData(WPSProcess):
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
         models = parse_models2("model_ids", model_ids, shc)
-        filters = parse_filters("filters", filters)
+        self.logger.debug("filters: %s", filters)
+        filters = parse_filters2("filters", filters)
+        self.logger.debug("filters: %s", filters)
+        self.logger.debug("filters: %s", ";".join(str(f) for f in filters))
 
         if requested_variables is not None:
             requested_variables = [
@@ -195,7 +198,7 @@ class FetchFilteredData(WPSProcess):
             ),
             ", ".join(model.name for model in models),
             ", ".join(
-                "%s: (%g, %g)" % (k, v[0], v[1]) for k, v in filters.iteritems()
+                "%s: (%g, %g)" % (f.label, f.vmin, f.vmax) for f in filters
             )
         )
 
@@ -238,6 +241,10 @@ class FetchFilteredData(WPSProcess):
                     _varset.update(model_residual.required_variables)
             if _varset.intersection(model_mlt.variables):
                 _varset.update(model_mlt.required_variables)
+            for filter_ in filters:
+                _varset.update(filter_.required_variables)
+            # make sure only the available variables are evaluated
+            _varset.intersection_update(available_variables)
             variables = list(_varset)
 
             # make sure the mandatory variables in the output
@@ -259,14 +266,9 @@ class FetchFilteredData(WPSProcess):
                 dataset_iterator = ts_master.subset(
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
+                applied, remaining = [], filters
                 for dataset in dataset_iterator:
-
-                    # TODO: complete filtering implementation
-                    #index = None
-                    #for filter_ in filters:
-                    #    index = filtert_.filter(dataset)
-                    #dataset = dataset.subset(index)
-
+                    dataset, applied, remaining = apply_filters(dataset, filters)
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     if total_count > MAX_SAMPLES_COUNT:
@@ -287,22 +289,51 @@ class FetchFilteredData(WPSProcess):
                         dataset.merge(
                             ts_slave.interpolate(times, variables, {}, cdf_type)
                         )
+                        dataset, applied, remaining = apply_filters(
+                            dataset, remaining, applied
+                        )
                     # auxiliary datasets
                     dataset.merge(
                         index_kp.interpolate(times, variables, None, cdf_type)
                     )
+                    dataset, applied, remaining = apply_filters(
+                        dataset, remaining, applied
+                    )
                     dataset.merge(
                         index_dst.interpolate(times, variables, None, cdf_type)
                     )
+                    dataset, applied, remaining = apply_filters(
+                        dataset, remaining, applied
+                    )
                     # quasi-dipole coordinates and magnetic local time
                     dataset.merge(model_qdc.eval(dataset, variables))
+                    dataset, applied, remaining = apply_filters(
+                        dataset, remaining, applied
+                    )
                     dataset.merge(model_mlt.eval(dataset, variables))
+                    dataset, applied, remaining = apply_filters(
+                        dataset, remaining, applied
+                    )
                     # spherical harmonics expansion models
                     for model in models:
                         dataset.merge(model.eval(dataset, variables))
+                        dataset, applied, remaining = apply_filters(
+                            dataset, remaining, applied
+                        )
                     # model residuals
                     for model_residual in model_residuals:
                         dataset.merge(model_residual.eval(dataset, variables))
+                        dataset, applied, remaining = apply_filters(
+                            dataset, remaining, applied
+                        )
+
+                    if remaining:
+                        raise ExecuteError(
+                            "Failed to apply some of the filters "
+                            "due to missing source variables! filters: %s" %
+                            "; ".join(str(f) for f in remaining)
+                        )
+
                     # TODO: product list
                     yield label, [], dataset.extract(output_variables)
 
@@ -392,7 +423,7 @@ class FetchFilteredData(WPSProcess):
                     "DATA_TIMESPAN": ("%s/%s" % (
                         begin_time.isoformat(), end_time.isoformat()
                     )).replace("+00:00", "Z"),
-                    #"DATA_FILTERS": format_filters(filters), #TODO: filter formatting
+                    "DATA_FILTERS": [str(f) for f in filters],
                     "SOURCES": labels,
                     "ORIGINAL_PRODUCT_NAMES:": product_list,
                 })

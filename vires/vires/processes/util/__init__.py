@@ -28,7 +28,10 @@
 #-------------------------------------------------------------------------------
 
 from .dataset import Dataset
-from .filters import Filter, ScalarRangeFilter, BoundingBoxFilter
+from .filters import (
+    apply_filters, Filter, ScalarRangeFilter, VectorComponentRangeFilter,
+    BoundingBoxFilter,
+)
 from .filters_subsampling import MinStepSampler
 from .time_series import TimeSeries
 from .time_series_product import ProductTimeSeries
@@ -38,12 +41,9 @@ from .model_magmod import MagneticModelResidual, MagneticModel
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
 from .interpolate import Interp1D
 from .input_parsers import (
-    parse_style,
-    parse_collections,
-    parse_model,
-    parse_models,
-    parse_models2,
-    parse_filters,
+    parse_style, parse_collections,
+    parse_model, parse_models, parse_models2,
+    parse_filters, parse_filters2,
 )
 from .png_output import (
     data_to_png,
