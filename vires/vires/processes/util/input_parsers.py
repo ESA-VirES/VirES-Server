@@ -26,6 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+import re
 from collections import OrderedDict
 from eoxmagmod import read_model_shc
 from eoxserver.contrib import gdal
@@ -34,6 +35,9 @@ from vires.util import get_color_scale, get_model
 from vires.models import ProductCollection
 from .time_series_product import ProductTimeSeries
 from .model_magmod import MagneticModel
+from .filters import ScalarRangeFilter, VectorComponentRangeFilter
+
+RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
 
 def parse_style(input_id, style):
     """ Parse style value and return the corresponding colour-map object. """
@@ -140,9 +144,7 @@ def parse_models(input_id, model_ids, shc, shc_input_id="shc"):
 
 
 def parse_models2(input_id, model_ids, shc, shc_input_id="shc"):
-    """ Parse model identifiers and returns an ordered dictionary
-    the corresponding models.
-    """
+    """ Parse model identifiers and returns a list of the model sources. """
     models = parse_models(input_id, model_ids, shc, shc_input_id)
     return [MagneticModel(id_, model) for id_, model in models.iteritems()]
 
@@ -150,7 +152,7 @@ def parse_models2(input_id, model_ids, shc, shc_input_id="shc"):
 def parse_filters(input_id, filter_string):
     """ Parse filters' string. """
     try:
-        filter_ = OrderedDict()
+        filters = OrderedDict()
         if filter_string.strip():
             for item in filter_string.split(";"):
                 name, bounds = item.split(":")
@@ -158,7 +160,32 @@ def parse_filters(input_id, filter_string):
                 if not name:
                     raise ValueError("Invalid empty filter name!")
                 lower, upper = [float(v) for v in bounds.split(",")]
-                filter_[name] = (lower, upper)
+                if name in filters:
+                    raise ValueError("Duplicate filter %r!" % name)
+                filters[name] = (lower, upper)
     except ValueError as exc:
         raise InvalidInputValueError(input_id, exc)
-    return filter_
+    return filters
+
+
+def parse_filters2(input_id, filter_string):
+    """ Parse filters' string and return list of the filter objects. """
+
+    def _get_filter(name, vmin, vmax):
+        match = RE_FILTER_NAME.match(name)
+        if match is None:
+            raise InvalidInputValueError(
+                input_id, "Invalid filter name %r" % name
+            )
+        variable, component = match.groups()
+        if component is None:
+            return ScalarRangeFilter(variable, vmin, vmax)
+        else:
+            return VectorComponentRangeFilter(
+                variable, int(component), vmin, vmax
+            )
+
+    return [
+        _get_filter(name, vmin, vmax) for name, (vmin, vmax)
+        in parse_filters(input_id, filter_string).iteritems()
+    ]

@@ -41,8 +41,11 @@ class Dataset(OrderedDict):
     def __init__(self, *args, **kwds):
         OrderedDict.__init__(self, *args, **kwds)
         self.cdf_type = {}
+        self.cdf_attr = {}
         if args and hasattr(args[0], 'cdf_type'):
             self.cdf_type.update(args[0].cdf_type)
+        if args and hasattr(args[0], 'cdf_attr'):
+            self.cdf_type.update(args[0].cdf_attr)
 
     @property
     def length(self):
@@ -51,7 +54,7 @@ class Dataset(OrderedDict):
         """
         return self.itervalues().next().shape[0] if len(self) else 0
 
-    def set(self, variable, data, cdf_type=None):
+    def set(self, variable, data, cdf_type=None, cdf_attr=None):
         """ Set variable. """
         data = array(data, copy=False)
         if len(self):
@@ -60,6 +63,8 @@ class Dataset(OrderedDict):
         self[variable] = data
         if cdf_type is not None:
             self.cdf_type[variable] = cdf_type
+        if cdf_attr is not None:
+            self.cdf_attr[variable] = cdf_attr
 
     def merge(self, dataset):
         """ Merge a dataset to this one. Unlike the update method the merge
@@ -68,7 +73,11 @@ class Dataset(OrderedDict):
         """
         for variable, data in dataset.iteritems():
             if variable not in self:
-                self.set(variable, data, dataset.cdf_type.get(variable))
+                self.set(
+                    variable, data,
+                    dataset.cdf_type.get(variable),
+                    dataset.cdf_attr.get(variable)
+                )
 
     def append(self, dataset):
         """ Append dataset of the same kind to this dataset. All variables
@@ -82,26 +91,41 @@ class Dataset(OrderedDict):
                 )
             else: # fill empty dataset
                 for variable, data in dataset.iteritems():
-                    self.set(variable, data, dataset.cdf_type.get(variable))
+                    self.set(
+                        variable, data,
+                        dataset.cdf_type.get(variable),
+                        dataset.cdf_attr.get(variable)
+                    )
 
     def subset(self, index, always_copy=True):
         """ Get subset of the dataset defined by the array of indices. """
         if index is None: # no-index means select all
             dataset = Dataset(self) if always_copy else self
+        elif self.length == 0 and index.size == 0:
+            # Older Numpy versions fail to apply zero subset of a zero size
+            # multi-dimensional array.
+            dataset = Dataset(self)
         else:
             dataset = Dataset(
                 ((var, data[index]) for var, data in self.iteritems()),
             )
             dataset.cdf_type.update(self.cdf_type)
+            dataset.cdf_attr.update(self.cdf_attr)
         return dataset
 
     def extract(self, variables):
         """ Get new subset containing only the selected variables. """
         dataset = Dataset()
         for variable in variables:
-            if variable in self:
+            try:
+                data = self[variable]
+            except KeyError:
+                pass # non-existent variables are silently ignored
+            else:
                 dataset.set(
-                    variable, self[variable], self.cdf_type.get(variable)
+                    variable, data,
+                    self.cdf_type.get(variable),
+                    self.cdf_attr.get(variable)
                 )
         return dataset
 
@@ -126,7 +150,8 @@ class Dataset(OrderedDict):
             data = self[variable]
             dataset.set(
                 variable, interp1d(data, kind).astype(data.dtype),
-                self.cdf_type.get(variable) # TODO: change the CDF type to float
+                self.cdf_type.get(variable), # TODO: change the CDF type to float
+                self.cdf_attr.get(variable)
             )
 
         return dataset

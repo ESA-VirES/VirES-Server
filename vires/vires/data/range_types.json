@@ -705,7 +705,7 @@
             "data_type": "Byte",
             "definition": "",
             "description": "",
-            "identifier": "",
+            "identifier": "SyncStatus",
             "name": "",
             "nil_values": [],
             "uom": ""
