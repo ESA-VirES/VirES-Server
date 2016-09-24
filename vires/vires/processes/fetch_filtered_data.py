@@ -265,23 +265,24 @@ class FetchFilteredData(WPSProcess):
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
                 for dataset in dataset_iterator:
+                    time_variable = ts_master.TIME_VARIABLE
+                    cdf_type = dataset.cdf_type[time_variable]
                     dataset, filters_left = dataset.filter(filters)
                     # subordinate interpolated datasets
-                    times = dataset[ts_master.TIME_VARIABLE]
-                    cdf_type = dataset.cdf_type[ts_master.TIME_VARIABLE]
                     for ts_slave in ts_slaves:
-                        dataset.merge(
-                            ts_slave.interpolate(times, variables, {}, cdf_type)
-                        )
+                        dataset.merge(ts_slave.interpolate(
+                            dataset[time_variable], variables, None, cdf_type
+                        ))
                         dataset, filters_left = dataset.filter(filters_left)
+                    self.logger.debug("dataset.length: %s", dataset.length)
                     # auxiliary datasets
-                    dataset.merge(
-                        index_kp.interpolate(times, variables, None, cdf_type)
-                    )
+                    dataset.merge(index_kp.interpolate(
+                        dataset[time_variable], variables, None, cdf_type
+                    ))
                     dataset, filters_left = dataset.filter(filters_left)
-                    dataset.merge(
-                        index_dst.interpolate(times, variables, None, cdf_type)
-                    )
+                    dataset.merge(index_dst.interpolate(
+                        dataset[time_variable], variables, None, cdf_type
+                    ))
                     dataset, filters_left = dataset.filter(filters_left)
                     # quasi-dipole coordinates and magnetic local time
                     dataset.merge(model_qdc.eval(dataset, variables))
