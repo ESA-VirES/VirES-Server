@@ -29,7 +29,7 @@
 
 from .dataset import Dataset
 from .filters import (
-    apply_filters, Filter, ScalarRangeFilter, VectorComponentRangeFilter,
+    Filter, ScalarRangeFilter, VectorComponentRangeFilter,
     BoundingBoxFilter,
 )
 from .filters_subsampling import MinStepSampler

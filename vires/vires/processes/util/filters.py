@@ -31,23 +31,6 @@
 from logging import getLogger, LoggerAdapter
 from vires.util import between
 
-def apply_filters(dataset, filters, filters_applied=None, index=None):
-    """ Apply list of filters to a dataset.
-    The function returns a new dataset subset, list of applied filters,
-    and list of filters not applied due to the missing required dataset
-    variables.
-    """
-    applied = [] if filters_applied is None else list(filters_applied)
-    remaining = []
-    varset = set(dataset)
-    for filter_ in filters:
-        if varset.issuperset(filter_.required_variables):
-            index = filter_.filter(dataset, index)
-            applied.append(filter_)
-        else:
-            remaining.append(filter_)
-    return dataset.subset(index), applied, remaining
-
 
 class Filter(object):
     """ Base filter class. """

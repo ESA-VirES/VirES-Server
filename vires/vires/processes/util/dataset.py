@@ -155,3 +155,18 @@ class Dataset(OrderedDict):
             )
 
         return dataset
+
+    def filter(self, filters, index=None, always_copy=False):
+        """ Filter dataset by the given list of filters.
+        The function returns a new dataset subset and list of filters
+        not applied due to the missing required dataset variables.
+        In case of no filter the same unchanged dataset is returned.
+        """
+        remaining = []
+        varset = set(self)
+        for filter_ in filters:
+            if varset.issuperset(filter_.required_variables):
+                index = filter_.filter(self, index)
+            else:
+                remaining.append(filter_)
+        return self.subset(index, always_copy), remaining

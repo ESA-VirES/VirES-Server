@@ -223,10 +223,11 @@ class FetchData(WPSProcess):
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 samplig_step, CDF_EPOCH_TYPE
             ))
+            filters = [sampler]
             if bbox:
-                filter_bbox = BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
-            else:
-                filter_bbox = None
+                filters.append(
+                    BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
+                )
 
             available_variables = list(exclude(unique(chain.from_iterable(
                 source.variables for source in sources.itervalues().next()
@@ -284,12 +285,8 @@ class FetchData(WPSProcess):
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
                 for dataset in dataset_iterator:
-                    # sub-sample data
-                    index = sampler.filter(dataset)
-                    # apply the optional bounding box filter
-                    if filter_bbox:
-                        index = filter_bbox.filter(dataset, index)
-                    dataset = dataset.subset(index)
+                    # apply the sub-sampling and bounding-box filters
+                    dataset, _ = dataset.filter(filters)
 
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
