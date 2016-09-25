@@ -47,6 +47,7 @@ from .time_series import TimeSeries
 class AuxiliaryDataTimeSeries(TimeSeries):
     """ Auxiliary data time-series class. """
     CDF_TYPE = {}
+    CDF_ATTR = {}
     TIME_VARIABLE = "Timestamp"
 
     class _LoggerAdapter(LoggerAdapter):
@@ -79,9 +80,10 @@ class AuxiliaryDataTimeSeries(TimeSeries):
                 if dst_var in variables:
                     data = data_dict[src_var]
                     cdf_type = self.CDF_TYPE.get(dst_var)
+                    cdf_attr = self.CDF_ATTR.get(dst_var)
                     if dst_var == self.TIME_VARIABLE:
                         data = mjd2000_to_cdf_rawtime(data, cdf_type)
-                    dataset.set(dst_var, data, cdf_type)
+                    dataset.set(dst_var, data, cdf_type, cdf_attr)
         self.logger.debug("dataset length: %s", dataset.length)
         return dataset
 
@@ -110,12 +112,18 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         self.logger.debug("variables: %s", variables)
         dataset = Dataset()
         if self.TIME_VARIABLE in variables:
-            dataset.set(self.TIME_VARIABLE, array(times), cdf_type)
+            dataset.set(
+                self.TIME_VARIABLE, array(times), cdf_type,
+                self.CDF_ATTR.get(self.TIME_VARIABLE),
+            )
         if self._name in variables:
             src_var, data = self._interp(
                 self._filename, cdf_rawtime_to_mjd2000(times, cdf_type)
             ).iteritems().next()
-            dataset.set(self._varmap[src_var], data)
+            dataset.set(
+                self._varmap[src_var], data, CDF_DOUBLE_TYPE,
+                self.CDF_ATTR.get(self._varmap[src_var]),
+            )
         self.logger.debug("interpolated dataset length: %s ", dataset.length)
         return dataset
 
@@ -123,6 +131,16 @@ class AuxiliaryDataTimeSeries(TimeSeries):
 class IndexKp(AuxiliaryDataTimeSeries):
     """ Kp index time-series source class. """
     CDF_TYPE = {'Timestamp': CDF_EPOCH_TYPE, 'Kp': CDF_UINT2_TYPE}
+    CDF_ATTR = {
+        'Timestamp': {
+            'DESCRIPTION': 'Time stamp',
+            'UNITS': '-',
+        },
+        'Kp': {
+            'DESCRIPTION': 'Global geo-magnetic storm index.',
+            'UNITS': '-',
+        },
+    }
 
     def __init__(self, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
@@ -134,6 +152,16 @@ class IndexKp(AuxiliaryDataTimeSeries):
 class IndexDst(AuxiliaryDataTimeSeries):
     """ Dst index time-series source class. """
     CDF_TYPE = {'Timestamp': CDF_EPOCH_TYPE, 'Dst': CDF_DOUBLE_TYPE}
+    CDF_ATTR = {
+        'Timestamp': {
+            'DESCRIPTION': 'Time stamp',
+            'UNITS': '-',
+        },
+        'Dst': {
+            'DESCRIPTION': 'Disturbance storm time index',
+            'UNITS': 'nT',
+        },
+    }
 
     def __init__(self, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(

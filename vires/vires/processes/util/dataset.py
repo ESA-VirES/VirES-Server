@@ -45,7 +45,7 @@ class Dataset(OrderedDict):
         if args and hasattr(args[0], 'cdf_type'):
             self.cdf_type.update(args[0].cdf_type)
         if args and hasattr(args[0], 'cdf_attr'):
-            self.cdf_type.update(args[0].cdf_attr)
+            self.cdf_attr.update(args[0].cdf_attr)
 
     @property
     def length(self):
@@ -59,12 +59,15 @@ class Dataset(OrderedDict):
         data = array(data, copy=False)
         if len(self):
             if self.itervalues().next().shape[0] != data.shape[0]:
-                raise ValueError("Array size mismatch!")
+                raise ValueError(
+                    "Array size mismatch! variable: %s, size: %s, dataset: %s" %
+                    (variable, data.shape[0], self.itervalues().next().shape[0])
+                )
         self[variable] = data
         if cdf_type is not None:
             self.cdf_type[variable] = cdf_type
         if cdf_attr is not None:
-            self.cdf_attr[variable] = cdf_attr
+            self.cdf_attr[variable] = dict(cdf_attr)
 
     def merge(self, dataset):
         """ Merge a dataset to this one. Unlike the update method the merge

@@ -92,9 +92,15 @@ class QuasiDipoleCoordinates(Model):
                 cdf_rawtime_to_decimal_year_fast(times, cdf_type, year)
             )
             if self.qdlat_variable in variables:
-                output_ds.set(self.qdlat_variable, qdlat, CDF_DOUBLE_TYPE)
+                output_ds.set(self.qdlat_variable, qdlat, CDF_DOUBLE_TYPE, {
+                    'DESCRIPTION': 'Magnetic quasi-dipole latitude',
+                    'UNITS': 'deg'
+                })
             if self.qdlon_variable in variables:
-                output_ds.set(self.qdlon_variable, qdlon, CDF_DOUBLE_TYPE)
+                output_ds.set(self.qdlon_variable, qdlon, CDF_DOUBLE_TYPE, {
+                    'DESCRIPTION': 'Magnetic quasi-dipole longitude',
+                    'UNITS': 'deg'
+                })
         return output_ds
 
 
@@ -137,7 +143,9 @@ class MagneticLocalTime(Model):
                     dataset[self.qdlon_variable],
                     cdf_rawtime_to_mjd2000(
                         dataset[self.time_variable], cdf_type
-                    )
-                ), CDF_DOUBLE_TYPE
+                    ),
+                ),
+                CDF_DOUBLE_TYPE,
+                {'DESCRIPTION': 'Magnetic local time', 'UNITS': 'h'}
             )
         return output_ds
