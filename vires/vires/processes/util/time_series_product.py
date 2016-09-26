@@ -34,7 +34,7 @@ from eoxserver.backends.access import connect
 from vires.util import between
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
-    CDF_EPOCH_TYPE,
+    timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
 )
 from vires.models import Product
 from .dataset import Dataset
@@ -46,6 +46,7 @@ class ProductTimeSeries(TimeSeries):
     TIME_VARIABLE = "Timestamp"
     TIME_TOLERANCE = timedelta(microseconds=10) # time selection tolerance
     TIME_OVERLAP = timedelta(seconds=60) # time interpolation overlap
+    TIME_GAP_THRESHOLD = timedelta(seconds=30) # gap time threshold
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -198,4 +199,9 @@ class ProductTimeSeries(TimeSeries):
         self.logger.debug("interpolated dataset length: %s ", dataset.length)
 
         # TODO: handle the interpolation kinds
-        return dataset.interpolate(times, self.TIME_VARIABLE, variables, {})
+        return dataset.interpolate(
+            times, self.TIME_VARIABLE, variables, {},
+            gap_threshold=timedelta_to_cdf_rawtime(
+                self.TIME_GAP_THRESHOLD, cdf_type
+            )
+        )

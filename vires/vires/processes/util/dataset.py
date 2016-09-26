@@ -28,8 +28,9 @@
 #-------------------------------------------------------------------------------
 
 from collections import OrderedDict
-from numpy import array, concatenate
-from vires.util import include
+from numpy import array, concatenate, inf
+from vires.util import include, unique
+from vires.cdf_util import CDF_DOUBLE_TYPE
 from .interpolate import Interp1D
 
 
@@ -132,20 +133,17 @@ class Dataset(OrderedDict):
                 )
         return dataset
 
-    def interpolate(self, values, variable, variables=None, kinds=None):
+    def interpolate(self, values, variable, variables=None, kinds=None,
+                    gap_threshold=inf):
         """ 1D time-series interpolation at 'values' of the given 'variable'.
         The 'kinds' of interpolation can be specified by the user defined
         dictionary. The supported kinds are: last, nearest, linear.
         """
         dataset = Dataset()
 
-        if self.length < 2: # dataset is too short to be interpolated
-            # TODO: implement NaN fill
-            return dataset
-
-        interp1d = Interp1D(self[variable], values)
+        interp1d = Interp1D(self[variable], values, gap_threshold)
         variables = (
-            self if variables is None else include(variables, self)
+            self if variables is None else include(unique(variables), self)
         )
 
         for variable in variables:
@@ -153,7 +151,7 @@ class Dataset(OrderedDict):
             data = self[variable]
             dataset.set(
                 variable, interp1d(data, kind).astype(data.dtype),
-                self.cdf_type.get(variable), # TODO: change the CDF type to float
+                CDF_DOUBLE_TYPE, #self.cdf_type.get(variable),
                 self.cdf_attr.get(variable)
             )
 
