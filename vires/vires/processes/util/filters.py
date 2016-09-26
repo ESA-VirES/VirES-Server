@@ -95,7 +95,7 @@ class ScalarRangeFilter(BaseRangeFilter):
         data = dataset[self.variable]
         if index is None:
             index = self._filter(data).nonzero()[0]
-        if index is None:
+        else:
             index = index[self._filter(data[index])]
         self.logger.debug("filtered size: %d", index.size)
         return index
@@ -122,7 +122,7 @@ class VectorComponentRangeFilter(BaseRangeFilter):
         data = dataset[self.variable]
         if index is None:
             index = self._filter(data[:, self.component]).nonzero()[0]
-        if index is None:
+        else:
             index = index[self._filter(data[index, self.component])]
         self.logger.debug("filtered size: %d", index.size)
         return index
