@@ -50,6 +50,7 @@ class MagneticModelResidual(Model):
             return '%s: %s' % (self.extra["residual_name"], msg), kwargs
 
     def __init__(self, model_name, variable, logger=None):
+        self.model_name = model_name
         self._required_variables = [variable, "%s_%s" % (variable, model_name)]
         self.variable = variable
         self.model_variable = "%s_%s" % (variable, model_name)
@@ -74,10 +75,30 @@ class MagneticModelResidual(Model):
         )
         if proceed:
             self.logger.debug("requested dataset length %s", dataset.length)
+
+            # prepare CDF attributes
+            src_attr = dataset.cdf_attr.get(self.variable)
+            if src_attr is None:
+                attr = None
+            else:
+                if self.variable == "B_NEC":
+                    base = 'Magnetic field vector residual, NEC frame'
+                else:
+                    base = "%s residual" % src_attr['DESCRIPTION']
+
+                attr = {
+                    'DESCRIPTION': (
+                        '%s, calculated as a difference of the measurement and '
+                        'value of the %s spherical harmonic model' %
+                        (base, self.model_name)
+                    ),
+                    'UNITS': src_attr['UNITS']
+                }
+
             output_ds.set(
                 self.output_variable,
                 dataset[self.variable] - dataset[self.model_variable],
-                dataset.cdf_type[self.variable]
+                dataset.cdf_type[self.variable], attr
             )
         return output_ds
 
@@ -161,7 +182,19 @@ class MagneticModel(Model):
             # set the dataset
             f_var, b_var = self.variables
             if f_var in variables:
-                output_ds.set(f_var, vnorm(model_data), CDF_DOUBLE_TYPE)
+                output_ds.set(f_var, vnorm(model_data), CDF_DOUBLE_TYPE, {
+                    'DESCRIPTION': (
+                        'Magnetic field intensity, calculated by '
+                        'the %s spherical harmonic model' % self.name
+                    ),
+                    'UNITS': 'nT',
+                })
             if b_var in variables:
-                output_ds.set(b_var, model_data, CDF_DOUBLE_TYPE)
+                output_ds.set(b_var, model_data, CDF_DOUBLE_TYPE, {
+                    'DESCRIPTION': (
+                        'Magnetic field vector, NEC frame, calculated by '
+                        'the %s spherical harmonic model' % self.name
+                    ),
+                    'UNITS': 'nT',
+                })
         return output_ds

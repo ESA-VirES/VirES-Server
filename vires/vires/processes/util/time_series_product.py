@@ -30,7 +30,6 @@
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
-from numpy import empty
 from eoxserver.backends.access import connect
 from vires.util import between
 from vires.cdf_util import (
@@ -57,27 +56,69 @@ class ProductTimeSeries(TimeSeries):
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "collection_id": collection.identifier,
         })
+        self.product_set = set() # stores all recorded source products
+
+    @property
+    def products(self):
+        """ Get list of all accessed products. """
+        return list(self.product_set)
 
     @property
     def variables(self):
         return [band.identifier for band in self.collection.range_type]
 
+    @staticmethod
+    def _extract_dataset(product, extracted_variables, idx_low, idx_high):
+        """ Extract dataset from a product. """
+        dataset = Dataset()
+        with cdf_open(connect(product.data_items.all()[0])) as cdf:
+            for variable in extracted_variables:
+                cdf_var = cdf.raw_var(variable)
+                data = cdf_var[idx_low:idx_high]
+                dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
+        return dataset
+
+    def _get_empty_dataset(self, variables):
+        """ Get empty dataset. """
+        self.logger.debug("empty dataset")
+        self.logger.debug("extracted variables %s", variables)
+
+        try:
+            # we need need at least one product from the collection
+            # to initialize correctly the empty variables
+            product = Product.objects.filter(
+                collections=self.collection
+            ).order_by('begin_time')[0]
+        except IndexError:
+            self.logger.warning(
+                "Empty collection! The variable types cannot be determined!"
+            )
+            return Dataset()
+        else:
+            # generate an empty dataset from the sample product
+            self.logger.debug("product: %s ", product.identifier)
+            return self._extract_dataset(product, variables, 0, 0)
+
     def subset(self, start, stop, variables=None):
+        variables = self.get_extracted_variables(variables)
+        self.logger.debug("subset: %s %s", start, stop)
+        self.logger.debug("extracted variables %s", variables)
+
+        if len(variables) == 0: # stop here if no variable is requested
+            return
+
         products_qs = Product.objects.filter(
             collections=self.collection,
             begin_time__lte=(stop + self.TIME_TOLERANCE),
             end_time__gte=(start - self.TIME_TOLERANCE),
         ).order_by('begin_time')
 
-        self.logger.debug("subset: %s %s", start, stop)
-
-        extracted_variables = None
         for product in products_qs:
-
             self.logger.debug("product: %s ", product.identifier)
 
-            with cdf_open(connect(product.data_items.all()[0])) as cdf:
+            self.product_set.add(product.identifier) # record source product
 
+            with cdf_open(connect(product.data_items.all()[0])) as cdf:
                 # temporal sub-setting
                 temp_var = cdf.raw_var(self.TIME_VARIABLE)
                 times, time_type = temp_var[:], temp_var.type()
@@ -92,22 +133,13 @@ class ProductTimeSeries(TimeSeries):
                     times, datetime_to_cdf_rawtime(start, time_type),
                     datetime_to_cdf_rawtime(stop, time_type),
                 ).nonzero()[0]
+
                 low = time_idx.min() if time_idx.size else 0
                 high = time_idx.max() + 1 if time_idx.size else 0
 
                 self.logger.debug("product slice %s:%s", low, high)
 
-                # prepare list of variables
-                extracted_variables = self.get_extracted_variables(variables)
-
-                self.logger.debug("extracted variables %s", extracted_variables)
-
-                # extract data
-                dataset = Dataset()
-                for variable in extracted_variables:
-                    cdf_var = cdf.raw_var(variable)
-                    data = cdf_var[low:high]
-                    dataset.set(variable, data, cdf_var.type())
+                dataset = self._extract_dataset(product, variables, low, high)
 
             self.logger.debug("dataset length: %s ", dataset.length)
 
@@ -119,11 +151,13 @@ class ProductTimeSeries(TimeSeries):
         if cdf_type != CDF_EPOCH_TYPE:
             raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
+        variables = self.get_extracted_variables(variables)
+        self.logger.debug("interpolated variables %s", variables)
+        if len(variables) == 0: # stop here if no variable is requested
+            return Dataset()
+
         if len(times) == 0: # return an empty dataset
-            return Dataset(
-                (variable, empty(0))
-                for variable in self.get_extracted_variables(variables)
-            )
+            return self._get_empty_dataset(variables)
 
         # get the time bounds
         start, stop = min(times), max(times)
@@ -132,8 +166,7 @@ class ProductTimeSeries(TimeSeries):
         dataset_iterator = self.subset(
             cdf_rawtime_to_datetime(start, cdf_type) - self.TIME_OVERLAP,
             cdf_rawtime_to_datetime(stop, cdf_type) + self.TIME_OVERLAP,
-            None if variables is None else
-            [self.TIME_VARIABLE] + list(variables),
+            [self.TIME_VARIABLE] + variables,
         )
 
         self.logger.debug(
@@ -146,18 +179,20 @@ class ProductTimeSeries(TimeSeries):
         dataset = Dataset()
         for item in dataset_iterator:
             if item:
+                _times = item[self.TIME_VARIABLE]
                 self.logger.debug(
                     "item time-span %s, %s",
-                    cdf_rawtime_to_datetime(item[self.TIME_VARIABLE].min(), cdf_type),
-                    cdf_rawtime_to_datetime(item[self.TIME_VARIABLE].max(), cdf_type),
+                    cdf_rawtime_to_datetime(_times.min(), cdf_type),
+                    cdf_rawtime_to_datetime(_times.max(), cdf_type),
                 )
             dataset.append(item)
 
         if dataset:
+            _times = dataset[self.TIME_VARIABLE]
             self.logger.debug(
                 "interpolated time-span %s, %s",
-                cdf_rawtime_to_datetime(dataset[self.TIME_VARIABLE].min(), cdf_type),
-                cdf_rawtime_to_datetime(dataset[self.TIME_VARIABLE].max(), cdf_type),
+                cdf_rawtime_to_datetime(_times.min(), cdf_type),
+                cdf_rawtime_to_datetime(_times.max(), cdf_type),
             )
 
         self.logger.debug("interpolated dataset length: %s ", dataset.length)
