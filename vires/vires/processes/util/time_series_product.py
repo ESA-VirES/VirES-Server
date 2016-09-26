@@ -56,6 +56,12 @@ class ProductTimeSeries(TimeSeries):
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "collection_id": collection.identifier,
         })
+        self.product_set = set() # stores all recorded source products
+
+    @property
+    def products(self):
+        """ Get list of all accessed products. """
+        return list(self.product_set)
 
     @property
     def variables(self):
@@ -109,6 +115,8 @@ class ProductTimeSeries(TimeSeries):
 
         for product in products_qs:
             self.logger.debug("product: %s ", product.identifier)
+
+            self.product_set.add(product.identifier) # record source product
 
             with cdf_open(connect(product.data_items.all()[0])) as cdf:
                 # temporal sub-setting

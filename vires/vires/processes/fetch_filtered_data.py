@@ -318,8 +318,7 @@ class FetchFilteredData(WPSProcess):
                             "records!" % MAX_SAMPLES_COUNT
                         )
 
-                    # TODO: product list
-                    yield label, [], dataset.extract(output_variables)
+                    yield label, dataset.extract(output_variables)
 
             self.access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
@@ -381,13 +380,8 @@ class FetchFilteredData(WPSProcess):
             if exists(temp_filename):
                 remove(temp_filename)
 
-            product_list = []
-            labels = []
             with cdf_open(temp_filename, 'w') as cdf:
-                for label, products, dataset in _generate_data_():
-                    labels.append(label)
-                    product_list.extend(products)
-
+                for _, dataset in _generate_data_():
                     if initialize: # write the first dataset
                         initialize = False
                         for variable, values in dataset.iteritems():
@@ -408,8 +402,11 @@ class FetchFilteredData(WPSProcess):
                         begin_time.isoformat(), end_time.isoformat()
                     )).replace("+00:00", "Z"),
                     "DATA_FILTERS": [str(f) for f in filters],
-                    "SOURCES": labels,
-                    "ORIGINAL_PRODUCT_NAMES:": product_list,
+                    "MAGNETIC_MODELS": [model.name for model in models],
+                    "SOURCES": sources.keys(),
+                    "ORIGINAL_PRODUCT_NAMES": sum(
+                        (s.products for l in sources.values() for s in l), []
+                    )
                 })
 
         else:
