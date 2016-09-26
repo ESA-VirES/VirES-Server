@@ -346,7 +346,7 @@ class FetchFilteredData(WPSProcess):
 
             with open(temp_filename, "wb") as output_fobj:
 
-                for label, _, dataset in _generate_data_():
+                for label, dataset in _generate_data_():
                     # convert all time variables to the target file-format
                     for variable, data in dataset.iteritems():
                         cdf_type = dataset.cdf_type.get(variable)
