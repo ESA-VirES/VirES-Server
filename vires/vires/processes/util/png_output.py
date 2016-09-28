@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Process utilities
+# Process utilities - PNG output
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -26,81 +26,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-from collections import OrderedDict
-from numpy import array
-#from osgeo import gdal; gdal.UseExceptions()
-from eoxserver.contrib import gdal
 from matplotlib.cm import ScalarMappable
-from eoxmagmod import read_model_shc
-from vires.util import get_color_scale, get_model
-from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
-
-def parse_style(input_id, style):
-    """ Parse style value and return the corresponding colour-map object. """
-    if style is None:
-        return None
-    try:
-        return get_color_scale(style)
-    except ValueError:
-        raise InvalidInputValueError(
-            input_id, "Invalid style identifier %r!" % style
-        )
-
-
-def parse_model(input_id, model_id, shc, shc_input_id="shc"):
-    """ Parse model identifier and returns the corresponding model."""
-    if model_id == "Custom_Model":
-        try:
-            model = read_model_shc(shc)
-        except ValueError:
-            raise InvalidInputValueError(
-                shc_input_id, "Failed to parse the custom model coefficients."
-            )
-    else:
-        model = get_model(model_id)
-        if model is None:
-            raise InvalidInputValueError(
-                input_id, "Invalid model identifier %r!" % model_id
-            )
-    return model
-
-
-def parse_models(input_id, model_ids, shc, shc_input_id="shc"):
-    """ Parse model identifiers and returns an ordered dictionary
-    the corresponding models.
-    """
-    models = OrderedDict()
-    if model_ids.strip():
-        for model_id in (id_.strip() for id_ in model_ids.split(",")):
-            models[model_id] = parse_model(
-                input_id, model_id, shc, shc_input_id
-            )
-    return models
-
-
-def parse_filters(input_id, filter_string):
-    """ Parse filters' string. """
-    try:
-        filter_ = OrderedDict()
-        if filter_string.strip():
-            for item in filter_string.split(";"):
-                name, bounds = item.split(":")
-                name = name.strip()
-                if not name:
-                    raise ValueError("Invalid empty filter name!")
-                lower, upper = [float(v) for v in bounds.split(",")]
-                filter_[name] = (lower, upper)
-    except ValueError as exc:
-        raise InvalidInputValueError(input_id, exc)
-    return filter_
-
-
-def format_filters(filters):
-    """ Convert filters to string. """
-    return "; ".join(
-        "%s: %g,%g" % (key, vmin, vmax)
-        for key, (vmin, vmax) in filters.iteritems()
-    )
+from numpy import array
+#from osgeo import gdal; gdal.UseExceptions() #pylint: disable=multiple-statements
+from eoxserver.contrib import gdal
 
 
 def data_to_png(filename, data, norm, cmap=None, ignore_alpha=True):
