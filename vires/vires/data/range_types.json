@@ -114,6 +114,16 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
+            "description": "Sun induced stray magnetic field correction vector subtracted from measurements, VFM frame",
+            "identifier": "dB_Sun",
+            "name": "dB_Sun",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
             "description": "Magnetic stray field correction vector of AOCS magneto-torquer coils, VFM frame",
             "identifier": "dB_AOCS",
             "name": "dB_AOCS",
@@ -337,4 +347,504 @@
         }
     ],
     "name": "MagneticModel"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Latitude ",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Longitude ",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Radius ",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "v_SC",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "v_ion",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "v_ion_error",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "E",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "E_error",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "dt_LP",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "n",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "n_error",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "T_ion",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "T_ion_error",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "T_elec",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "T_elec_error",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "U_SC",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "U_SC_error",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "v_ion_H",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "v_ion_H_error",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "v_ion_V",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "v_ion_V_error",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "rms_fit_H",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "rms_fit_V",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "var_x_H",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "var_y_H",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "var_x_V",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "var_y_V",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "dv_mtq_H",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "",
+            "identifier": "dv_mtq_V",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "",
+            "identifier": "SAA",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "",
+            "identifier": "Flags_LP",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "",
+            "identifier": "Flags_LP_n",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "",
+            "identifier": "Flags_LP_T_elec",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "",
+            "identifier": "Flags_LP_U_SC",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "",
+            "identifier": "SyncStatus",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "",
+            "identifier": "Flags_TII",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "",
+            "identifier": "Flags_Platform",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "",
+            "identifier": "Maneuver_Id",
+            "name": "",
+            "nil_values": [],
+            "uom": ""
+        }
+    ],
+    "name": "SWARM_EFI"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Latitude ",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Longitude ",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Radius ",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Plasma Bubble Index (0 Quiet; 1 Bubble; -1 Not analyzed)",
+            "identifier": "Bubble_Index",
+            "name": "Bubble_Index",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Detection probability of the plasma bubble (in steps of 0.2; 0-not probable, 1-very probable)",
+            "identifier": "Bubble_Probability",
+            "name": "Bubble_Probability",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags related to the plasma bubble index",
+            "identifier": "Flags_Bubble",
+            "name": "Flags_Bubble",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags_F passed through from MAGx_L1_B",
+            "identifier": "Flags_F",
+            "name": "Flags_F",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags_B passed through from MAGx_L1_B",
+            "identifier": "Flags_B",
+            "name": "Flags_B",
+            "nil_values": [],
+            "uom": "-"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags_q passed through from MAGx_L1_B ",
+            "identifier": "Flags_q",
+            "name": "Flags_q",
+            "nil_values": [],
+            "uom": "-"
+        }
+    ],
+    "name": "SWARM_IBI"
 }]

@@ -1,7 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
+#  Process Utilities
+#
+# Project: VirES
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
@@ -24,35 +26,34 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, invalid-name
 
-from logging import INFO, WARNING
-from django.conf.urls import url
-from allauth.urls import urlpatterns as allauth_urlpatterns
-from .views import ProfileUpdate
-from django.views.generic import TemplateView
-from .url_tools import decorate
-from .decorators import log_access
-
-# for the following URLs patterns a warning is logged in case
-# on an unauthenticated access
-WATCHED_URLS = [
-    'account_logout',
-    'account_change_password',
-    'account_set_password',
-    'account_inactive',
-    'account_email',
-    'socialaccount_connections',
-]
-
-# include AllAuth URL patters and wrap selected views
-urlpatterns = decorate(
-    allauth_urlpatterns, log_access(INFO, WARNING),
-    lambda obj: obj.name in WATCHED_URLS
+from .dataset import Dataset
+from .filters import (
+    Filter, ScalarRangeFilter, VectorComponentRangeFilter,
+    BoundingBoxFilter,
+)
+from .filters_subsampling import MinStepSampler
+from .time_series import TimeSeries
+from .time_series_product import ProductTimeSeries
+from .time_series_aux import  IndexKp, IndexDst
+from .model import Model
+from .model_magmod import MagneticModelResidual, MagneticModel
+from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
+from .interpolate import Interp1D
+from .input_parsers import (
+    parse_style, parse_collections,
+    parse_model, parse_models, parse_models2,
+    parse_filters, parse_filters2,
+)
+from .png_output import (
+    data_to_png,
+    array_to_png,
 )
 
-# additional patterns
-urlpatterns += [
-    url(r'^profile/$', ProfileUpdate.as_view(), name='account_change_profile'),
-    url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
-]
+# other miscellaneous utilities
+def format_filters(filters):
+    """ Convert filters to string. """
+    return "; ".join(
+        "%s: %g,%g" % (key, vmin, vmax)
+        for key, (vmin, vmax) in filters.iteritems()
+    )

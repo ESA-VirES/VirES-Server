@@ -1,7 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
+# Data Source - model base class
+#
+# Project: VirES
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
@@ -24,35 +26,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, invalid-name
 
-from logging import INFO, WARNING
-from django.conf.urls import url
-from allauth.urls import urlpatterns as allauth_urlpatterns
-from .views import ProfileUpdate
-from django.views.generic import TemplateView
-from .url_tools import decorate
-from .decorators import log_access
+class Model(object):
+    """ Base model source class. """
 
-# for the following URLs patterns a warning is logged in case
-# on an unauthenticated access
-WATCHED_URLS = [
-    'account_logout',
-    'account_change_password',
-    'account_set_password',
-    'account_inactive',
-    'account_email',
-    'socialaccount_connections',
-]
+    @property
+    def variables(self):
+        """ Get list of the provided variables. """
+        raise NotImplementedError
 
-# include AllAuth URL patters and wrap selected views
-urlpatterns = decorate(
-    allauth_urlpatterns, log_access(INFO, WARNING),
-    lambda obj: obj.name in WATCHED_URLS
-)
+    @property
+    def required_variables(self):
+        """ Get list of the required input dataset variables. """
+        raise NotImplementedError
 
-# additional patterns
-urlpatterns += [
-    url(r'^profile/$', ProfileUpdate.as_view(), name='account_change_profile'),
-    url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
-]
+    def eval(self, dataset, variables=None, **kwargs):
+        """ Evaluate model for the given dataset.
+        Optionally the content of the output dataset can be controlled
+        by the list of the output variables.
+        Specific models can define additional keyword parameters.
+        """
+        raise NotImplementedError
