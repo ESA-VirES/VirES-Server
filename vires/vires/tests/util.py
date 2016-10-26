@@ -34,7 +34,7 @@ from numpy import array
 from matplotlib.colors import LinearSegmentedColormap
 from vires.tests import ArrayMixIn
 from vires.util import (
-    between, float_array_slice, datetime_array_slice,
+    between, between_co, float_array_slice, datetime_array_slice,
     get_total_seconds, get_color_scale, get_model,
 )
 
@@ -74,8 +74,14 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
 
     def test_between(self):
         self.assertAllEqual(
-            between(array([1.0, 2.0, 3.0, 4.0]), 1.5, 3.5),
-            array([False, True, True, False])
+            between(array([1.0, 1.5, 2.0, 3.0, 3.5, 4.0]), 1.5, 3.5),
+            array([False, True, True, True, True, False])
+        )
+
+    def test_between_co(self):
+        self.assertAllEqual(
+            between_co(array([1.0, 1.5, 2.0, 3.0, 3.5, 4.0]), 1.5, 3.5),
+            array([False, True, True, True, False, False])
         )
 
     def test_total_seconds(self):
