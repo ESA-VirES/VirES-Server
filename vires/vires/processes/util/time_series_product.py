@@ -31,7 +31,7 @@
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
 from eoxserver.backends.access import connect
-from vires.util import between
+from vires.util import between_co
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
     CDF_EPOCH_TYPE,
@@ -109,7 +109,7 @@ class ProductTimeSeries(TimeSeries):
 
         products_qs = Product.objects.filter(
             collections=self.collection,
-            begin_time__lte=(stop + self.TIME_TOLERANCE),
+            begin_time__lt=(stop + self.TIME_TOLERANCE),
             end_time__gte=(start - self.TIME_TOLERANCE),
         ).order_by('begin_time')
 
@@ -129,7 +129,7 @@ class ProductTimeSeries(TimeSeries):
                     cdf_rawtime_to_datetime(times.max(), time_type),
                 )
 
-                time_idx = between(
+                time_idx = between_co(
                     times, datetime_to_cdf_rawtime(start, time_type),
                     datetime_to_cdf_rawtime(stop, time_type),
                 ).nonzero()[0]

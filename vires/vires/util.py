@@ -86,8 +86,17 @@ class cached_property(object):
 
 
 def between(data, lower_bound, upper_bound):
-    """ Get mask of values within the given closed interval. """
+    """ Get mask of values within the given closed interval:
+        lower_bound <= value <= upper_bound
+    """
     return (data >= lower_bound) & (data <= upper_bound)
+
+
+def between_co(data, lower_bound, upper_bound):
+    """ Get mask of values within the given closed-open interval:
+        lower_bound <= value < upper_bound
+    """
+    return (data >= lower_bound) & (data < upper_bound)
 
 
 # TODO: To be removed.

@@ -330,7 +330,7 @@ class FetchFilteredData(WPSProcess):
         # get configurations
         conf_sys = SystemConfigReader()
         temp_basename = join(conf_sys.path_temp, "vires_" + uuid4().hex)
-        result_basename = "%s_%s_%s_MDR_MAG_Filtered" % (
+        result_basename = "%s_%s_%s_Filtered" % (
             "_".join(
                 s.collection.identifier for l in sources.values() for s in l
             ),
