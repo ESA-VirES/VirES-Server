@@ -28,7 +28,7 @@
 #-------------------------------------------------------------------------------
 
 from logging import getLogger, LoggerAdapter
-from numpy import diff, concatenate
+from numpy import empty, diff, concatenate
 from .filters import Filter
 
 class MinStepSampler(Filter):
@@ -63,15 +63,15 @@ class MinStepSampler(Filter):
         """ Low-level sub-sampling filter. """
         min_step = self.min_step
         base_value = self.base_value
-        if base_value is None:
-            if len(data) > 0:
+        if len(data) > 0: # non-empty array
+            if base_value is None:
                 base_value = data[0]
-            else:
-                base_value = 0 # empty array default
-        self.logger.debug("min.step: %s, base value: %s", min_step, base_value)
-        self.logger.debug("initial size: %d", data.size)
-        index = concatenate(
-            ([1], diff(((data - base_value) / self.min_step).astype('int')))
-        ).nonzero()[0]
+            self.logger.debug("min.step: %s, base value: %s", min_step, base_value)
+            self.logger.debug("initial size: %d", data.size)
+            index = concatenate(
+                ([1], diff(((data - base_value) / self.min_step).astype('int')))
+            ).nonzero()[0]
+        else: # empty array
+            index = empty(0, 'int64')
         self.logger.debug("filtered size: %d", index.size)
         return index
