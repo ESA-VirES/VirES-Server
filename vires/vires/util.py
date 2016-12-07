@@ -34,6 +34,8 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cm import get_cmap
 from itertools import ifilter, ifilterfalse
 
+import vires.contrib.colormaps as cmaps
+
 import eoxmagmod as mm
 
 try:
@@ -211,7 +213,7 @@ def get_color_scale(name):
             (1.0, 255, 0, 0),
         ], 1.0 / 255.0)
 
-    elif name == "custom2":
+    elif name == "diverging_2":
         return clist_to_colormap(name, [
             (0.0, 0, 0, 0),
             (0.000000000001, 3, 10.1796, 255),
@@ -227,7 +229,93 @@ def get_color_scale(name):
             (1.0, 255, 0, 255),
         ], 1.0 / 255.0)
 
-    elif name == "custom1":
+
+    elif name == "yignbu":
+        return clist_to_colormap(name, [
+            ( 0.0, 8,29,88),
+            (.125, 37,52,148),
+            (.25, 34,94,168),
+            (.375, 29,145,192),
+            (.5, 65,182,196),
+            (.625, 127,205,187),
+            (.75, 199,233,180),
+            (.875, 237,248,217),
+            (1.0, 255,255,217),
+        ], 1.0 / 255.0)
+
+    elif name == "greens":
+        return clist_to_colormap(name, [
+            (0.0, 0,68,27),
+            (0.125, 0,109,44),
+            (0.25, 35,139,69),
+            (0.375, 65,171,93),
+            (0.5, 116,196,118),
+            (0.625, 161,217,155),
+            (0.75, 199,233,192),
+            (0.875, 229,245,224),
+            (1.0, 247,252,245),
+        ], 1.0 / 255.0)
+
+    elif name == "yiorrd":
+        return clist_to_colormap(name, [
+            (0.0  ,128,0,38),
+            (0.125,189,0,38),
+            (0.25 ,227,26,28),
+            (0.375,252,78,42),
+            (0.5  ,253,141,60),
+            (0.625,254,178,76),
+            (0.75 ,254,217,118),
+            (0.875,255,237,160),
+            (1.0  ,255,255,204),
+        ], 1.0 / 255.0)
+
+    elif name == "bluered":
+        return clist_to_colormap(name, [
+            (0.0, 0,0,255),
+            (1.0, 255,0,0),
+        ], 1.0 / 255.0)
+
+    elif name == "earth":
+        return clist_to_colormap(name, [
+            (0.0, 0,0,130),
+            (0.1, 0,180,180),
+            (0.2, 40,210,40),
+            (0.4, 230,230,50),
+            (0.6, 120,70,20),
+            (1.0, 255,255,255),
+        ], 1.0 / 255.0)
+
+
+    elif name == "electric":
+        return clist_to_colormap(name, [
+            (0.0, 0,0,0),
+            (0.15, 30,0,100), 
+            (0.4, 120,0,100),
+            (0.6, 160,90,0),
+            (0.8, 230,200,0),
+            (1.0, 255,250,220),
+        ], 1.0 / 255.0)
+
+    elif name == "portland":
+        return clist_to_colormap(name, [
+            (0.0, 12,51,131),
+            (0.25, 10,136,186), 
+            (0.5, 242,211,56),
+            (0.75, 242,143,56), 
+            ( 1.0, 217,30,30),
+        ], 1.0 / 255.0)
+
+    elif name == "blackbody":
+        return clist_to_colormap(name, [
+            (0.0, 0,0,0),
+            (0.2, 230,0,0),
+            (0.4, 230,210,0),
+            (0.7, 255,255,255),
+            (1.0, 160,200,255),
+        ], 1.0 / 255.0)
+
+
+    elif name == "diverging_1":
         return clist_to_colormap(name, [
             (0.0, 0.2510, 0, 0.2510),
             (0.01587301587, 0.2331, 0, 0.3045),
@@ -294,6 +382,9 @@ def get_color_scale(name):
             (0.98412698394, 1.0, 0, 0.9091),
             (1.0, 1.0, 0, 1.0000),
         ])
+
+    elif name=="viridis" or name=="magma" or name=="inferno" or name=="plasma":
+        return getattr(cmaps, name)
 
     else:
         # get standard colour-map
