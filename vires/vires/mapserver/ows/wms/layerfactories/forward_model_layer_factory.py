@@ -264,7 +264,7 @@ class ForwardModelLayerFactory(BaseCoverageLayerFactory):
             ms.colorObj(127, 0, 0),
         ), minvalue, maxvalue, contours)
 
-        create_style("custom2", layer, (
+        create_style("diverging_2", layer, (
             (ms.colorObj(0, 0, 0), 0.0),
             (ms.colorObj(3, 10, 255), 0.000000000001),
             (ms.colorObj(32, 74, 255), 0.1),
@@ -279,7 +279,7 @@ class ForwardModelLayerFactory(BaseCoverageLayerFactory):
             (ms.colorObj(255, 0, 255), 1.0),
         ), minvalue, maxvalue, contours)
 
-        create_linear_style("custom1", layer, (
+        create_linear_style("diverging_1", layer, (
             ms.colorObj(64, 0, 64),
             ms.colorObj(59, 0, 77),
             ms.colorObj(54, 0, 91),
