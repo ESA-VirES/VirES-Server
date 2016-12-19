@@ -94,13 +94,13 @@ class ForwardModelConnector(Component):
                 time, coeff_min, coeff_max
             )
             # scale pixel values
-            scale_factor = 255.0 / (range_max - range_min)
-            pixel_array = scale_factor * (pixel_array - range_min)
+            # scale_factor = 255.0 / (range_max - range_min)
+            # pixel_array = scale_factor * (pixel_array - range_min)
 
         # finalize the layer data
         path = join("/vsimem", uuid4().hex)
         driver = gdal.GetDriverByName("GTiff")
-        dataset = driver.Create(path, size_x, size_y, 1, gdal.GDT_Byte)
+        dataset = driver.Create(path, size_x, size_y, 1, gdal.GDT_Float32)
         dataset.SetGeoTransform((
             bbox[0], (bbox[2] - bbox[0]) / float(size_x), 0.0,
             bbox[3], 0.0, (bbox[1] - bbox[3]) / float(size_y)
