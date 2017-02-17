@@ -847,4 +847,379 @@
         }
     ],
     "name": "SWARM_IBI"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "milliseconds elapsed since 00:00:00 January 1, 2000 UTC",
+            "identifier": "timestamp",
+            "name": "timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic longitude of satellite crossing of the magnetic equator",
+            "identifier": "longitude",
+            "name": "longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic latitude of satellite crossing of the magnetic equator",
+            "identifier": "latitude",
+            "name": "latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Estimate of the equatorial electric field",
+            "identifier": "EEF",
+            "name": "EEF",
+            "nil_values": [],
+            "uom": "V/m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quality indicator of EEF estimate; relative error between modeled and observed current profil",
+            "identifier": "RelErr",
+            "name": "RelErr",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags describing data gaps and satellite identification",
+            "identifier": "flags",
+            "name": "flags",
+            "nil_values": [],
+            "uom": ""
+        }
+    ],
+    "name": "SWARM_EEF"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Radius",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Ionospheric radial current (IRC)",
+            "identifier": "IRC",
+            "name": "IRC",
+            "nil_values": [],
+            "uom": "uA/m2"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "uncertainty of IRC",
+            "identifier": "IRC_Error",
+            "name": "IRC_Error",
+            "nil_values": [],
+            "uom": "uA/m2"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Field-aligned current (FAC)",
+            "identifier": "FAC",
+            "name": "FAC",
+            "nil_values": [],
+            "uom": "uA/m2"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "uncertainty of FAC",
+            "identifier": "FAC_Error",
+            "name": "FAC_Error",
+            "nil_values": [],
+            "uom": "uA/m2"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Flags characterizing the product quality (processing flags)",
+            "identifier": "Flags",
+            "name": "Flags",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Flags_F passed through from L1b and accumulated for quad points",
+            "identifier": "Flags_F",
+            "name": "Flags_F",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Flags_B passed through from L1b and accumulated for quad points",
+            "identifier": "Flags_B",
+            "name": "Flags_B",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Flags_q passed through from L1b and accumulated for quad point",
+            "identifier": "Flags_q",
+            "name": "Flags_q",
+            "nil_values": [],
+            "uom": ""
+        }
+    ],
+    "name": "SWARM_FAC"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time stamp in UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic radius",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "km"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "X-,Y-,Z-coordinates (WGS84) of the GPS satellite",
+            "identifier": "GPS_Position",
+            "name": "GPS_Position",
+            "nil_values": [],
+            "uom": "km"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "X-,Y-,Z-coordinates (WGS84) of the LEO satellite",
+            "identifier": "LEO_Positio",
+            "name": "LEO_Positio",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt16",
+            "definition": "",
+            "description": "GPS satellite PRN",
+            "identifier": "PRN",
+            "name": "PRN",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS L1 carrier phase observation",
+            "identifier": "L1",
+            "name": "L1",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS L2 carrier phase observation",
+            "identifier": "L2",
+            "name": "L2",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS P1 code phase observation",
+            "identifier": "",
+            "name": "",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS P2 code phase observation",
+            "identifier": "P2",
+            "name": "P2",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS signal-to-noise ratio or raw signal strength on L1",
+            "identifier": "S1",
+            "name": "S1",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS signal-to-noise ratio or raw signal strength on L2",
+            "identifier": "S2",
+            "name": "S2",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Absolute slant TE",
+            "identifier": "Absolute_STEC",
+            "name": "Absolute_STEC",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Relative slant TEC",
+            "identifier": "Relative_STEC",
+            "name": "Relative_STEC",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Root mean square error of relative slant TEC",
+            "identifier": "Relative_STEC_RMS",
+            "name": "Relative_STEC_RMS",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS receiver differential code bias",
+            "identifier": "DCB",
+            "name": "DCB",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error of the GPS receiver differential code bias",
+            "identifier": "DCB_Error",
+            "name": "DCB_Error",
+            "nil_values": [],
+            "uom": "TECU"
+        }
+    ],
+    "name": "SWARM_TEC"
 }]
