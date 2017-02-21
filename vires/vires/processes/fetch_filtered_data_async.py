@@ -37,12 +37,11 @@ from itertools import chain, izip
 from datetime import datetime, timedelta
 from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData,
+    LiteralData, ComplexData, RequestParameter, Reference,
     FormatText, FormatJSON, FormatBinaryRaw,
-    CDFile,
 )
 from eoxserver.services.ows.wps.exceptions import ExecuteError
-from vires.config import SystemConfigReader
+from vires.models import Job
 from vires.util import unique, exclude, include
 from vires.time_util import (
     naive_to_utc, timedelta_to_iso_duration,
@@ -59,11 +58,11 @@ from vires.processes.util import (
 )
 
 # TODO: Make the limits configurable.
-# Limit response size (equivalent to 5 daily SWARM LR products).
-MAX_SAMPLES_COUNT = 432000
+# Limit response size (equivalent to 50 daily SWARM LR products).
+MAX_SAMPLES_COUNT = 4320000
 
 # maximum allowed time selection period
-MAX_TIME_SELECTION = timedelta(days=31)
+MAX_TIME_SELECTION = timedelta(days=356)
 
 # set of the minimum required variables
 REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
@@ -77,17 +76,20 @@ CDF_RAW_TIME_CONVERTOR = {
 }
 
 
-class FetchFilteredData(WPSProcess):
+class FetchFilteredDataAsync(WPSProcess):
     """ Process retrieving subset of the registered Swarm data based
     on collection, time interval and optional additional custom filters.
     This process is designed to be used for the data download.
     """
-    identifier = "vires:fetch_filtered_data"
+    identifier = "vires:fetch_filtered_data_async"
     title = "Fetch merged SWARM products."
     metadata = {}
     profiles = ["vires"]
+    synchronous = False
+    asynchronous = True
 
     inputs = [
+        ("user", RequestParameter(lambda request: request.user)),
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -155,11 +157,22 @@ class FetchFilteredData(WPSProcess):
         )),
     ]
 
+    def initialize(self, context, inputs, outputs, parts):
+        """ Asynchronous process initialization. """
+        # create DB record for this WPS job
+        job = Job()
+        job.process_id = self.identifier
+        job.owner = inputs['\\user']
+        job.identifier = context.identifier
+        job.response_url = context.status_location
+        job.save()
+
     def execute(self, collection_ids, begin_time, end_time, filters,
                 requested_variables, model_ids, shc,
-                csv_time_format, output, **kwarg):
+                csv_time_format, output, context, **kwarg):
         """ Execute process """
-        workspace_dir = SystemConfigReader().path_temp
+        workspace_dir = ""
+
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
         models = parse_models2("model_ids", model_ids, shc)
@@ -412,4 +425,4 @@ class FetchFilteredData(WPSProcess):
                 "Unexpected output format %r requested!" % output['mime_type']
             )
 
-        return CDFile(temp_filename, filename=result_filename, **output)
+        return Reference(*context.publish(temp_filename), **output)
