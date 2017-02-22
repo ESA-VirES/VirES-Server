@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities
+#  Process Utilities - cache backend wrapper
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2017 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,34 +27,17 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .cache import with_cache_session
-from .dataset import Dataset
-from .filters import (
-    Filter, ScalarRangeFilter, VectorComponentRangeFilter,
-    BoundingBoxFilter,
-)
-from .filters_subsampling import MinStepSampler
-from .time_series import TimeSeries
-from .time_series_product import ProductTimeSeries
-from .time_series_aux import  IndexKp, IndexDst
-from .model import Model
-from .model_magmod import MagneticModelResidual, MagneticModel
-from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
-from .interpolate import Interp1D
-from .input_parsers import (
-    parse_style, parse_collections,
-    parse_model, parse_models, parse_models2,
-    parse_filters, parse_filters2,
-)
-from .png_output import (
-    data_to_png,
-    array_to_png,
-)
+from functools import wraps
+from eoxserver.backends.cache import setup_cache_session, shutdown_cache_session
 
-# other miscellaneous utilities
-def format_filters(filters):
-    """ Convert filters to string. """
-    return "; ".join(
-        "%s: %g,%g" % (key, vmin, vmax)
-        for key, (vmin, vmax) in filters.iteritems()
-    )
+def with_cache_session(func):
+    """ Decorator setting up the EOxServer cache session. """
+    @wraps(func)
+    def __wrapper__(*args, **kwargs):
+        setup_cache_session()
+        try:
+            response = func(*args, **kwargs)
+        finally:
+            shutdown_cache_session()
+        return response
+    return __wrapper__

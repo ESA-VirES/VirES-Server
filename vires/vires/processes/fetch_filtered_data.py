@@ -53,9 +53,8 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2, parse_filters2,
-    IndexKp, IndexDst,
-    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
+    parse_collections, parse_models2, parse_filters2, IndexKp, IndexDst,
+    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
 )
 
 # TODO: Make the limits configurable.

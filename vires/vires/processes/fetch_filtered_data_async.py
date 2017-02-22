@@ -52,17 +52,17 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2, parse_filters2,
-    IndexKp, IndexDst,
-    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
+    parse_collections, parse_models2, parse_filters2, IndexKp, IndexDst,
+    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
+    with_cache_session,
 )
 
 # TODO: Make the limits configurable.
 # Limit response size (equivalent to 50 daily SWARM LR products).
 MAX_SAMPLES_COUNT = 4320000
 
-# maximum allowed time selection period
-MAX_TIME_SELECTION = timedelta(days=356)
+# maximum allowed time selection period (~100years >> mission life-time)
+MAX_TIME_SELECTION = timedelta(days=35525)
 
 # set of the minimum required variables
 REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
@@ -167,6 +167,7 @@ class FetchFilteredDataAsync(WPSProcess):
         job.response_url = context.status_location
         job.save()
 
+    @with_cache_session
     def execute(self, collection_ids, begin_time, end_time, filters,
                 requested_variables, model_ids, shc,
                 csv_time_format, output, context, **kwarg):
@@ -340,8 +341,9 @@ class FetchFilteredDataAsync(WPSProcess):
         # === OUTPUT ===
 
         # get configurations
-        temp_basename = join(workspace_dir, "vires_" + uuid4().hex)
-        result_basename = "%s_%s_%s_Filtered" % (
+        #temp_basename = join(workspace_dir, "vires_" + uuid4().hex)
+        #result_basename = "%s_%s_%s_Filtered" % (
+        temp_basename = "%s_%s_%s_Filtered" % (
             "_".join(
                 s.collection.identifier for l in sources.values() for s in l
             ),
@@ -351,7 +353,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
         if output['mime_type'] == "text/csv":
             temp_filename = temp_basename + ".csv"
-            result_filename = result_basename + ".csv"
+            #result_filename = result_basename + ".csv"
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
             initialize = True
 
@@ -385,7 +387,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
         elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
             temp_filename = temp_basename + ".cdf"
-            result_filename = result_basename + ".cdf"
+            #result_filename = result_basename + ".cdf"
             initialize = True
 
             if exists(temp_filename):
