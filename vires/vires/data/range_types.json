@@ -18,7 +18,7 @@
             "identifier": "SyncStatus",
             "name": "SyncStatus",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -158,7 +158,7 @@
             "identifier": "q_NEC_CRF",
             "name": "q_NEC_CRF",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -178,7 +178,7 @@
             "identifier": "Flags_F",
             "name": "Flags_F",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -188,7 +188,7 @@
             "identifier": "Flags_B",
             "name": "Flags_B",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -198,7 +198,7 @@
             "identifier": "Flags_q",
             "name": "Flags_q",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -208,7 +208,7 @@
             "identifier": "Flags_Platform",
             "name": "Flags_Platform",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -218,7 +218,7 @@
             "identifier": "ASM_Freq_Dev",
             "name": "ASM_Freq_Dev",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         }
     ],
     "name": "SWARM_MAG"
@@ -394,189 +394,189 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Spacecraft velocity, NEC frame",
             "identifier": "v_SC",
-            "name": "",
+            "name": "v_SC",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Ion velocity, NEC frame",
             "identifier": "v_ion",
-            "name": "",
+            "name": "v_ion",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of v_ion, NEC frame",
             "identifier": "v_ion_error",
-            "name": "",
+            "name": "v_ion_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Electric field vector, NEC frame",
             "identifier": "E",
-            "name": "",
+            "name": "E",
             "nil_values": [],
-            "uom": ""
+            "uom": "mV/m"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of E, NEC frame",
             "identifier": "E_error",
-            "name": "",
+            "name": "E_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "mV/m"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Time offset of LP data, tLP = t + dt_LP",
             "identifier": "dt_LP",
-            "name": "",
+            "name": "dt_LP",
             "nil_values": [],
-            "uom": ""
+            "uom": "s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Plasma density (electron)",
             "identifier": "n",
-            "name": "",
+            "name": "n",
             "nil_values": [],
-            "uom": ""
+            "uom": "cm-3"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of plasma density (ne)",
             "identifier": "n_error",
-            "name": "",
+            "name": "n_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "cm-3"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Plasma ion temperature",
             "identifier": "T_ion",
-            "name": "",
+            "name": "T_ion",
             "nil_values": [],
-            "uom": ""
+            "uom": "K"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of plasma ion temperature (T_ion)",
             "identifier": "T_ion_error",
-            "name": "",
+            "name": "T_ion_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "K"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Plasma electron temperature",
             "identifier": "T_elec",
-            "name": "",
+            "name": "T_elec",
             "nil_values": [],
-            "uom": ""
+            "uom": "K"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of plasma electron temperature (T_elec)",
             "identifier": "T_elec_error",
-            "name": "",
+            "name": "T_elec_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "K"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Spacecraft potential",
             "identifier": "U_SC",
-            "name": "",
+            "name": "U_SC",
             "nil_values": [],
-            "uom": ""
+            "uom": "V"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of spacecraft potential (U_pol)",
             "identifier": "U_SC_error",
-            "name": "",
+            "name": "U_SC_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "V"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Ion velocity, horizontal (H) sensor",
             "identifier": "v_ion_H",
-            "name": "",
+            "name": "v_ion_H",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of v_ion_H",
             "identifier": "v_ion_H_error",
-            "name": "",
+            "name": "v_ion_H_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Ion velocity, vertical (V) sensor",
             "identifier": "v_ion_V",
-            "name": "",
+            "name": "v_ion_V",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of v_ion_V",
             "identifier": "v_ion_V_error",
-            "name": "",
+            "name": "v_ion_V_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "RMS fit error from TII x-profile 2-Gaussian fits, H sensor",
             "identifier": "rms_fit_H",
-            "name": "",
+            "name": "rms_fit_H",
             "nil_values": [],
             "uom": ""
         },
@@ -584,9 +584,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "RMS fit error from TII x-profile 2-Gaussian fits, V sensor",
             "identifier": "rms_fit_V",
-            "name": "",
+            "name": "rms_fit_V",
             "nil_values": [],
             "uom": ""
         },
@@ -594,9 +594,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Variance in 16 Hz x moment during a halfsecond interval, H sensor",
             "identifier": "var_x_H",
-            "name": "",
+            "name": "var_x_H",
             "nil_values": [],
             "uom": ""
         },
@@ -604,9 +604,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Variance in 16 Hz y moment during a halfsecond interval, H sensor",
             "identifier": "var_y_H",
-            "name": "",
+            "name": "var_y_H",
             "nil_values": [],
             "uom": ""
         },
@@ -614,9 +614,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Variance in 16 Hz x moment during a halfsecond interval, V sensor",
             "identifier": "var_x_V",
-            "name": "",
+            "name": "var_x_V",
             "nil_values": [],
             "uom": ""
         },
@@ -624,9 +624,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Variance in 16 Hz y moment during a halfsecond interval, V sensor",
             "identifier": "var_y_V",
-            "name": "",
+            "name": "var_y_V",
             "nil_values": [],
             "uom": ""
         },
@@ -634,29 +634,29 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Velocity deflection due to magnetotorquer, H sensor",
             "identifier": "dv_mtq_H",
-            "name": "",
+            "name": "dv_mtq_H",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Velocity deflection due to magnetotorquer, V sensor",
             "identifier": "dv_mtq_V",
-            "name": "",
+            "name": "dv_mtq_V",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "South Atlantic Anomaly proximity indicator, range 0-5",
             "identifier": "SAA",
-            "name": "",
+            "name": "SAA",
             "nil_values": [],
             "uom": ""
         },
@@ -664,9 +664,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags indicating the source/method of LP measurements (ne, T_elec, U_SC)",
             "identifier": "Flags_LP",
-            "name": "",
+            "name": "Flags_LP",
             "nil_values": [],
             "uom": ""
         },
@@ -674,9 +674,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the plasma density measurement",
             "identifier": "Flags_LP_n",
-            "name": "",
+            "name": "Flags_LP_n",
             "nil_values": [],
             "uom": ""
         },
@@ -684,9 +684,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the electron temperature measurement",
             "identifier": "Flags_LP_T_elec",
-            "name": "",
+            "name": "Flags_LP_T_elec",
             "nil_values": [],
             "uom": ""
         },
@@ -694,9 +694,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the spacecraft potential measurement",
             "identifier": "Flags_LP_U_SC",
-            "name": "",
+            "name": "Flags_LP_U_SC",
             "nil_values": [],
             "uom": ""
         },
@@ -704,9 +704,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Synchronization status",
             "identifier": "SyncStatus",
-            "name": "",
+            "name": "SyncStatus",
             "nil_values": [],
             "uom": ""
         },
@@ -714,9 +714,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the TII measurement",
             "identifier": "Flags_TII",
-            "name": "",
+            "name": "Flags_TII",
             "nil_values": [],
             "uom": ""
         },
@@ -724,9 +724,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the S/C platform information (AOCS thrusters, VFM and STR status)",
             "identifier": "Flags_Platform",
-            "name": "",
+            "name": "Flags_Platform",
             "nil_values": [],
             "uom": ""
         },
@@ -734,9 +734,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Current maneuver identification code",
             "identifier": "Maneuver_Id",
-            "name": "",
+            "name": "Maneuver_Id",
             "nil_values": [],
             "uom": ""
         }
@@ -793,7 +793,7 @@
             "identifier": "Bubble_Index",
             "name": "Bubble_Index",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -803,7 +803,7 @@
             "identifier": "Bubble_Probability",
             "name": "Bubble_Probability",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -813,7 +813,7 @@
             "identifier": "Flags_Bubble",
             "name": "Flags_Bubble",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -823,7 +823,7 @@
             "identifier": "Flags_F",
             "name": "Flags_F",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -833,7 +833,7 @@
             "identifier": "Flags_B",
             "name": "Flags_B",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -843,10 +843,12 @@
             "identifier": "Flags_q",
             "name": "Flags_q",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         }
     ],
     "name": "SWARM_IBI"
+<<<<<<< Updated upstream
+=======
 },
 {
     "bands": [
@@ -1095,8 +1097,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "X-,Y-,Z-coordinates (WGS84) of the LEO satellite",
-            "identifier": "LEO_Positio",
-            "name": "LEO_Positio",
+            "identifier": "LEO_Position",
+            "name": "LEO_Position",
             "nil_values": [],
             "uom": "m"
         },
@@ -1135,8 +1137,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "GPS P1 code phase observation",
-            "identifier": "",
-            "name": "",
+            "identifier": "P1",
+            "name": "P1",
             "nil_values": [],
             "uom": "m"
         },
@@ -1222,4 +1224,5 @@
         }
     ],
     "name": "SWARM_TEC"
+>>>>>>> Stashed changes
 }]
