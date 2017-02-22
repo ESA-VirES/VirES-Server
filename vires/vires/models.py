@@ -51,7 +51,7 @@ from vires.util import get_total_seconds
 class Job(Model):
     """ VirES WPS asynchronous job.
     """
-    owner = ForeignKey(User, related_name='jobs', null=False, blank=False)
+    owner = ForeignKey(User, related_name='jobs', null=True, blank=True)
     identifier = CharField(max_length=256, null=False, blank=False)
     process_id = CharField(max_length=256, null=False, blank=False)
     response_url = CharField(max_length=512, null=False, blank=False)

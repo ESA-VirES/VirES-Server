@@ -159,10 +159,11 @@ class FetchFilteredDataAsync(WPSProcess):
 
     def initialize(self, context, inputs, outputs, parts):
         """ Asynchronous process initialization. """
+        user = inputs['\\user']
         # create DB record for this WPS job
         job = Job()
         job.process_id = self.identifier
-        job.owner = inputs['\\user']
+        job.owner = user if user.is_authenticated() else None
         job.identifier = context.identifier
         job.response_url = context.status_location
         job.save()

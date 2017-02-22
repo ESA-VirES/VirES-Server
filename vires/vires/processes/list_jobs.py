@@ -59,8 +59,9 @@ class ListJobs(Component):
     ]
 
     def execute(self, user, **kwargs):
+        owner = user if user.is_authenticated() else None
         job_list = {}
-        for job in Job.objects.filter(owner=user).order_by("created"):
+        for job in Job.objects.filter(owner=owner).order_by("created"):
             job_list.setdefault(job.process_id, []).append({
                 "id": str(job.identifier),
                 "url": str(job.response_url),
