@@ -847,8 +847,6 @@
         }
     ],
     "name": "SWARM_IBI"
-<<<<<<< Updated upstream
-=======
 },
 {
     "bands": [
@@ -1224,5 +1222,4 @@
         }
     ],
     "name": "SWARM_TEC"
->>>>>>> Stashed changes
 }]
