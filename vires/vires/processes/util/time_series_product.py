@@ -56,6 +56,9 @@ class ProductTimeSeries(TimeSeries):
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "collection_id": collection.identifier,
         })
+        if self.collection.range_type.name == "SWARM_EEF":
+            self.TIME_VARIABLE = 'timestamp'
+
         self.product_set = set() # stores all recorded source products
 
     @property

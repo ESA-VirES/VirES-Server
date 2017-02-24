@@ -71,7 +71,7 @@ BASE_MIN_STEP = timedelta(seconds=7)
 BASE_TIME_UNIT = timedelta(days=1)
 
 # set of the minimum required variables
-REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
+REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius","timestamp", "latitude", "longitude"]
 
 # time converters
 CDF_RAW_TIME_FORMATS = ("ISO date-time", "MJD2000", "Unix epoch")
@@ -222,7 +222,7 @@ class FetchData(WPSProcess):
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
-            sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
+            sampler = MinStepSampler('timestamp', timedelta_to_cdf_rawtime(
                 samplig_step, CDF_EPOCH_TYPE
             ))
             filters = [sampler]
