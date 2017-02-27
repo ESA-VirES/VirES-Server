@@ -31,8 +31,8 @@
 # pylint: disable=too-many-branches, too-many-statements
 
 from os import remove
-from os.path import join, exists
-from uuid import uuid4
+from os.path import exists #, join
+#from uuid import uuid4
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -270,15 +270,33 @@ class FetchFilteredDataAsync(WPSProcess):
             output_variables = variables = []
 
         def _generate_data_():
-            total_count = 0
+            samples_count = 0
+            product_count = 0
 
+            # count matched product to be bale
+            collection_product_counts = dict(
+                (label, merged_sources[0].subset_count(begin_time, end_time))
+                for label, merged_sources in sources.iteritems()
+            )
+            total_product_count = sum(collection_product_counts.values())
+
+            # generate the data
             for label, merged_sources in sources.iteritems():
                 ts_master, ts_slaves = merged_sources[0], merged_sources[1:]
                 # NOTE: the mandatory variables are always taken from the master
                 dataset_iterator = ts_master.subset(
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
-                for dataset in dataset_iterator:
+                for idx, dataset in enumerate(dataset_iterator, 1):
+                    # update status
+                    context.update_progress(
+                        (product_count * 100) // total_product_count,
+                        "Filtering collection %r, product %d of %d." % (
+                            label, idx, collection_product_counts[label]
+                        )
+                    )
+                    product_count += 1
+                    #
                     time_variable = ts_master.TIME_VARIABLE
                     cdf_type = dataset.cdf_type[time_variable]
                     dataset, filters_left = dataset.filter(filters)
@@ -320,12 +338,12 @@ class FetchFilteredDataAsync(WPSProcess):
                         )
 
                     # check if the number of samples is within the allowed limit
-                    total_count += dataset.length
-                    if total_count > MAX_SAMPLES_COUNT:
+                    samples_count += dataset.length
+                    if samples_count > MAX_SAMPLES_COUNT:
                         self.access_logger.error(
                             "The sample count %d exceeds the maximum allowed "
                             "count of %d samples!",
-                            total_count, MAX_SAMPLES_COUNT,
+                            samples_count, MAX_SAMPLES_COUNT,
                         )
                         raise ExecuteError(
                             "Requested data exceeds the maximum limit of %d "
@@ -336,7 +354,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
             self.access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
-                total_count, output['mime_type'], ", ".join(output_variables)
+                samples_count, output['mime_type'], ", ".join(output_variables)
             )
 
         # === OUTPUT ===
@@ -388,7 +406,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
         elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
             temp_filename = temp_basename + ".cdf"
-            #result_filename = result_basename + ".cdf"
+            result_filename = temp_filename #result_basename + ".cdf"
             initialize = True
 
             if exists(temp_filename):
