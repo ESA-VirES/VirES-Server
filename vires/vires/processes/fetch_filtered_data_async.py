@@ -54,7 +54,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_filters2, IndexKp, IndexDst,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    with_cache_session,
+    with_cache_session, get_username, get_user,
 )
 
 # TODO: Make the limits configurable.
@@ -89,7 +89,7 @@ class FetchFilteredDataAsync(WPSProcess):
     asynchronous = True
 
     inputs = [
-        ("user", RequestParameter(lambda request: request.user)),
+        ("username", RequestParameter(get_username)),
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -159,11 +159,14 @@ class FetchFilteredDataAsync(WPSProcess):
 
     def initialize(self, context, inputs, outputs, parts):
         """ Asynchronous process initialization. """
-        user = inputs['\\user']
+        context.logger.info(
+            "Received %s WPS request from %s.",
+            self.identifier, inputs['\\username'] or "an anonymous user"
+        )
         # create DB record for this WPS job
         job = Job()
+        job.owner = get_user(inputs['\\username'])
         job.process_id = self.identifier
-        job.owner = user if user.is_authenticated() else None
         job.identifier = context.identifier
         job.response_url = context.status_location
         job.save()
