@@ -102,6 +102,18 @@ class ProductTimeSeries(TimeSeries):
             self.logger.debug("product: %s ", product.identifier)
             return self._extract_dataset(product, variables, 0, 0)
 
+    def _subset_qs(self, start, stop):
+        """ Subset DJngo query set. """
+        return Product.objects.filter(
+            collections=self.collection,
+            begin_time__lt=(stop + self.TIME_TOLERANCE),
+            end_time__gte=(start - self.TIME_TOLERANCE),
+        )
+
+    def subset_count(self, start, stop):
+        """ Count matched number of products. """
+        return self._subset_qs(start, stop).count()
+
     def subset(self, start, stop, variables=None):
         variables = self.get_extracted_variables(variables)
         self.logger.debug("subset: %s %s", start, stop)
@@ -110,13 +122,7 @@ class ProductTimeSeries(TimeSeries):
         if len(variables) == 0: # stop here if no variable is requested
             return
 
-        products_qs = Product.objects.filter(
-            collections=self.collection,
-            begin_time__lt=(stop + self.TIME_TOLERANCE),
-            end_time__gte=(start - self.TIME_TOLERANCE),
-        ).order_by('begin_time')
-
-        for product in products_qs:
+        for product in self._subset_qs(start, stop).order_by('begin_time'):
             self.logger.debug("product: %s ", product.identifier)
 
             self.product_set.add(product.identifier) # record source product
