@@ -4,6 +4,7 @@
 #
 # Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
+#          Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
@@ -27,9 +28,19 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+#pylint: disable=missing-docstring,fixme,unused-argument
+#pylint: disable=old-style-class,no-init,too-few-public-methods
+
+from datetime import timedelta
 from django.core.exceptions import ValidationError
-from django.contrib.gis.db import models
+from django.db.models import (
+    Model, ForeignKey, CharField, DateTimeField,
+)
 from django.contrib.gis import geos
+from django.contrib.gis.db.models import (
+    GeoManager, MultiLineStringField,
+)
+from django.contrib.auth.models import User
 
 from eoxserver.resources.coverages.models import (
     collect_eo_metadata, Collection, Coverage, EO_OBJECT_TYPE_REGISTRY
@@ -37,9 +48,26 @@ from eoxserver.resources.coverages.models import (
 from vires.util import get_total_seconds
 
 
+class Job(Model):
+    """ VirES WPS asynchronous job.
+    """
+    owner = ForeignKey(User, related_name='jobs', null=True, blank=True)
+    identifier = CharField(max_length=256, null=False, blank=False)
+    process_id = CharField(max_length=256, null=False, blank=False)
+    response_url = CharField(max_length=512, null=False, blank=False)
+    created = DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "WPS Job"
+        verbose_name_plural = "WPS Jobs"
+
+    def __unicode__(self):
+        return "%s:%s" % (self.process_id, self.identifier)
+
+
 class Product(Coverage):
-    objects = models.GeoManager()
-    ground_path = models.MultiLineStringField(null=True, blank=True)
+    objects = GeoManager()
+    ground_path = MultiLineStringField(null=True, blank=True)
 
     # TODO: Get rid of the incorrect resolution time
     @property
@@ -61,7 +89,7 @@ EO_OBJECT_TYPE_REGISTRY[201] = Product
 
 
 class ProductCollection(Product, Collection):
-    objects = models.GeoManager()
+    objects = GeoManager()
 
     class Meta:
         verbose_name = "Product Collection"
@@ -77,7 +105,7 @@ class ProductCollection(Product, Collection):
         product = eo_object.cast()
 
         if len(self):
-            # TODO: re-code this, as this is not relevant enough
+            # TODO: needs to be reviewed
             #if self.resolution_time != product.resolution_time:
             #    raise ValidationError(
             #        "%s has a different temporal resolution as %s" % (
@@ -112,6 +140,6 @@ EO_OBJECT_TYPE_REGISTRY[210] = ProductCollection
 
 
 class ForwardModel(Coverage):
-    objects = models.GeoManager()
+    objects = GeoManager()
 
 EO_OBJECT_TYPE_REGISTRY[250] = ForwardModel

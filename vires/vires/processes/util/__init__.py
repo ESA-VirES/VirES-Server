@@ -27,6 +27,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+from .cache import with_cache_session
 from .dataset import Dataset
 from .filters import (
     Filter, ScalarRangeFilter, VectorComponentRangeFilter,
@@ -49,6 +50,7 @@ from .png_output import (
     data_to_png,
     array_to_png,
 )
+from .auth import get_username, get_user
 
 # other miscellaneous utilities
 def format_filters(filters):
