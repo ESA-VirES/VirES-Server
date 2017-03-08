@@ -54,7 +54,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2,
     IndexKp, IndexDst,
-    BoundingBoxFilter, MinStepSampler,
+    BoundingBoxFilter, MinStepSampler, GroupingSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
 )
 
@@ -71,7 +71,7 @@ BASE_MIN_STEP = timedelta(seconds=7)
 BASE_TIME_UNIT = timedelta(days=1)
 
 # set of the minimum required variables
-REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius","timestamp", "latitude", "longitude"]
+REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
 
 # time converters
 CDF_RAW_TIME_FORMATS = ("ISO date-time", "MJD2000", "Unix epoch")
@@ -222,10 +222,11 @@ class FetchData(WPSProcess):
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
-            sampler = MinStepSampler('timestamp', timedelta_to_cdf_rawtime(
+            sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 samplig_step, CDF_EPOCH_TYPE
             ))
-            filters = [sampler]
+            grouping_sampler = GroupingSampler('Timestamp')
+            filters = [sampler, grouping_sampler]
             if bbox:
                 filters.append(
                     BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
@@ -289,7 +290,7 @@ class FetchData(WPSProcess):
                 for dataset in dataset_iterator:
                     # apply the sub-sampling and bounding-box filters
                     dataset, _ = dataset.filter(filters)
-
+                    self.logger.debug("%s", dataset.items())
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     collection_count += dataset.length

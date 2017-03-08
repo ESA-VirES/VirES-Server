@@ -40,6 +40,14 @@ from vires.models import Product
 from .dataset import Dataset
 from .time_series import TimeSeries
 
+VARIABLE_TRANSLATES = {
+    "SWARM_EEF":{
+        'Timestamp': 'timestamp',
+        'Latitude': 'latitude',
+        'Longitude': 'longitude'
+    }
+}
+
 
 class ProductTimeSeries(TimeSeries):
     """ Product time-series class. """
@@ -52,12 +60,13 @@ class ProductTimeSeries(TimeSeries):
             return '%s: %s' % (self.extra["collection_id"], msg), kwargs
 
     def __init__(self, collection, logger=None):
+        variable_translate = VARIABLE_TRANSLATES.get(collection.range_type.name, {})
+        self.translate_fw = variable_translate
+        self.translate_bw = dict((v, k) for k, v in variable_translate.iteritems())
         self.collection = collection
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "collection_id": collection.identifier,
         })
-        if self.collection.range_type.name == "SWARM_EEF":
-            self.TIME_VARIABLE = 'timestamp'
 
         self.product_set = set() # stores all recorded source products
 
@@ -68,15 +77,17 @@ class ProductTimeSeries(TimeSeries):
 
     @property
     def variables(self):
-        return [band.identifier for band in self.collection.range_type]
+        return [
+            self.translate_bw.get(band.identifier, band.identifier)
+            for band in self.collection.range_type
+        ]
 
-    @staticmethod
-    def _extract_dataset(product, extracted_variables, idx_low, idx_high):
+    def _extract_dataset(self, product, extracted_variables, idx_low, idx_high):
         """ Extract dataset from a product. """
         dataset = Dataset()
         with cdf_open(connect(product.data_items.all()[0])) as cdf:
             for variable in extracted_variables:
-                cdf_var = cdf.raw_var(variable)
+                cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
                 data = cdf_var[idx_low:idx_high]
                 dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
         return dataset
@@ -129,7 +140,9 @@ class ProductTimeSeries(TimeSeries):
 
             with cdf_open(connect(product.data_items.all()[0])) as cdf:
                 # temporal sub-setting
-                temp_var = cdf.raw_var(self.TIME_VARIABLE)
+                temp_var = cdf.raw_var(
+                    self.translate_fw.get(self.TIME_VARIABLE, self.TIME_VARIABLE)
+                )
                 times, time_type = temp_var[:], temp_var.type()
 
                 self.logger.debug(
