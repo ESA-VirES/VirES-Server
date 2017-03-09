@@ -33,7 +33,7 @@ from .filters import (
     Filter, ScalarRangeFilter, VectorComponentRangeFilter,
     BoundingBoxFilter,
 )
-from .filters_subsampling import MinStepSampler
+from .filters_subsampling import MinStepSampler, GroupingSampler
 from .time_series import TimeSeries
 from .time_series_product import ProductTimeSeries
 from .time_series_aux import  IndexKp, IndexDst
