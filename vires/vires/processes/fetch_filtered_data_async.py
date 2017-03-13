@@ -29,18 +29,21 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches,
 # pylint: disable=too-many-branches, too-many-statements
+# pylint: disable=missing-docstring, unused-argument
 
+from functools import wraps
 from os import remove
 from os.path import exists #, join
 #from uuid import uuid4
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from django.conf import settings
+from django.utils.timezone import utc
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, RequestParameter, Reference,
     FormatText, FormatJSON, FormatBinaryRaw,
 )
-from eoxserver.services.ows.wps.exceptions import ExecuteError
+from eoxserver.services.ows.wps.exceptions import ExecuteError, ServerBusy
 from vires.models import Job
 from vires.util import unique, exclude, include
 from vires.time_util import (
@@ -58,6 +61,9 @@ from vires.processes.util import (
 )
 
 # TODO: Make the limits configurable.
+# Limit number of active jobs (ACCEPTED or STARTED) per user
+MAX_ACTIVE_JOBS = 2
+
 # Limit response size (equivalent to 50 daily SWARM LR products).
 MAX_SAMPLES_COUNT = 4320000
 
@@ -157,15 +163,65 @@ class FetchFilteredDataAsync(WPSProcess):
         )),
     ]
 
+
+    @staticmethod
+    def on_started(context, progress, message):
+        """ Callback executed when an asynchronous Job gets started. """
+        job = Job.objects.get(identifier=context.identifier)
+        job.status = Job.STARTED
+        job.started = datetime.now(utc)
+        job.save()
+        context.logger.info(
+            "Job started after %.3gs waiting.",
+            (job.started - job.created).total_seconds()
+        )
+
+    @staticmethod
+    def on_succeeded(context, outputs):
+        """ Callback executed when an asynchronous Job finishes. """
+        job = Job.objects.get(identifier=context.identifier)
+        job.status = Job.SUCCEEDED
+        job.stopped = datetime.now(utc)
+        job.save()
+        context.logger.info(
+            "Job finished after %.3gs running.",
+            (job.stopped - job.started).total_seconds()
+        )
+
+    @staticmethod
+    def on_failed(context, exception):
+        """ Callback executed when an asynchronous Job fails. """
+        job = Job.objects.get(identifier=context.identifier)
+        job.status = Job.FAILED
+        job.stopped = datetime.now(utc)
+        job.save()
+        context.logger.info(
+            "Job failed after %.3gs running.",
+            (job.stopped - job.started).total_seconds()
+        )
+
     def initialize(self, context, inputs, outputs, parts):
         """ Asynchronous process initialization. """
         context.logger.info(
             "Received %s WPS request from %s.",
             self.identifier, inputs['\\username'] or "an anonymous user"
         )
+
+        user = get_user(inputs['\\username'])
+        active_jobs_count = Job.objects.filter(
+            owner=user, status__in=(Job.ACCEPTED, Job.STARTED)
+        ).count()
+
+        if active_jobs_count >= MAX_ACTIVE_JOBS:
+            raise ServerBusy(
+                "Maximum number of allowed active asynchronous download "
+                "requests exceeded!"
+            )
+
         # create DB record for this WPS job
         job = Job()
-        job.owner = get_user(inputs['\\username'])
+        job.status = Job.ACCEPTED
+        job.owner = user
         job.process_id = self.identifier
         job.identifier = context.identifier
         job.response_url = context.status_location
