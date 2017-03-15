@@ -35,6 +35,8 @@ from eoxserver.services.ows.wps.parameters import (
 )
 from vires.models import Job
 
+STATUS_TO_STRING = dict(Job.STATUS_CHOICES)
+
 class ListJobs(Component):
     """ This utility process lists all asynchronous WPS jobs owned by
     the current user.
@@ -66,6 +68,9 @@ class ListJobs(Component):
                 "id": str(job.identifier),
                 "url": str(job.response_url),
                 "created": job.created.isoformat("T"),
+                "started": job.started.isoformat("T") if job.started else None,
+                "stopped": job.stopped.isoformat("T") if job.stopped else None,
+                "status": STATUS_TO_STRING[job.status],
             })
         return CDObject(
             job_list, format=FormatJSON(), filename="job_list.json",

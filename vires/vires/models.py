@@ -51,18 +51,37 @@ from vires.util import get_total_seconds
 class Job(Model):
     """ VirES WPS asynchronous job.
     """
+    ACCEPTED = 'A'  # Accepted, enqueued for processing
+    STARTED = 'R'   # Running, processing in progress
+    SUCCEEDED = 'S'  # Successfully finished without errors
+    ABORTED = 'T'   # Terminated on user request (reserved for future use)
+    FAILED = 'F'    # Failed, an error occurred
+    UNDEFINED = 'U' # Unknown undefined state
+
+    STATUS_CHOICES = (
+        (ACCEPTED, "ACCEPTED"),
+        (STARTED, "STARTED"),
+        (SUCCEEDED, "SUCCEEDED"),
+        (ABORTED, "ABORTED"),
+        (FAILED, "FAILED"),
+        (UNDEFINED, "UNDEFINED"),
+    )
+
     owner = ForeignKey(User, related_name='jobs', null=True, blank=True)
     identifier = CharField(max_length=256, null=False, blank=False)
     process_id = CharField(max_length=256, null=False, blank=False)
     response_url = CharField(max_length=512, null=False, blank=False)
     created = DateTimeField(auto_now_add=True)
+    started = DateTimeField(null=True)
+    stopped = DateTimeField(null=True)
+    status = CharField(max_length=1, choices=STATUS_CHOICES, default=UNDEFINED)
 
     class Meta:
         verbose_name = "WPS Job"
         verbose_name_plural = "WPS Jobs"
 
     def __unicode__(self):
-        return "%s:%s" % (self.process_id, self.identifier)
+        return "%s:%s:%s" % (self.process_id, self.identifier, self.status)
 
 
 class Product(Coverage):
