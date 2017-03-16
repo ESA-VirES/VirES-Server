@@ -290,7 +290,6 @@ class FetchData(WPSProcess):
                 for dataset in dataset_iterator:
                     # apply the sub-sampling and bounding-box filters
                     dataset, _ = dataset.filter(filters)
-                    self.logger.debug("%s", dataset.items())
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     collection_count += dataset.length
