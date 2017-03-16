@@ -30,6 +30,7 @@
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
+from numpy import empty
 from eoxserver.backends.access import connect
 from vires.util import between_co
 from vires.cdf_util import (
@@ -88,7 +89,11 @@ class ProductTimeSeries(TimeSeries):
         with cdf_open(connect(product.data_items.all()[0])) as cdf:
             for variable in extracted_variables:
                 cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
-                data = cdf_var[idx_low:idx_high]
+                if len(cdf_var.shape) > 0: # regular vector variable
+                    data = cdf_var[idx_low:idx_high]
+                else: # NRV scalar variable
+                    data = empty(max(0, idx_high - idx_low), dtype=cdf_var.dtype)
+                    data.fill(cdf_var[...])
                 dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
         return dataset
 
