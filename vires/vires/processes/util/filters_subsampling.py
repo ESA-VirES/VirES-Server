@@ -28,7 +28,7 @@
 #-------------------------------------------------------------------------------
 
 from logging import getLogger, LoggerAdapter
-from numpy import empty, diff, concatenate, in1d
+from numpy import empty, diff, concatenate, in1d, arange
 from .filters import Filter
 
 class MinStepSampler(Filter):
@@ -99,7 +99,7 @@ class GroupingSampler(Filter):
 
     def filter(self, dataset, index=None):
         if index is None:
-            return dataset
+            return arange(dataset.length)
         else:
             return self._filter(dataset[self.variable], index)
 
@@ -109,7 +109,7 @@ class GroupingSampler(Filter):
         """
         if len(data) > 0: # non-empty array
             self.logger.debug("initial size: %d", data.size)
-            res_index = in1d(data,data[index])
+            res_index = in1d(data,data[index]).nonzero()[0]
         else: # empty array
             index = empty(0, 'int64')
         self.logger.debug("filtered size: %d", index.size)
