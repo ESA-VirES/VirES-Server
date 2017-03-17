@@ -1,10 +1,12 @@
 #-------------------------------------------------------------------------------
 #
+#  Process Utilities - Authentication
+#
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2015 EOX IT Services GmbH
+# Copyright (C) 2017 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,5 +27,18 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-__version__="0.4.0dev0"
-FULL_PACKAGE_NAME = "%s-%s" % (__name__, __version__)
+from django.contrib.auth.models import User
+
+def get_username(request):
+    """ Extract username of the authenticated user from the Django HttpRequest
+    or return None for unauthenticated user.
+    """
+    user = request.user
+    return user.username if user.is_authenticated() else None
+
+
+def get_user(username):
+    """ Get the User object for the given username.
+    Returns None if the username is None.
+    """
+    return None if username is None else User.objects.get(username=username)

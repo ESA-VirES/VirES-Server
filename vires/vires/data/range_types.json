@@ -18,7 +18,7 @@
             "identifier": "SyncStatus",
             "name": "SyncStatus",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -158,7 +158,7 @@
             "identifier": "q_NEC_CRF",
             "name": "q_NEC_CRF",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -178,7 +178,7 @@
             "identifier": "Flags_F",
             "name": "Flags_F",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -188,7 +188,7 @@
             "identifier": "Flags_B",
             "name": "Flags_B",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -198,7 +198,7 @@
             "identifier": "Flags_q",
             "name": "Flags_q",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -208,7 +208,7 @@
             "identifier": "Flags_Platform",
             "name": "Flags_Platform",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -218,7 +218,7 @@
             "identifier": "ASM_Freq_Dev",
             "name": "ASM_Freq_Dev",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         }
     ],
     "name": "SWARM_MAG"
@@ -394,189 +394,189 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Spacecraft velocity, NEC frame",
             "identifier": "v_SC",
-            "name": "",
+            "name": "v_SC",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Ion velocity, NEC frame",
             "identifier": "v_ion",
-            "name": "",
+            "name": "v_ion",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of v_ion, NEC frame",
             "identifier": "v_ion_error",
-            "name": "",
+            "name": "v_ion_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Electric field vector, NEC frame",
             "identifier": "E",
-            "name": "",
+            "name": "E",
             "nil_values": [],
-            "uom": ""
+            "uom": "mV/m"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of E, NEC frame",
             "identifier": "E_error",
-            "name": "",
+            "name": "E_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "mV/m"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Time offset of LP data, tLP = t + dt_LP",
             "identifier": "dt_LP",
-            "name": "",
+            "name": "dt_LP",
             "nil_values": [],
-            "uom": ""
+            "uom": "s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Plasma density (electron)",
             "identifier": "n",
-            "name": "",
+            "name": "n",
             "nil_values": [],
-            "uom": ""
+            "uom": "cm-3"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of plasma density (ne)",
             "identifier": "n_error",
-            "name": "",
+            "name": "n_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "cm-3"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Plasma ion temperature",
             "identifier": "T_ion",
-            "name": "",
+            "name": "T_ion",
             "nil_values": [],
-            "uom": ""
+            "uom": "K"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of plasma ion temperature (T_ion)",
             "identifier": "T_ion_error",
-            "name": "",
+            "name": "T_ion_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "K"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Plasma electron temperature",
             "identifier": "T_elec",
-            "name": "",
+            "name": "T_elec",
             "nil_values": [],
-            "uom": ""
+            "uom": "K"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of plasma electron temperature (T_elec)",
             "identifier": "T_elec_error",
-            "name": "",
+            "name": "T_elec_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "K"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Spacecraft potential",
             "identifier": "U_SC",
-            "name": "",
+            "name": "U_SC",
             "nil_values": [],
-            "uom": ""
+            "uom": "V"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of spacecraft potential (U_pol)",
             "identifier": "U_SC_error",
-            "name": "",
+            "name": "U_SC_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "V"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Ion velocity, horizontal (H) sensor",
             "identifier": "v_ion_H",
-            "name": "",
+            "name": "v_ion_H",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of v_ion_H",
             "identifier": "v_ion_H_error",
-            "name": "",
+            "name": "v_ion_H_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Ion velocity, vertical (V) sensor",
             "identifier": "v_ion_V",
-            "name": "",
+            "name": "v_ion_V",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Error estimate of v_ion_V",
             "identifier": "v_ion_V_error",
-            "name": "",
+            "name": "v_ion_V_error",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "RMS fit error from TII x-profile 2-Gaussian fits, H sensor",
             "identifier": "rms_fit_H",
-            "name": "",
+            "name": "rms_fit_H",
             "nil_values": [],
             "uom": ""
         },
@@ -584,9 +584,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "RMS fit error from TII x-profile 2-Gaussian fits, V sensor",
             "identifier": "rms_fit_V",
-            "name": "",
+            "name": "rms_fit_V",
             "nil_values": [],
             "uom": ""
         },
@@ -594,9 +594,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Variance in 16 Hz x moment during a halfsecond interval, H sensor",
             "identifier": "var_x_H",
-            "name": "",
+            "name": "var_x_H",
             "nil_values": [],
             "uom": ""
         },
@@ -604,9 +604,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Variance in 16 Hz y moment during a halfsecond interval, H sensor",
             "identifier": "var_y_H",
-            "name": "",
+            "name": "var_y_H",
             "nil_values": [],
             "uom": ""
         },
@@ -614,9 +614,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Variance in 16 Hz x moment during a halfsecond interval, V sensor",
             "identifier": "var_x_V",
-            "name": "",
+            "name": "var_x_V",
             "nil_values": [],
             "uom": ""
         },
@@ -624,9 +624,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Variance in 16 Hz y moment during a halfsecond interval, V sensor",
             "identifier": "var_y_V",
-            "name": "",
+            "name": "var_y_V",
             "nil_values": [],
             "uom": ""
         },
@@ -634,29 +634,29 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Velocity deflection due to magnetotorquer, H sensor",
             "identifier": "dv_mtq_H",
-            "name": "",
+            "name": "dv_mtq_H",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "",
+            "description": "Velocity deflection due to magnetotorquer, V sensor",
             "identifier": "dv_mtq_V",
-            "name": "",
+            "name": "dv_mtq_V",
             "nil_values": [],
-            "uom": ""
+            "uom": "m/s"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "South Atlantic Anomaly proximity indicator, range 0-5",
             "identifier": "SAA",
-            "name": "",
+            "name": "SAA",
             "nil_values": [],
             "uom": ""
         },
@@ -664,9 +664,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags indicating the source/method of LP measurements (ne, T_elec, U_SC)",
             "identifier": "Flags_LP",
-            "name": "",
+            "name": "Flags_LP",
             "nil_values": [],
             "uom": ""
         },
@@ -674,9 +674,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the plasma density measurement",
             "identifier": "Flags_LP_n",
-            "name": "",
+            "name": "Flags_LP_n",
             "nil_values": [],
             "uom": ""
         },
@@ -684,9 +684,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the electron temperature measurement",
             "identifier": "Flags_LP_T_elec",
-            "name": "",
+            "name": "Flags_LP_T_elec",
             "nil_values": [],
             "uom": ""
         },
@@ -694,9 +694,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the spacecraft potential measurement",
             "identifier": "Flags_LP_U_SC",
-            "name": "",
+            "name": "Flags_LP_U_SC",
             "nil_values": [],
             "uom": ""
         },
@@ -704,9 +704,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Synchronization status",
             "identifier": "SyncStatus",
-            "name": "",
+            "name": "SyncStatus",
             "nil_values": [],
             "uom": ""
         },
@@ -714,9 +714,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the TII measurement",
             "identifier": "Flags_TII",
-            "name": "",
+            "name": "Flags_TII",
             "nil_values": [],
             "uom": ""
         },
@@ -724,9 +724,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Flags characterizing the S/C platform information (AOCS thrusters, VFM and STR status)",
             "identifier": "Flags_Platform",
-            "name": "",
+            "name": "Flags_Platform",
             "nil_values": [],
             "uom": ""
         },
@@ -734,9 +734,9 @@
             "color_interpretation": "Undefined",
             "data_type": "Byte",
             "definition": "",
-            "description": "",
+            "description": "Current maneuver identification code",
             "identifier": "Maneuver_Id",
-            "name": "",
+            "name": "Maneuver_Id",
             "nil_values": [],
             "uom": ""
         }
@@ -793,7 +793,7 @@
             "identifier": "Bubble_Index",
             "name": "Bubble_Index",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -803,7 +803,7 @@
             "identifier": "Bubble_Probability",
             "name": "Bubble_Probability",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -813,7 +813,7 @@
             "identifier": "Flags_Bubble",
             "name": "Flags_Bubble",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -823,7 +823,7 @@
             "identifier": "Flags_F",
             "name": "Flags_F",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -833,7 +833,7 @@
             "identifier": "Flags_B",
             "name": "Flags_B",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         },
         {
             "color_interpretation": "Undefined",
@@ -843,8 +843,383 @@
             "identifier": "Flags_q",
             "name": "Flags_q",
             "nil_values": [],
-            "uom": "-"
+            "uom": ""
         }
     ],
     "name": "SWARM_IBI"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "milliseconds elapsed since 00:00:00 January 1, 2000 UTC",
+            "identifier": "timestamp",
+            "name": "timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic longitude of satellite crossing of the magnetic equator",
+            "identifier": "longitude",
+            "name": "longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic latitude of satellite crossing of the magnetic equator",
+            "identifier": "latitude",
+            "name": "latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Estimate of the equatorial electric field",
+            "identifier": "EEF",
+            "name": "EEF",
+            "nil_values": [],
+            "uom": "V/m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quality indicator of EEF estimate; relative error between modeled and observed current profil",
+            "identifier": "RelErr",
+            "name": "RelErr",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags describing data gaps and satellite identification",
+            "identifier": "flags",
+            "name": "flags",
+            "nil_values": [],
+            "uom": ""
+        }
+    ],
+    "name": "SWARM_EEF"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Radius",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Ionospheric radial current (IRC)",
+            "identifier": "IRC",
+            "name": "IRC",
+            "nil_values": [],
+            "uom": "uA/m2"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "uncertainty of IRC",
+            "identifier": "IRC_Error",
+            "name": "IRC_Error",
+            "nil_values": [],
+            "uom": "uA/m2"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Field-aligned current (FAC)",
+            "identifier": "FAC",
+            "name": "FAC",
+            "nil_values": [],
+            "uom": "uA/m2"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "uncertainty of FAC",
+            "identifier": "FAC_Error",
+            "name": "FAC_Error",
+            "nil_values": [],
+            "uom": "uA/m2"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Flags characterizing the product quality (processing flags)",
+            "identifier": "Flags",
+            "name": "Flags",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Flags_F passed through from L1b and accumulated for quad points",
+            "identifier": "Flags_F",
+            "name": "Flags_F",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Flags_B passed through from L1b and accumulated for quad points",
+            "identifier": "Flags_B",
+            "name": "Flags_B",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Flags_q passed through from L1b and accumulated for quad point",
+            "identifier": "Flags_q",
+            "name": "Flags_q",
+            "nil_values": [],
+            "uom": ""
+        }
+    ],
+    "name": "SWARM_FAC"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time stamp in UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Geographic radius",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "km"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "X-,Y-,Z-coordinates (WGS84) of the GPS satellite",
+            "identifier": "GPS_Position",
+            "name": "GPS_Position",
+            "nil_values": [],
+            "uom": "km"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "X-,Y-,Z-coordinates (WGS84) of the LEO satellite",
+            "identifier": "LEO_Position",
+            "name": "LEO_Position",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt16",
+            "definition": "",
+            "description": "GPS satellite PRN",
+            "identifier": "PRN",
+            "name": "PRN",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS L1 carrier phase observation",
+            "identifier": "L1",
+            "name": "L1",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS L2 carrier phase observation",
+            "identifier": "L2",
+            "name": "L2",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS P1 code phase observation",
+            "identifier": "P1",
+            "name": "P1",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS P2 code phase observation",
+            "identifier": "P2",
+            "name": "P2",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS signal-to-noise ratio or raw signal strength on L1",
+            "identifier": "S1",
+            "name": "S1",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS signal-to-noise ratio or raw signal strength on L2",
+            "identifier": "S2",
+            "name": "S2",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Absolute slant TE",
+            "identifier": "Absolute_STEC",
+            "name": "Absolute_STEC",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Relative slant TEC",
+            "identifier": "Relative_STEC",
+            "name": "Relative_STEC",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Root mean square error of relative slant TEC",
+            "identifier": "Relative_STEC_RMS",
+            "name": "Relative_STEC_RMS",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "GPS receiver differential code bias",
+            "identifier": "DCB",
+            "name": "DCB",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error of the GPS receiver differential code bias",
+            "identifier": "DCB_Error",
+            "name": "DCB_Error",
+            "nil_values": [],
+            "uom": "TECU"
+        }
+    ],
+    "name": "SWARM_TEC"
 }]

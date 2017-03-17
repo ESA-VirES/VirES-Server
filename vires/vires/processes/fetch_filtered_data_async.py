@@ -29,20 +29,22 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches,
 # pylint: disable=too-many-branches, too-many-statements
+# pylint: disable=missing-docstring, unused-argument
 
+from functools import wraps
 from os import remove
-from os.path import join, exists
-from uuid import uuid4
+from os.path import exists #, join
+#from uuid import uuid4
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from django.conf import settings
+from django.utils.timezone import utc
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData,
+    LiteralData, ComplexData, RequestParameter, Reference,
     FormatText, FormatJSON, FormatBinaryRaw,
-    CDFile,
 )
-from eoxserver.services.ows.wps.exceptions import ExecuteError
-from vires.config import SystemConfigReader
+from eoxserver.services.ows.wps.exceptions import ExecuteError, ServerBusy
+from vires.models import Job
 from vires.util import unique, exclude, include
 from vires.time_util import (
     naive_to_utc, timedelta_to_iso_duration,
@@ -55,14 +57,18 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_filters2, IndexKp, IndexDst,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
+    with_cache_session, get_username, get_user,
 )
 
 # TODO: Make the limits configurable.
-# Limit response size (equivalent to 5 daily SWARM LR products).
-MAX_SAMPLES_COUNT = 432000
+# Limit number of active jobs (ACCEPTED or STARTED) per user
+MAX_ACTIVE_JOBS = 2
 
-# maximum allowed time selection period
-MAX_TIME_SELECTION = timedelta(days=31)
+# Limit response size (equivalent to 50 daily SWARM LR products).
+MAX_SAMPLES_COUNT = 4320000
+
+# maximum allowed time selection period (~100years >> mission life-time)
+MAX_TIME_SELECTION = timedelta(days=35525)
 
 # set of the minimum required variables
 REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
@@ -76,17 +82,20 @@ CDF_RAW_TIME_CONVERTOR = {
 }
 
 
-class FetchFilteredData(WPSProcess):
+class FetchFilteredDataAsync(WPSProcess):
     """ Process retrieving subset of the registered Swarm data based
     on collection, time interval and optional additional custom filters.
     This process is designed to be used for the data download.
     """
-    identifier = "vires:fetch_filtered_data"
+    identifier = "vires:fetch_filtered_data_async"
     title = "Fetch merged SWARM products."
     metadata = {}
     profiles = ["vires"]
+    synchronous = False
+    asynchronous = True
 
     inputs = [
+        ("username", RequestParameter(get_username)),
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -154,11 +163,77 @@ class FetchFilteredData(WPSProcess):
         )),
     ]
 
+
+    @staticmethod
+    def on_started(context, progress, message):
+        """ Callback executed when an asynchronous Job gets started. """
+        job = Job.objects.get(identifier=context.identifier)
+        job.status = Job.STARTED
+        job.started = datetime.now(utc)
+        job.save()
+        context.logger.info(
+            "Job started after %.3gs waiting.",
+            (job.started - job.created).total_seconds()
+        )
+
+    @staticmethod
+    def on_succeeded(context, outputs):
+        """ Callback executed when an asynchronous Job finishes. """
+        job = Job.objects.get(identifier=context.identifier)
+        job.status = Job.SUCCEEDED
+        job.stopped = datetime.now(utc)
+        job.save()
+        context.logger.info(
+            "Job finished after %.3gs running.",
+            (job.stopped - job.started).total_seconds()
+        )
+
+    @staticmethod
+    def on_failed(context, exception):
+        """ Callback executed when an asynchronous Job fails. """
+        job = Job.objects.get(identifier=context.identifier)
+        job.status = Job.FAILED
+        job.stopped = datetime.now(utc)
+        job.save()
+        context.logger.info(
+            "Job failed after %.3gs running.",
+            (job.stopped - job.started).total_seconds()
+        )
+
+    def initialize(self, context, inputs, outputs, parts):
+        """ Asynchronous process initialization. """
+        context.logger.info(
+            "Received %s WPS request from %s.",
+            self.identifier, inputs['\\username'] or "an anonymous user"
+        )
+
+        user = get_user(inputs['\\username'])
+        active_jobs_count = Job.objects.filter(
+            owner=user, status__in=(Job.ACCEPTED, Job.STARTED)
+        ).count()
+
+        if active_jobs_count >= MAX_ACTIVE_JOBS:
+            raise ServerBusy(
+                "Maximum number of allowed active asynchronous download "
+                "requests exceeded!"
+            )
+
+        # create DB record for this WPS job
+        job = Job()
+        job.status = Job.ACCEPTED
+        job.owner = user
+        job.process_id = self.identifier
+        job.identifier = context.identifier
+        job.response_url = context.status_location
+        job.save()
+
+    @with_cache_session
     def execute(self, collection_ids, begin_time, end_time, filters,
                 requested_variables, model_ids, shc,
-                csv_time_format, output, **kwarg):
+                csv_time_format, output, context, **kwarg):
         """ Execute process """
-        workspace_dir = SystemConfigReader().path_temp
+        workspace_dir = ""
+
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
         models = parse_models2("model_ids", model_ids, shc)
@@ -254,15 +329,33 @@ class FetchFilteredData(WPSProcess):
             output_variables = variables = []
 
         def _generate_data_():
-            total_count = 0
+            samples_count = 0
+            product_count = 0
 
+            # count matched product to be bale
+            collection_product_counts = dict(
+                (label, merged_sources[0].subset_count(begin_time, end_time))
+                for label, merged_sources in sources.iteritems()
+            )
+            total_product_count = sum(collection_product_counts.values())
+
+            # generate the data
             for label, merged_sources in sources.iteritems():
                 ts_master, ts_slaves = merged_sources[0], merged_sources[1:]
                 # NOTE: the mandatory variables are always taken from the master
                 dataset_iterator = ts_master.subset(
                     begin_time, end_time, REQUIRED_VARIABLES + variables,
                 )
-                for dataset in dataset_iterator:
+                for idx, dataset in enumerate(dataset_iterator, 1):
+                    # update status
+                    context.update_progress(
+                        (product_count * 100) // total_product_count,
+                        "Filtering collection %r, product %d of %d." % (
+                            label, idx, collection_product_counts[label]
+                        )
+                    )
+                    product_count += 1
+                    #
                     time_variable = ts_master.TIME_VARIABLE
                     cdf_type = dataset.cdf_type[time_variable]
                     dataset, filters_left = dataset.filter(filters)
@@ -304,12 +397,12 @@ class FetchFilteredData(WPSProcess):
                         )
 
                     # check if the number of samples is within the allowed limit
-                    total_count += dataset.length
-                    if total_count > MAX_SAMPLES_COUNT:
+                    samples_count += dataset.length
+                    if samples_count > MAX_SAMPLES_COUNT:
                         self.access_logger.error(
                             "The sample count %d exceeds the maximum allowed "
                             "count of %d samples!",
-                            total_count, MAX_SAMPLES_COUNT,
+                            samples_count, MAX_SAMPLES_COUNT,
                         )
                         raise ExecuteError(
                             "Requested data exceeds the maximum limit of %d "
@@ -320,14 +413,15 @@ class FetchFilteredData(WPSProcess):
 
             self.access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
-                total_count, output['mime_type'], ", ".join(output_variables)
+                samples_count, output['mime_type'], ", ".join(output_variables)
             )
 
         # === OUTPUT ===
 
         # get configurations
-        temp_basename = join(workspace_dir, "vires_" + uuid4().hex)
-        result_basename = "%s_%s_%s_Filtered" % (
+        #temp_basename = join(workspace_dir, "vires_" + uuid4().hex)
+        #result_basename = "%s_%s_%s_Filtered" % (
+        temp_basename = "%s_%s_%s_Filtered" % (
             "_".join(
                 s.collection.identifier for l in sources.values() for s in l
             ),
@@ -337,7 +431,7 @@ class FetchFilteredData(WPSProcess):
 
         if output['mime_type'] == "text/csv":
             temp_filename = temp_basename + ".csv"
-            result_filename = result_basename + ".csv"
+            #result_filename = result_basename + ".csv"
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
             initialize = True
 
@@ -371,7 +465,7 @@ class FetchFilteredData(WPSProcess):
 
         elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
             temp_filename = temp_basename + ".cdf"
-            result_filename = result_basename + ".cdf"
+            result_filename = temp_filename #result_basename + ".cdf"
             initialize = True
 
             if exists(temp_filename):
@@ -411,4 +505,4 @@ class FetchFilteredData(WPSProcess):
                 "Unexpected output format %r requested!" % output['mime_type']
             )
 
-        return CDFile(temp_filename, filename=result_filename, **output)
+        return Reference(*context.publish(temp_filename), **output)

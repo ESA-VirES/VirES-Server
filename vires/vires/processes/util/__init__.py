@@ -27,12 +27,13 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+from .cache import with_cache_session
 from .dataset import Dataset
 from .filters import (
     Filter, ScalarRangeFilter, VectorComponentRangeFilter,
     BoundingBoxFilter,
 )
-from .filters_subsampling import MinStepSampler
+from .filters_subsampling import MinStepSampler, GroupingSampler
 from .time_series import TimeSeries
 from .time_series_product import ProductTimeSeries
 from .time_series_aux import  IndexKp, IndexDst
@@ -49,6 +50,7 @@ from .png_output import (
     data_to_png,
     array_to_png,
 )
+from .auth import get_username, get_user
 
 # other miscellaneous utilities
 def format_filters(filters):

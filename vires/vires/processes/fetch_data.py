@@ -54,7 +54,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2,
     IndexKp, IndexDst,
-    BoundingBoxFilter, MinStepSampler,
+    BoundingBoxFilter, MinStepSampler, GroupingSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
 )
 
@@ -225,7 +225,8 @@ class FetchData(WPSProcess):
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 samplig_step, CDF_EPOCH_TYPE
             ))
-            filters = [sampler]
+            grouping_sampler = GroupingSampler('Timestamp')
+            filters = [sampler, grouping_sampler]
             if bbox:
                 filters.append(
                     BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
@@ -289,7 +290,6 @@ class FetchData(WPSProcess):
                 for dataset in dataset_iterator:
                     # apply the sub-sampling and bounding-box filters
                     dataset, _ = dataset.filter(filters)
-
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     collection_count += dataset.length

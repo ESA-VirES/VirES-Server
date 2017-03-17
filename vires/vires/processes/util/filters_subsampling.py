@@ -28,7 +28,7 @@
 #-------------------------------------------------------------------------------
 
 from logging import getLogger, LoggerAdapter
-from numpy import empty, diff, concatenate
+from numpy import empty, diff, concatenate, in1d, arange
 from .filters import Filter
 
 class MinStepSampler(Filter):
@@ -75,3 +75,42 @@ class MinStepSampler(Filter):
             index = empty(0, 'int64')
         self.logger.debug("filtered size: %d", index.size)
         return index
+
+
+class GroupingSampler(Filter):
+    """ Filter class sub-sampling the dataset so that the distance
+    between two neighbour groups is not shorter than the requested minimal step.
+    """
+    class _LoggerAdapter(LoggerAdapter):
+        def process(self, msg, kwargs):
+            return 'grouping-sampler %s: %s' % (
+                self.extra["variable"], msg
+            ), kwargs
+
+    def __init__(self, variable, logger=None):
+        self.variable = variable
+        self.logger = self._LoggerAdapter(
+            logger or getLogger(__name__), {"variable": self.variable}
+        )
+
+    @property
+    def required_variables(self):
+        return [self.variable]
+
+    def filter(self, dataset, index=None):
+        if index is None:
+            return arange(dataset.length)
+        else:
+            return self._filter(dataset[self.variable], index)
+
+    def _filter(self, data, index):
+        """ Sampler to get possible additional values which have the same
+        variable value.
+        """
+        if len(data) > 0: # non-empty array
+            self.logger.debug("initial size: %d", data.size)
+            res_index = in1d(data,data[index]).nonzero()[0]
+        else: # empty array
+            index = empty(0, 'int64')
+        self.logger.debug("filtered size: %d", index.size)
+        return res_index

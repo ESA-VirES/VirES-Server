@@ -422,9 +422,14 @@ class VirESMetadataReader(object):
 
     @classmethod
     def get_coords(cls, data):
-        coords = np.empty((len(data["Longitude"]), 2))
-        coords[:, 0] = data["Longitude"][:]
-        coords[:, 1] = data["Latitude"][:]
+        try:
+            coords = np.empty((len(data["Longitude"]), 2))
+            coords[:, 0] = data["Longitude"][:]
+            coords[:, 1] = data["Latitude"][:]
+        except KeyError:
+            coords = np.empty((len(data["longitude"]), 2))
+            coords[:, 0] = data["longitude"][:]
+            coords[:, 1] = data["latitude"][:]
         return coords
 
     @classmethod
@@ -453,7 +458,10 @@ class VirESMetadataReader(object):
     def read(cls, data):
         # NOTE: For sake of simplicity we take geocentric (ITRF) coordinates
         #       as geodetic coordinates.
-        size = (len(data["Timestamp"]), 0)
+        try:
+            size = (len(data["Timestamp"]), 0)
+        except KeyError:
+            size = (len(data["timestamp"]), 0)
         coords = cls.get_coords(data)
         #ground_path = cls.get_ground_path(coords)
         #bbox = ground_path.extent
@@ -466,6 +474,12 @@ class VirESMetadataReader(object):
                 (bbox[2], bbox[3]), (bbox[0], bbox[3]), (bbox[0], bbox[1]),
             ))
         )
+        try:
+            begintime = naive_to_utc(data["Timestamp"][0])
+            endtime = naive_to_utc(data["Timestamp"][-1])
+        except KeyError:
+            begintime = naive_to_utc(data["timestamp"][0])
+            endtime = naive_to_utc(data["timestamp"][-1])
 
         return {
             "format": "CDF",
@@ -473,6 +487,6 @@ class VirESMetadataReader(object):
             "extent": bbox,
             "footprint": footprint,
             "ground_path": ground_path,
-            "begin_time": naive_to_utc(data["Timestamp"][0]),
-            "end_time": naive_to_utc(data["Timestamp"][-1]),
+            "begin_time": begintime,
+            "end_time": endtime,
         }

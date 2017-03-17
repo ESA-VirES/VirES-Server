@@ -30,6 +30,7 @@
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
+from numpy import empty
 from eoxserver.backends.access import connect
 from vires.util import between_co
 from vires.cdf_util import (
@@ -39,6 +40,14 @@ from vires.cdf_util import (
 from vires.models import Product
 from .dataset import Dataset
 from .time_series import TimeSeries
+
+VARIABLE_TRANSLATES = {
+    "SWARM_EEF":{
+        'Timestamp': 'timestamp',
+        'Latitude': 'latitude',
+        'Longitude': 'longitude'
+    }
+}
 
 
 class ProductTimeSeries(TimeSeries):
@@ -52,10 +61,14 @@ class ProductTimeSeries(TimeSeries):
             return '%s: %s' % (self.extra["collection_id"], msg), kwargs
 
     def __init__(self, collection, logger=None):
+        variable_translate = VARIABLE_TRANSLATES.get(collection.range_type.name, {})
+        self.translate_fw = variable_translate
+        self.translate_bw = dict((v, k) for k, v in variable_translate.iteritems())
         self.collection = collection
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "collection_id": collection.identifier,
         })
+
         self.product_set = set() # stores all recorded source products
 
     @property
@@ -65,16 +78,22 @@ class ProductTimeSeries(TimeSeries):
 
     @property
     def variables(self):
-        return [band.identifier for band in self.collection.range_type]
+        return [
+            self.translate_bw.get(band.identifier, band.identifier)
+            for band in self.collection.range_type
+        ]
 
-    @staticmethod
-    def _extract_dataset(product, extracted_variables, idx_low, idx_high):
+    def _extract_dataset(self, product, extracted_variables, idx_low, idx_high):
         """ Extract dataset from a product. """
         dataset = Dataset()
         with cdf_open(connect(product.data_items.all()[0])) as cdf:
             for variable in extracted_variables:
-                cdf_var = cdf.raw_var(variable)
-                data = cdf_var[idx_low:idx_high]
+                cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
+                if len(cdf_var.shape) > 0: # regular vector variable
+                    data = cdf_var[idx_low:idx_high]
+                else: # NRV scalar variable
+                    data = empty(max(0, idx_high - idx_low), dtype=cdf_var.dtype)
+                    data.fill(cdf_var[...])
                 dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
         return dataset
 
@@ -99,6 +118,18 @@ class ProductTimeSeries(TimeSeries):
             self.logger.debug("product: %s ", product.identifier)
             return self._extract_dataset(product, variables, 0, 0)
 
+    def _subset_qs(self, start, stop):
+        """ Subset DJngo query set. """
+        return Product.objects.filter(
+            collections=self.collection,
+            begin_time__lt=(stop + self.TIME_TOLERANCE),
+            end_time__gte=(start - self.TIME_TOLERANCE),
+        )
+
+    def subset_count(self, start, stop):
+        """ Count matched number of products. """
+        return self._subset_qs(start, stop).count()
+
     def subset(self, start, stop, variables=None):
         variables = self.get_extracted_variables(variables)
         self.logger.debug("subset: %s %s", start, stop)
@@ -107,20 +138,16 @@ class ProductTimeSeries(TimeSeries):
         if len(variables) == 0: # stop here if no variable is requested
             return
 
-        products_qs = Product.objects.filter(
-            collections=self.collection,
-            begin_time__lt=(stop + self.TIME_TOLERANCE),
-            end_time__gte=(start - self.TIME_TOLERANCE),
-        ).order_by('begin_time')
-
-        for product in products_qs:
+        for product in self._subset_qs(start, stop).order_by('begin_time'):
             self.logger.debug("product: %s ", product.identifier)
 
             self.product_set.add(product.identifier) # record source product
 
             with cdf_open(connect(product.data_items.all()[0])) as cdf:
                 # temporal sub-setting
-                temp_var = cdf.raw_var(self.TIME_VARIABLE)
+                temp_var = cdf.raw_var(
+                    self.translate_fw.get(self.TIME_VARIABLE, self.TIME_VARIABLE)
+                )
                 times, time_type = temp_var[:], temp_var.type()
 
                 self.logger.debug(
