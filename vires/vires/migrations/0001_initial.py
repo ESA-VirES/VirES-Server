@@ -25,21 +25,6 @@ class Migration(migrations.Migration):
             bases=('coverages.coverage',),
         ),
         migrations.CreateModel(
-            name='Job',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('identifier', models.CharField(max_length=256)),
-                ('process_id', models.CharField(max_length=256)),
-                ('response_url', models.CharField(max_length=512)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('owner', models.ForeignKey(related_name='jobs', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-            ],
-            options={
-                'verbose_name': 'WPS Job',
-                'verbose_name_plural': 'WPS Jobs',
-            },
-        ),
-        migrations.CreateModel(
             name='Product',
             fields=[
                 ('coverage_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='coverages.Coverage')),
