@@ -20,11 +20,12 @@
 	<h2>FAQ – Frequently Asked Questions</h2>
 </div>
 <div style="margin-bottom: 2em;">
-  <ol class="decimal">
+  <ul>
     <li><a href="#sync">What is the synchronization status and last available data?</a></li>
     <li><a href="#models">How does VirES evaluate the magnetic models?</a></li>
     <li><a href="#qdl_mlt">How does VirES evaluate the Apex Quasi-Dipole latitude and Magnetic Local Time?</a></li>
     <li><a href="#shc">How does VirES treat my uploaded field model coefficients?</a></li>
+    <li><a href="#bubbles">How does VirES visualize Bubble Index Data?</a></li>
     <li><a href="#controls">How do I control the globe/map?</a></li>
     <li><a href="#sampling">Not all Swarm data points are shown – what is the sampling?</a></li>
     <li><a href="#validation">Has there been a scientific validation of the service?</a></li>
@@ -33,19 +34,19 @@
     <li><a href="#profile">How do I change my user profile/delete my account?</a></li>
     <li><a href="#vires">Who owns VirES?</a></li>
     <li><a href="#contact">How can I contact VirES?</a></li>
-  </ol>
+  </ul>
 </div>
 
 
 <div class="panel panel-default">
-  <div class="panel-heading">1. <a name="sync"> What is the synchronization status and last available data?</a></div>
+  <div class="panel-heading"><a name="sync"> What is the synchronization status and last available data?</a></div>
   <div class="panel-body">
     Swarm product data are synchronized with the mission’s official product archive such that latest data are accessible via VirES at maximum 4 hours after publication by ESA. This applies also when reprocessed versions of historic product data are published. Dst- and Kp-Indices are being synchronized at 4 hour intervals currently with the service provided by GFZ Potsdam.
   </div>
 </div>
 
 <div class="panel panel-default">
-  <div class="panel-heading">2. <a name="models">How does VirES evaluate the magnetic models?</a></div>
+  <div class="panel-heading"><a name="models">How does VirES evaluate the magnetic models?</a></div>
   <div class="panel-body">
     <p>The Spherical Harmonic representation of the Earth magnetic field is employed to model the reference magnetic field to which the SWARM measurements can be compared.</p>
     <p>VirES is configured to offer a set of standard models, namely, the CHAOS-5, IGRF-12 and the Swarm Initial Field model. Beside these a user is allowed to define custom models.</p>
@@ -59,20 +60,27 @@
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">3. <a name="qdl_mlt">How does VirES evaluate the Apex Quasi-Dipole latitude and Magnetic Local Time?</a></div>
+  <div class="panel-heading"><a name="qdl_mlt">How does VirES evaluate the Apex Quasi-Dipole latitude and Magnetic Local Time?</a></div>
   <div class="panel-body">
     The Apex Quasi-dipole latitude and Magnetic Local Time are evaluated by Fortran code kindly provided by Nils Olsen (<a href="https://github.com/ESA-VirES/MagneticModel/tree/master/qdipole">See on github</a>)
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">4. <a name="shc">How does VirES treat my uploaded field model coefficients?</a></div>
+  <div class="panel-heading"><a name="shc">How does VirES treat my uploaded field model coefficients?</a></div>
   <div class="panel-body">
     <p>The uploaded custom coefficients are treated as user’s private data and all the IPRs are retained by the user.</p>
     <p>The coefficients are always included in the model evaluation HTTP requests and “forgotten” by the server once the related HTTP response is returned. They are never stored on the VirES server and cannot be viewed or utilized by anybody else, not even by the service operator.</p>
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">5. <a name="controls">How do I control the globe/map?</a></div>
+  <div class="panel-heading"><a name="bubbles">How does VirES visualize Bubble Index Data?</a></div>
+  <div class="panel-body">
+    <p></p>
+    <p></p>
+  </div>
+</div>
+<div class="panel panel-default">
+  <div class="panel-heading"><a name="controls">How do I control the globe/map?</a></div>
   <div class="panel-body">
     <p>The VirES workspace includes a virtual globe and map widget. The interaction controls are the following:</p>
     <p>The mouse pointer device is used on the globe/map as follows:</p>
@@ -87,7 +95,7 @@
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">6. <a name="sampling">Not all Swarm data points are shown – what is the sampling?</a></div>
+  <div class="panel-heading"><a name="sampling">Not all Swarm data points are shown – what is the sampling?</a></div>
   <div class="panel-body">
     <p>
       For performance reasons only limited subset of the SWARM measurements can
@@ -125,37 +133,37 @@
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">7. <a name="validation">Has there been a scientific validation of the service?</a></div>
+  <div class="panel-heading"><a name="validation">Has there been a scientific validation of the service?</a></div>
   <div class="panel-body">
     Senior geomagnetists at DTU Space, GFZ Potsdam and mission experts at ESA/ESRIN have been members of the project team involved in the detailed specification of VirES and its accurate validation at various stages of evolution (prototype, release candidate, operational service). 
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">8. <a name="contribute">Can I contribute to the evolution of VirES, and how?</a></div>
+  <div class="panel-heading"><a name="contribute">Can I contribute to the evolution of VirES, and how?</a></div>
   <div class="panel-body">
     An online user forum and problem solution area is currently under preparation. You will receive a notification by email as soon this will be opened to anybody wishing to provide ideas and improvement suggestions to the VirES application engineers and to the service provider team. VirES is a Free and Open Source Software initiative meaning that you are also invited to get involved into branching out software code and to contribute your own enhancements to it. The code is maintained and related issues are publicly tracked under <a href="https://github.com/ESA-VirES">ESA-VirES</a>.
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">9. <a name="browser">Is there any difference which Web browser I use for VirES?</a></div>
+  <div class="panel-heading"><a name="browser">Is there any difference which Web browser I use for VirES?</a></div>
   <div class="panel-body">
     Google Chrome is fastest in rendering SVG and has a very good HTML-5 features support. Therefore, it is the recommended browser. Nonetheless, all other major browsers (Microsoft Internet Explorer and Edge, Firefox, Opera, Safari) in their most recent releases have been tested and found working properly. Some features of VirES perform differently depending on the used browser. Touch screen interaction is supported. Mobile devices which support HTML can also be used. Small screens are, however not practical for a number of service functions. It is always a good idea to have the latest video drivers running on your computer.
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">10. <a name="profile">How do I change my user profile/delete my account?</a></div>
+  <div class="panel-heading"><a name="profile">How do I change my user profile/delete my account?</a></div>
   <div class="panel-body">
     You can change your password, e-mail, user profile information, and connected social account on the settings page which you reach by clicking on your name displayed in the banner bar of the VirES workspace window. You can have your account deleted by sending an e-mail message to the service operator using the address <a href="mailto:support@vires.services" target="_top">support@vires.services</a>.
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">11. <a name="vires">Who owns VirES?</a></div>
+  <div class="panel-heading"><a name="vires">Who owns VirES?</a></div>
   <div class="panel-body">
     "VirES for Swarm" is a service required and implemented by the Earth Observation Directorate of the <a href="http://esa.int">European Space Agency</a> (ESA) and designed and operated by <a href="https://eox.at/">EOX IT Services GmbH</a> (EOX), a private company. The technical framework entirely consists of Free and Open Source Software (MIT style licence). EOX is currently the sole committer to the code repository (hoping that other developer will be joining soon). The site is hosted on the servers of EOX. The domain name vires.services is owned by EOX. The information uploaded and generated by using the VirES service are owned by the individual who performed the specific upload and generated output as defined in the personal data privacy strategy of the service.
   </div>
 </div>
 <div class="panel panel-default">
-  <div class="panel-heading">12. <a name="contact">How can I contact VirES?</a></div>
+  <div class="panel-heading"><a name="contact">How can I contact VirES?</a></div>
   <div class="panel-body">
     <p>The email address via which to reach the service operator personnel is <a href="mailto:support@vires.services" target="_top">support@vires.services</a>.</p>
     <p>Feedback and ideas are very welcome, feel free to contact us under <a href="mailto:feedback@vires.services">feedback@vires.services</a>.</p>
