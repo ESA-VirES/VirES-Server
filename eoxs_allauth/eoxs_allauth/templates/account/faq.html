@@ -62,7 +62,26 @@
 <div class="panel panel-default">
   <div class="panel-heading"><a name="qdl_mlt">How does VirES evaluate the Apex Quasi-Dipole latitude and Magnetic Local Time?</a></div>
   <div class="panel-body">
-    The Apex Quasi-dipole latitude and Magnetic Local Time are evaluated by Fortran code kindly provided by Nils Olsen (<a href="https://github.com/ESA-VirES/MagneticModel/tree/master/qdipole">See on github</a>)
+    <p>
+    The Apex Quasi-dipole latitude and Magnetic Local Time are evaluated by Fortran code kindly provided by Nils Olsen (<a href="https://github.com/ESA-VirES/MagneticModel/tree/master/qdipole">See on github</a>).</p>
+    <p> For example, the evaluation of the QD latitude (lat_QD) is done using the following formula:
+    </p>
+    <p>
+      lat_QD = +/-acos( sqrt( (R_E + h) / (R_E + h_A) ) )
+    </p>
+    <p>
+      where:
+    </p>
+    <ul>
+      <li>R_E is the mean Earth radius (6371.009 km)</li>
+      <li>h is the geodetic height above the reference ellipsoid</li>
+      <li>h_A is the geodetic height of the apex above the reference ellipsoid and the sign given by the vertical component of the magnetic fields</li>
+    </ul>
+    <p> For more details see  following references:</p>
+    <ul>
+      <li>Richmond, Ionospheric  Electrodynamics  Using Magnetic  Apex Coordinates, J. Geomag. Geoelectr., 47, 1995</li>
+      <li>Emmert et.al., A computationally compact representation of Magnetic‐Apex and Quasi‐Dipole coordinates with smooth base vectors, J. of Geophysical Research, vol. 115, 2010.</li>
+    </ul>
   </div>
 </div>
 <div class="panel panel-default">
