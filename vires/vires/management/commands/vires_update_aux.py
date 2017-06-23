@@ -27,6 +27,8 @@
 #-------------------------------------------------------------------------------
 
 import sys
+from os import rename, remove
+from os.path import exists
 from contextlib import closing
 from urllib2 import urlopen
 from optparse import make_option
@@ -43,7 +45,7 @@ URL_TIMEOUT = 25
 
 def update(source, destination, updater, label):
     """ Update index from the given source. """
-    print "Updating %s-index from %s" % (
+    print "Updating %s from %s" % (
         label, source if source != '-' else '<standard input>'
     )
 
@@ -53,14 +55,24 @@ def update(source, destination, updater, label):
         source.startswith("ftp://")
     )
 
-    if is_url:
-        with closing(urlopen(source, timeout=URL_TIMEOUT)) as fin:
-            updater(fin, destination)
-    elif source == '-':
-        updater(sys.stdin, destination)
-    else:
-        with open(source) as fin:
-            updater(fin, destination)
+    destination_tmp = destination + ".tmp.cdf"
+    if exists(destination_tmp):
+        remove(destination_tmp)
+
+    try:
+        if is_url:
+            with closing(urlopen(source, timeout=URL_TIMEOUT)) as fin:
+                updater(fin, destination_tmp)
+        elif source == '-':
+            updater(sys.stdin, destination_tmp)
+        else:
+            with open(source) as fin:
+                updater(fin, destination_tmp)
+        rename(destination_tmp, destination)
+    except Exception:
+        if exists(destination_tmp):
+            remove(destination_tmp)
+        raise
 
 
 class Command(CommandOutputMixIn, BaseCommand):
@@ -83,11 +95,11 @@ class Command(CommandOutputMixIn, BaseCommand):
             update(
                 kwargs["dst_filename"],
                 settings.VIRES_AUX_DB_DST,
-                update_dst, 'Dst'
+                update_dst, 'Dst-index'
             )
         if kwargs["kp_filename"] is not None:
             update(
                 kwargs["kp_filename"],
                 settings.VIRES_AUX_DB_KP,
-                update_kp, 'Kp'
+                update_kp, 'Kp-index'
             )

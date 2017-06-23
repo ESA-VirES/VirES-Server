@@ -256,5 +256,3 @@ class Timer(object):
     def reset(self):
         """ Reset initial time."""
         self._start = time.time()
-
-
