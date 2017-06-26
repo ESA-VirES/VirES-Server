@@ -56,22 +56,20 @@ class Command(CommandOutputMixIn, BaseCommand):
 
     options = [
         (
-            "filename_a", settings.VIRES_ORBIT_COUNTER_A_DST,
+            "filename_a", settings.VIRES_ORBIT_COUNTER_DB['A'],
             "Swarm A orbit counter"
         ),
         (
-            "filename_b", settings.VIRES_ORBIT_COUNTER_B_DST,
+            "filename_b", settings.VIRES_ORBIT_COUNTER_DB['B'],
             "Swarm B orbit counter"
         ),
         (
-            "filename_c", settings.VIRES_ORBIT_COUNTER_C_DST,
+            "filename_c", settings.VIRES_ORBIT_COUNTER_DB['C'],
             "Swarm C orbit counter"
         ),
     ]
 
-    #@nested_commit_on_success # There is no Django DB modification.
     def handle(self, *args, **kwargs):
-
         for opt_name, destination, label in self.options:
             if kwargs[opt_name] is not None:
                 update(
