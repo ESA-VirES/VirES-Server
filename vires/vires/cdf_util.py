@@ -50,6 +50,10 @@ CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
 CDF_DOUBLE_TYPE = pycdf.const.CDF_DOUBLE.value
 CDF_UINT1_TYPE = pycdf.const.CDF_UINT1.value
 CDF_UINT2_TYPE = pycdf.const.CDF_UINT2.value
+CDF_UINT4_TYPE = pycdf.const.CDF_UINT4.value
+CDF_INT1_TYPE = pycdf.const.CDF_INT1.value
+CDF_INT2_TYPE = pycdf.const.CDF_INT2.value
+CDF_INT4_TYPE = pycdf.const.CDF_INT4.value
 
 CDF_EPOCH_1970 = 62167219200000.0
 CDF_EPOCH_2000 = 63113904000000.0
@@ -244,14 +248,16 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
 
 
 def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
-                    **interp1d_prm):
+                    nodata=None, types=None, **interp1d_prm):
     """ Read values of the listed fields from the CDF file and interpolate
     them at the given time values (the `time` array of MDJ2000 values).
     The data exceeding the time interval of the source data is filled with the
-    `fill_value`. The function accepts additional keyword arguments which are
-    passed to the `scipy.interpolate.interp1d` interpolation (such as `kind`
-    and `fill_value`).
+    `nodata` dictionary. The function accepts additional keyword arguments which
+    are passed to the `scipy.interpolate.interp1d` interpolation (e.g., `kind`).
     """
+    nodata = nodata or {}
+    types = types or {}
+
     # additional interpolation parameters
     if scipy.__version__ >= '0.14':
         interp1d_prm['assume_sorted'] = True
@@ -270,13 +276,21 @@ def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
     # check minimal length required by the chosen kind of interpolation
     if time.size > 0 and cdf_time.shape[0] >= min_len:
         return [
-            (field, interp1d(
-                cdf_time, cdf[field][idx_start:idx_stop], **interp1d_prm
-            )(time))
-            for field in fields
+            (field, data.astype(type_) if type_ else data)
+            for field, data, type_ in (
+                (
+                    field,
+                    interp1d(
+                        cdf_time, cdf[field][idx_start:idx_stop],
+                        fill_value=nodata.get(field, nan), **interp1d_prm
+                    )(time),
+                    types.get(field)
+                ) for field in fields
+            )
         ]
     else:
         return [
-            (field, full(time.shape, interp1d_prm.get("fill_value", nan)))
-            for field in fields
+            (field, full(
+                time.shape, nodata.get(field, nan), types.get(field, 'float')
+            )) for field in fields
         ]

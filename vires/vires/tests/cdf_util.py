@@ -247,19 +247,25 @@ class TestCDF(ArrayMixIn, unittest.TestCase):
         # full overlap
         self._cdf_time_interp(-732.00, -728.00, 80)
         self._cdf_time_interp(-732.00, -728.00, 80, kind="nearest")
+        self._cdf_time_interp(-732.00, -728.00, 80, kind="zero")
         # touching the bounds
         self._cdf_time_interp(-728.56251, -728.00, 5)
         self._cdf_time_interp(-728.56251, -728.00, 5, kind="nearest")
+        self._cdf_time_interp(-728.56251, -728.00, 5, kind="zero")
         self._cdf_time_interp(-732.00, -729.979169, 5)
         self._cdf_time_interp(-732.00, -729.979169, 5, kind="nearest")
+        self._cdf_time_interp(-732.00, -729.979169, 5, kind="zero")
         # out of bounds
         self._cdf_time_interp(-728.00, -726.00, 5)
         self._cdf_time_interp(-728.00, -726.00, 5, kind="nearest")
+        self._cdf_time_interp(-728.00, -726.00, 5, kind="zero")
         self._cdf_time_interp(-734.00, -732.00, 5)
         self._cdf_time_interp(-734.00, -732.00, 5, kind="nearest")
+        self._cdf_time_interp(-734.00, -732.00, 5, kind="zero")
         # single value
         self._cdf_time_interp(-729.00, -729.00, 1)
         self._cdf_time_interp(-729.00, -729.00, 1, kind="nearest")
+        self._cdf_time_interp(-729.00, -729.00, 1, kind="zero")
 
 
 if __name__ == "__main__":

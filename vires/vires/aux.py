@@ -98,7 +98,9 @@ def query_dst_int(filename, time, nodata=nan):
     """ Query interpolated Dst index values. """
     if exists(filename):
         with cdf_open(filename) as cdf:
-            return dict(cdf_time_interp(cdf, time, ("dst",), fill_value=nodata))
+            return dict(cdf_time_interp(
+                cdf, time, ("dst",), nodata={"dst": nodata}, kind="linear"
+            ))
     else:
         return {"dst": full(time.shape, nan)}
 
@@ -108,7 +110,7 @@ def query_kp_int(filename, time, nodata=nan):
     if exists(filename):
         with cdf_open(filename) as cdf:
             return dict(cdf_time_interp(
-                cdf, time, ("kp",), fill_value=nodata, kind="nearest"
+                cdf, time, ("kp",), nodata={"kp": nodata}, kind="nearest"
             ))
     else:
-        return {"kp": full(time.shape, nan)}
+        return {"kp": full(time.shape, nodata)}

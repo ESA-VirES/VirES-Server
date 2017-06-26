@@ -28,9 +28,11 @@
 #-------------------------------------------------------------------------------
 
 from os.path import exists
-from django.utils.dateparse import parse_datetime
 from numpy import loadtxt, array, nan
+
+from .util import full
 from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
+from .time_util import datetime_to_mjd2000
 
 
 def parse_orbit_counter_file(src_file):
@@ -52,3 +54,48 @@ def update_orbit_counter_file(src_file, dst_file):
         cdf["orbit"], cdf["MJD2000"], cdf["phi_AN"], cdf["Source"] = (
             parse_orbit_counter_file(src_file)
         )
+
+
+def fetch_orbit_counter_data(filename, start, stop):
+    """ Extract non-interpolated orbit counter data. """
+    if not exists(filename):
+        return {
+            "MJD2000": array([]),
+            "orbit": array([]),
+            "phi_AN": array([]),
+            "Source": array([]),
+        }
+    with cdf_open(filename) as cdf:
+        return dict(cdf_time_subset(
+            cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
+            fields=("MJD2000", "orbit", "phi_AN", "Source"), margin=1,
+            time_field="MJD2000",
+        ))
+
+
+def interpolate_orbit_counter_data(filename, time, nodata=None):
+    """ Interpolate orbit counter data.
+    All variables are interpolated using the lower nearest neighbour
+    interpolation.
+    """
+    # fill the default no-data type
+    _nodata = {"orbit": -1, "phi_AN": nan, "Source": -1}
+    if nodata:
+        _nodata.update(nodata)
+    nodata = _nodata
+
+    if not exists(filename):
+        return {
+            "orbit": full(time.shape, int(nodata["orbit"]), "int32"),
+            "phi_AN": full(time.shape, nodata["orbit"]),
+            "Source": full(time.shape, int(nodata["Source"]), "int8"),
+        }
+    else:
+        with cdf_open(filename) as cdf:
+            return dict(
+                cdf_time_interp(
+                    cdf, time, ("orbit", "phi_AN", "Source"),
+                    types={"orbit": "int32", "Source": "int8"},
+                    nodata=nodata, time_field="MJD2000", kind='zero',
+                )
+            )

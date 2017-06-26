@@ -220,7 +220,11 @@ class TestIndexDst(ArrayMixIn, unittest.TestCase):
         )(times)
 
         self.assertEqual(data['dst'].shape, (count,))
-        self.assertEqual(isnan(data['dst']).shape, isnan(values).shape)
+        self.assertEqual(data['dst'].shape, values.shape)
+        self.assertEqual(
+            data['dst'][isnan(data['dst'])].shape,
+            values[isnan(values)].shape
+        )
         self.assertAllAlmostEqual(
             data['dst'][logical_not(isnan(values))],
             values[logical_not(isnan(values))]
