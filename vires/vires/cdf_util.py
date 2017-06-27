@@ -33,7 +33,7 @@ from math import ceil, floor
 from datetime import timedelta
 from numpy import (
     amin, amax, nan, vectorize, object as dt_object, float64 as dt_float64,
-    ndarray,
+    ndarray, searchsorted,
 )
 import scipy
 from scipy.interpolate import interp1d
@@ -205,34 +205,6 @@ def cdf_rawtime_to_decimal_year(raw_time, cdf_type):
     return v_mjd2000_to_decimal_year(cdf_rawtime_to_mjd2000(raw_time, cdf_type))
 
 
-def _cdf_time_slice(cdf, start, stop, margin=0, time_field='time'):
-    """ Get sub-setting slice bounds. """
-    time = cdf.raw_var(time_field)
-    idx_start, idx_stop = 0, time.shape[0]
-
-    if start > stop:
-        start, stop = stop, start
-
-    if time.shape[0] > 0:
-        start = max(start, time[0])
-        stop = min(stop, time[-1])
-        time_span = time[-1] - time[0]
-        if time_span > 0:
-            resolution = (time.shape[0] - 1) / time_span
-            idx_start = int(ceil((start - time[0]) * resolution))
-            idx_stop = max(0, 1 + int(floor((stop - time[0]) * resolution)))
-        elif start > time[-1] or stop < time[0]:
-            idx_start = idx_stop # empty selection
-
-    if margin != 0:
-        if idx_start < time.shape[0]:
-            idx_start = max(0, idx_start - margin)
-        if idx_stop > 0:
-            idx_stop = max(0, idx_stop + margin)
-
-    return idx_start, idx_stop
-
-
 def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
     """ Extract subset of the listed `fields` from a CDF data file.
     The extracted range of values match times which lie within the given
@@ -241,8 +213,8 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
     The `margin` parameter is used to extend the index range by N surrounding
     elements. Negative margin is allowed.
     """
-    idx_start, idx_stop = _cdf_time_slice(
-        cdf, start, stop, margin, time_field
+    idx_start, idx_stop = array_slice(
+        cdf.raw_var(time_field)[:], start, stop, margin
     )
     return [(field, cdf[field][idx_start:idx_stop]) for field in fields]
 
@@ -264,12 +236,12 @@ def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
     interp1d_prm['copy'] = False
     interp1d_prm['bounds_error'] = False
 
-    cdf_time = cdf.raw_var(time_field)
+    cdf_time = cdf.raw_var(time_field)[:]
 
     # if possible get subset of the time data
     if time.size > 0 and cdf_time.shape[0] > min_len:
-        idx_start, idx_stop = _cdf_time_slice(
-            cdf, amin(time), amax(time), min_len//2, time_field
+        idx_start, idx_stop = array_slice(
+            cdf_time, amin(time), amax(time), min_len//2
         )
         cdf_time = cdf_time[idx_start:idx_stop]
 
@@ -294,3 +266,26 @@ def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
                 time.shape, nodata.get(field, nan), types.get(field, 'float')
             )) for field in fields
         ]
+
+
+def array_slice(values, start, stop, margin=0):
+    """ Get sub-setting slice bounds. The sliced array must be sorted
+    in the ascending order.
+    """
+    size = values.shape[0]
+    idx_start, idx_stop = 0, size
+
+    if start > stop:
+        start, stop = stop, start
+
+    if idx_stop > 0:
+        idx_start = searchsorted(values, start, 'left')
+        idx_stop = searchsorted(values, stop, 'right')
+
+    if margin != 0:
+        if idx_start < size:
+            idx_start = min(size, max(0, idx_start - margin))
+        if idx_stop > 0:
+            idx_stop = min(size, max(0, idx_stop + margin))
+
+    return idx_start, idx_stop

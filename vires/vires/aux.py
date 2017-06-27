@@ -90,7 +90,7 @@ def query_kp(filename, start, stop):
     with cdf_open(filename) as cdf:
         return dict(cdf_time_subset(
             cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
-            fields=("time", "kp"), margin=1,
+            fields=("time", "kp"), margin=1
         ))
 
 
