@@ -47,6 +47,7 @@ from .time_series import TimeSeries
 class AuxiliaryDataTimeSeries(TimeSeries):
     """ Auxiliary data time-series class. """
     CDF_TYPE = {}
+    CDF_INTERP_TYPE = {}
     CDF_ATTR = {}
     TIME_VARIABLE = "Timestamp"
 
@@ -61,6 +62,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         self._query = query_fcn
         self._interp = iterp_fcn
         self._varmap = varmap
+        self._revvarmap = dict((val, key) for key, val in varmap.items())
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "index_name": name,
         })
@@ -75,15 +77,17 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         self.logger.debug("variables: %s", variables)
         dataset = Dataset()
         if variables:
-            data_dict = self._query(self._filename, start, stop)
-            for src_var, dst_var in self._varmap.items():
-                if dst_var in variables:
-                    data = data_dict[src_var]
-                    cdf_type = self.CDF_TYPE.get(dst_var)
-                    cdf_attr = self.CDF_ATTR.get(dst_var)
-                    if dst_var == self.TIME_VARIABLE:
-                        data = mjd2000_to_cdf_rawtime(data, cdf_type)
-                    dataset.set(dst_var, data, cdf_type, cdf_attr)
+            src_data = self._query(self._filename, start, stop, fields=tuple(
+                self._revvarmap[variable] for variable in variables
+            ))
+            for src_var, data in src_data.items():
+                variable = self._varmap[src_var]
+                cdf_type = self.CDF_TYPE.get(variable)
+                cdf_attr = self.CDF_ATTR.get(variable)
+                if variable == self.TIME_VARIABLE:
+                    data = mjd2000_to_cdf_rawtime(data, cdf_type)
+                dataset.set(variable, data, cdf_type, cdf_attr)
+
         self.logger.debug("dataset length: %s", dataset.length)
         return dataset
 
@@ -103,6 +107,9 @@ class AuxiliaryDataTimeSeries(TimeSeries):
             include(variables, self.variables) if variables is not None else
             self.variables
         )
+        dependent_variables = [
+            variable for variable in variables if variable != self.TIME_VARIABLE
+        ]
         self.logger.debug(
             "requested time-span %s, %s",
             cdf_rawtime_to_datetime(min(times), cdf_type),
@@ -116,14 +123,20 @@ class AuxiliaryDataTimeSeries(TimeSeries):
                 self.TIME_VARIABLE, array(times), cdf_type,
                 self.CDF_ATTR.get(self.TIME_VARIABLE),
             )
-        if self._name in variables:
-            src_var, data = self._interp(
-                self._filename, cdf_rawtime_to_mjd2000(times, cdf_type)
-            ).iteritems().next()
-            dataset.set(
-                self._varmap[src_var], data, CDF_DOUBLE_TYPE,
-                self.CDF_ATTR.get(self._varmap[src_var]),
+        if dependent_variables:
+            src_data = self._interp(
+                self._filename, cdf_rawtime_to_mjd2000(times, cdf_type),
+                fields=tuple(
+                    self._revvarmap[variable] for variable in dependent_variables
+                )
             )
+            for src_var, data in src_data.items():
+                variable = self._varmap[src_var]
+                dataset.set(
+                    variable, data,
+                    self.CDF_INTERP_TYPE.get(variable, CDF_DOUBLE_TYPE),
+                    self.CDF_ATTR.get(variable),
+                )
         self.logger.debug("interpolated dataset length: %s ", dataset.length)
         return dataset
 
@@ -131,6 +144,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
 class IndexKp(AuxiliaryDataTimeSeries):
     """ Kp index time-series source class. """
     CDF_TYPE = {'Timestamp': CDF_EPOCH_TYPE, 'Kp': CDF_UINT2_TYPE}
+    CDF_INTERP_TYPE = {'Kp': CDF_DOUBLE_TYPE}
     CDF_ATTR = {
         'Timestamp': {
             'DESCRIPTION': 'Time stamp',
@@ -152,6 +166,7 @@ class IndexKp(AuxiliaryDataTimeSeries):
 class IndexDst(AuxiliaryDataTimeSeries):
     """ Dst index time-series source class. """
     CDF_TYPE = {'Timestamp': CDF_EPOCH_TYPE, 'Dst': CDF_DOUBLE_TYPE}
+    CDF_INTERP_TYPE = {'Dst': CDF_DOUBLE_TYPE}
     CDF_ATTR = {
         'Timestamp': {
             'DESCRIPTION': 'Time stamp',

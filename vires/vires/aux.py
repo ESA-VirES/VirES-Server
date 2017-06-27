@@ -72,45 +72,55 @@ def update_kp(src_file, dst_file):
         cdf["time"], cdf["kp"], cdf["ap"], cdf["flag"] = parse_kp(src_file)
 
 
-def query_dst(filename, start, stop):
+def query_dst(filename, start, stop, fields=("time", "dst")):
     """ Query non-interpolated Dst index values. """
     if not exists(filename):
-        return {"time": array([]), "dst": array([])}
+        return dict((field, array([])) for field in fields)
+
     with cdf_open(filename) as cdf:
         return dict(cdf_time_subset(
             cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
-            fields=("time", "dst"), margin=1
+            fields=fields, margin=1
         ))
 
 
-def query_kp(filename, start, stop):
+def query_kp(filename, start, stop, fields=("time", "kp")):
     """ Query non-interpolated Kp index values. """
     if not exists(filename):
-        return {"time": array([]), "kp": array([])}
+        return dict((field, array([])) for field in fields)
+
     with cdf_open(filename) as cdf:
         return dict(cdf_time_subset(
             cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
-            fields=("time", "kp"), margin=1
+            fields=fields, margin=1
         ))
 
 
-def query_dst_int(filename, time, nodata=nan):
+def query_dst_int(filename, time, nodata=None, fields=("dst",)):
     """ Query interpolated Dst index values. """
     if exists(filename):
         with cdf_open(filename) as cdf:
             return dict(cdf_time_interp(
-                cdf, time, ("dst",), nodata={"dst": nodata}, kind="linear"
+                cdf, time, fields, nodata=nodata, kind="linear"
             ))
     else:
-        return {"dst": full(time.shape, nan)}
+        nodata = nodata or {}
+        return dict(
+            (field, full(time.shape, nodata.get(field, nan)))
+            for field in fields
+        )
 
 
-def query_kp_int(filename, time, nodata=nan):
+def query_kp_int(filename, time, nodata=None, fields=("kp",)):
     """ Query interpolated Kp index values. """
     if exists(filename):
         with cdf_open(filename) as cdf:
             return dict(cdf_time_interp(
-                cdf, time, ("kp",), nodata={"kp": nodata}, kind="nearest"
+                cdf, time, fields, nodata=nodata, kind="nearest"
             ))
     else:
-        return {"kp": full(time.shape, nodata)}
+        nodata = nodata or {}
+        return dict(
+            (field, full(time.shape, nodata.get(field, nan)))
+            for field in fields
+        )

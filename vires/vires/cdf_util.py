@@ -213,6 +213,9 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
     The `margin` parameter is used to extend the index range by N surrounding
     elements. Negative margin is allowed.
     """
+    if not fields:
+        return [] # skip the data extraction for an empty variable list
+
     idx_start, idx_stop = array_slice(
         cdf.raw_var(time_field)[:], start, stop, margin
     )
@@ -229,6 +232,9 @@ def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
     """
     nodata = nodata or {}
     types = types or {}
+
+    if not fields:
+        return [] # skip the data extraction for an empty variable list
 
     # additional interpolation parameters
     if scipy.__version__ >= '0.14':
