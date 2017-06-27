@@ -53,9 +53,9 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2,
-    IndexKp, IndexDst,
+    OrbitCounter, IndexKp, IndexDst,
     BoundingBoxFilter, MinStepSampler, GroupingSampler,
-    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime
+    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
 )
 
 # TODO: Make following parameters configurable.
@@ -80,6 +80,7 @@ CDF_RAW_TIME_CONVERTOR = {
     "MJD2000": cdf_rawtime_to_mjd2000,
     "Unix epoch": cdf_rawtime_to_unix_epoch,
 }
+
 
 class FetchData(WPSProcess):
     """ Process retrieving registered Swarm data based on collection, time
@@ -218,6 +219,10 @@ class FetchData(WPSProcess):
 
         # prepare list of the extracted non-mandatory variables
         if sources:
+            orbit_counter = dict(
+                (satellite, OrbitCounter("OrbitCounter" + satellite, path))
+                for satellite, path in settings.VIRES_ORBIT_COUNTER_DB.items()
+            )
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             model_qdc = QuasiDipoleCoordinates()
@@ -235,7 +240,8 @@ class FetchData(WPSProcess):
             available_variables = list(exclude(unique(chain.from_iterable(
                 source.variables for source in sources.itervalues().next()
             )), REQUIRED_VARIABLES)) + [
-                'Kp', 'Dst', 'QDLat', 'QDLon', 'MLT'
+                'Kp', 'Dst', 'QDLat', 'QDLon', 'MLT',
+                'OrbitNumber', 'AscendingNodeLongitude', 'OrbitSource',
             ]
 
             model_residuals = []
@@ -312,6 +318,16 @@ class FetchData(WPSProcess):
                         dataset.merge(
                             ts_slave.interpolate(times, variables, {}, cdf_type)
                         )
+
+                    # get orbit numbers if possible
+                    applicable_orbit_counter = orbit_counter.get(
+                        settings.VIRES_COL2SAT[ts_master.collection.identifier]
+                    )
+                    if applicable_orbit_counter:
+                        dataset.merge(applicable_orbit_counter.interpolate(
+                            times, variables, None, cdf_type
+                        ))
+
                     # auxiliary datasets
                     dataset.merge(
                         index_kp.interpolate(times, variables, None, cdf_type)

@@ -31,7 +31,6 @@
 # pylint: disable=too-many-branches, too-many-statements
 # pylint: disable=missing-docstring, unused-argument
 
-from functools import wraps
 from os import remove
 from os.path import exists #, join
 #from uuid import uuid4
@@ -58,6 +57,7 @@ from vires.processes.util import (
     parse_collections, parse_models2, parse_filters2, IndexKp, IndexDst,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     with_cache_session, get_username, get_user,
+    OrbitCounter,
 )
 
 # TODO: Make the limits configurable.
@@ -232,7 +232,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 requested_variables, model_ids, shc,
                 csv_time_format, output, context, **kwarg):
         """ Execute process """
-        workspace_dir = ""
+        #workspace_dir = ""
 
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
@@ -274,6 +274,10 @@ class FetchFilteredDataAsync(WPSProcess):
 
         # prepare list of the extracted non-mandatory variables
         if sources:
+            orbit_counter = dict(
+                (satellite, OrbitCounter("OrbitCounter" + satellite, path))
+                for satellite, path in settings.VIRES_ORBIT_COUNTER_DB.items()
+            )
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             model_qdc = QuasiDipoleCoordinates()
@@ -282,7 +286,8 @@ class FetchFilteredDataAsync(WPSProcess):
             available_variables = list(exclude(unique(chain.from_iterable(
                 source.variables for source in sources.itervalues().next()
             )), REQUIRED_VARIABLES)) + [
-                'Kp', 'Dst', 'QDLat', 'QDLon', 'MLT'
+                'Kp', 'Dst', 'QDLat', 'QDLon', 'MLT',
+                'OrbitNumber', 'AscendingNodeLongitude', 'OrbitSource',
             ]
 
             model_residuals = []
@@ -366,6 +371,15 @@ class FetchFilteredDataAsync(WPSProcess):
                         ))
                         dataset, filters_left = dataset.filter(filters_left)
                     self.logger.debug("dataset.length: %s", dataset.length)
+                    # get orbit numbers if possible
+                    applicable_orbit_counter = orbit_counter.get(
+                        settings.VIRES_COL2SAT[ts_master.collection.identifier]
+                    )
+                    if applicable_orbit_counter:
+                        dataset.merge(applicable_orbit_counter.interpolate(
+                            dataset[time_variable], variables, None, cdf_type
+                        ))
+                        dataset, filters_left = dataset.filter(filters_left)
                     # auxiliary datasets
                     dataset.merge(index_kp.interpolate(
                         dataset[time_variable], variables, None, cdf_type

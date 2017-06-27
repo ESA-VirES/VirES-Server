@@ -55,6 +55,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_filters2, IndexKp, IndexDst,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
+    OrbitCounter,
 )
 
 # TODO: Make the limits configurable.
@@ -199,6 +200,10 @@ class FetchFilteredData(WPSProcess):
 
         # prepare list of the extracted non-mandatory variables
         if sources:
+            orbit_counter = dict(
+                (satellite, OrbitCounter("OrbitCounter" + satellite, path))
+                for satellite, path in settings.VIRES_ORBIT_COUNTER_DB.items()
+            )
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             model_qdc = QuasiDipoleCoordinates()
@@ -207,7 +212,8 @@ class FetchFilteredData(WPSProcess):
             available_variables = list(exclude(unique(chain.from_iterable(
                 source.variables for source in sources.itervalues().next()
             )), REQUIRED_VARIABLES)) + [
-                'Kp', 'Dst', 'QDLat', 'QDLon', 'MLT'
+                'Kp', 'Dst', 'QDLat', 'QDLon', 'MLT',
+                'OrbitNumber', 'AscendingNodeLongitude', 'OrbitSource',
             ]
 
             model_residuals = []
@@ -273,6 +279,15 @@ class FetchFilteredData(WPSProcess):
                         ))
                         dataset, filters_left = dataset.filter(filters_left)
                     self.logger.debug("dataset.length: %s", dataset.length)
+                    # get orbit numbers if possible
+                    applicable_orbit_counter = orbit_counter.get(
+                        settings.VIRES_COL2SAT[ts_master.collection.identifier]
+                    )
+                    if applicable_orbit_counter:
+                        dataset.merge(applicable_orbit_counter.interpolate(
+                            dataset[time_variable], variables, None, cdf_type
+                        ))
+                        dataset, filters_left = dataset.filter(filters_left)
                     # auxiliary datasets
                     dataset.merge(index_kp.interpolate(
                         dataset[time_variable], variables, None, cdf_type
