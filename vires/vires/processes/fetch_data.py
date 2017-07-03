@@ -41,7 +41,7 @@ from eoxserver.services.ows.wps.parameters import (
     CDFileWrapper,
 )
 from eoxserver.services.ows.wps.exceptions import ExecuteError
-from vires.util import unique, exclude, include
+from vires.util import unique, exclude
 from vires.time_util import (
     naive_to_utc,
     timedelta_to_iso_duration,
@@ -56,6 +56,7 @@ from vires.processes.util import (
     OrbitCounter, IndexKp, IndexDst,
     BoundingBoxFilter, MinStepSampler, GroupingSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
+    VariableResolver,
 )
 
 # TODO: Make following parameters configurable.
@@ -71,7 +72,7 @@ BASE_MIN_STEP = timedelta(seconds=7)
 BASE_TIME_UNIT = timedelta(days=1)
 
 # set of the minimum required variables
-REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
+MANDATORY_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
 
 # time converters
 CDF_RAW_TIME_FORMATS = ("ISO date-time", "MJD2000", "Unix epoch")
@@ -217,7 +218,9 @@ class FetchData(WPSProcess):
 
         self.logger.debug("sampling step: %s", samplig_step)
 
-        # prepare list of the extracted non-mandatory variables
+        # resolve data sources, models and filters and variables dependencies
+        resolvers = dict()
+
         if sources:
             orbit_counter = dict(
                 (satellite, OrbitCounter("OrbitCounter" + satellite, path))
@@ -237,65 +240,107 @@ class FetchData(WPSProcess):
                     BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
                 )
 
-            available_variables = list(exclude(unique(chain.from_iterable(
-                source.variables for source in sources.itervalues().next()
-            )), REQUIRED_VARIABLES)) + [
-                'Kp', 'Dst', 'QDLat', 'QDLon', 'MLT',
-                'OrbitNumber', 'AscendingNodeLongitude', 'OrbitSource',
-            ]
-
-            model_residuals = []
+            # collect all spherical-harmonics models and residuals
+            models_with_residuals = []
             for model in models:
-                available_variables.extend(model.variables)
-                # prepare residuals' sources
+                models_with_residuals.append(model)
                 for variable in model.BASE_VARIABLES:
-                    model_residual = MagneticModelResidual(model.name, variable)
-                    model_residuals.append(model_residual)
-                    available_variables.extend(model_residual.variables)
+                    models_with_residuals.append(
+                        MagneticModelResidual(model.name, variable)
+                    )
 
-            if requested_variables is not None:
-                # make sure the requested variables exist and the minimum
-                # required variables are present
-                output_variables = list(include(
-                    unique(requested_variables), available_variables
-                ))
-            else:
-                # by default all variables are returned
-                output_variables = available_variables
+            # resolving variable dependencies for each label separately
+            for label, product_sources in sources.iteritems():
+                resolver = VariableResolver(
+                    requested_variables, MANDATORY_VARIABLES
+                )
 
-            # handle sources' dependencies by adding intermediate variables
-            _varset = set(output_variables)
-            for model_residual in model_residuals:
-                if _varset.intersection(model_residual.variables):
-                    _varset.update(model_residual.required_variables)
-            if _varset.intersection(model_mlt.variables):
-                _varset.update(model_mlt.required_variables)
-            variables = list(_varset)
+                resolvers[label] = resolver
 
-            # make sure the mandatory variables in the output
-            output_variables = REQUIRED_VARIABLES + output_variables
+                # master
+                master = product_sources[0]
+                resolver.add_master(master)
 
-            self.logger.debug("available variables: %s", available_variables)
-            self.logger.debug("evaluated variables: %s", variables)
-            self.logger.debug("returned variables: %s", output_variables)
+                # slaves
+                for slave in product_sources[1:]:
+                    resolver.add_slave(slave, 'Timestamp')
+
+                # auxiliary slaves
+                for slave in (index_kp, index_dst):
+                    resolver.add_slave(slave, 'Timestamp')
+
+                # satellite specific slaves
+                satellite = (
+                    settings.VIRES_COL2SAT[master.collection.identifier]
+                )
+                if satellite in orbit_counter:
+                    resolver.add_slave(
+                        orbit_counter[satellite], 'Timestamp'
+                    )
+
+                # models
+                for model in chain((model_qdc, model_mlt), models_with_residuals):
+                    resolver.add_model(model)
+
+                # filters
+                for filter_ in filters:
+                    resolver.add_filter(filter_)
+
+                self.logger.debug(
+                    "%s: available variables: %s", label,
+                    ", ".join(resolver.available)
+                )
+                self.logger.debug(
+                    "%s: evaluated variables: %s", label,
+                    ", ".join(resolver.required)
+                )
+                self.logger.debug(
+                    "%s: output variables: %s", label,
+                    ", ".join(resolver.output)
+                )
+                self.logger.debug(
+                    "%s: applicable filters: %s", label,
+                    "; ".join(str(f) for f in resolver.resolved_filters)
+                )
+                self.logger.debug(
+                    "%s: unresolved filters: %s", label, "; ".join(
+                        str(f) for f in resolver.unresolved_filters
+                    )
+                )
+
+            # collect the common output variables
+            output_variables = tuple(unique(chain.from_iterable(
+                resolver.output for resolver in resolvers.values()
+            )))
+
         else:
-            # no collection selected
-            output_variables = variables = []
+            # empty output
+            output_variables = ()
+
+        self.logger.debug("output variables: %s", ", ".join(output_variables))
 
         def _generate_data_():
             total_count = 0
 
-            for label, merged_sources in sources.iteritems():
+            for label, resolver in resolvers.iteritems():
                 collection_count = 0
 
-                ts_master, ts_slaves = merged_sources[0], merged_sources[1:]
-                # NOTE: the mandatory variables are always taken from the master
-                dataset_iterator = ts_master.subset(
-                    begin_time, end_time, REQUIRED_VARIABLES + variables,
+                all_variables = resolver.required
+                variables = tuple(exclude(all_variables, resolver.mandatory))
+
+                # master
+                dataset_iterator = resolver.master.subset(
+                    begin_time, end_time, all_variables
                 )
+
                 for dataset in dataset_iterator:
-                    # apply the sub-sampling and bounding-box filters
-                    dataset, _ = dataset.filter(filters)
+                    self.logger.debug(
+                        "dataset length before applying filters: %s",
+                        dataset.length
+                    )
+                    # master filters
+                    dataset, _ = dataset.filter(resolver.filters)
+
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     collection_count += dataset.length
@@ -312,39 +357,23 @@ class FetchData(WPSProcess):
                         )
 
                     # subordinate interpolated datasets
-                    times = dataset[ts_master.TIME_VARIABLE]
-                    cdf_type = dataset.cdf_type[ts_master.TIME_VARIABLE]
-                    for ts_slave in ts_slaves:
+                    times = dataset[resolver.master.TIME_VARIABLE]
+                    cdf_type = dataset.cdf_type[resolver.master.TIME_VARIABLE]
+                    for slave in resolver.slaves:
                         dataset.merge(
-                            ts_slave.interpolate(times, variables, {}, cdf_type)
+                            slave.interpolate(times, variables, {}, cdf_type)
                         )
 
-                    # get orbit numbers if possible
-                    applicable_orbit_counter = orbit_counter.get(
-                        settings.VIRES_COL2SAT[ts_master.collection.identifier]
-                    )
-                    if applicable_orbit_counter:
-                        dataset.merge(applicable_orbit_counter.interpolate(
-                            times, variables, None, cdf_type
-                        ))
-
-                    # auxiliary datasets
-                    dataset.merge(
-                        index_kp.interpolate(times, variables, None, cdf_type)
-                    )
-                    dataset.merge(
-                        index_dst.interpolate(times, variables, None, cdf_type)
-                    )
-                    # quasi-dipole coordinates and magnetic local time
-                    dataset.merge(model_qdc.eval(dataset, variables))
-                    dataset.merge(model_mlt.eval(dataset, variables))
-                    # spherical harmonics expansion models
+                    # models
                     for model in models:
                         dataset.merge(model.eval(dataset, variables))
-                    # model residuals
-                    for model_residual in model_residuals:
-                        dataset.merge(model_residual.eval(dataset, variables))
-                    yield label, dataset.extract(output_variables)
+
+                    self.logger.debug(
+                        "dataset length after applying filters: %s",
+                        dataset.length
+                    )
+
+                    yield label, dataset
 
             self.access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
@@ -353,33 +382,38 @@ class FetchData(WPSProcess):
 
         # write the output
         output_fobj = StringIO()
+        time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
-        initialize = True
+        if sources:
+            # write CSV header
+            output_fobj.write("id,")
+            output_fobj.write(",".join(output_variables))
+            output_fobj.write("\r\n")
+
         for label, dataset in _generate_data_():
-
-            # convert all time variables to the target file-format
-            for variable, data in dataset.iteritems():
+            formatters = []
+            data = []
+            for variable in output_variables:
+                data_item = dataset.get(variable)
+                # convert time variables to the target file-format
                 cdf_type = dataset.cdf_type.get(variable)
                 if cdf_type == CDF_EPOCH_TYPE:
-                    dataset[variable] = CDF_RAW_TIME_CONVERTOR[csv_time_format](
-                        data, cdf_type
-                    )
-
-            if initialize:
-                output_fobj.write("id,")
-                output_fobj.write(",".join(dataset.iterkeys()))
-                output_fobj.write("\r\n")
-                formatters = [
-                    get_formatter(data, dataset.cdf_type.get(variable))
-                    for variable, data in dataset.iteritems()
-                ]
-                initialize = False
-
+                    data_item = time_convertor(data_item, cdf_type)
+                # collect all data items
+                data.append(data_item)
+                # collect formatters for the available data items
+                if data_item is not None:
+                    formatters.append(get_formatter(data_item, cdf_type))
+            # construct format string
+            format_ = ",".join(
+                "nan" if item is None else "%s" for item in data
+            )
+            # iterate the rows and write the CSV records
             label_prefix = "%s," % label
-            for row in izip(*dataset.itervalues()):
+            for row in izip(*(item for item in data if item is not None)):
                 output_fobj.write(label_prefix)
                 output_fobj.write(
-                    ",".join(f(v) for f, v in zip(formatters, row))
+                    format_ % tuple(f(v) for f, v in zip(formatters, row))
                 )
                 output_fobj.write("\r\n")
 

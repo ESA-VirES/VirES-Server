@@ -52,6 +52,7 @@ from .png_output import (
     array_to_png,
 )
 from .auth import get_username, get_user
+from .variables import VariableResolver
 
 # other miscellaneous utilities
 def format_filters(filters):

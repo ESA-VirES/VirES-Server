@@ -35,6 +35,7 @@ from os.path import join, exists
 from uuid import uuid4
 from itertools import chain, izip
 from datetime import datetime, timedelta
+from numpy import nan
 from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData,
@@ -43,7 +44,7 @@ from eoxserver.services.ows.wps.parameters import (
 )
 from eoxserver.services.ows.wps.exceptions import ExecuteError
 from vires.config import SystemConfigReader
-from vires.util import unique, exclude, include
+from vires.util import unique, exclude, include, full
 from vires.time_util import (
     naive_to_utc, timedelta_to_iso_duration,
 )
@@ -55,7 +56,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_filters2, IndexKp, IndexDst,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    OrbitCounter,
+    OrbitCounter, VariableResolver,
 )
 
 # TODO: Make the limits configurable.
@@ -66,7 +67,7 @@ MAX_SAMPLES_COUNT = 432000
 MAX_TIME_SELECTION = timedelta(days=31)
 
 # set of the minimum required variables
-REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
+MANDATORY_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
 
 # time converters
 CDF_RAW_TIME_FORMATS = ("ISO date-time", "MJD2000", "Unix epoch")
@@ -198,7 +199,10 @@ class FetchFilteredData(WPSProcess):
             )
         )
 
-        # prepare list of the extracted non-mandatory variables
+
+        # resolve data sources, models and filters and variables dependencies
+        resolvers = dict()
+
         if sources:
             orbit_counter = dict(
                 (satellite, OrbitCounter("OrbitCounter" + satellite, path))
@@ -209,109 +213,130 @@ class FetchFilteredData(WPSProcess):
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
 
-            available_variables = list(exclude(unique(chain.from_iterable(
-                source.variables for source in sources.itervalues().next()
-            )), REQUIRED_VARIABLES)) + [
-                'Kp', 'Dst', 'QDLat', 'QDLon', 'MLT',
-                'OrbitNumber', 'AscendingNodeLongitude', 'OrbitSource',
-            ]
-
-            model_residuals = []
+            # collect all spherical-harmonics models and residuals
+            models_with_residuals = []
             for model in models:
-                available_variables.extend(model.variables)
-                # prepare residuals' sources
+                models_with_residuals.append(model)
                 for variable in model.BASE_VARIABLES:
-                    model_residual = MagneticModelResidual(model.name, variable)
-                    model_residuals.append(model_residual)
-                    available_variables.extend(model_residual.variables)
+                    models_with_residuals.append(
+                        MagneticModelResidual(model.name, variable)
+                    )
 
-            if requested_variables is not None:
-                # make sure the requested variables exist and the minimum
-                # required variables are present
-                output_variables = list(include(
-                    unique(requested_variables), available_variables
-                ))
-            else:
-                # by default all variables are returned
-                output_variables = available_variables
+            # resolving variable dependencies for each label separately
+            for label, product_sources in sources.iteritems():
+                resolver = VariableResolver(
+                    requested_variables, MANDATORY_VARIABLES
+                )
 
-            # resolve sources and filters' dependencies
-            # by adding intermediate variables
-            _varset = set(output_variables)
-            for filter_ in filters:
-                _varset.update(filter_.required_variables)
-            for model_residual in model_residuals:
-                if _varset.intersection(model_residual.variables):
-                    _varset.update(model_residual.required_variables)
-            if _varset.intersection(model_mlt.variables):
-                _varset.update(model_mlt.required_variables)
-            # make sure only the available variables are evaluated
-            _varset.intersection_update(available_variables)
-            variables = list(_varset)
+                resolvers[label] = resolver
 
-            # make sure the mandatory variables in the output
-            output_variables = REQUIRED_VARIABLES + output_variables
+                # master
+                master = product_sources[0]
+                resolver.add_master(master)
 
-            self.logger.debug("available variables: %s", available_variables)
-            self.logger.debug("evaluated variables: %s", variables)
-            self.logger.debug("returned variables: %s", output_variables)
+                # slaves
+                for slave in product_sources[1:]:
+                    resolver.add_slave(slave, 'Timestamp')
+
+                # auxiliary slaves
+                for slave in (index_kp, index_dst):
+                    resolver.add_slave(slave, 'Timestamp')
+
+                # satellite specific slaves
+                satellite = (
+                    settings.VIRES_COL2SAT[master.collection.identifier]
+                )
+                if satellite in orbit_counter:
+                    resolver.add_slave(
+                        orbit_counter[satellite], 'Timestamp'
+                    )
+
+                # models
+                for model in chain((model_qdc, model_mlt), models_with_residuals):
+                    resolver.add_model(model)
+
+                # filters
+                for filter_ in filters:
+                    resolver.add_filter(filter_)
+
+                self.logger.debug(
+                    "%s: available variables: %s", label,
+                    ", ".join(resolver.available)
+                )
+                self.logger.debug(
+                    "%s: evaluated variables: %s", label,
+                    ", ".join(resolver.required)
+                )
+                self.logger.debug(
+                    "%s: output variables: %s", label,
+                    ", ".join(resolver.output)
+                )
+                self.logger.debug(
+                    "%s: applicable filters: %s", label,
+                    "; ".join(str(f) for f in resolver.resolved_filters)
+                )
+                self.logger.debug(
+                    "%s: unresolved filters: %s", label, "; ".join(
+                        str(f) for f in resolver.unresolved_filters
+                    )
+                )
+
+            # collect the common output variables
+            output_variables = tuple(unique(chain.from_iterable(
+                resolver.output for resolver in resolvers.values()
+            )))
+
         else:
-            # no collection selected
-            output_variables = variables = []
+            # empty output
+            output_variables = ()
+
+            self.logger.debug("output variables: %s", ", ".join(output_variables))
 
         def _generate_data_():
             total_count = 0
 
-            for label, merged_sources in sources.iteritems():
-                ts_master, ts_slaves = merged_sources[0], merged_sources[1:]
-                # NOTE: the mandatory variables are always taken from the master
-                dataset_iterator = ts_master.subset(
-                    begin_time, end_time, REQUIRED_VARIABLES + variables,
+            for label, resolver in resolvers.iteritems():
+
+                all_variables = resolver.required
+                variables = tuple(exclude(all_variables, resolver.mandatory))
+
+                # master
+                dataset_iterator = resolver.master.subset(
+                    begin_time, end_time, all_variables
                 )
+
                 for dataset in dataset_iterator:
-                    time_variable = ts_master.TIME_VARIABLE
-                    cdf_type = dataset.cdf_type[time_variable]
-                    dataset, filters_left = dataset.filter(filters)
-                    # subordinate interpolated datasets
-                    for ts_slave in ts_slaves:
-                        dataset.merge(ts_slave.interpolate(
-                            dataset[time_variable], variables, None, cdf_type
-                        ))
-                        dataset, filters_left = dataset.filter(filters_left)
-                    self.logger.debug("dataset.length: %s", dataset.length)
-                    # get orbit numbers if possible
-                    applicable_orbit_counter = orbit_counter.get(
-                        settings.VIRES_COL2SAT[ts_master.collection.identifier]
+                    self.logger.debug(
+                        "dataset length before applying filters: %s",
+                        dataset.length
                     )
-                    if applicable_orbit_counter:
-                        dataset.merge(applicable_orbit_counter.interpolate(
-                            dataset[time_variable], variables, None, cdf_type
-                        ))
+
+                    # master filters
+                    dataset, filters_left = dataset.filter(resolver.filters)
+
+                    # subordinate interpolated datasets
+                    times = dataset[resolver.master.TIME_VARIABLE]
+                    cdf_type = dataset.cdf_type[resolver.master.TIME_VARIABLE]
+                    for slave in resolver.slaves:
+                        dataset.merge(
+                            slave.interpolate(times, variables, {}, cdf_type)
+                        )
                         dataset, filters_left = dataset.filter(filters_left)
-                    # auxiliary datasets
-                    dataset.merge(index_kp.interpolate(
-                        dataset[time_variable], variables, None, cdf_type
-                    ))
-                    dataset, filters_left = dataset.filter(filters_left)
-                    dataset.merge(index_dst.interpolate(
-                        dataset[time_variable], variables, None, cdf_type
-                    ))
-                    dataset, filters_left = dataset.filter(filters_left)
-                    # quasi-dipole coordinates and magnetic local time
-                    dataset.merge(model_qdc.eval(dataset, variables))
-                    dataset, filters_left = dataset.filter(filters_left)
-                    dataset.merge(model_mlt.eval(dataset, variables))
-                    dataset, filters_left = dataset.filter(filters_left)
-                    # spherical harmonics expansion models
+
+                    # models
                     for model in models:
                         dataset.merge(model.eval(dataset, variables))
                         dataset, filters_left = dataset.filter(filters_left)
-                    # model residuals
-                    for model_residual in model_residuals:
-                        dataset.merge(model_residual.eval(dataset, variables))
-                        dataset, filters_left = dataset.filter(filters_left)
+
+                    self.logger.debug(
+                        "dataset length after applying filters: %s",
+                        dataset.length
+                    )
 
                     if filters_left:
+                        # NOTE: Technically this error should not happen
+                        # the unresolved filters should be detected by the
+                        # resolver.
                         raise ExecuteError(
                             "Failed to apply some of the filters "
                             "due to missing source variables! filters: %s" %
@@ -331,7 +356,7 @@ class FetchFilteredData(WPSProcess):
                             "records!" % MAX_SAMPLES_COUNT
                         )
 
-                    yield label, dataset.extract(output_variables)
+                    yield label, dataset
 
             self.access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
@@ -354,58 +379,94 @@ class FetchFilteredData(WPSProcess):
             temp_filename = temp_basename + ".csv"
             result_filename = result_basename + ".csv"
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
-            initialize = True
 
             with open(temp_filename, "wb") as output_fobj:
 
+                if sources:
+                    # write CSV header
+                    output_fobj.write("id,")
+                    output_fobj.write(",".join(output_variables))
+                    output_fobj.write("\r\n")
+
                 for label, dataset in _generate_data_():
-                    # convert all time variables to the target file-format
-                    for variable, data in dataset.iteritems():
+                    formatters = []
+                    data = []
+                    for variable in output_variables:
+                        data_item = dataset.get(variable)
+                        # convert time variables to the target file-format
                         cdf_type = dataset.cdf_type.get(variable)
                         if cdf_type == CDF_EPOCH_TYPE:
-                            dataset[variable] = time_convertor(data, cdf_type)
-
-                    if initialize:
-                        output_fobj.write("id,")
-                        output_fobj.write(",".join(dataset.iterkeys()))
-                        output_fobj.write("\r\n")
-                        formatters = [
-                            get_formatter(data, dataset.cdf_type.get(variable))
-                            for variable, data in dataset.iteritems()
-                        ]
-                        initialize = False
-
+                            data_item = time_convertor(data_item, cdf_type)
+                        # collect all data items
+                        data.append(data_item)
+                        # collect formatters for the available data items
+                        if data_item is not None:
+                            formatters.append(get_formatter(data_item, cdf_type))
+                    # construct format string
+                    format_ = ",".join(
+                        "nan" if item is None else "%s" for item in data
+                    )
+                    # iterate the rows and write the CSV records
                     label_prefix = "%s," % label
-                    for row in izip(*dataset.itervalues()):
+                    for row in izip(*(item for item in data if item is not None)):
                         output_fobj.write(label_prefix)
                         output_fobj.write(
-                            ",".join(f(v) for f, v in zip(formatters, row))
+                            format_ % tuple(f(v) for f, v in zip(formatters, row))
                         )
                         output_fobj.write("\r\n")
 
 
         elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
+            # TODO: proper no-data value configuration
             temp_filename = temp_basename + ".cdf"
             result_filename = result_basename + ".cdf"
-            initialize = True
 
             if exists(temp_filename):
                 remove(temp_filename)
 
+            record_count = 0
             with cdf_open(temp_filename, 'w') as cdf:
                 for _, dataset in _generate_data_():
-                    if initialize: # write the first dataset
-                        initialize = False
-                        for variable, values in dataset.iteritems():
-                            cdf.new(
-                                variable, values, dataset.cdf_type.get(variable)
-                            )
-                            cdf[variable].attrs.update(
-                                dataset.cdf_attr.get(variable, {})
-                            )
-                    else: # write follow-on dataset
-                        for field, values in dataset.iteritems():
-                            cdf[field].extend(values)
+
+                    available = tuple(include(output_variables, dataset))
+                    inserted = tuple(exclude(available, cdf))
+                    missing = tuple(exclude(cdf, available))
+
+                    self.logger.debug(
+                        "CDF: available variables: %s", ", ".join(available)
+                    )
+                    self.logger.debug(
+                        "CDF: inserted variables: %s", ", ".join(inserted)
+                    )
+                    self.logger.debug(
+                        "CDF: missing variables: %s", ", ".join(missing)
+                    )
+
+                    for variable in inserted: # create the initial datasets
+                        shape = (record_count,) + dataset[variable].shape[1:]
+                        cdf.new(
+                            variable, full(shape, nan),
+                            dataset.cdf_type.get(variable)
+                        )
+                        cdf[variable].attrs.update(
+                            dataset.cdf_attr.get(variable, {})
+                        )
+
+                    if dataset.length > 0: # write the follow-on dataset
+                        for variable in available:
+                            cdf[variable].extend(dataset[variable])
+
+                        for variable in missing:
+                            shape = (dataset.length,) + cdf[variable].shape[1:]
+                            cdf[variable].extend(full(shape, nan))
+
+                        record_count += dataset.length
+
+                for variable in cdf:
+                    if len(cdf[variable]) != record_count:
+                        raise ExecuteError(
+                            "CDF %s variable length mismatch!" % variable
+                        )
 
                 # add the global attributes
                 cdf.attrs.update({

@@ -116,7 +116,7 @@ class ProductTimeSeries(TimeSeries):
             return Dataset()
         else:
             # generate an empty dataset from the sample product
-            self.logger.debug("product: %s ", product.identifier)
+            self.logger.debug("template product: %s ", product.identifier)
             return self._extract_dataset(product, variables, 0, 0)
 
     def _subset_qs(self, start, stop):
@@ -139,6 +139,7 @@ class ProductTimeSeries(TimeSeries):
         if len(variables) == 0: # stop here if no variable is requested
             return
 
+        counter = 0
         for product in self._subset_qs(start, stop).order_by('begin_time'):
             self.logger.debug("product: %s ", product.identifier)
 
@@ -172,6 +173,13 @@ class ProductTimeSeries(TimeSeries):
             self.logger.debug("dataset length: %s ", dataset.length)
 
             yield dataset
+            counter += 1
+
+        # try to yield at least one empty dataset for a non-empty collection
+        if counter < 1:
+            dataset = self._get_empty_dataset(variables)
+            if dataset:
+                yield dataset
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
                     cdf_type=CDF_EPOCH_TYPE, valid_only=False):
@@ -198,7 +206,7 @@ class ProductTimeSeries(TimeSeries):
         )
 
         self.logger.debug(
-            "requested time-span %s, %s",
+            "requested time-span [%s, %s]",
             cdf_rawtime_to_datetime(start, cdf_type),
             cdf_rawtime_to_datetime(stop, cdf_type)
         )
@@ -206,22 +214,26 @@ class ProductTimeSeries(TimeSeries):
 
         dataset = Dataset()
         for item in dataset_iterator:
-            if item:
+            if item and item.length > 0:
                 _times = item[self.TIME_VARIABLE]
                 self.logger.debug(
-                    "item time-span %s, %s",
+                    "item time-span [%s, %s]",
                     cdf_rawtime_to_datetime(_times.min(), cdf_type),
                     cdf_rawtime_to_datetime(_times.max(), cdf_type),
                 )
+            else:
+                self.logger.debug("item time-span is empty")
             dataset.append(item)
 
-        if dataset:
+        if dataset and dataset.length > 0:
             _times = dataset[self.TIME_VARIABLE]
             self.logger.debug(
                 "interpolated time-span %s, %s",
                 cdf_rawtime_to_datetime(_times.min(), cdf_type),
                 cdf_rawtime_to_datetime(_times.max(), cdf_type),
             )
+        else:
+            self.logger.debug("interpolated time-span is empty")
 
         self.logger.debug("interpolated dataset length: %s ", dataset.length)
 
