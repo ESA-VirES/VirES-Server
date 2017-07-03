@@ -115,7 +115,7 @@ class GroupingSampler(Filter):
             self.logger.debug("initial size: %d", data.size)
             res_index = in1d(data, data[index]).nonzero()[0]
         else: # empty array
-            index = empty(0, 'int64')
+            res_index = empty(0, 'int64')
         self.logger.debug("filtered size: %d", index.size)
         return res_index
 
