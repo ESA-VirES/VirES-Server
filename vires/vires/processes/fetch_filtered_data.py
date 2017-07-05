@@ -324,7 +324,7 @@ class FetchFilteredData(WPSProcess):
                         dataset, filters_left = dataset.filter(filters_left)
 
                     # models
-                    for model in models:
+                    for model in resolver.models:
                         dataset.merge(model.eval(dataset, variables))
                         dataset, filters_left = dataset.filter(filters_left)
 

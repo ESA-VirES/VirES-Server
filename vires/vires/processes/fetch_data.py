@@ -365,7 +365,7 @@ class FetchData(WPSProcess):
                         )
 
                     # models
-                    for model in models:
+                    for model in resolver.models:
                         dataset.merge(model.eval(dataset, variables))
 
                     self.logger.debug(
