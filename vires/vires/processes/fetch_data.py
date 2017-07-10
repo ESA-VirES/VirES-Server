@@ -56,7 +56,7 @@ from vires.processes.util import (
     OrbitCounter, IndexKp, IndexDst,
     BoundingBoxFilter, MinStepSampler, GroupingSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    VariableResolver,
+    VariableResolver, SpacecraftLabel,
 )
 
 # TODO: Make following parameters configurable.
@@ -72,7 +72,9 @@ BASE_MIN_STEP = timedelta(seconds=7)
 BASE_TIME_UNIT = timedelta(days=1)
 
 # set of the minimum required variables
-MANDATORY_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
+MANDATORY_VARIABLES = [
+    "Spacecraft", "Timestamp", "Latitude", "Longitude", "Radius"
+]
 
 # time converters
 CDF_RAW_TIME_FORMATS = ("ISO date-time", "MJD2000", "Unix epoch")
@@ -270,12 +272,13 @@ class FetchData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
-                satellite = (
-                    settings.VIRES_COL2SAT[master.collection.identifier]
+                spacecraft = (
+                    settings.VIRES_COL2SAT.get(master.collection.identifier)
                 )
-                if satellite in orbit_counter:
+                resolver.add_model(SpacecraftLabel(spacecraft or '-'))
+                if spacecraft in orbit_counter:
                     resolver.add_slave(
-                        orbit_counter[satellite], 'Timestamp'
+                        orbit_counter[spacecraft], 'Timestamp'
                     )
 
                 # models
@@ -326,7 +329,9 @@ class FetchData(WPSProcess):
                 collection_count = 0
 
                 all_variables = resolver.required
-                variables = tuple(exclude(all_variables, resolver.mandatory))
+                variables = tuple(exclude(
+                    all_variables, resolver.master.variables
+                ))
 
                 # master
                 dataset_iterator = resolver.master.subset(

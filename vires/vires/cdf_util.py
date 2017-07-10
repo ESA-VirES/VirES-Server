@@ -54,6 +54,7 @@ CDF_UINT4_TYPE = pycdf.const.CDF_UINT4.value
 CDF_INT1_TYPE = pycdf.const.CDF_INT1.value
 CDF_INT2_TYPE = pycdf.const.CDF_INT2.value
 CDF_INT4_TYPE = pycdf.const.CDF_INT4.value
+CDF_CHAR_TYPE = pycdf.const.CDF_CHAR.value
 
 CDF_EPOCH_1970 = 62167219200000.0
 CDF_EPOCH_2000 = 63113904000000.0

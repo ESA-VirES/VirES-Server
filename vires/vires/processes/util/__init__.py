@@ -41,6 +41,7 @@ from .time_series_orbit_counter import OrbitCounter
 from .model import Model
 from .model_magmod import MagneticModelResidual, MagneticModel
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
+from .label import Label, SpacecraftLabel
 from .interpolate import Interp1D
 from .input_parsers import (
     parse_style, parse_collections,
@@ -52,7 +53,7 @@ from .png_output import (
     array_to_png,
 )
 from .auth import get_username, get_user
-from .variables import VariableResolver
+from .resolver import VariableResolver
 
 # other miscellaneous utilities
 def format_filters(filters):
