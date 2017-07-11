@@ -39,7 +39,7 @@ from numpy import nan
 from django.conf import settings
 from django.utils.timezone import utc
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData, RequestParameter, Reference,
+    LiteralData, ComplexData, AllowedRange, RequestParameter, Reference,
     FormatText, FormatJSON, FormatBinaryRaw,
 )
 from eoxserver.services.ows.wps.exceptions import ExecuteError, ServerBusy
@@ -50,7 +50,7 @@ from vires.time_util import (
 )
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
-    get_formatter, CDF_EPOCH_TYPE, cdf_open,
+    timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE, cdf_open,
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
@@ -58,6 +58,7 @@ from vires.processes.util import (
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     with_cache_session, get_username, get_user,
     OrbitCounter, VariableResolver, SpacecraftLabel,
+    MinStepSampler, GroupingSampler,
 )
 
 # TODO: Make the limits configurable.
@@ -114,6 +115,11 @@ class FetchFilteredDataAsync(WPSProcess):
         ("end_time", LiteralData(
             'end_time', datetime, optional=False, title="End time",
             abstract="End of the selection time interval",
+        )),
+        ("sampling_step", LiteralData(
+            'sampling_step', timedelta, optional=True, title="Sampling step",
+            allowed_values=AllowedRange(timedelta(0), None, dtype=timedelta),
+            abstract="Optional output data sampling step.",
         )),
         ("filters", LiteralData(
             'filters', str, optional=True, default="",
@@ -231,7 +237,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
     @with_cache_session
     def execute(self, collection_ids, begin_time, end_time, filters,
-                requested_variables, model_ids, shc,
+                sampling_step, requested_variables, model_ids, shc,
                 csv_time_format, output, context, **kwarg):
         """ Execute process """
         #workspace_dir = ""
@@ -274,6 +280,8 @@ class FetchFilteredDataAsync(WPSProcess):
             )
         )
 
+        if sampling_step is not None:
+            self.logger.debug("sampling step: %s", sampling_step)
 
         # resolve data sources, models and filters and variables dependencies
         resolvers = dict()
@@ -296,6 +304,13 @@ class FetchFilteredDataAsync(WPSProcess):
                     models_with_residuals.append(
                         MagneticModelResidual(model.name, variable)
                     )
+            # optional sub-sampling filters
+            if sampling_step:
+                sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
+                    sampling_step, CDF_EPOCH_TYPE
+                ))
+                grouping_sampler = GroupingSampler('Timestamp')
+                filters = [sampler, grouping_sampler] + filters
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.iteritems():

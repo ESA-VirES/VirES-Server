@@ -38,7 +38,7 @@ from datetime import datetime, timedelta
 from numpy import nan
 from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData,
+    LiteralData, ComplexData, AllowedRange,
     FormatText, FormatJSON, FormatBinaryRaw,
     CDFile,
 )
@@ -50,13 +50,14 @@ from vires.time_util import (
 )
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
-    get_formatter, CDF_EPOCH_TYPE, cdf_open,
+    timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE, cdf_open,
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_filters2, IndexKp, IndexDst,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     OrbitCounter, VariableResolver, SpacecraftLabel,
+    MinStepSampler, GroupingSampler,
 )
 
 # TODO: Make the limits configurable.
@@ -107,6 +108,11 @@ class FetchFilteredData(WPSProcess):
         ("end_time", LiteralData(
             'end_time', datetime, optional=False, title="End time",
             abstract="End of the selection time interval",
+        )),
+        ("sampling_step", LiteralData(
+            'sampling_step', timedelta, optional=True, title="Sampling step",
+            allowed_values=AllowedRange(timedelta(0), None, dtype=timedelta),
+            abstract="Optional output data sampling step.",
         )),
         ("filters", LiteralData(
             'filters', str, optional=True, default="",
@@ -159,7 +165,7 @@ class FetchFilteredData(WPSProcess):
     ]
 
     def execute(self, collection_ids, begin_time, end_time, filters,
-                requested_variables, model_ids, shc,
+                sampling_step, requested_variables, model_ids, shc,
                 csv_time_format, output, **kwarg):
         """ Execute process """
         workspace_dir = SystemConfigReader().path_temp
@@ -201,6 +207,8 @@ class FetchFilteredData(WPSProcess):
             )
         )
 
+        if sampling_step is not None:
+            self.logger.debug("sampling step: %s", sampling_step)
 
         # resolve data sources, models and filters and variables dependencies
         resolvers = dict()
@@ -223,6 +231,13 @@ class FetchFilteredData(WPSProcess):
                     models_with_residuals.append(
                         MagneticModelResidual(model.name, variable)
                     )
+            # optional sub-sampling filters
+            if sampling_step:
+                sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
+                    sampling_step, CDF_EPOCH_TYPE
+                ))
+                grouping_sampler = GroupingSampler('Timestamp')
+                filters = [sampler, grouping_sampler] + filters
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.iteritems():
