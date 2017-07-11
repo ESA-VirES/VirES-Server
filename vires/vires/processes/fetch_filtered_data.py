@@ -42,7 +42,9 @@ from eoxserver.services.ows.wps.parameters import (
     FormatText, FormatJSON, FormatBinaryRaw,
     CDFile,
 )
-from eoxserver.services.ows.wps.exceptions import ExecuteError
+from eoxserver.services.ows.wps.exceptions import (
+    InvalidParameterValue, InvalidOutputDefError,
+)
 from vires.config import SystemConfigReader
 from vires.util import unique, exclude, include, full
 from vires.time_util import (
@@ -191,7 +193,7 @@ class FetchFilteredData(WPSProcess):
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
             self.access_logger.error(message)
-            raise ExecuteError(message)
+            raise InvalidParameterValue('end_time', message)
 
         # log the request
         self.access_logger.info(
@@ -357,7 +359,8 @@ class FetchFilteredData(WPSProcess):
                         # NOTE: Technically this error should not happen
                         # the unresolved filters should be detected by the
                         # resolver.
-                        raise ExecuteError(
+                        raise InvalidParameterValue(
+                            'filters',
                             "Failed to apply some of the filters "
                             "due to missing source variables! filters: %s" %
                             "; ".join(str(f) for f in filters_left)
@@ -371,7 +374,8 @@ class FetchFilteredData(WPSProcess):
                             "count of %d samples!",
                             total_count, MAX_SAMPLES_COUNT,
                         )
-                        raise ExecuteError(
+                        raise InvalidParameterValue(
+                            'end_time',
                             "Requested data exceeds the maximum limit of %d "
                             "records!" % MAX_SAMPLES_COUNT
                         )
@@ -482,12 +486,6 @@ class FetchFilteredData(WPSProcess):
 
                         record_count += dataset.length
 
-                for variable in cdf:
-                    if len(cdf[variable]) != record_count:
-                        raise ExecuteError(
-                            "CDF %s variable length mismatch!" % variable
-                        )
-
                 # add the global attributes
                 cdf.attrs.update({
                     "TITLE": result_filename,
@@ -503,7 +501,8 @@ class FetchFilteredData(WPSProcess):
                 })
 
         else:
-            ExecuteError(
+            InvalidOutputDefError(
+                'output',
                 "Unexpected output format %r requested!" % output['mime_type']
             )
 

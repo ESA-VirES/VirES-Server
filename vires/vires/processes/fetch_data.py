@@ -40,7 +40,7 @@ from eoxserver.services.ows.wps.parameters import (
     FormatText, FormatJSON,
     CDFileWrapper,
 )
-from eoxserver.services.ows.wps.exceptions import ExecuteError
+from eoxserver.services.ows.wps.exceptions import InvalidParameterValue
 from vires.util import unique, exclude
 from vires.time_util import (
     naive_to_utc,
@@ -178,7 +178,7 @@ class FetchData(WPSProcess):
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
             self.access_logger.error(message)
-            raise ExecuteError(message)
+            raise InvalidParameterValue('end_time', message)
 
         # log the request
         self.access_logger.info(
@@ -210,7 +210,7 @@ class FetchData(WPSProcess):
         self.logger.debug("relative area: %s", relative_area)
         self.logger.debug("relative time: %s", relative_time)
 
-        samplig_step = timedelta(seconds=(
+        sampling_step = timedelta(seconds=(
             relative_area * (
                 BASE_MIN_STEP.total_seconds() +
                 relative_time *
@@ -218,7 +218,7 @@ class FetchData(WPSProcess):
             )
         ))
 
-        self.logger.debug("sampling step: %s", samplig_step)
+        self.logger.debug("sampling step: %s", sampling_step)
 
         # resolve data sources, models and filters and variables dependencies
         resolvers = dict()
@@ -233,7 +233,7 @@ class FetchData(WPSProcess):
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
-                samplig_step, CDF_EPOCH_TYPE
+                sampling_step, CDF_EPOCH_TYPE
             ))
             grouping_sampler = GroupingSampler('Timestamp')
             filters = [sampler, grouping_sampler]
@@ -355,7 +355,8 @@ class FetchData(WPSProcess):
                             "count of %d samples per collection!",
                             collection_count, MAX_SAMPLES_COUNT_PER_COLLECTION
                         )
-                        raise ExecuteError(
+                        raise InvalidParameterValue(
+                            'end_time',
                             "Requested data exceeds the maximum limit of %d "
                             "samples per collection!" %
                             MAX_SAMPLES_COUNT_PER_COLLECTION
