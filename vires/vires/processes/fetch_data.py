@@ -271,7 +271,7 @@ class FetchData(WPSProcess):
 
                 # satellite specific slaves
                 satellite = (
-                    settings.VIRES_COL2SAT[master.collection.identifier]
+                    settings.VIRES_COL2SAT.get(master.collection.identifier)
                 )
                 if satellite in orbit_counter:
                     resolver.add_slave(
