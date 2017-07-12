@@ -371,7 +371,9 @@ class FetchFilteredDataAsync(WPSProcess):
             for label, resolver in resolvers.iteritems():
 
                 all_variables = resolver.required
-                variables = tuple(exclude(all_variables, resolver.mandatory))
+                variables = tuple(exclude(
+                    all_variables, resolver.master.variables
+                ))
 
                 # master
                 dataset_iterator = resolver.master.subset(
