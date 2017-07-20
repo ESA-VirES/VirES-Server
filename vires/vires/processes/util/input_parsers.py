@@ -29,7 +29,6 @@
 import re
 from collections import OrderedDict
 from eoxmagmod import read_model_shc
-from eoxserver.contrib import gdal
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.util import get_color_scale, get_model
 from vires.models import ProductCollection
@@ -38,6 +37,8 @@ from .model_magmod import MagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
+RE_RESIDUAL_VARIABLE = re.compile(r'(.+)_res([ABC])([ABC])')
+
 
 def parse_style(input_id, style):
     """ Parse style value and return the corresponding colour-map object. """
@@ -204,3 +205,18 @@ def parse_filters2(input_id, filter_string):
         _get_filter(name, vmin, vmax) for name, (vmin, vmax)
         in parse_filters(input_id, filter_string).iteritems()
     ]
+
+
+def parse_variables(input_id, variables_strings):
+    """ Variable parsers.  """
+    variables_strings = str(variables_strings.strip())
+    if variables_strings:
+        variables = [var.strip() for var in variables_strings.split(',')]
+        residual_variables = [
+            (variable, match.groups()) for variable, match in (
+                (var, RE_RESIDUAL_VARIABLE.match(var)) for var in variables
+            ) if match
+        ]
+        return (variables, residual_variables)
+    else:
+        return [], []

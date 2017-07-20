@@ -47,6 +47,7 @@ from .input_parsers import (
     parse_style, parse_collections,
     parse_model, parse_models, parse_models2,
     parse_filters, parse_filters2,
+    parse_variables,
 )
 from .png_output import (
     data_to_png,
@@ -54,6 +55,8 @@ from .png_output import (
 )
 from .auth import get_username, get_user
 from .resolver import VariableResolver
+from .residuals import group_residual_variables, Sat2SatResidual
+
 
 # other miscellaneous utilities
 def format_filters(filters):

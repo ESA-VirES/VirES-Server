@@ -39,7 +39,7 @@ from .time_series_aux import AuxiliaryDataTimeSeries
 class OrbitCounter(AuxiliaryDataTimeSeries):
     """ Orbit counter time-series class. """
     CDF_TYPE = {
-        'Timestamp': CDF_EPOCH_TYPE,
+        'AscendingNodeTime': CDF_EPOCH_TYPE,
         'OrbitNumber': CDF_INT4_TYPE,               # uses -1 as NaN
         'AscendingNodeLongitude': CDF_DOUBLE_TYPE,   # NaN
         'OrbitSource': CDF_INT1_TYPE,               # uses -1 as NaN
@@ -50,8 +50,8 @@ class OrbitCounter(AuxiliaryDataTimeSeries):
         'OrbitSource': CDF_INT1_TYPE,               # uses -1 as NaN
     }
     CDF_ATTR = {
-        'Timestamp': {
-            'DESCRIPTION': 'Time stamp',
+        'AscendingNodeTime': {
+            'DESCRIPTION': 'Time of the orbit ascending node.',
             'UNITS': '-',
         },
         'OrbitNumber': {
@@ -73,14 +73,14 @@ class OrbitCounter(AuxiliaryDataTimeSeries):
             'UNITS': '-',
         },
     }
-    TIME_VARIABLE = "Timestamp"
+    TIME_VARIABLE = "AscendingNodeTime"
 
     def __init__(self, name, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
             self, name, filename, fetch_orbit_counter_data,
             interpolate_orbit_counter_data, {
                 'orbit': 'OrbitNumber',
-                'MJD2000': 'Timestamp',
+                'MJD2000': 'AscendingNodeTime',
                 'phi_AN': 'AscendingNodeLongitude',
                 'Source': 'OrbitSource',
             }, logger

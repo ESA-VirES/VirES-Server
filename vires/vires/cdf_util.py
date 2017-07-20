@@ -120,6 +120,24 @@ def cdf_open(filename, mode="r"):
     return cdf
 
 
+def cdf_rawtime_to_seconds(raw_time_delta, cdf_type):
+    """ Covert a CDF raw time difference to `datetime.timedelta` object """
+    if cdf_type == CDF_EPOCH_TYPE:
+        # TODO: handle vectors
+        return raw_time_delta * 1e-3
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def seconds_to_cdf_rawtime(time_seconds, cdf_type):
+    """ Covert a CDF raw time difference to `datetime.timedelta` object """
+    if cdf_type == CDF_EPOCH_TYPE:
+        # TODO: handle vectors
+        return time_seconds * 1e3
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
 def cdf_rawtime_to_timedelta(raw_time_delta, cdf_type):
     """ Covert a CDF raw time difference to `datetime.timedelta` object """
     if cdf_type == CDF_EPOCH_TYPE:

@@ -70,7 +70,8 @@ def fetch_orbit_counter_data(filename, start, stop,
 
 
 def interpolate_orbit_counter_data(filename, time, nodata=None,
-                                   fields=("orbit", "phi_AN", "Source")):
+                                   fields=("orbit", "phi_AN", "Source"),
+                                   kind='zero'):
     """ Interpolate orbit counter data.
     All variables are interpolated using the lower nearest neighbour
     interpolation.
@@ -88,7 +89,7 @@ def interpolate_orbit_counter_data(filename, time, nodata=None,
             return dict(
                 cdf_time_interp(
                     cdf, time, fields, types=types, nodata=nodata,
-                    time_field="MJD2000", kind='zero'
+                    time_field="MJD2000", kind=kind
                 )
             )
     else:

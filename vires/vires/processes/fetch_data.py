@@ -52,12 +52,14 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2,
-    OrbitCounter, IndexKp, IndexDst,
-    BoundingBoxFilter, MinStepSampler, GroupingSampler,
+    parse_collections, parse_models2, parse_variables,
+    IndexKp, IndexDst, OrbitCounter,
+    MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel,
+    Sat2SatResidual, group_residual_variables,
 )
+
 
 # TODO: Make following parameters configurable.
 # Limit response size (equivalent to 1/2 daily SWARM MAG LR product).
@@ -161,11 +163,12 @@ class FetchData(WPSProcess):
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
         models = parse_models2("model_ids", model_ids, shc)
-        if requested_variables is not None:
-            requested_variables = [
-                var.strip() for var in requested_variables.split(',')
-            ]
-        self.logger.debug("requested variables: %s", requested_variables)
+        requested_variables, residual_variables = (
+            parse_variables('requested_variables', requested_variables)
+        )
+        self.logger.debug(
+            "requested variables: %s", ", ".join(requested_variables)
+        )
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
@@ -280,6 +283,14 @@ class FetchData(WPSProcess):
                     resolver.add_slave(
                         orbit_counter[spacecraft], 'Timestamp'
                     )
+
+                # prepare spacecraft to spacecraft residuals
+                grouped_res_vars = group_residual_variables(
+                    product_sources, residual_variables
+                )
+                self.logger.debug("%s", grouped_res_vars)
+                for (msc, ssc), cols in grouped_res_vars.items():
+                    resolver.add_model(Sat2SatResidual(msc, ssc, cols))
 
                 # models
                 for model in chain((model_qdc, model_mlt), models_with_residuals):
