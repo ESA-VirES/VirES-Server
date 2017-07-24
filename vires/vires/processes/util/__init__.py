@@ -42,7 +42,6 @@ from .model import Model
 from .model_magmod import MagneticModelResidual, MagneticModel
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
 from .label import Label, SpacecraftLabel
-from .interpolate import Interp1D
 from .input_parsers import (
     parse_style, parse_collections,
     parse_model, parse_models, parse_models2,

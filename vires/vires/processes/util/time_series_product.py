@@ -56,6 +56,7 @@ class ProductTimeSeries(TimeSeries):
     TIME_TOLERANCE = timedelta(microseconds=10) # time selection tolerance
     TIME_OVERLAP = timedelta(seconds=60) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(seconds=30) # gap time threshold
+    TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=0.5)
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -71,6 +72,9 @@ class ProductTimeSeries(TimeSeries):
         })
 
         self.product_set = set() # stores all recorded source products
+
+        # default segment neighbourhood
+        self.segment_neighbourhood = self.TIME_SEGMENT_NEIGHBOURHOOD
 
     @property
     def products(self):
@@ -242,5 +246,8 @@ class ProductTimeSeries(TimeSeries):
             times, self.TIME_VARIABLE, variables, {},
             gap_threshold=timedelta_to_cdf_rawtime(
                 self.TIME_GAP_THRESHOLD, cdf_type
+            ),
+            segment_neighbourhood=timedelta_to_cdf_rawtime(
+                self.segment_neighbourhood, cdf_type
             )
         )
