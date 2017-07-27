@@ -418,7 +418,6 @@ class FetchFilteredData(WPSProcess):
 
                 if sources:
                     # write CSV header
-                    output_fobj.write("id,")
                     output_fobj.write(",".join(output_variables))
                     output_fobj.write("\r\n")
 
@@ -441,9 +440,7 @@ class FetchFilteredData(WPSProcess):
                         "nan" if item is None else "%s" for item in data
                     )
                     # iterate the rows and write the CSV records
-                    label_prefix = "%s," % label
                     for row in izip(*(item for item in data if item is not None)):
-                        output_fobj.write(label_prefix)
                         output_fobj.write(
                             format_ % tuple(f(v) for f, v in zip(formatters, row))
                         )
