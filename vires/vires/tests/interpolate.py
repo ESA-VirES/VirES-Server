@@ -30,7 +30,8 @@
 
 import unittest
 from logging import getLogger, DEBUG, INFO, Formatter, StreamHandler
-from numpy import array, nan
+from numpy import array, nan, empty
+from vires.util import full
 from vires.tests import ArrayMixIn
 from vires.interpolate import Interp1D
 
@@ -75,7 +76,35 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             70, 73, 75, 77, 80, 83, 85, 87, 90, 93, 95, 97,
         ])
 
-        # no gap
+        # scalar/ empty target array
+        test(
+            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), array([]),
+            array([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+            array([]),
+        )
+
+        # vector / empty target array
+        test(
+            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), array([]),
+            array([
+                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
+                [5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
+            ]), empty((0, 3)),
+        )
+
+        # scalar / empty source array
+        test(
+            array([]), array([10, 20, 30, 40, 50, 60, 70, 80, 90]),
+            array([]), array([nan, nan, nan, nan, nan, nan, nan, nan, nan]),
+        )
+
+        # vector / empty source array
+        test(
+            array([]), array([10, 20, 30, 40, 50, 60, 70, 80, 90]),
+            empty((0, 3)), full((9, 3), nan)
+        )
+
+        # scalar / no gap
         test(
             array([10, 20, 30, 40, 50, 60, 70, 80, 90]), x_dst,
             array([1, 2, 3, 4, 5, 6, 7, 8, 9]),
@@ -92,8 +121,35 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
                 9, nan, nan, nan,
             ]),
         )
+        # vector / no gap
+        test(
+            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), x_dst,
+            array([
+                [1, 1, 1],
+                [2, 2, 2],
+                [3, 3, 3],
+                [4, 4, 4],
+                [5, 5, 5],
+                [6, 6, 6],
+                [7, 7, 7],
+                [8, 8, 8],
+                [9, 9, 9]
+            ]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+                [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
+                [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
+                [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
+                [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
+                [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
+                [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
+                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+            ]),
+        )
 
-        # 1 gap - 2 segments
+        # scalar / 1 gap - 2 segments
         test(
             array([10, 20, 30, 40, 60, 70, 80, 90]), x_dst,
             array([1, 2, 3, 4, 6, 7, 8, 9]),
@@ -111,7 +167,28 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             ]),
         )
 
-        # 2 gaps - 3 segments
+        # vector / 1 gap - 2 segments
+        test(
+            array([10, 20, 30, 40, 60, 70, 80, 90]), x_dst,
+            array([
+                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
+                [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
+            ]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+                [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
+                [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
+                [4, 4, 4], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
+                [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
+                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+            ]),
+        )
+
+        # scalar / 2 gaps - 3 segments
         test(
             array([10, 20, 40, 50, 60, 80, 90]), x_dst,
             array([1, 2, 4, 5, 6, 8, 9]),
@@ -129,7 +206,25 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             ]),
         )
 
-        # 2 gaps - 3 segments - 1 zero-length segment
+        # vector / 2 gaps - 3 segments
+        test(
+            array([10, 20, 40, 50, 60, 80, 90]), x_dst,
+            array([[1, 1, 1], [2, 2, 2], [4, 4, 4], [5, 5, 5], [6, 6, 6], [8, 8, 8], [9, 9, 9]]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+                [2, 2, 2], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
+                [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
+                [6, 6, 6], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+            ]),
+        )
+
+        # scalar / 2 gaps - 3 segments - 1 zero-length segment
         test(
             array([10, 20, 50, 80, 90]), x_dst,
             array([1, 2, 5, 8, 9]),
@@ -147,7 +242,25 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             ]),
         )
 
-        # 4 gaps - 5 segments - 5 zero-length segment
+        # vector / 2 gaps - 3 segments - 1 zero-length segment
+        test(
+            array([10, 20, 50, 80, 90]), x_dst,
+            array([[1, 1, 1], [2, 2, 2], [5, 5, 5], [8, 8, 8], [9, 9, 9]]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+                [2, 2, 2], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [5, 5, 5], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+            ]),
+        )
+
+        # scalar / 4 gaps - 5 segments - 5 zero-length segment
         test(
             array([10, 30, 50, 70, 90]), x_dst,
             array([1, 3, 5, 7, 9]),
@@ -165,7 +278,57 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             ]),
         )
 
-        # no gap + neighbourhood
+        # vector / 4 gaps - 5 segments - 5 zero-length segment
+        test(
+            array([10, 30, 50, 70, 90]), x_dst,
+            array([[1, 1, 1], [3, 3, 3], [5, 5, 5], [7, 7, 7], [9, 9, 9]]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [1, 1, 1], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [3, 3, 3], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [5, 5, 5], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [7, 7, 7], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+            ]),
+        )
+
+        # scalar/ empty target array
+        test(
+            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), array([]),
+            array([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+            array([]),
+            segment_neighbourhood=4,
+        )
+
+        # vector / empty target array
+        test(
+            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), array([]),
+            array([
+                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
+                [5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
+            ]), empty((0, 3)),
+            segment_neighbourhood=4,
+        )
+
+        # scalar / empty source array
+        test(
+            array([]), array([10, 20, 30, 40, 50, 60, 70, 80, 90]),
+            array([]), array([nan, nan, nan, nan, nan, nan, nan, nan, nan]),
+            segment_neighbourhood=4,
+        )
+
+        # vector / empty source array
+        test(
+            array([]), array([10, 20, 30, 40, 50, 60, 70, 80, 90]),
+            empty((0, 3)), full((9, 3), nan),
+            segment_neighbourhood=4,
+        )
+
+        # scalar / no gap + neighbourhood
         test(
             array([10, 20, 30, 40, 50, 60, 70, 80, 90]), x_dst,
             array([1, 2, 3, 4, 5, 6, 7, 8, 9]),
@@ -184,7 +347,29 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             segment_neighbourhood=4,
         )
 
-        # 1 gap - 2 segments + neighbourhood
+        # vector / no gap + neighbourhood
+        test(
+            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), x_dst,
+            array([
+                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
+                [5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
+            ]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+                [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
+                [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
+                [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
+                [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
+                [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
+                [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
+                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+            ]),
+            segment_neighbourhood=4,
+        )
+
+        # scalar /  1 gap - 2 segments + neighbourhood
         test(
             array([10, 20, 30, 40, 60, 70, 80, 90]), x_dst,
             array([1, 2, 3, 4, 6, 7, 8, 9]),
@@ -203,7 +388,29 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             segment_neighbourhood=4,
         )
 
-        # 2 gaps - 3 segments + neighbourhood
+        # vector /  1 gap - 2 segments + neighbourhood
+        test(
+            array([10, 20, 30, 40, 60, 70, 80, 90]), x_dst,
+            array([
+                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
+                [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
+            ]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+                [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
+                [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
+                [4, 4, 4], [4, 4, 4], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [6, 6, 6],
+                [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
+                [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
+                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+            ]),
+            segment_neighbourhood=4,
+        )
+
+        # scalar /  2 gaps - 3 segments + neighbourhood
         test(
             array([10, 20, 40, 50, 60, 80, 90]), x_dst,
             array([1, 2, 4, 5, 6, 8, 9]),
@@ -222,7 +429,26 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             segment_neighbourhood=4,
         )
 
-        # 2 gaps - 3 segments - 1 zero-length segment + neighbourhood
+        # vector /  2 gaps - 3 segments + neighbourhood
+        test(
+            array([10, 20, 40, 50, 60, 80, 90]), x_dst,
+            array([[1, 1, 1], [2, 2, 2], [4, 4, 4], [5, 5, 5], [6, 6, 6], [8, 8, 8], [9, 9, 9]]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+                [2, 2, 2], [2, 2, 2], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [4, 4, 4],
+                [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
+                [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
+                [6, 6, 6], [6, 6, 6], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [8, 8, 8],
+                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+            ]),
+            segment_neighbourhood=4,
+        )
+
+        # scalar /  2 gaps - 3 segments - 1 zero-length segment + neighbourhood
         test(
             array([10, 20, 50, 80, 90]), x_dst,
             array([1, 2, 5, 8, 9]),
@@ -241,7 +467,26 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
             segment_neighbourhood=4,
         )
 
-        # 4 gaps - 5 segments - 5 zero-length segment + neighbourhood
+        # vector /  2 gaps - 3 segments - 1 zero-length segment + neighbourhood
+        test(
+            array([10, 20, 50, 80, 90]), x_dst,
+            array([[1, 1, 1], [2, 2, 2], [5, 5, 5], [8, 8, 8], [9, 9, 9]]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+                [2, 2, 2], [2, 2, 2], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [5, 5, 5],
+                [5, 5, 5], [5, 5, 5], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [8, 8, 8],
+                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+            ]),
+            segment_neighbourhood=4,
+        )
+
+        # scalar /  4 gaps - 5 segments - 5 zero-length segment + neighbourhood
         test(
             array([10, 30, 50, 70, 90]), x_dst,
             array([1, 3, 5, 7, 9]),
@@ -256,6 +501,25 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
                 7, 7, nan, nan,
                 nan, nan, nan, 9,
                 9, 9, nan, nan,
+            ]),
+            segment_neighbourhood=4,
+        )
+
+        # vector /  4 gaps - 5 segments - 5 zero-length segment + neighbourhood
+        test(
+            array([10, 30, 50, 70, 90]), x_dst,
+            array([[1, 1, 1], [3, 3, 3], [5, 5, 5], [7, 7, 7], [9, 9, 9]]),
+            array([
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+                [1, 1, 1], [1, 1, 1], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [3, 3, 3],
+                [3, 3, 3], [3, 3, 3], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [5, 5, 5],
+                [5, 5, 5], [5, 5, 5], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [7, 7, 7],
+                [7, 7, 7], [7, 7, 7], [nan, nan, nan], [nan, nan, nan],
+                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [9, 9, 9],
+                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
             ]),
             segment_neighbourhood=4,
         )

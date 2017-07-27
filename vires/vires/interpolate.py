@@ -141,5 +141,9 @@ class Interp1D(object):
         y_dst = empty((len(self.x_dst),) + y_src.shape[1:])
         if y_dst.size > 0:
             y_dst[idx_nan] = nan
-            y_dst[idx_valid] = y_src[idx_nearest]
+            # NOTE: workaround for the empty multi-dimensional slicing bug
+            #       in NumPy v1.7.1
+            if len(idx_valid) > 0:
+                y_dst[idx_valid] = y_src[idx_nearest]
+
         return y_dst
