@@ -29,7 +29,6 @@
 import re
 from collections import OrderedDict
 from eoxmagmod import read_model_shc
-from eoxserver.contrib import gdal
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.util import get_color_scale, get_model
 from vires.models import ProductCollection
@@ -38,6 +37,8 @@ from .model_magmod import MagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
+RE_RESIDUAL_VARIABLE = re.compile(r'(.+)_res([ABC])([ABC])')
+
 
 def parse_style(input_id, style):
     """ Parse style value and return the corresponding colour-map object. """
@@ -79,32 +80,47 @@ def parse_collections(input_id, source):
                 input_id, "Invalid collection identifier %r! (label: %r)" %
                 (exc.args[0], label)
             )
-    # check the collection counts and range types
-    if result:
-        labels = iter(result)
-        label = labels.next()
-        collections = result[label]
-        count = len(collections)
-        rtypes = tuple(col.range_type for col in collections)
-        if len(set(rtypes)) < len(rtypes):
+
+    range_types = []
+    master_rtype = None
+    for label, collections in result.items():
+        # master (first collection) must be always defined
+        if len(collections) < 1:
             raise InvalidInputValueError(
-                input_id, "Non-unique collection range-types! (label: %r; )" %
-                label
+                input_id, "Collection list must have at least one item!"
+                " (label: %r)" % label
             )
-        for label in labels:
-            collections = result[label]
-            # check count
-            if len(collections) != count:
+        # master (first collection) must be always of the same range-type
+        if master_rtype is None:
+            master_rtype = collections[0].range_type
+            range_types = [master_rtype] # master is always the first
+        else:
+            if master_rtype != collections[0].range_type:
                 raise InvalidInputValueError(
-                    input_id, "Collection count mismatch! (label: %r; )" %
-                    label
+                    input_id, "Master collection type mismatch!"
+                    " (label: %r; )" % label
                 )
-            # check range types
-            if tuple(col.range_type for col in collections) != rtypes:
+
+        # slaves are optional
+        # slaves' order does not matter
+
+        # collect slave range-types
+        slave_rtypes = []
+
+        # for one label multiple collections of the same renge-type not allowed
+        for rtype in (collection.range_type for collection in collections[1:]):
+            if rtype == master_rtype or rtype in slave_rtypes:
                 raise InvalidInputValueError(
-                    input_id, "Collection range-type mismatch! (label: %r; )" %
-                    label
+                    input_id, "Multiple collections of the same type "
+                    "are not allowed! (label: %r; )" % label
                 )
+            slave_rtypes.append(rtype)
+
+        # collect all unique range-types
+        range_types.extend(
+            rtype for rtype in slave_rtypes if rtype not in range_types
+        )
+
     # convert collections to product time-series
     return dict(
         (label, [ProductTimeSeries(collection) for collection in collections])
@@ -189,3 +205,18 @@ def parse_filters2(input_id, filter_string):
         _get_filter(name, vmin, vmax) for name, (vmin, vmax)
         in parse_filters(input_id, filter_string).iteritems()
     ]
+
+
+def parse_variables(input_id, variables_strings):
+    """ Variable parsers.  """
+    variables_strings = str(variables_strings.strip())
+    if variables_strings:
+        variables = [var.strip() for var in variables_strings.split(',')]
+        residual_variables = [
+            (variable, match.groups()) for variable, match in (
+                (var, RE_RESIDUAL_VARIABLE.match(var)) for var in variables
+            ) if match
+        ]
+        return (variables, residual_variables)
+    else:
+        return [], []

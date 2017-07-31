@@ -47,7 +47,7 @@ from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
     cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year,
     cdf_rawtime_to_decimal_year_fast, datetime_to_cdf_rawtime,
-    mjd2000_to_cdf_rawtime,
+    mjd2000_to_cdf_rawtime, array_slice,
 )
 from vires.aux import parse_dst
 from vires.tests import ArrayMixIn
@@ -187,7 +187,8 @@ class TestCDF(ArrayMixIn, unittest.TestCase):
     def _cdf_time_subset(self, fields, start, stop, idx_start, idx_stop, margin=0):
         """ Testing CDF read. """
         with cdf_open(self.FILE) as cdf:
-            for field, value in cdf_time_subset(cdf, start, stop, fields, margin):
+            data = cdf_time_subset(cdf, start, stop, fields, margin)
+            for field, value in data:
                 self.assertEqual(value.shape, (idx_stop - idx_start,))
                 self.assertAllEqual(value, cdf[field][idx_start:idx_stop])
                 self.assertAllEqual(value, DATA_DST[field][idx_start:idx_stop])
@@ -247,20 +248,70 @@ class TestCDF(ArrayMixIn, unittest.TestCase):
         # full overlap
         self._cdf_time_interp(-732.00, -728.00, 80)
         self._cdf_time_interp(-732.00, -728.00, 80, kind="nearest")
+        self._cdf_time_interp(-732.00, -728.00, 80, kind="zero")
         # touching the bounds
         self._cdf_time_interp(-728.56251, -728.00, 5)
         self._cdf_time_interp(-728.56251, -728.00, 5, kind="nearest")
+        self._cdf_time_interp(-728.56251, -728.00, 5, kind="zero")
         self._cdf_time_interp(-732.00, -729.979169, 5)
         self._cdf_time_interp(-732.00, -729.979169, 5, kind="nearest")
+        self._cdf_time_interp(-732.00, -729.979169, 5, kind="zero")
         # out of bounds
         self._cdf_time_interp(-728.00, -726.00, 5)
         self._cdf_time_interp(-728.00, -726.00, 5, kind="nearest")
+        self._cdf_time_interp(-728.00, -726.00, 5, kind="zero")
         self._cdf_time_interp(-734.00, -732.00, 5)
         self._cdf_time_interp(-734.00, -732.00, 5, kind="nearest")
+        self._cdf_time_interp(-734.00, -732.00, 5, kind="zero")
         # single value
         self._cdf_time_interp(-729.00, -729.00, 1)
         self._cdf_time_interp(-729.00, -729.00, 1, kind="nearest")
+        self._cdf_time_interp(-729.00, -729.00, 1, kind="zero")
 
+    def test_array_slice_equidistant(self):
+        test_array = arange(11, dtype='float')
+        self.assertEqual(array_slice(test_array, -1, 11, 0), (0, 11))
+        self.assertEqual(array_slice(test_array, -1, 5, 0), (0, 6))
+        self.assertEqual(array_slice(test_array, -1, 4.5, 0), (0, 5))
+        self.assertEqual(array_slice(test_array, 5, 11, 0), (5, 11))
+        self.assertEqual(array_slice(test_array, 5.5, 11, 0), (6, 11))
+        self.assertEqual(array_slice(test_array, 5, 5, 0), (5, 6))
+        self.assertEqual(array_slice(test_array, 4.5, 5.5, 0), (5, 6))
+        self.assertEqual(array_slice(test_array, 4.5, 4.5, 0), (5, 5))
+        self.assertEqual(array_slice(test_array, 2.5, 7.5, 0), (3, 8))
+
+        self.assertEqual(array_slice(test_array, -1, 11, 1), (0, 11))
+        self.assertEqual(array_slice(test_array, -1, 5, 1), (0, 7))
+        self.assertEqual(array_slice(test_array, -1, 4.5, 1), (0, 6))
+        self.assertEqual(array_slice(test_array, 5, 11, 1), (4, 11))
+        self.assertEqual(array_slice(test_array, 5.5, 11, 1), (5, 11))
+        self.assertEqual(array_slice(test_array, 5, 5, 1), (4, 7))
+        self.assertEqual(array_slice(test_array, 4.5, 5.5, 1), (4, 7))
+        self.assertEqual(array_slice(test_array, 4.5, 4.5, 1), (4, 6))
+        self.assertEqual(array_slice(test_array, 2.5, 7.5, 1), (2, 9))
+
+    def test_array_slice_sorted(self):
+        test_array = arange(11, dtype='float')
+        test_array *= test_array
+        self.assertEqual(array_slice(test_array, -1, 101, 0), (0, 11))
+        self.assertEqual(array_slice(test_array, -1, 25, 0), (0, 6))
+        self.assertEqual(array_slice(test_array, -1, 22, 0), (0, 5))
+        self.assertEqual(array_slice(test_array, 25, 101, 0), (5, 11))
+        self.assertEqual(array_slice(test_array, 28, 101, 0), (6, 11))
+        self.assertEqual(array_slice(test_array, 25, 25, 0), (5, 6))
+        self.assertEqual(array_slice(test_array, 23, 28, 0), (5, 6))
+        self.assertEqual(array_slice(test_array, 23, 23, 0), (5, 5))
+        self.assertEqual(array_slice(test_array, 7, 56, 0), (3, 8))
+
+        self.assertEqual(array_slice(test_array, -1, 101, 1), (0, 11))
+        self.assertEqual(array_slice(test_array, -1, 25, 1), (0, 7))
+        self.assertEqual(array_slice(test_array, -1, 22, 1), (0, 6))
+        self.assertEqual(array_slice(test_array, 25, 101, 1), (4, 11))
+        self.assertEqual(array_slice(test_array, 28, 101, 1), (5, 11))
+        self.assertEqual(array_slice(test_array, 25, 25, 1), (4, 7))
+        self.assertEqual(array_slice(test_array, 23, 28, 1), (4, 7))
+        self.assertEqual(array_slice(test_array, 23, 23, 1), (4, 6))
+        self.assertEqual(array_slice(test_array, 7, 56, 1), (2, 9))
 
 if __name__ == "__main__":
     unittest.main()
