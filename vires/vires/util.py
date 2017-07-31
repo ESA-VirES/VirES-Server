@@ -146,6 +146,11 @@ def datetime_array_slice(start, stop, first, last, step, tolerance):
 
 def get_model(model_id):
     """ Get model for given identifier. """
+    if model_id == "CHAOS-6-Combined":
+        return (
+            mm.read_model_shc(mm.DATA_CHAOS6_CORE_X3) +
+            mm.read_model_shc(mm.DATA_CHAOS6_STATIC)
+        )
     if model_id == "CHAOS-5-Combined":
         return (
             mm.read_model_shc(mm.DATA_CHAOS5_CORE_V4) +
