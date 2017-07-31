@@ -197,7 +197,10 @@ class Sat2SatResidual(Model):
         time_cdf_type = dataset.cdf_type.get('Timestamp')
         # FIXME: handle gracefully zero-length time
         if len(time_master) < 1:
-            raise ValueError("Zero length time array!")
+            # This happens regularly in empty elections so for now i will remove
+            # raising of the error returning output_ds instead
+            # raise ValueError("Zero length time array!")
+            return output_ds
 
         orbcnt_master = fetch_orbit_counter_data(
             filename=settings.VIRES_ORBIT_COUNTER_DB[self._master_spacecraft],
