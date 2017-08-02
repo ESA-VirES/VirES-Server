@@ -480,7 +480,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 s.collection.identifier for l in sources.values() for s in l
             ),
             begin_time.strftime("%Y%m%dT%H%M%S"),
-            (end_time - timedelta(seconds=1)).strftime("%Y%m%dT%H%M%S"),
+            end_time.strftime("%Y%m%dT%H%M%S"),
         )
 
         if output['mime_type'] == "text/csv":
