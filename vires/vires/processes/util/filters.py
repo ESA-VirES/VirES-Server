@@ -57,7 +57,7 @@ class RejectAll(object):
 
     @property
     def required_variables(self):
-        raise ()
+        return ()
 
     def filter(self, dataset, index=None):
         return array([], dtype='int64')
