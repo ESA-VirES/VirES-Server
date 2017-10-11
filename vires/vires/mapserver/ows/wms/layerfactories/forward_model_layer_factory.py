@@ -235,9 +235,9 @@ class ForwardModelLayerFactory(BaseCoverageLayerFactory):
         ), minvalue, maxvalue, contours)
 
         create_linear_style("coolwarm", layer, (
-            ms.colorObj(255, 0, 0),
-            ms.colorObj(255, 255, 255),
             ms.colorObj(0, 0, 255),
+            ms.colorObj(255, 255, 255),
+            ms.colorObj(255, 0, 0),
         ), minvalue, maxvalue, contours)
 
         create_linear_style("rainbow", layer, (
@@ -929,16 +929,16 @@ class ForwardModelLayerFactory(BaseCoverageLayerFactory):
         ), minvalue, maxvalue, contours)
 
    
-        create_style("yignbu", layer, (
-            (ms.colorObj(8,29,88), 0.0),
-            (ms.colorObj(37,52,148), 0.125),
-            (ms.colorObj(34,94,168), 0.25),
-            (ms.colorObj(29,145,192), 0.375),
+        create_style("ylgnbu", layer, (
+            (ms.colorObj(255,255,217), 0.0),
+            (ms.colorObj(237,248,217), 0.125),
+            (ms.colorObj(199,233,180), 0.25),
+            (ms.colorObj(127,205,187), 0.375),
             (ms.colorObj(65,182,196), 0.5),
-            (ms.colorObj(127,205,187), 0.625),
-            (ms.colorObj(199,233,180), 0.75),
-            (ms.colorObj(237,248,217), 0.875),
-            (ms.colorObj(255,255,217), 1.0),
+            (ms.colorObj(29,145,192), 0.625),
+            (ms.colorObj(34,94,168), 0.75),
+            (ms.colorObj(37,52,148), 0.875),
+            (ms.colorObj(8,29,88), 1.0),
         ), minvalue, maxvalue, contours)
 
         create_style("greens", layer, (
@@ -953,16 +953,16 @@ class ForwardModelLayerFactory(BaseCoverageLayerFactory):
             (ms.colorObj(247,252,245), 1.0),
         ), minvalue, maxvalue, contours)
 
-        create_style("yiorrd", layer, (
-            (ms.colorObj(128,0,38), 0.0),
-            (ms.colorObj(189,0,38), 0.125),
-            (ms.colorObj(227,26,28), 0.25),
-            (ms.colorObj(252,78,42), 0.375),
+        create_style("ylorrd", layer, (
+            (ms.colorObj(255,255,204), 0.0),
+            (ms.colorObj(255,237,160), 0.125),
+            (ms.colorObj(254,217,118), 0.25),
+            (ms.colorObj(254,178,76), 0.375),
             (ms.colorObj(253,141,60), 0.5),
-            (ms.colorObj(254,178,76), 0.625),
-            (ms.colorObj(254,217,118), 0.75),
-            (ms.colorObj(255,237,160), 0.875),
-            (ms.colorObj(255,255,204), 1.0),
+            (ms.colorObj(252,78,42), 0.625),
+            (ms.colorObj(227,26,28), 0.75),
+            (ms.colorObj(189,0,38), 0.875),
+            (ms.colorObj(128,0,38), 1.0),
         ), minvalue, maxvalue, contours)
 
         create_style("bluered", layer, (
