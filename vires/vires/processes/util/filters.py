@@ -166,4 +166,4 @@ class BoundingBoxFilter(Filter):
         return index
 
     def __str__(self):
-        ";".join(str(filter_) for filter_ in self.filters)
+        return ";".join(str(filter_) for filter_ in self.filters)
