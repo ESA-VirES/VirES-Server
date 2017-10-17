@@ -46,7 +46,7 @@ from .input_parsers import (
     parse_style, parse_collections,
     parse_model, parse_models, parse_models2,
     parse_filters, parse_filters2,
-    parse_variables,
+    parse_variables, get_residual_variables,
 )
 from .png_output import (
     data_to_png,

@@ -210,13 +210,15 @@ def parse_filters2(input_id, filter_string):
 def parse_variables(input_id, variables_strings):
     """ Variable parsers.  """
     variables_strings = str(variables_strings.strip())
-    if variables_strings:
-        variables = [var.strip() for var in variables_strings.split(',')]
-        residual_variables = [
-            (variable, match.groups()) for variable, match in (
-                (var, RE_RESIDUAL_VARIABLE.match(var)) for var in variables
-            ) if match
-        ]
-        return (variables, residual_variables)
-    else:
-        return [], []
+    return [
+        var.strip() for var in variables_strings.split(',')
+    ] if variables_strings else []
+
+
+def get_residual_variables(variables):
+    """ Extract residual variables from a list of all variables. """
+    return [
+        (variable, match.groups()) for variable, match in (
+            (var, RE_RESIDUAL_VARIABLE.match(var)) for var in variables
+        ) if match
+    ]

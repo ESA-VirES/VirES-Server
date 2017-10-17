@@ -57,7 +57,7 @@ from vires.processes.util import (
     MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel,
-    Sat2SatResidual, group_residual_variables,
+    Sat2SatResidual, group_residual_variables, get_residual_variables,
 )
 
 
@@ -163,8 +163,8 @@ class FetchData(WPSProcess):
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
         models = parse_models2("model_ids", model_ids, shc)
-        requested_variables, residual_variables = (
-            parse_variables('requested_variables', requested_variables)
+        requested_variables = parse_variables(
+            'requested_variables', requested_variables
         )
         self.logger.debug(
             "requested variables: %s", ", ".join(requested_variables)
@@ -285,10 +285,14 @@ class FetchData(WPSProcess):
                     )
 
                 # prepare spacecraft to spacecraft residuals
+                # NOTE: No residual variables required by the filters.
+                residual_variables = get_residual_variables(requested_variables)
+                self.logger.debug("residual variables: %s", ", ".join(
+                    var for var, _ in residual_variables
+                ))
                 grouped_res_vars = group_residual_variables(
                     product_sources, residual_variables
                 )
-                self.logger.debug("%s", grouped_res_vars)
                 for (msc, ssc), cols in grouped_res_vars.items():
                     resolver.add_model(Sat2SatResidual(msc, ssc, cols))
 
