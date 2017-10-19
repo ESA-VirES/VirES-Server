@@ -56,7 +56,7 @@ from vires.processes.util import (
     IndexKp, IndexDst, OrbitCounter,
     MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    VariableResolver, SpacecraftLabel,
+    VariableResolver, SpacecraftLabel, SunPosition,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
 )
 
@@ -235,6 +235,7 @@ class FetchData(WPSProcess):
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
+            model_sun = SunPosition()
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
             ))
@@ -297,7 +298,10 @@ class FetchData(WPSProcess):
                     resolver.add_model(Sat2SatResidual(msc, ssc, cols))
 
                 # models
-                for model in chain((model_qdc, model_mlt), models_with_residuals):
+                aux_models = chain(
+                    (model_qdc, model_mlt, model_sun), models_with_residuals
+                )
+                for model in aux_models:
                     resolver.add_model(model)
 
                 # filters
