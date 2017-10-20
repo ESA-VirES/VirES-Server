@@ -48,16 +48,19 @@
               Features:
           </p>
           <ul>
-              <li><b>Alpha and Charlie satellite residuals</b></br>The magnetic residual between satellites Alpha and Charlie in the NEC-frame have been added as parameters. The residuals can be accessed together with magnetic data from Swarm Alpha, and will by default be included when downloading MAGA_LR products.</li>
-              <li><b>Orbit number</b></br>The orbit number has been added as a parameter counting the number of Equator crossings of the ascending node since the Swarm mission start. The parameter will by default be included in all products.</li>
-              <li><b>Spacecraft as product parameter</b></br>A new parameter "Spacecraft" has been introduced to downloaded data to easily identify which satellite downloaded data originates from within a product.</li>
-              <li><b>Solar position</b></br>
-                5 new parameters calculated for each measurement (time and location) have been introduced:
+              <li><b>Alpha and Charlie satellite residuals</b><br>The magnetic residual between satellites Alpha and Charlie in the NEC-frame have been added as parameters. The residuals can be accessed together with magnetic data from Swarm Alpha.</li>
+              <li><b>Orbit number</b><br>The orbit number has been added as a parameter counting the number of Equator crossings of the ascending node since the Swarm mission start. </li>
+              <li><b>Spacecraft as product parameter</b><br>A new parameter "Spacecraft" has been introduced to downloaded data to easily identify which satellite downloaded data originates from within a product.</li>
+              <li><b>Solar position</b><br>
+                Several parameters to determine the position of the sun have been added as filters:
                 <ul>
                   <li>SunDeclination, SunRightAscension and SunHourAngle defining Sun position in the Equatorial Coordinate System</li>
                   <li>SunZenithAngle, SunAzimuthAngle defining Sun position in the local Horizontal Coordinate System</li>
                 </ul>
                 See <a href="https://en.wikipedia.org/wiki/Equatorial_coordinate_system">"Equatorial coordinate system"</a> and <a href="https://en.wikipedia.org/wiki/Horizontal_coordinate_system">"Horizontal coordinate system"</a>.
+              </li>
+              <li><b>New parameters</b><br> 
+              All new parameters described above can be downloaded as part of a product by selecting them with the "Custom download parameters" in the Download panel.
               </li>
               <li><b>Cursor coordinates on globe</b></br>On hover of the globe in the Globe View, latitude and longitude for that point will be displayed in the top-left corner.</li>
               <li><b>Extended Download panel functionality</b></br>Parameter filters can be added directly in the Download panel by selecting "Add filter" in the Download panel. A Timestep filter enabling subsampling of the product. Subsampling can be enabled by selecting "Custom time subsampling" and specifying subsample interval in the Download panel. Subsampling will be applied to each daily product independently.</li>
@@ -71,7 +74,7 @@
               </li>
               <li><b>Model difference</b></br>The difference between two models at any coefficient range can be displayed on the globe. This functionality can be accessed under settings of any of the geomagnetic models available in the Layers panel.</li>
               <li><b>CHAOS-6</b></br>Geomagnetic field model CHAOS-5 has been replaced by <a href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/">CHAOS-6</a> in the Layers panel.</li> 
-              <li><b>Cartographic layer update</b></br>"Blue Marble" layer previously available in the Layers panel has been updated with a "S2 Cloudless" mosaic, which has much higher resolution and is based on Sentinel-2 data.</li> 
+              <li><b>Cartographic layer update</b></br>"Blue Marble" layer previously available in the Layers panel has been updated with a "S2 Cloudless" mosaic, which has higher resolution and is based on Sentinel-2 data.</li> 
           </ul>
 
 
