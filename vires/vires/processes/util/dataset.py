@@ -31,7 +31,7 @@ from collections import OrderedDict
 from numpy import array, concatenate, inf
 from vires.util import include, unique
 from vires.cdf_util import CDF_DOUBLE_TYPE
-from .interpolate import Interp1D
+from vires.interpolate import Interp1D
 
 
 class Dataset(OrderedDict):
@@ -134,14 +134,17 @@ class Dataset(OrderedDict):
         return dataset
 
     def interpolate(self, values, variable, variables=None, kinds=None,
-                    gap_threshold=inf):
+                    gap_threshold=inf, segment_neighbourhood=0):
         """ 1D time-series interpolation at 'values' of the given 'variable'.
         The 'kinds' of interpolation can be specified by the user defined
         dictionary. The supported kinds are: last, nearest, linear.
+        The values as well the variable must be sorted in ascending order.
         """
         dataset = Dataset()
 
-        interp1d = Interp1D(self[variable], values, gap_threshold)
+        interp1d = Interp1D(
+            self[variable], values, gap_threshold, segment_neighbourhood
+        )
         variables = (
             self if variables is None else include(unique(variables), self)
         )

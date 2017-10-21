@@ -51,7 +51,7 @@ class MinStepSampler(Filter):
 
     @property
     def required_variables(self):
-        return [self.variable]
+        return (self.variable,)
 
     def filter(self, dataset, index=None):
         if index is None:
@@ -76,6 +76,10 @@ class MinStepSampler(Filter):
         self.logger.debug("filtered size: %d", index.size)
         return index
 
+    def __str__(self):
+        return "%s: MinStepSampler(%r, %r)" % (
+            self.variable, self.min_step, self.base_value
+        )
 
 class GroupingSampler(Filter):
     """ Filter class sub-sampling the dataset so that the distance
@@ -95,7 +99,7 @@ class GroupingSampler(Filter):
 
     @property
     def required_variables(self):
-        return [self.variable]
+        return (self.variable,)
 
     def filter(self, dataset, index=None):
         if index is None:
@@ -109,8 +113,11 @@ class GroupingSampler(Filter):
         """
         if len(data) > 0: # non-empty array
             self.logger.debug("initial size: %d", data.size)
-            res_index = in1d(data,data[index]).nonzero()[0]
+            res_index = in1d(data, data[index]).nonzero()[0]
         else: # empty array
-            index = empty(0, 'int64')
+            res_index = empty(0, 'int64')
         self.logger.debug("filtered size: %d", index.size)
         return res_index
+
+    def __str__(self):
+        return "%s: GroupingSampler()" % self.variable

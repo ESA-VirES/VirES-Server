@@ -33,7 +33,7 @@ from math import ceil, floor
 from datetime import timedelta
 from numpy import (
     amin, amax, nan, vectorize, object as dt_object, float64 as dt_float64,
-    ndarray,
+    ndarray, searchsorted,
 )
 import scipy
 from scipy.interpolate import interp1d
@@ -50,6 +50,11 @@ CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
 CDF_DOUBLE_TYPE = pycdf.const.CDF_DOUBLE.value
 CDF_UINT1_TYPE = pycdf.const.CDF_UINT1.value
 CDF_UINT2_TYPE = pycdf.const.CDF_UINT2.value
+CDF_UINT4_TYPE = pycdf.const.CDF_UINT4.value
+CDF_INT1_TYPE = pycdf.const.CDF_INT1.value
+CDF_INT2_TYPE = pycdf.const.CDF_INT2.value
+CDF_INT4_TYPE = pycdf.const.CDF_INT4.value
+CDF_CHAR_TYPE = pycdf.const.CDF_CHAR.value
 
 CDF_EPOCH_1970 = 62167219200000.0
 CDF_EPOCH_2000 = 63113904000000.0
@@ -113,6 +118,24 @@ def cdf_open(filename, mode="r"):
     else:
         raise ValueError("Invalid mode value %r!" % mode)
     return cdf
+
+
+def cdf_rawtime_to_seconds(raw_time_delta, cdf_type):
+    """ Covert a CDF raw time difference to `datetime.timedelta` object """
+    if cdf_type == CDF_EPOCH_TYPE:
+        # TODO: handle vectors
+        return raw_time_delta * 1e-3
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def seconds_to_cdf_rawtime(time_seconds, cdf_type):
+    """ Covert a CDF raw time difference to `datetime.timedelta` object """
+    if cdf_type == CDF_EPOCH_TYPE:
+        # TODO: handle vectors
+        return time_seconds * 1e3
+    else:
+        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def cdf_rawtime_to_timedelta(raw_time_delta, cdf_type):
@@ -201,34 +224,6 @@ def cdf_rawtime_to_decimal_year(raw_time, cdf_type):
     return v_mjd2000_to_decimal_year(cdf_rawtime_to_mjd2000(raw_time, cdf_type))
 
 
-def _cdf_time_slice(cdf, start, stop, margin=0, time_field='time'):
-    """ Get sub-setting slice bounds. """
-    time = cdf.raw_var(time_field)
-    idx_start, idx_stop = 0, time.shape[0]
-
-    if start > stop:
-        start, stop = stop, start
-
-    if time.shape[0] > 0:
-        start = max(start, time[0])
-        stop = min(stop, time[-1])
-        time_span = time[-1] - time[0]
-        if time_span > 0:
-            resolution = (time.shape[0] - 1) / time_span
-            idx_start = int(ceil((start - time[0]) * resolution))
-            idx_stop = max(0, 1 + int(floor((stop - time[0]) * resolution)))
-        elif start > time[-1] or stop < time[0]:
-            idx_start = idx_stop # empty selection
-
-    if margin != 0:
-        if idx_start < time.shape[0]:
-            idx_start = max(0, idx_start - margin)
-        if idx_stop > 0:
-            idx_stop = max(0, idx_stop + margin)
-
-    return idx_start, idx_stop
-
-
 def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
     """ Extract subset of the listed `fields` from a CDF data file.
     The extracted range of values match times which lie within the given
@@ -237,46 +232,85 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
     The `margin` parameter is used to extend the index range by N surrounding
     elements. Negative margin is allowed.
     """
-    idx_start, idx_stop = _cdf_time_slice(
-        cdf, start, stop, margin, time_field
+    if not fields:
+        return [] # skip the data extraction for an empty variable list
+
+    idx_start, idx_stop = array_slice(
+        cdf.raw_var(time_field)[:], start, stop, margin
     )
     return [(field, cdf[field][idx_start:idx_stop]) for field in fields]
 
 
 def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
-                    **interp1d_prm):
+                    nodata=None, types=None, **interp1d_prm):
     """ Read values of the listed fields from the CDF file and interpolate
     them at the given time values (the `time` array of MDJ2000 values).
     The data exceeding the time interval of the source data is filled with the
-    `fill_value`. The function accepts additional keyword arguments which are
-    passed to the `scipy.interpolate.interp1d` interpolation (such as `kind`
-    and `fill_value`).
+    `nodata` dictionary. The function accepts additional keyword arguments which
+    are passed to the `scipy.interpolate.interp1d` interpolation (e.g., `kind`).
     """
+    nodata = nodata or {}
+    types = types or {}
+
+    if not fields:
+        return [] # skip the data extraction for an empty variable list
+
     # additional interpolation parameters
     if scipy.__version__ >= '0.14':
         interp1d_prm['assume_sorted'] = True
     interp1d_prm['copy'] = False
     interp1d_prm['bounds_error'] = False
 
-    cdf_time = cdf.raw_var(time_field)
+    cdf_time = cdf.raw_var(time_field)[:]
 
     # if possible get subset of the time data
     if time.size > 0 and cdf_time.shape[0] > min_len:
-        idx_start, idx_stop = _cdf_time_slice(
-            cdf, amin(time), amax(time), min_len//2, time_field
+        idx_start, idx_stop = array_slice(
+            cdf_time, amin(time), amax(time), min_len//2
         )
         cdf_time = cdf_time[idx_start:idx_stop]
 
     # check minimal length required by the chosen kind of interpolation
     if time.size > 0 and cdf_time.shape[0] >= min_len:
         return [
-            (field, interp1d(
-                cdf_time, cdf[field][idx_start:idx_stop], **interp1d_prm
-            )(time))
-            for field in fields
+            (field, data.astype(type_) if type_ else data)
+            for field, data, type_ in (
+                (
+                    field,
+                    interp1d(
+                        cdf_time, cdf[field][idx_start:idx_stop],
+                        fill_value=nodata.get(field, nan), **interp1d_prm
+                    )(time),
+                    types.get(field)
+                ) for field in fields
+            )
         ]
     else:
         return [
-            (field, full(time.shape, interp1d_prm.get("fill_value", nan)))
-            for field in fields
+            (field, full(
+                time.shape, nodata.get(field, nan), types.get(field, 'float')
+            )) for field in fields
         ]
+
+
+def array_slice(values, start, stop, margin=0):
+    """ Get sub-setting slice bounds. The sliced array must be sorted
+    in the ascending order.
+    """
+    size = values.shape[0]
+    idx_start, idx_stop = 0, size
+
+    if start > stop:
+        start, stop = stop, start
+
+    if idx_stop > 0:
+        idx_start = searchsorted(values, start, 'left')
+        idx_stop = searchsorted(values, stop, 'right')
+
+    if margin != 0:
+        if idx_start < size:
+            idx_start = min(size, max(0, idx_start - margin))
+        if idx_stop > 0:
+            idx_stop = min(size, max(0, idx_stop + margin))
+
+    return idx_start, idx_stop

@@ -91,7 +91,7 @@ class ForwardModelConnector(Component):
             # fast Cubic Spline model interpolation
             pixel_array = model_provider.evaluate_int(
                 data_item, band.identifier, bbox, size_x, size_y, elevation,
-                time, coeff_min, coeff_max
+                time, coeff_min, coeff_max, grid_step=(8, 8)
             )
             # scale pixel values
             # scale_factor = 255.0 / (range_max - range_min)

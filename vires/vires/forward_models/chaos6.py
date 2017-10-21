@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities
+# CHAOS 6 - CORE, STATIC and Combined magnetic models
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2017 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,41 +27,46 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .cache import with_cache_session
-from .dataset import Dataset
-from .filters import (
-    Filter, ScalarRangeFilter, VectorComponentRangeFilter,
-    BoundingBoxFilter,
+# NOTE: eoxmagmod >= 0.3.4 is required.
+from eoxmagmod import (
+    read_model_shc, DATA_CHAOS6_CORE_X3, DATA_CHAOS6_STATIC,
 )
-from .filters_subsampling import MinStepSampler, GroupingSampler
-from .time_series import TimeSeries
-from .time_series_product import ProductTimeSeries
-from .time_series_aux import  IndexKp, IndexDst
-from .time_series_orbit_counter import OrbitCounter
-from .model import Model
-from .model_magmod import MagneticModelResidual, MagneticModel
-from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
-from .model_sunpos import SunPosition
-from .label import Label, SpacecraftLabel
-from .input_parsers import (
-    parse_style, parse_collections,
-    parse_model, parse_models, parse_models2,
-    parse_filters, parse_filters2,
-    parse_variables, get_residual_variables,
-)
-from .png_output import (
-    data_to_png,
-    array_to_png,
-)
-from .auth import get_username, get_user
-from .resolver import VariableResolver
-from .residuals import group_residual_variables, Sat2SatResidual
+from vires.forward_models.base import BaseForwardModel
+from vires.util import cached_property
+
+class CHAOS6CoreForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-6 core field.
+    """
+    identifier = "CHAOS-6-Core"
+
+    @cached_property
+    def model(self):
+        return read_model_shc(DATA_CHAOS6_CORE_X3)
 
 
-# other miscellaneous utilities
-def format_filters(filters):
-    """ Convert filters to string. """
-    return "; ".join(
-        "%s: %g,%g" % (key, vmin, vmax)
-        for key, (vmin, vmax) in filters.iteritems()
-    )
+class CHAOS6StaticForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-6 static field.
+    """
+    identifier = "CHAOS-6-Static"
+
+    @cached_property
+    def model(self):
+        return read_model_shc(DATA_CHAOS6_STATIC)
+
+
+class CHAOS6CombinedForwardModel(BaseForwardModel):
+    """ Forward model calculator for the CHAOS-6 Combined field.
+    """
+    identifier = "CHAOS-6-Combined"
+
+    @cached_property
+    def model(self):
+        return (
+            read_model_shc(DATA_CHAOS6_CORE_X3) +
+            read_model_shc(DATA_CHAOS6_STATIC)
+        )
+
+    @cached_property
+    def time_validity(self):
+        """ Get the validity interval of the model. """
+        return self._time_validity(read_model_shc(DATA_CHAOS6_CORE_X3))

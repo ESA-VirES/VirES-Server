@@ -146,6 +146,11 @@ def datetime_array_slice(start, stop, first, last, step, tolerance):
 
 def get_model(model_id):
     """ Get model for given identifier. """
+    if model_id == "CHAOS-6-Combined":
+        return (
+            mm.read_model_shc(mm.DATA_CHAOS6_CORE_X3) +
+            mm.read_model_shc(mm.DATA_CHAOS6_STATIC)
+        )
     if model_id == "CHAOS-5-Combined":
         return (
             mm.read_model_shc(mm.DATA_CHAOS5_CORE_V4) +
@@ -195,9 +200,9 @@ def get_color_scale(name):
 
     elif name == "coolwarm":
         return clist_to_colormap(name, [
-            (0.0, 255, 0, 0),
+            (0.0, 0, 0, 255),
             (0.5, 255, 255, 255),
-            (1.0, 0, 0, 255),
+            (1.0, 255, 0, 0),
         ], 1.0 / 255.0)
 
     elif name == "rainbow":
@@ -230,17 +235,17 @@ def get_color_scale(name):
         ], 1.0 / 255.0)
 
 
-    elif name == "yignbu":
+    elif name == "ylgnbu":
         return clist_to_colormap(name, [
-            ( 0.0, 8,29,88),
-            (.125, 37,52,148),
-            (.25, 34,94,168),
-            (.375, 29,145,192),
+            (0.0, 255,255,217),
+            (.125, 237,248,217),
+            (.25, 199,233,180),
+            (.375, 127,205,187),
             (.5, 65,182,196),
-            (.625, 127,205,187),
-            (.75, 199,233,180),
-            (.875, 237,248,217),
-            (1.0, 255,255,217),
+            (.625, 29,145,192),
+            (.75, 34,94,168),
+            (.875, 37,52,148),
+            (1.0 , 8,29,88),
         ], 1.0 / 255.0)
 
     elif name == "greens":
@@ -256,17 +261,17 @@ def get_color_scale(name):
             (1.0, 247,252,245),
         ], 1.0 / 255.0)
 
-    elif name == "yiorrd":
+    elif name == "ylorrd":
         return clist_to_colormap(name, [
-            (0.0  ,128,0,38),
-            (0.125,189,0,38),
-            (0.25 ,227,26,28),
-            (0.375,252,78,42),
+            (0.0  ,255,255,204),
+            (0.125,255,237,160),
+            (0.25 ,254,217,118),
+            (0.375,254,178,76),
             (0.5  ,253,141,60),
-            (0.625,254,178,76),
-            (0.75 ,254,217,118),
-            (0.875,255,237,160),
-            (1.0  ,255,255,204),
+            (0.625,252,78,42),
+            (0.75 ,227,26,28),
+            (0.875,189,0,38),
+            (1.0  ,128,0,38),
         ], 1.0 / 255.0)
 
     elif name == "bluered":

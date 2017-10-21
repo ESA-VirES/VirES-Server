@@ -28,6 +28,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments
 
+from numpy import array
 from logging import getLogger, LoggerAdapter
 from vires.util import between
 
@@ -46,6 +47,23 @@ class Filter(object):
         A new array of indices identifying the filtered data subset is returned.
         """
         raise NotImplementedError
+
+    def __str__(self):
+        raise NotImplementedError
+
+
+class RejectAll(object):
+    """ Filter rejecting all records. """
+
+    @property
+    def required_variables(self):
+        return ()
+
+    def filter(self, dataset, index=None):
+        return array([], dtype='int64')
+
+    def __str__(self):
+        return "RejectAll()"
 
 
 class BaseRangeFilter(Filter):
@@ -69,7 +87,7 @@ class BaseRangeFilter(Filter):
 
     @property
     def required_variables(self):
-        return [self.variable]
+        return (self.variable,)
 
     def _filter(self, data):
         """ Low level filter. """
@@ -132,7 +150,7 @@ class BoundingBoxFilter(Filter):
     """ Bounding box filter. """
 
     def __init__(self, variables, bbox):
-        self._variables = variables
+        self._variables = tuple(variables)
         self.filters = [
             ScalarRangeFilter(variable, vmin, vmax)
             for variable, (vmin, vmax) in zip(variables, zip(bbox[0], bbox[1]))
@@ -148,4 +166,4 @@ class BoundingBoxFilter(Filter):
         return index
 
     def __str__(self):
-        ";".join(str(filter_) for filter_ in self.filters)
+        return ";".join(str(filter_) for filter_ in self.filters)
