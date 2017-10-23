@@ -408,6 +408,15 @@ class FetchFilteredDataAsync(WPSProcess):
 
         def _generate_data_():
             total_count = 0
+            product_count = 0
+
+            # count products
+            collection_product_counts = dict(
+                (label, resolver.master.subset_count(begin_time, end_time))
+                for label, resolver in resolvers.iteritems()
+            )
+            total_product_count = sum(collection_product_counts.itervalues())
+
 
             for label, resolver in resolvers.iteritems():
 
@@ -421,7 +430,16 @@ class FetchFilteredDataAsync(WPSProcess):
                     begin_time, end_time, all_variables
                 )
 
-                for dataset in dataset_iterator:
+                for product_idx, dataset in enumerate(dataset_iterator, 1):
+                    context.update_progress(
+                        (product_count * 100) // total_product_count,
+                        "Filtering collection %s, product %d of %d." % (
+                            label, product_idx, collection_product_counts[label]
+                        )
+                    )
+                    product_count += 1
+
+
                     self.logger.debug(
                         "dataset length before applying filters: %s",
                         dataset.length
