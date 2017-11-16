@@ -28,6 +28,7 @@
 
 from logging import INFO, WARNING
 from django.conf.urls import url
+from django.views.generic.base import RedirectView
 from allauth.urls import urlpatterns as allauth_urlpatterns
 from .views import ProfileUpdate
 from django.views.generic import TemplateView
@@ -51,8 +52,11 @@ urlpatterns = decorate(
     lambda obj: obj.name in WATCHED_URLS
 )
 
+favicon_view = RedirectView.as_view(url='/eoxs_static/other/favicon/favicon.ico', permanent=True)
+
 # additional patterns
 urlpatterns += [
     url(r'^profile/$', ProfileUpdate.as_view(), name='account_change_profile'),
     url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
+    url(r'^favicon\.ico$', favicon_view),
 ]
