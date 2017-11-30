@@ -213,7 +213,7 @@ class FetchData(WPSProcess):
         self.logger.debug("relative area: %s", relative_area)
         self.logger.debug("relative time: %s", relative_time)
 
-        min_step = timedelta(0) if relative_time <= 0 else BASE_MIN_STEP
+        min_step = timedelta(0) if relative_time <= 1 else BASE_MIN_STEP
         sampling_step = timedelta(seconds=(
             relative_area * (
                 min_step.total_seconds() +
