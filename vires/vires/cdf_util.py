@@ -47,7 +47,10 @@ from .time_util import (
 )
 
 CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
+CDF_FLOAT_TYPE = pycdf.const.CDF_FLOAT.value
 CDF_DOUBLE_TYPE = pycdf.const.CDF_DOUBLE.value
+CDF_REAL8_TYPE = pycdf.const.CDF_REAL8.value # CDF_DOUBLE != CDF_REAL8
+CDF_REAL4_TYPE = pycdf.const.CDF_REAL4.value # CDF_FLOAT != CDF_REAL4
 CDF_UINT1_TYPE = pycdf.const.CDF_UINT1.value
 CDF_UINT2_TYPE = pycdf.const.CDF_UINT2.value
 CDF_UINT4_TYPE = pycdf.const.CDF_UINT4.value
