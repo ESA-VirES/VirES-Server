@@ -29,7 +29,9 @@
 import re
 from collections import OrderedDict
 from eoxmagmod import read_model_shc
-from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from eoxserver.services.ows.wps.exceptions import (
+    MissingRequiredInputError, InvalidInputValueError
+)
 from vires.util import get_color_scale, get_model
 from vires.models import ProductCollection
 from .time_series_product import ProductTimeSeries
@@ -131,6 +133,9 @@ def parse_collections(input_id, source):
 def parse_model(input_id, model_id, shc, shc_input_id="shc"):
     """ Parse model identifier and returns the corresponding model."""
     if model_id == "Custom_Model":
+        if shc is None:
+            raise MissingRequiredInputError(shc_input_id)
+
         try:
             model = read_model_shc(shc)
         except ValueError:
