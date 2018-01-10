@@ -42,10 +42,15 @@ from .dataset import Dataset
 from .time_series import TimeSeries
 
 VARIABLE_TRANSLATES = {
-    "SWARM_EEF":{
+    "SWARM_EEF": {
         'Timestamp': 'timestamp',
         'Latitude': 'latitude',
         'Longitude': 'longitude'
+    },
+    "AUX_IMF_2_": {
+        'Timestamp': 'Epoch',
+        'IMF_BY_GSM': 'BY_GSM',
+        'IMF_BZ_GSM': 'BZ_GSM',
     }
 }
 
@@ -124,7 +129,7 @@ class ProductTimeSeries(TimeSeries):
             return self._extract_dataset(product, variables, 0, 0)
 
     def _subset_qs(self, start, stop):
-        """ Subset DJngo query set. """
+        """ Subset Django query set. """
         return Product.objects.filter(
             collections=self.collection,
             begin_time__lt=(stop + self.TIME_TOLERANCE),
