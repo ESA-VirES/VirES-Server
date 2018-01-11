@@ -37,7 +37,7 @@ from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
     timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
 )
-from vires.models import Product
+from vires.models import Product, ProductCollection
 from .dataset import Dataset
 from .time_series import TimeSeries
 
@@ -68,6 +68,8 @@ class ProductTimeSeries(TimeSeries):
             return '%s: %s' % (self.extra["collection_id"], msg), kwargs
 
     def __init__(self, collection, logger=None):
+        if isinstance(collection, basestring):
+            collection = ProductCollection.objects.get(identifier=collection)
         variable_translate = VARIABLE_TRANSLATES.get(collection.range_type.name, {})
         self.translate_fw = variable_translate
         self.translate_bw = dict((v, k) for k, v in variable_translate.iteritems())
