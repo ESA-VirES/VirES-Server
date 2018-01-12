@@ -40,7 +40,7 @@ from eoxserver.services.ows.wps.parameters import (
     FormatText, FormatJSON,
     CDFileWrapper,
 )
-from eoxserver.services.ows.wps.exceptions import InvalidParameterValue
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.util import unique, exclude
 from vires.time_util import (
     naive_to_utc,
@@ -181,7 +181,7 @@ class FetchData(WPSProcess):
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
             self.access_logger.error(message)
-            raise InvalidParameterValue('end_time', message)
+            raise InvalidInputValueError('end_time', message)
 
         # log the request
         self.access_logger.info(
@@ -374,7 +374,7 @@ class FetchData(WPSProcess):
                             "count of %d samples per collection!",
                             collection_count, MAX_SAMPLES_COUNT_PER_COLLECTION
                         )
-                        raise InvalidParameterValue(
+                        raise InvalidInputValueError(
                             'end_time',
                             "Requested data exceeds the maximum limit of %d "
                             "samples per collection!" %
