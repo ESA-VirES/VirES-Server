@@ -40,7 +40,7 @@ from vires.aux import (
     query_dst, query_dst_int,
     query_kp, query_kp_int,
 )
-from .dataset import Dataset
+from vires.dataset import Dataset
 from .time_series import TimeSeries
 
 

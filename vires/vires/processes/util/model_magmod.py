@@ -38,8 +38,8 @@ from vires.cdf_util import (
     CDF_EPOCH_TYPE,
     CDF_DOUBLE_TYPE,
 )
+from vires.dataset import Dataset
 from .model import Model
-from .dataset import Dataset
 
 
 class MagneticModelResidual(Model):

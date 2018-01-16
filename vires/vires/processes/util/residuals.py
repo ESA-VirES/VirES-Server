@@ -41,9 +41,9 @@ from vires.cdf_util import (
     cdf_rawtime_to_datetime, seconds_to_cdf_rawtime, cdf_rawtime_to_seconds,
 )
 from vires.util import include
+from vires.dataset import Dataset
 from .time_series_product import ProductTimeSeries
 from .model import Model
-from .dataset import Dataset
 
 
 def group_residual_variables(sources, residual_variables):

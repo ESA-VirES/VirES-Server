@@ -38,7 +38,7 @@ from vires.cdf_util import (
     timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
 )
 from vires.models import Product, ProductCollection
-from .dataset import Dataset
+from vires.dataset import Dataset
 from .time_series import TimeSeries
 
 VARIABLE_TRANSLATES = {
