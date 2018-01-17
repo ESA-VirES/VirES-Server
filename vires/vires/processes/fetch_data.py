@@ -53,7 +53,7 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_variables,
-    IndexKp, IndexDst, OrbitCounter, AuxIMF2,
+    IndexKp, IndexDst, OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel, SunPosition,
@@ -195,8 +195,6 @@ class FetchData(WPSProcess):
             ", ".join(model.name for model in models),
         )
 
-        # TODO: calculate the optimal sampling step
-
         if bbox:
             relative_area = abs(
                 (bbox.upper[0] - bbox.lower[0]) *
@@ -233,7 +231,7 @@ class FetchData(WPSProcess):
             )
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
-            index_f10 = AuxIMF2(settings.VIRES_AUX_IMF_2__COLLECTION)
+            index_f10 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
@@ -383,8 +381,8 @@ class FetchData(WPSProcess):
                         )
 
                     # subordinate interpolated datasets
-                    times = dataset[resolver.master.TIME_VARIABLE]
-                    cdf_type = dataset.cdf_type[resolver.master.TIME_VARIABLE]
+                    times = dataset[resolver.master.time_variable]
+                    cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
                         dataset.merge(
                             slave.interpolate(times, variables, {}, cdf_type)
