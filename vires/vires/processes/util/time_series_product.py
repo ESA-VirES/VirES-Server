@@ -96,7 +96,7 @@ class ProductTimeSeries(TimeSeries):
 
     def __init__(self, collection, logger=None):
         if isinstance(collection, basestring):
-            collection = ProductCollection.objects.get(identifier=collection)
+            collection = self._get_collection(collection)
 
         params = PRODUCT_TYPE_PARAMETERS.get(
             collection.range_type.name, DEFAULT_PRODUCT_TYPE_PARAMETERS
@@ -296,3 +296,12 @@ class ProductTimeSeries(TimeSeries):
                 self.segment_neighbourhood, cdf_type
             )
         )
+
+    @staticmethod
+    def _get_collection(collection_name):
+        try:
+            return ProductCollection.objects.get(identifier=collection_name)
+        except ProductCollection.DoesNotExist:
+            raise RuntimeError(
+                "Non-existent product collection %s!" % collection_name
+            )
