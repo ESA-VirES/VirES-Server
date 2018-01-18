@@ -98,10 +98,14 @@ class AuxiliaryDataTimeSeries(TimeSeries):
             raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
         if len(times) == 0: # return an empty dataset
-            return Dataset(
-                (variable, empty(0))
-                for variable in self.get_extracted_variables(variables)
-            )
+            dataset = Dataset()
+            for variable in self.get_extracted_variables(variables):
+                dataset.set(
+                    variable, empty(0),
+                    self.CDF_TYPE.get(variable),
+                    self.CDF_ATTR.get(variable)
+                )
+            return dataset
 
         variables = list(
             include(variables, self.variables) if variables is not None else
