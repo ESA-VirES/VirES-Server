@@ -156,10 +156,13 @@ class ProductTimeSeries(TimeSeries):
                 collections=self.collection
             ).order_by('begin_time')[0]
         except IndexError:
-            self.logger.warning(
-                "Empty collection! The variable types cannot be determined!"
+            self.logger.error(
+                "Empty collection! The variables and their types cannot be "
+                "reliably determined!"
             )
-            return Dataset()
+            raise RuntimeError(
+                "Empty product collection %s!" % self.collection.identifier
+            )
         else:
             # generate an empty dataset from the sample product
             self.logger.debug("template product: %s ", product.identifier)
