@@ -43,7 +43,7 @@ from eoxserver.services.ows.wps.parameters import (
     CDFile,
 )
 from eoxserver.services.ows.wps.exceptions import (
-    InvalidParameterValue, InvalidOutputDefError,
+    InvalidInputValueError, InvalidOutputDefError,
 )
 from vires.config import SystemConfigReader
 from vires.util import unique, exclude, include, full
@@ -195,7 +195,7 @@ class FetchFilteredData(WPSProcess):
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
             self.access_logger.error(message)
-            raise InvalidParameterValue('end_time', message)
+            raise InvalidInputValueError('end_time', message)
 
         # log the request
         self.access_logger.info(
@@ -381,7 +381,7 @@ class FetchFilteredData(WPSProcess):
                         # NOTE: Technically this error should not happen
                         # the unresolved filters should be detected by the
                         # resolver.
-                        raise InvalidParameterValue(
+                        raise InvalidInputValueError(
                             'filters',
                             "Failed to apply some of the filters "
                             "due to missing source variables! filters: %s" %
@@ -396,7 +396,7 @@ class FetchFilteredData(WPSProcess):
                             "count of %d samples!",
                             total_count, MAX_SAMPLES_COUNT,
                         )
-                        raise InvalidParameterValue(
+                        raise InvalidInputValueError(
                             'end_time',
                             "Requested data exceeds the maximum limit of %d "
                             "records!" % MAX_SAMPLES_COUNT
