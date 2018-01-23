@@ -72,11 +72,13 @@ class AuxImf2Parameters(SwarmDefaultParameters):
         'Timestamp': 'Epoch',
         'IMF_BY_GSM': 'BY_GSM',
         'IMF_BZ_GSM': 'BZ_GSM',
+        'IMF_V': 'V',
     }
     VARIABLE_INTERPOLATION_KINDS = {
         'F10_INDEX': 'zero',
         'IMF_BY_GSM': 'zero',
         'IMF_BZ_GSM': 'zero',
+        'IMF_V': 'zero',
     }
 
 
