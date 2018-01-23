@@ -1275,6 +1275,21 @@
             "color_interpretation": "Undefined",
             "data_type": "Float32",
             "definition": "",
+            "description": "1AU IP plasma flow speed (km/s)",
+            "identifier": "V",
+            "name": "V",
+            "nil_values": [
+                {
+                    "reason": "http://www.opengis.net/def/nil/OGC/0/unknown",
+                    "value": 999.9
+                }
+            ],
+            "uom": "km.s-1"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
             "description": "F10.7 - Daily 10.7 cm solar radio flux, units: 10**(-22) Joules/second/square-meter/Hertz, from NGDC (1963/001-2016/366)",
             "identifier": "F10_INDEX",
             "name": "F10_INDEX",
