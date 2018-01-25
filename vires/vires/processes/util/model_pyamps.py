@@ -215,12 +215,12 @@ class AssociatedMagneticModel(AMPSModel):
             else:
                 B = ([],)*3
             B = stack(B, axis=-1)
-            if b_variable in variables:
-                output_ds.set(b_variable, B, CDF_DOUBLE_TYPE,
+            if self.b_variable in variables:
+                output_ds.set(self.b_variable, B, CDF_DOUBLE_TYPE,
                     {'DESCRIPTION': 'AMPS - Magnetic field vector', 'UNITS': 'nT'},
                 )
-            if f_variable in variables:
-                output_ds.set(var, sqrt((B**2).sum(axis=-1)), CDF_DOUBLE_TYPE,
+            if self.f_variable in variables:
+                output_ds.set(self.f_variable, sqrt((B**2).sum(axis=-1)), CDF_DOUBLE_TYPE,
                     {'DESCRIPTION': 'AMPS - Magnetic field intensity', 'UNITS': 'nT'},
                 )
         return output_ds
