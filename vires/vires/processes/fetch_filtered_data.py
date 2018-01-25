@@ -62,7 +62,8 @@ from vires.processes.util import (
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel, SunPosition,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
-    DipoleTiltAnglePosition,
+    DipoleTiltAnglePosition, IonosphericCurrentModel,
+    AssociatedMagneticModel,
 )
 
 # TODO: Make the limits configurable.
@@ -230,6 +231,8 @@ class FetchFilteredData(WPSProcess):
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
             model_tilt_angle = DipoleTiltAnglePosition()
+            model_amps_cur = IonosphericCurrentModel()
+            model_amps_mag = AssociatedMagneticModel()
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
@@ -295,6 +298,7 @@ class FetchFilteredData(WPSProcess):
                 # models
                 aux_models = chain((
                     model_qdc, model_mlt, model_sun, model_tilt_angle,
+                    model_amps_cur, model_amps_mag,
                 ), models_with_residuals)
                 for model in aux_models:
                     resolver.add_model(model)
