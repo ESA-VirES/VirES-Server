@@ -28,9 +28,9 @@
 #-------------------------------------------------------------------------------
 #pylint: disable=too-many-locals
 
-from numpy import argmax, isscalar, abs, sqrt, nan, stack
-from pyamps import AMPS, get_B_space
 from logging import getLogger, LoggerAdapter
+from numpy import argmax, abs as np_abs, sqrt, nan, stack
+from pyamps import AMPS, get_B_space
 from vires.util import include, unique
 from vires.cdf_util import (
     CDF_DOUBLE_TYPE,
@@ -50,7 +50,7 @@ class AMPSModel(Model):
         """ get AMPS model input parameters from dataset """
         idx = None
         if value:
-            argmax(abs(dataset[key] - value), axis=0)
+            argmax(np_abs(dataset[key] - value), axis=0)
         return (dataset[var][idx] for var in cls.MODEL_PARAMETERS)
 
 class IonosphericCurrentModel(AMPSModel):
@@ -60,7 +60,7 @@ class IonosphericCurrentModel(AMPSModel):
     FILTER45_MODE = 2
 
     DEFAULT_REQUIRED_VARIABLES = [
-        "Timestamp", "QDLat", "MLT", "Radius", "QDBasis"
+        "Timestamp", "QDLat", "MLT", "QDBasis"
     ]
 
     VARIABLES = {
@@ -68,29 +68,33 @@ class IonosphericCurrentModel(AMPSModel):
             DEFAULT_MODE,
             AMPS.get_divergence_free_current_function,
             CDF_DOUBLE_TYPE, {
-            'DESCRIPTION': 'AMPS - Divergence-free current function', 'UNITS': 'kA'
-        }),
+                'DESCRIPTION': 'AMPS - Divergence-free current function',
+                'UNITS': 'kA'
+            }
+        ),
         "TotalCurrent": (
             VECTOR_TRANSFORM_MODE,
             AMPS.get_total_current,
             CDF_DOUBLE_TYPE, {
-            'DESCRIPTION': 'AMPS - Total horizontal current', 'UNITS': 'mA/m'
-        }),
+                'DESCRIPTION': 'AMPS - Total horizontal current',
+                'UNITS': 'mA/m'
+            }
+        ),
         "UpwardCurrent": (
             FILTER45_MODE,
             AMPS.get_upward_current,
             CDF_DOUBLE_TYPE, {
-            'DESCRIPTION': 'AMPS - Upward current', 'UNITS': u'\xb5A/m^2' # 'mu'A/m^2
-        }),
+                'DESCRIPTION': 'AMPS - Upward current',
+                'UNITS': u'\xb5A/m^2' # 'mu'A/m^2
+            }
+        ),
     }
-
-
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return 'IonosphericCurrentModel: %s' % msg, kwargs
 
-    def __init__(self, logger=None,varmap=None):
+    def __init__(self, logger=None, varmap=None):
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
         varmap = varmap or {}
         self._required_variables = [
@@ -116,24 +120,24 @@ class IonosphericCurrentModel(AMPSModel):
 
         if variables:
             req_var = self.required_variables
-            times, qdlats, mlts, rads, f_qd = (dataset[var] for var in req_var[:5])
+            times, qdlats, mlts, f_qd = (dataset[var] for var in req_var[:4])
             if times.size > 0:
                 median_time = times[times.size // 2]
-                v, By, Bz, tilt, f107 = self.model_parameters(
+                v_imf, by_imf, bz_imf, tilt, f107 = self.model_parameters(
                     dataset, median_time, req_var[0]
                 )
             else:
-                v, By, Bz, tilt, f107 = (0,)*5
+                v_imf, by_imf, bz_imf, tilt, f107 = (0,)*5
             model = AMPS(
-                v=v, By=By, Bz=Bz,
+                v=v_imf, By=by_imf, Bz=bz_imf,
                 tilt=tilt, f107=f107,
                 resolution=0, dr=90,
             )
 
             for var in variables:
-                mode, func, cdf_type, cdf_attr = VARIABLES[var]
+                mode, func, cdf_type, cdf_attr = self.VARIABLES[var]
                 values = func(model, qdlats, mlts)
-                if mode == VECTOR_TRANSFORM_MODE:
+                if mode == self.VECTOR_TRANSFORM_MODE:
                     east, north = values
                     # 2D Coordinate transform: Quasi-Dipole -> Geographic
                     # NOTE: only for visualization purposes
@@ -141,9 +145,9 @@ class IonosphericCurrentModel(AMPSModel):
                         f_qd[..., 0, 0] * east + f_qd[..., 1, 0] * north,
                         f_qd[..., 0, 1] * east + f_qd[..., 1, 1] * north
                     ), axis=-1)
-                elif mode == FILTER45_MODE:
+                elif mode == self.FILTER45_MODE:
                     # Filter away values < 45 deg lat
-                    values[abs(mlats) < 45] = nan
+                    values[np_abs(qdlats) < 45] = nan
                 output_ds.set(var, values, cdf_type, cdf_attr)
 
         return output_ds
@@ -199,28 +203,34 @@ class AssociatedMagneticModel(AMPSModel):
                     raise TypeError("Unsupported CDF time type %r !" % cdf_type)
                 times_dt = cdf_rawtime_to_datetime(times, cdf_type)
                 epoch = cdf_rawtime_to_decimal_year(median_time, cdf_type)
-                v, By, Bz, tilt, f107 = self.model_parameters(dataset)
-                B = get_B_space(
+                v_imf, by_imf, bz_imf, tilt, f107 = self.model_parameters(dataset)
+                b_amps = get_B_space(
                     glat=lats,
                     glon=lons,
-                    height=rads * 1e-3 - REFRE, # km
+                    height=rads * 1e-3 - self.REFRE, # km
                     time=times_dt,
-                    v=v,
-                    By=By,
-                    Bz=Bz,
+                    v=v_imf,
+                    By=by_imf,
+                    Bz=bz_imf,
                     tilt=tilt,
                     f107=f107,
                     epoch=epoch
                 )
             else:
-                B = ([],)*3
-            B = stack(B, axis=-1)
+                b_amps = ([],)*3
+            b_amps = stack(b_amps, axis=-1)
             if self.b_variable in variables:
-                output_ds.set(self.b_variable, B, CDF_DOUBLE_TYPE,
-                    {'DESCRIPTION': 'AMPS - Magnetic field vector', 'UNITS': 'nT'},
+                output_ds.set(
+                    self.b_variable, b_amps, CDF_DOUBLE_TYPE, {
+                        'DESCRIPTION': 'AMPS - Magnetic field vector',
+                        'UNITS': 'nT'
+                    },
                 )
             if self.f_variable in variables:
-                output_ds.set(self.f_variable, sqrt((B**2).sum(axis=-1)), CDF_DOUBLE_TYPE,
-                    {'DESCRIPTION': 'AMPS - Magnetic field intensity', 'UNITS': 'nT'},
+                output_ds.set(
+                    self.f_variable, sqrt((b_amps**2).sum(axis=-1)), CDF_DOUBLE_TYPE, {
+                        'DESCRIPTION': 'AMPS - Magnetic field intensity',
+                        'UNITS': 'nT'
+                    },
                 )
         return output_ds
