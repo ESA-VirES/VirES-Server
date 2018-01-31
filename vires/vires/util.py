@@ -168,6 +168,14 @@ def get_model(model_id):
         return mm.read_model_igrf11()
     if model_id == "WMM2010":
         return mm.read_model_wmm2010()
+    if model_id == "CHAOS-6-Core":
+        return mm.read_model_shc(mm.DATA_CHAOS6_CORE_X3)
+    if model_id == "CHAOS-6-Static":
+        return mm.read_model_shc(mm.DATA_CHAOS6_STATIC)
+    if model_id == "CHAOS-5-Core":
+        return mm.read_model_shc(mm.DATA_CHAOS5_CORE_V4)
+    if model_id == "CHAOS-5-Static":
+        return mm.read_model_shc(mm.DATA_CHAOS5_STATIC)
 
 
 def get_color_scale(name):
