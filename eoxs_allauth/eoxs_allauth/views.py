@@ -51,6 +51,14 @@ def wrapped_ows(request):
     """
     return ows(request)
 
+@log_access(INFO, WARNING)
+@csrf_exempt
+def open_ows(request):
+    """The EOxServer's OWS end-point view as non auth wrapped version
+    with the necessary decorators.
+    """
+    return ows(request)
+
 
 @require_GET
 def workspace(request):
