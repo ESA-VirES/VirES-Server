@@ -33,9 +33,7 @@ from math import ceil, floor
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cm import get_cmap
 from itertools import ifilter, ifilterfalse
-
-import vires.contrib.colormaps as cmaps
-
+from vires.contrib.colormaps import cmaps
 import eoxmagmod as mm
 
 try:
@@ -71,8 +69,7 @@ def include(iterable, included):
     return ifilter(set(included).__contains__, iterable)
 
 
-# NOTE: We deliberately break the python naming convention here.
-class cached_property(object):
+class cached_property(object): #pylint: disable=invalid-name
     """ Decorator converting a given method with a single self argument
      into a property cached on the instance.
     """
@@ -144,38 +141,36 @@ def datetime_array_slice(start, stop, first, last, step, tolerance):
     )
 
 
-def get_model(model_id):
-    """ Get model for given identifier. """
-    if model_id == "CHAOS-6-Combined":
-        return (
+MODELS_FACTORIES = {
+    "CHAOS-6-Combined":
+        lambda: (
             mm.read_model_shc(mm.DATA_CHAOS6_CORE_X3) +
             mm.read_model_shc(mm.DATA_CHAOS6_STATIC)
-        )
-    if model_id == "CHAOS-5-Combined":
-        return (
+        ),
+    "CHAOS-5-Combined":
+        lambda: (
             mm.read_model_shc(mm.DATA_CHAOS5_CORE_V4) +
             mm.read_model_shc(mm.DATA_CHAOS5_STATIC)
-        )
-    if model_id in ("IGRF12", "IGRF"):
-        return mm.read_model_shc(mm.DATA_IGRF12)
-    if model_id == "SIFM":
-        return mm.read_model_shc(mm.DATA_SIFM)
-    if model_id in ("WMM", "WMM2015"):
-        return mm.read_model_wmm2015()
-    if model_id in ("EMM", "EMM2010"):
-        return mm.read_model_emm2010()
-    if model_id == "IGRF11":
-        return mm.read_model_igrf11()
-    if model_id == "WMM2010":
-        return mm.read_model_wmm2010()
-    if model_id == "CHAOS-6-Core":
-        return mm.read_model_shc(mm.DATA_CHAOS6_CORE_X3)
-    if model_id == "CHAOS-6-Static":
-        return mm.read_model_shc(mm.DATA_CHAOS6_STATIC)
-    if model_id == "CHAOS-5-Core":
-        return mm.read_model_shc(mm.DATA_CHAOS5_CORE_V4)
-    if model_id == "CHAOS-5-Static":
-        return mm.read_model_shc(mm.DATA_CHAOS5_STATIC)
+        ),
+    "IGRF12": lambda: mm.read_model_shc(mm.DATA_IGRF12),
+    "IGRF11": mm.read_model_igrf11,
+    "IGRF": lambda: mm.read_model_shc(mm.DATA_IGRF12),
+    "SIFM": lambda: mm.read_model_shc(mm.DATA_SIFM),
+    "WMM": mm.read_model_wmm2015,
+    "WMM2010": mm.read_model_wmm2010,
+    "WMM2015": mm.read_model_wmm2015,
+    "EMM": mm.read_model_emm2010,
+    "EMM2010": mm.read_model_emm2010,
+    "CHAOS-6-Core": lambda: mm.read_model_shc(mm.DATA_CHAOS6_CORE_X3),
+    "CHAOS-6-Static": lambda: mm.read_model_shc(mm.DATA_CHAOS6_STATIC),
+    "CHAOS-5-Core": lambda: mm.read_model_shc(mm.DATA_CHAOS5_CORE_V4),
+    "CHAOS-5-Static": lambda: mm.read_model_shc(mm.DATA_CHAOS5_STATIC),
+}
+
+def get_model(model_id):
+    """ Get model for given identifier. """
+    read_model = MODELS_FACTORIES.get(model_id)
+    return read_model() if read_model else None
 
 
 def get_color_scale(name):
@@ -198,7 +193,6 @@ def get_color_scale(name):
         return LinearSegmentedColormap(
             label, {'red': reds, 'green': greens, 'blue': blues}
         )
-
 
     if name == "blackwhite":
         return clist_to_colormap(name, [
@@ -245,86 +239,86 @@ def get_color_scale(name):
 
     elif name == "ylgnbu":
         return clist_to_colormap(name, [
-            (0.0, 255,255,217),
-            (.125, 237,248,217),
-            (.25, 199,233,180),
-            (.375, 127,205,187),
-            (.5, 65,182,196),
-            (.625, 29,145,192),
-            (.75, 34,94,168),
-            (.875, 37,52,148),
-            (1.0 , 8,29,88),
+            (0.0, 255, 255, 217),
+            (.125, 237, 248, 217),
+            (.25, 199, 233, 180),
+            (.375, 127, 205, 187),
+            (.5, 65, 182, 196),
+            (.625, 29, 145, 192),
+            (.75, 34, 94, 168),
+            (.875, 37, 52, 148),
+            (1.0, 8, 29, 88),
         ], 1.0 / 255.0)
 
     elif name == "greens":
         return clist_to_colormap(name, [
-            (0.0, 0,68,27),
-            (0.125, 0,109,44),
-            (0.25, 35,139,69),
-            (0.375, 65,171,93),
-            (0.5, 116,196,118),
-            (0.625, 161,217,155),
-            (0.75, 199,233,192),
-            (0.875, 229,245,224),
-            (1.0, 247,252,245),
+            (0.0, 0, 68, 27),
+            (0.125, 0, 109, 44),
+            (0.25, 35, 139, 69),
+            (0.375, 65, 171, 93),
+            (0.5, 116, 196, 118),
+            (0.625, 161, 217, 155),
+            (0.75, 199, 233, 192),
+            (0.875, 229, 245, 224),
+            (1.0, 247, 252, 245),
         ], 1.0 / 255.0)
 
     elif name == "ylorrd":
         return clist_to_colormap(name, [
-            (0.0  ,255,255,204),
-            (0.125,255,237,160),
-            (0.25 ,254,217,118),
-            (0.375,254,178,76),
-            (0.5  ,253,141,60),
-            (0.625,252,78,42),
-            (0.75 ,227,26,28),
-            (0.875,189,0,38),
-            (1.0  ,128,0,38),
+            (0.0, 255, 255, 204),
+            (0.125, 255, 237, 160),
+            (0.25, 254, 217, 118),
+            (0.375, 254, 178, 76),
+            (0.5, 253, 141, 60),
+            (0.625, 252, 78, 42),
+            (0.75, 227, 26, 28),
+            (0.875, 189, 0, 38),
+            (1.0, 128, 0, 38),
         ], 1.0 / 255.0)
 
     elif name == "bluered":
         return clist_to_colormap(name, [
-            (0.0, 0,0,255),
-            (1.0, 255,0,0),
+            (0.0, 0, 0, 255),
+            (1.0, 255, 0, 0),
         ], 1.0 / 255.0)
 
     elif name == "earth":
         return clist_to_colormap(name, [
-            (0.0, 0,0,130),
-            (0.1, 0,180,180),
-            (0.2, 40,210,40),
-            (0.4, 230,230,50),
-            (0.6, 120,70,20),
-            (1.0, 255,255,255),
+            (0.0, 0, 0, 130),
+            (0.1, 0, 180, 180),
+            (0.2, 40, 210, 40),
+            (0.4, 230, 230, 50),
+            (0.6, 120, 70, 20),
+            (1.0, 255, 255, 255),
         ], 1.0 / 255.0)
 
 
     elif name == "electric":
         return clist_to_colormap(name, [
-            (0.0, 0,0,0),
-            (0.15, 30,0,100), 
-            (0.4, 120,0,100),
-            (0.6, 160,90,0),
-            (0.8, 230,200,0),
-            (1.0, 255,250,220),
+            (0.0, 0, 0, 0),
+            (0.15, 30, 0, 100),
+            (0.4, 120, 0, 100),
+            (0.6, 160, 90, 0),
+            (0.8, 230, 200, 0),
+            (1.0, 255, 250, 220),
         ], 1.0 / 255.0)
 
     elif name == "portland":
         return clist_to_colormap(name, [
-            (0.0, 12,51,131),
-            (0.25, 10,136,186), 
-            (0.5, 242,211,56),
-            (0.75, 242,143,56), 
-            ( 1.0, 217,30,30),
+            (0.0, 12, 51, 131),
+            (0.25, 10, 136, 186),
+            (0.5, 242, 211, 56),
+            (0.75, 242, 143, 56),
+            (1.0, 217, 30, 30),
         ], 1.0 / 255.0)
 
     elif name == "blackbody":
         return clist_to_colormap(name, [
-            (0.0, 0,0,0),
-            (0.2, 230,0,0),
-            (0.4, 230,210,0),
-            (0.7, 255,255,255),
-            (1.0, 160,200,255),
+            (0.0, 0, 0, 0),
+            (0.2, 230, 0, 0),
+            (0.4, 230, 210, 0),
+            (0.7, 255, 255, 255),
+            (1.0, 160, 200, 255),
         ], 1.0 / 255.0)
 
 
@@ -396,9 +390,9 @@ def get_color_scale(name):
             (1.0, 1.0, 0, 1.0000),
         ])
 
-    elif name=="viridis" or name=="magma" or name=="inferno" or name=="plasma":
-        return getattr(cmaps, name)
-
+    elif name in cmaps:
+        # get a colour-map from vires.contrib.colormaps
+        return cmaps[name]
     else:
-        # get standard colour-map
+        # get a standard matplotlib colour-map
         return get_cmap(name)
