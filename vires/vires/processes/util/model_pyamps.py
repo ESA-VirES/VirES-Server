@@ -41,27 +41,17 @@ from vires.cdf_util import (
 from vires.dataset import Dataset
 from .model import Model
 
-class AMPSModel(Model):
-    """ Superclass for Average Magnetic field and Polar current System(AMPS). """
-    MODEL_PARAMETERS = ['IMF_V', 'BY_GSM', 'BZ_GSM', 'DipoleTiltAngle', 'F10_INDEX']
-
-    @classmethod
-    def model_parameters(cls, dataset, value=None, key='Timestamp'):
-        """ get AMPS model input parameters from dataset """
-        idx = None
-        if value:
-            argmax(np_abs(dataset[key] - value), axis=0)
-        return (dataset[var][idx] for var in cls.MODEL_PARAMETERS)
-
-class IonosphericCurrentModel(AMPSModel):
+class IonosphericCurrentModel(Model):
     """ Ionospheric current System in AMPS model. """
     DEFAULT_MODE = 0
     VECTOR_TRANSFORM_MODE = 1
     FILTER45_MODE = 2
 
+    MODEL_PARAMETERS = ['IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F10_INDEX']
+
     DEFAULT_REQUIRED_VARIABLES = [
         "Timestamp", "QDLat", "MLT", "QDBasis"
-    ]
+    ] + MODEL_PARAMETERS
 
     VARIABLES = {
         "DivergenceFreeCurrentFunction": (
@@ -122,9 +112,11 @@ class IonosphericCurrentModel(AMPSModel):
             req_var = self.required_variables
             times, qdlats, mlts, f_qd = (dataset[var] for var in req_var[:4])
             if times.size > 0:
+                self.logger.debug("requested dataset length %s", len(times))
                 median_time = times[times.size // 2]
-                v_imf, by_imf, bz_imf, tilt, f107 = self.model_parameters(
-                    dataset, median_time, req_var[0]
+                idx = argmax(np_abs(times - median_time), axis=0)
+                v_imf, by_imf, bz_imf, tilt, f107 = (
+                    dataset[var][idx] for var in self.MODEL_PARAMETERS
                 )
             else:
                 v_imf, by_imf, bz_imf, tilt, f107 = (0,)*5
@@ -133,7 +125,6 @@ class IonosphericCurrentModel(AMPSModel):
                 tilt=tilt, f107=f107,
                 resolution=0, dr=90,
             )
-
             for var in variables:
                 mode, func, cdf_type, cdf_attr = self.VARIABLES[var]
                 values = func(model, qdlats, mlts)
@@ -153,9 +144,13 @@ class IonosphericCurrentModel(AMPSModel):
         return output_ds
 
 
-class AssociatedMagneticModel(AMPSModel):
+class AssociatedMagneticModel(Model):
     """ Associated magnetic field of AMPS model. """
-    DEFAULT_REQUIRED_VARIABLES = ["Timestamp", "Latitude", "Longitude", "Radius"]
+    MODEL_PARAMETERS = ['IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F10_INDEX']
+
+    DEFAULT_REQUIRED_VARIABLES = [
+        "Timestamp", "Latitude", "Longitude", "Radius"
+    ] + MODEL_PARAMETERS
 
     DEFAULT_OUTPUT_VARIABLES = ["F_AMPS", "B_AMPS"]
 
@@ -195,6 +190,7 @@ class AssociatedMagneticModel(AMPSModel):
             times, lats, lons, rads = (dataset[var] for var in req_var[:4])
 
             if times.size > 0:
+                self.logger.debug("requested dataset length %s", len(times))
                 median_time = times[times.size // 2]
 
                 cdf_type = dataset.cdf_type.get(req_var[0], None)
@@ -202,8 +198,8 @@ class AssociatedMagneticModel(AMPSModel):
                 if cdf_type != CDF_EPOCH_TYPE:
                     raise TypeError("Unsupported CDF time type %r !" % cdf_type)
                 times_dt = cdf_rawtime_to_datetime(times, cdf_type)
-                epoch = cdf_rawtime_to_decimal_year(median_time, cdf_type)
-                v_imf, by_imf, bz_imf, tilt, f107 = self.model_parameters(dataset)
+                epoch = float(cdf_rawtime_to_decimal_year(median_time, cdf_type))
+                v_imf, by_imf, bz_imf, tilt, f107 = (dataset[var] for var in self.MODEL_PARAMETERS)
                 b_amps = get_B_space(
                     glat=lats,
                     glon=lons,
