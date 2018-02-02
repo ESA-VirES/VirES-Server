@@ -152,7 +152,7 @@ class AssociatedMagneticModel(Model):
         "Timestamp", "Latitude", "Longitude", "Radius"
     ] + MODEL_PARAMETERS
 
-    DEFAULT_OUTPUT_VARIABLES = ["F_AMPS", "B_AMPS"]
+    DEFAULT_OUTPUT_VARIABLES = ["F_AMPS", "B_NEC_AMPS"]
 
     REFRE = 6371.2 # reference radius Earth(km)
 
