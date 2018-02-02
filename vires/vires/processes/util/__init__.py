@@ -28,7 +28,6 @@
 #-------------------------------------------------------------------------------
 
 from .cache import with_cache_session
-from .dataset import Dataset
 from .filters import (
     Filter, ScalarRangeFilter, VectorComponentRangeFilter,
     BoundingBoxFilter,
