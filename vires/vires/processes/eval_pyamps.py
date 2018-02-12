@@ -73,8 +73,6 @@ class EvalAMPS(WPSProcess):
     title = "Evaluate AMPS model"
     metadata = {}
     profiles = ["vires"] # TODO: confirm profiles
-    DEFAULT_MODE = 0
-    FILTER45_MODE = 2
 
     REFRE = 6371.2 # Reference radius used in geomagnetic modeling
 
@@ -89,26 +87,14 @@ class EvalAMPS(WPSProcess):
         "Z": lambda b: -b[..., 2],
     }
     EVAL_CURR_VARIABLE = {
-        "Ju": ( # amps upward current
+        "Ju": # amps upward current
             lambda m, c: AMPS.get_upward_current(m, *c),
-            FILTER45_MODE,
-            u'\xb5A/m^2',
-        ),
-        "Psi": ( # amps divergence-free current function
+        "Psi": # amps divergence-free current function
             lambda m, c: AMPS.get_divergence_free_current_function(m, *c),
-            DEFAULT_MODE,
-            'kA',
-        ),
-        "j_X": ( # amps eastward component of the horizontal current
+        "j_X": # amps eastward component of the horizontal current
             lambda m, c: AMPS.get_total_current(m, *c)[0],
-            DEFAULT_MODE,
-            'mA/m',
-        ),
-        "j_Y": ( # amps northward component of the horizontal current
+        "j_Y": # amps northward component of the horizontal current
             lambda m, c: AMPS.get_total_current(m, *c)[1],
-            DEFAULT_MODE,
-            'mA/m',
-        ),
     }
 
     inputs = [
@@ -271,9 +257,9 @@ class EvalAMPS(WPSProcess):
                     height=gcrads*1e-3 - self.REFRE,
                     resolution=0, dr=90,
                 )
-                eval_func, mode, unit = self.EVAL_CURR_VARIABLE[variable]
+                eval_func = self.EVAL_CURR_VARIABLE[variable]
                 values = eval_func(model, [qdlats, mlts])
-                if mode == self.FILTER45_MODE:
+                if variable == "Ju":
                     values[np_abs(qdlats) < 45] = nan
                 pixel_array = values.reshape(lons.shape)
             elif variable in self.EVAL_MAG_VARIABLE:
@@ -290,7 +276,6 @@ class EvalAMPS(WPSProcess):
                     f107=f107,
                     epoch=mean_dt,
                 )
-                unit = 'nT'
                 pixel_array = self.EVAL_MAG_VARIABLE[variable](b_nec)
 
         range_min = pixel_array.min() if range_min is None else range_min
@@ -315,5 +300,4 @@ class EvalAMPS(WPSProcess):
         return {
             "output": result,
             "style_range": "%s,%s,%s"%(style, range_min, range_max),
-            "unit": unit,
         }
