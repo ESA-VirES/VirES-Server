@@ -34,8 +34,8 @@ from os.path import join, exists
 from uuid import uuid4
 from datetime import datetime
 from numpy import (
-    array, full_like, linspace, concatenate,
-    sqrt, nan, abs as np_abs, meshgrid
+    array, full_like, full, linspace, concatenate,
+    sqrt, nan, abs as np_abs, meshgrid, nanmin, nanmax
 )
 from matplotlib.colors import Normalize
 from pyamps import AMPS, get_B_space
@@ -63,6 +63,7 @@ from vires.cdf_util import (
 )
 from vires.time_util import (
     naive_to_utc,
+    datetime_mean,
     datetime_to_decimal_year,
     datetime_to_mjd2000,
 )
@@ -72,19 +73,19 @@ class EvalAMPS(WPSProcess):
     identifier = "eval_amps"
     title = "Evaluate AMPS model"
     metadata = {}
-    profiles = ["vires"] # TODO: confirm profiles
+    profiles = ["vires"]
 
     REFRE = 6371.2 # Reference radius used in geomagnetic modeling
 
     EVAL_MAG_VARIABLE = {
         # amps magnetic field intensity
-        "F": lambda b: sqrt((b**2).sum(axis=-1)),
+        "F": lambda b: sqrt((b**2).sum(axis=0)),
         # amps eastward magnetic field component
         "X": lambda b: b[..., 0],
         # amps northward magnetic field component
         "Y": lambda b: b[..., 1],
         # amps down-pointing magnetic field component
-        "Z": lambda b: -b[..., 2],
+        "Z": lambda b: -b[..., 2], # opposite sign, up-vector in amps, down(center) in vires
     }
     EVAL_CURR_VARIABLE = {
         "Ju": # amps upward current
@@ -189,7 +190,7 @@ class EvalAMPS(WPSProcess):
             model_tilt_angle.eval(dataset, ["DipoleTiltAngle"])
         )
         # extract scalars from the dataset
-        amps_parameters = ((key, dataset[key][0]) for key in [
+        amps_parameters = (dataset[key][0] for key in [
             "IMF_V", "IMF_BY_GSM", "IMF_BZ_GSM", "F10_INDEX", "DipoleTiltAngle"
         ])
         return amps_parameters
@@ -206,7 +207,7 @@ class EvalAMPS(WPSProcess):
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
-        mean_dt = (begin_time + end_time)/2
+        mean_dt = datetime_mean(begin_time, end_time)
 
         self.access_logger.info(
             "request: toi: (%s, %s), aoi: %s, elevation: %g, "
@@ -227,59 +228,63 @@ class EvalAMPS(WPSProcess):
             linspace(y_max + hd_y, y_min - hd_y, height, endpoint=True)
         )
         elevations = full_like(lons, fill_value=elevation)
-
         with ElapsedTimeLogger("pyamps.%s %dx%dpx %s evaluated in" % (
             variable, width, height, bbox[0] + bbox[1],
         ), self.logger):
-            gclats, gclons, gcrads = convert(
-                concatenate(
-                    lons.reshape(-1, 1),
-                    lats.reshape(-1, 1),
-                    elevations.reshape(-1, 1),
-                ),
-                GEODETIC_ABOVE_WGS84,
-                GEOCENTRIC_SPHERICAL,
-            )
-            qdlats, qdlons = eval_qdlatlon(
-                gclats,
-                gclons,
-                gcrads,
-                full_like(lons, fill_value=datetime_to_decimal_year(mean_dt)),
-            )
-            mlts = eval_mlt(
-                qdlons,
-                full_like(lons, fill_value=datetime_to_mjd2000(mean_dt)),
-            )
             if variable in self.EVAL_CURR_VARIABLE:
+                gcoor = convert(
+                    concatenate((
+                        lats.reshape(-1, 1),
+                        lons.reshape(-1, 1),
+                        elevations.reshape(-1, 1),
+                    ), axis=1),
+                    GEODETIC_ABOVE_WGS84,
+                    GEOCENTRIC_SPHERICAL,
+                )
+                gclats = gcoor[:, 0]
+                gclons = gcoor[:, 1]
+                gcrads = gcoor[:, 2]
+
+                qdlats, qdlons = eval_qdlatlon(
+                    gclats,
+                    gclons,
+                    gcrads,
+                    full_like(gclons, fill_value=datetime_to_decimal_year(mean_dt)),
+                )
+                mlts = eval_mlt(
+                    qdlons,
+                    full_like(qdlons, fill_value=datetime_to_mjd2000(mean_dt)),
+                )
+
                 model = AMPS(
                     v=imf_v, By=imf_by, Bz=imf_bz,
                     tilt=tilt, f107=f107,
-                    height=gcrads*1e-3 - self.REFRE,
+                    height=elevation,
+                    #Note: not gcrads[0] - self.REFRE, due to locality of conversion
                     resolution=0, dr=90,
                 )
+                qdlats_grid, mlts_grid = meshgrid(qdlats, mlts)
                 eval_func = self.EVAL_CURR_VARIABLE[variable]
-                values = eval_func(model, [qdlats, mlts])
+                pixel_array = eval_func(model, [qdlats_grid, mlts_grid])
                 if variable == "Ju":
-                    values[np_abs(qdlats) < 45] = nan
-                pixel_array = values.reshape(lons.shape)
+                    pixel_array[np_abs(qdlats_grid) < 45] = nan
             elif variable in self.EVAL_MAG_VARIABLE:
-                times = full_like(lons, fill_value=mean_dt)
-                b_nec = get_B_space(
-                    glat=lons,
-                    glon=lats,
-                    height=elevations,
-                    time=times,
-                    v=imf_v,
-                    By=imf_by,
-                    Bz=imf_bz,
-                    tilt=tilt,
-                    f107=f107,
-                    epoch=mean_dt,
-                )
+                b_nec = array(get_B_space(
+                    glat=lats.flatten(),
+                    glon=lons.flatten(),
+                    height=elevations.flatten(),
+                    time=full(lons.size, mean_dt, dtype=object),
+                    v=full(lons.size, imf_v),
+                    By=full(lons.size, imf_by),
+                    Bz=full(lons.size, imf_bz),
+                    tilt=full(lons.size, tilt),
+                    f107=full(lons.size, f107),
+                    epoch=datetime_to_decimal_year(mean_dt),
+                )).reshape(3, height, width)
                 pixel_array = self.EVAL_MAG_VARIABLE[variable](b_nec)
 
-        range_min = pixel_array.min() if range_min is None else range_min
-        range_max = pixel_array.max() if range_max is None else range_max
+        range_min = nanmin(pixel_array) if range_min is None else range_min
+        range_max = nanmax(pixel_array) if range_max is None else range_max
         if range_max < range_min:
             range_max, range_min = range_min, range_max
         self.logger.debug("output data range: %s", (range_min, range_max))
