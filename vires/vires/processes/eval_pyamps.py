@@ -81,11 +81,11 @@ class EvalAMPS(WPSProcess):
         # amps magnetic field intensity
         "F": lambda b: sqrt((b**2).sum(axis=0)),
         # amps eastward magnetic field component
-        "X": lambda b: b[..., 0],
+        "X": lambda b: b[0],
         # amps northward magnetic field component
-        "Y": lambda b: b[..., 1],
+        "Y": lambda b: b[1],
         # amps down-pointing magnetic field component
-        "Z": lambda b: -b[..., 2], # opposite sign, up-vector in amps, down(center) in vires
+        "Z": lambda b: -b[2], # opposite sign, up-vector in amps, down(center) in vires
     }
     EVAL_CURR_VARIABLE = {
         "Ju": # amps upward current
@@ -93,9 +93,9 @@ class EvalAMPS(WPSProcess):
         "Psi": # amps divergence-free current function
             lambda m, c: AMPS.get_divergence_free_current_function(m, *c),
         "j_X": # amps eastward component of the horizontal current
-            lambda m, c: AMPS.get_total_current(m, *c)[0],
+            lambda m, c: AMPS.get_total_current(m, *c)[0].reshape(c[0].shape),
         "j_Y": # amps northward component of the horizontal current
-            lambda m, c: AMPS.get_total_current(m, *c)[1],
+            lambda m, c: AMPS.get_total_current(m, *c)[1].reshape(c[0].shape),
     }
 
     inputs = [
@@ -108,12 +108,10 @@ class EvalAMPS(WPSProcess):
         ("width", LiteralData(
             "width", int, optional=False, title="Image width in pixels.",
             allowed_values=AllowedRange(1, 1024, dtype=int), default=256,
-            # TODO: test if range and default are reasonable
         )),
         ("height", LiteralData(
             "height", int, optional=False, title="Image height in pixels.",
             allowed_values=AllowedRange(1, 1024, dtype=int), default=128,
-            # TODO: test if range and default are reasonable
         )),
         ("begin_time", LiteralData(
             "begin_time", datetime, optional=False,
@@ -195,6 +193,31 @@ class EvalAMPS(WPSProcess):
         ])
         return amps_parameters
 
+    def gcoor2qdlatmlt(self, lats, lons, elev, dtime):
+        gcoor = convert(
+            concatenate((
+                lats.reshape(-1, 1),
+                lons.reshape(-1, 1),
+                elev.reshape(-1, 1),
+            ), axis=1),
+            GEODETIC_ABOVE_WGS84,
+            GEOCENTRIC_SPHERICAL,
+        )
+        qdlats, qdlons = eval_qdlatlon(
+            gcoor[:, 0],
+            gcoor[:, 1],
+            gcoor[:, 2],
+            full_like(gcoor[:, 0], fill_value=datetime_to_decimal_year(dtime)),
+        )
+        mlts = eval_mlt(
+            qdlons,
+            full_like(qdlons, fill_value=datetime_to_mjd2000(dtime)),
+        )
+
+        qdlats = qdlats.reshape(lats.shape)
+        mlts = mlts.reshape(lats.shape)
+        return qdlats, mlts
+
     def execute(self, variable, begin_time, end_time, elevation,
                 range_max, range_min, bbox, width, height, style,
                 output):
@@ -228,46 +251,22 @@ class EvalAMPS(WPSProcess):
             linspace(y_max + hd_y, y_min - hd_y, height, endpoint=True)
         )
         elevations = full_like(lons, fill_value=elevation)
+
         with ElapsedTimeLogger("pyamps.%s %dx%dpx %s evaluated in" % (
             variable, width, height, bbox[0] + bbox[1],
         ), self.logger):
             if variable in self.EVAL_CURR_VARIABLE:
-                gcoor = convert(
-                    concatenate((
-                        lats.reshape(-1, 1),
-                        lons.reshape(-1, 1),
-                        elevations.reshape(-1, 1),
-                    ), axis=1),
-                    GEODETIC_ABOVE_WGS84,
-                    GEOCENTRIC_SPHERICAL,
-                )
-                gclats = gcoor[:, 0]
-                gclons = gcoor[:, 1]
-                gcrads = gcoor[:, 2]
-
-                qdlats, qdlons = eval_qdlatlon(
-                    gclats,
-                    gclons,
-                    gcrads,
-                    full_like(gclons, fill_value=datetime_to_decimal_year(mean_dt)),
-                )
-                mlts = eval_mlt(
-                    qdlons,
-                    full_like(qdlons, fill_value=datetime_to_mjd2000(mean_dt)),
-                )
-
+                qdlats, mlts = self.gcoor2qdlatmlt(lats, lons, elevations, mean_dt)
                 model = AMPS(
                     v=imf_v, By=imf_by, Bz=imf_bz,
                     tilt=tilt, f107=f107,
                     height=elevation,
-                    #Note: not gcrads[0] - self.REFRE, due to locality of conversion
                     resolution=0, dr=90,
                 )
-                qdlats_grid, mlts_grid = meshgrid(qdlats, mlts)
                 eval_func = self.EVAL_CURR_VARIABLE[variable]
-                pixel_array = eval_func(model, [qdlats_grid, mlts_grid])
+                pixel_array = eval_func(model, [qdlats, mlts])
                 if variable == "Ju":
-                    pixel_array[np_abs(qdlats_grid) < 45] = nan
+                    pixel_array[np_abs(qdlats) < 45] = nan
             elif variable in self.EVAL_MAG_VARIABLE:
                 b_nec = array(get_B_space(
                     glat=lats.flatten(),
