@@ -33,11 +33,11 @@ from os import remove
 from os.path import join, exists
 from uuid import uuid4
 from datetime import datetime
+from matplotlib.colors import Normalize
 from numpy import (
     array, full_like, full, linspace, concatenate,
     sqrt, nan, abs as np_abs, meshgrid, nanmin, nanmax
 )
-from matplotlib.colors import Normalize
 from pyamps import AMPS, get_B_space
 from eoxmagmod import (
     convert, eval_mlt, eval_qdlatlon,
