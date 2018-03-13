@@ -37,44 +37,88 @@ from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
     timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
 )
-from vires.models import Product
-from .dataset import Dataset
+from vires.models import Product, ProductCollection
+from vires.dataset import Dataset
 from .time_series import TimeSeries
 
-VARIABLE_TRANSLATES = {
-    "SWARM_EEF":{
-        'Timestamp': 'timestamp',
-        'Latitude': 'latitude',
-        'Longitude': 'longitude'
-    }
-}
 
-
-class ProductTimeSeries(TimeSeries):
-    """ Product time-series class. """
+class SwarmDefaultParameters(object):
+    """ Default SWARM product parameters. """
     TIME_VARIABLE = "Timestamp"
     TIME_TOLERANCE = timedelta(microseconds=10) # time selection tolerance
     TIME_OVERLAP = timedelta(seconds=60) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(seconds=30) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=0.5)
+    VARIABLE_TRANSLATES = {}
+    VARIABLE_INTERPOLATION_KINDS = {}
+
+
+class SwarmEEFParameters(SwarmDefaultParameters):
+    """ Default SWARM product parameters. """
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 'timestamp',
+        'Latitude': 'latitude',
+        'Longitude': 'longitude'
+    }
+
+
+class AuxImf2Parameters(SwarmDefaultParameters):
+    INTERPOLATION_KIND = "zero"
+    TIME_TOLERANCE = timedelta(minutes=61) # time selection tolerance
+    TIME_OVERLAP = timedelta(hours=2) # time interpolation overlap
+    TIME_GAP_THRESHOLD = timedelta(minutes=61) # gap time threshold
+    TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=60)
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 'Epoch',
+        'IMF_BY_GSM': 'BY_GSM',
+        'IMF_BZ_GSM': 'BZ_GSM',
+        'IMF_V': 'V',
+    }
+    VARIABLE_INTERPOLATION_KINDS = {
+        'F10_INDEX': 'zero',
+        'IMF_BY_GSM': 'zero',
+        'IMF_BZ_GSM': 'zero',
+        'IMF_V': 'zero',
+    }
+
+
+DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters
+PRODUCT_TYPE_PARAMETERS = {
+    "SWARM_EEF": SwarmEEFParameters,
+    "AUX_IMF_2_": AuxImf2Parameters,
+}
+
+
+class ProductTimeSeries(TimeSeries):
+    """ Product time-series class. """
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return '%s: %s' % (self.extra["collection_id"], msg), kwargs
 
     def __init__(self, collection, logger=None):
-        variable_translate = VARIABLE_TRANSLATES.get(collection.range_type.name, {})
-        self.translate_fw = variable_translate
-        self.translate_bw = dict((v, k) for k, v in variable_translate.iteritems())
+        if isinstance(collection, basestring):
+            collection = self._get_collection(collection)
+
+        params = PRODUCT_TYPE_PARAMETERS.get(
+            collection.range_type.name, DEFAULT_PRODUCT_TYPE_PARAMETERS
+        )
+
         self.collection = collection
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "collection_id": collection.identifier,
         })
+        self.translate_fw = dict(params.VARIABLE_TRANSLATES)
+        self.translate_bw = dict((v, k) for k, v in self.translate_fw.iteritems())
 
         self.product_set = set() # stores all recorded source products
 
-        # default segment neighbourhood
-        self.segment_neighbourhood = self.TIME_SEGMENT_NEIGHBOURHOOD
+        self.time_variable = params.TIME_VARIABLE
+        self.time_tolerance = params.TIME_TOLERANCE
+        self.time_overlap = params.TIME_OVERLAP
+        self.time_gap_threshold = params.TIME_GAP_THRESHOLD
+        self.segment_neighbourhood = params.TIME_SEGMENT_NEIGHBOURHOOD
+        self.interpolation_kinds = params.VARIABLE_INTERPOLATION_KINDS
 
     @property
     def products(self):
@@ -114,21 +158,24 @@ class ProductTimeSeries(TimeSeries):
                 collections=self.collection
             ).order_by('begin_time')[0]
         except IndexError:
-            self.logger.warning(
-                "Empty collection! The variable types cannot be determined!"
+            self.logger.error(
+                "Empty collection! The variables and their types cannot be "
+                "reliably determined!"
             )
-            return Dataset()
+            raise RuntimeError(
+                "Empty product collection %s!" % self.collection.identifier
+            )
         else:
             # generate an empty dataset from the sample product
             self.logger.debug("template product: %s ", product.identifier)
             return self._extract_dataset(product, variables, 0, 0)
 
     def _subset_qs(self, start, stop):
-        """ Subset DJngo query set. """
+        """ Subset Django query set. """
         return Product.objects.filter(
             collections=self.collection,
-            begin_time__lt=(stop + self.TIME_TOLERANCE),
-            end_time__gte=(start - self.TIME_TOLERANCE),
+            begin_time__lt=(stop + self.time_tolerance),
+            end_time__gte=(start - self.time_tolerance),
         )
 
     def subset_count(self, start, stop):
@@ -152,7 +199,7 @@ class ProductTimeSeries(TimeSeries):
             with cdf_open(connect(product.data_items.all()[0])) as cdf:
                 # temporal sub-setting
                 temp_var = cdf.raw_var(
-                    self.translate_fw.get(self.TIME_VARIABLE, self.TIME_VARIABLE)
+                    self.translate_fw.get(self.time_variable, self.time_variable)
                 )
                 times, time_type = temp_var[:], temp_var.type()
 
@@ -204,9 +251,9 @@ class ProductTimeSeries(TimeSeries):
 
         # load the source interpolated data
         dataset_iterator = self.subset(
-            cdf_rawtime_to_datetime(start, cdf_type) - self.TIME_OVERLAP,
-            cdf_rawtime_to_datetime(stop, cdf_type) + self.TIME_OVERLAP,
-            [self.TIME_VARIABLE] + variables,
+            cdf_rawtime_to_datetime(start, cdf_type) - self.time_overlap,
+            cdf_rawtime_to_datetime(stop, cdf_type) + self.time_overlap,
+            [self.time_variable] + variables,
         )
 
         self.logger.debug(
@@ -219,7 +266,7 @@ class ProductTimeSeries(TimeSeries):
         dataset = Dataset()
         for item in dataset_iterator:
             if item and item.length > 0:
-                _times = item[self.TIME_VARIABLE]
+                _times = item[self.time_variable]
                 self.logger.debug(
                     "item time-span [%s, %s]",
                     cdf_rawtime_to_datetime(_times.min(), cdf_type),
@@ -230,7 +277,7 @@ class ProductTimeSeries(TimeSeries):
             dataset.append(item)
 
         if dataset and dataset.length > 0:
-            _times = dataset[self.TIME_VARIABLE]
+            _times = dataset[self.time_variable]
             self.logger.debug(
                 "interpolated time-span %s, %s",
                 cdf_rawtime_to_datetime(_times.min(), cdf_type),
@@ -241,13 +288,22 @@ class ProductTimeSeries(TimeSeries):
 
         self.logger.debug("interpolated dataset length: %s ", dataset.length)
 
-        # TODO: handle the interpolation kinds
         return dataset.interpolate(
-            times, self.TIME_VARIABLE, variables, {},
+            times, self.time_variable, variables,
+            kinds=self.interpolation_kinds,
             gap_threshold=timedelta_to_cdf_rawtime(
-                self.TIME_GAP_THRESHOLD, cdf_type
+                self.time_gap_threshold, cdf_type
             ),
             segment_neighbourhood=timedelta_to_cdf_rawtime(
                 self.segment_neighbourhood, cdf_type
             )
         )
+
+    @staticmethod
+    def _get_collection(collection_name):
+        try:
+            return ProductCollection.objects.get(identifier=collection_name)
+        except ProductCollection.DoesNotExist:
+            raise RuntimeError(
+                "Non-existent product collection %s!" % collection_name
+            )

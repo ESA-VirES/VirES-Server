@@ -29,7 +29,8 @@
 #pylint: disable=too-many-locals
 
 from logging import getLogger, LoggerAdapter
-from eoxmagmod.qd import eval_qdlatlon, eval_mlt
+from numpy import hstack
+from eoxmagmod.qd import eval_qdlatlon_with_base_vectors, eval_mlt
 from vires.util import include, unique
 from vires.cdf_util import (
     cdf_rawtime_to_mjd2000,
@@ -37,8 +38,8 @@ from vires.cdf_util import (
     cdf_rawtime_to_decimal_year_fast,
     CDF_DOUBLE_TYPE,
 )
+from vires.dataset import Dataset
 from .model import Model
-from .dataset import Dataset
 
 
 class QuasiDipoleCoordinates(Model):
@@ -46,7 +47,7 @@ class QuasiDipoleCoordinates(Model):
     DEFAULT_REQUIRED_VARIABLES = [
         "Timestamp", "Latitude", "Longitude", "Radius",
     ]
-    DEFAULT_OUTPUT_VARIABLES = ["QDLat", "QDLon"]
+    DEFAULT_OUTPUT_VARIABLES = ["QDLat", "QDLon", "QDBasis"]
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -54,7 +55,9 @@ class QuasiDipoleCoordinates(Model):
 
     def __init__(self, logger=None, varmap=None):
         varmap = varmap or {}
-        self.qdlat_variable, self.qdlon_variable = self.DEFAULT_OUTPUT_VARIABLES
+        self.qdlat_variable, self.qdlon_variable, self.basis_variable = (
+            self.DEFAULT_OUTPUT_VARIABLES
+        )
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
         ]
@@ -66,7 +69,7 @@ class QuasiDipoleCoordinates(Model):
 
     @property
     def variables(self):
-        return [self.qdlat_variable, self.qdlon_variable]
+        return [self.qdlat_variable, self.qdlon_variable, self.basis_variable]
 
     def eval(self, dataset, variables=None, **kwargs):
         output_ds = Dataset()
@@ -87,7 +90,7 @@ class QuasiDipoleCoordinates(Model):
             else:
                 year = 2000 # default if not time-stamp value is available
             # evaluate quasi-dipole coordinates
-            qdlat, qdlon = eval_qdlatlon(
+            qdlat, qdlon, f11, f12, f21, f22, _ = eval_qdlatlon_with_base_vectors(
                 lats, lons, rads * 1e-3, # radius in km
                 cdf_rawtime_to_decimal_year_fast(times, cdf_type, year)
             )
@@ -101,6 +104,20 @@ class QuasiDipoleCoordinates(Model):
                     'DESCRIPTION': 'Magnetic quasi-dipole longitude',
                     'UNITS': 'deg'
                 })
+            if self.basis_variable in variables:
+                size = times.size
+                output_ds.set(
+                    self.basis_variable,
+                    hstack((
+                        f11.reshape((size, 1)),
+                        f12.reshape((size, 1)),
+                        f21.reshape((size, 1)),
+                        f22.reshape((size, 1)),
+                    )).reshape((size, 2, 2,)),
+                    CDF_DOUBLE_TYPE,
+                    {'DESCRIPTION': 'QD vector basis [F1, F2]', 'UNITS': '-'}
+                )
+
         return output_ds
 
 

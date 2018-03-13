@@ -35,8 +35,8 @@ from vires.cdf_util import (
     cdf_rawtime_to_mjd2000,
     CDF_DOUBLE_TYPE,
 )
+from vires.dataset import Dataset
 from .model import Model
-from .dataset import Dataset
 
 
 class SunPosition(Model):

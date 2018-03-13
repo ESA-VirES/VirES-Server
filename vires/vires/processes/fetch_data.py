@@ -32,9 +32,6 @@
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from cStringIO import StringIO
-
-import msgpack
-
 from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData,
@@ -42,11 +39,10 @@ from eoxserver.services.ows.wps.parameters import (
     ComplexData,
     FormatText, FormatJSON,
     CDFileWrapper,
-    CDObject,
     FormatBinaryRaw,
 )
-from eoxserver.services.ows.wps.exceptions import InvalidParameterValue
-from vires.util import unique, exclude, include
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from vires.util import unique, exclude
 from vires.time_util import (
     naive_to_utc,
     timedelta_to_iso_duration,
@@ -58,11 +54,12 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_variables,
-    IndexKp, IndexDst, OrbitCounter,
+    IndexKp, IndexDst, OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel, SunPosition,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
+    DipoleTiltAnglePosition,
 )
 
 
@@ -190,7 +187,7 @@ class FetchData(WPSProcess):
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
             self.access_logger.error(message)
-            raise InvalidParameterValue('end_time', message)
+            raise InvalidInputValueError('end_time', message)
 
         # log the request
         self.access_logger.info(
@@ -203,8 +200,6 @@ class FetchData(WPSProcess):
             ),
             ", ".join(model.name for model in models),
         )
-
-        # TODO: calculate the optimal sampling step
 
         if bbox:
             relative_area = abs(
@@ -242,9 +237,11 @@ class FetchData(WPSProcess):
             )
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
+            index_f10 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
+            model_tilt_angle = DipoleTiltAnglePosition()
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
             ))
@@ -281,7 +278,7 @@ class FetchData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # auxiliary slaves
-                for slave in (index_kp, index_dst):
+                for slave in (index_kp, index_dst, index_f10):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
@@ -307,9 +304,9 @@ class FetchData(WPSProcess):
                     resolver.add_model(Sat2SatResidual(msc, ssc, cols))
 
                 # models
-                aux_models = chain(
-                    (model_qdc, model_mlt, model_sun), models_with_residuals
-                )
+                aux_models = chain((
+                    model_qdc, model_mlt, model_sun, model_tilt_angle,
+                ), models_with_residuals)
                 for model in aux_models:
                     resolver.add_model(model)
 
@@ -383,7 +380,7 @@ class FetchData(WPSProcess):
                             "count of %d samples per collection!",
                             collection_count, MAX_SAMPLES_COUNT_PER_COLLECTION
                         )
-                        raise InvalidParameterValue(
+                        raise InvalidInputValueError(
                             'end_time',
                             "Requested data exceeds the maximum limit of %d "
                             "samples per collection!" %
@@ -391,8 +388,8 @@ class FetchData(WPSProcess):
                         )
 
                     # subordinate interpolated datasets
-                    times = dataset[resolver.master.TIME_VARIABLE]
-                    cdf_type = dataset.cdf_type[resolver.master.TIME_VARIABLE]
+                    times = dataset[resolver.master.time_variable]
+                    cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
                         dataset.merge(
                             slave.interpolate(times, variables, {}, cdf_type)

@@ -43,7 +43,7 @@ from eoxserver.services.ows.wps.parameters import (
     FormatText, FormatJSON, FormatBinaryRaw,
 )
 from eoxserver.services.ows.wps.exceptions import (
-    InvalidParameterValue, InvalidOutputDefError, ServerBusy,
+    InvalidInputValueError, InvalidOutputDefError, ServerBusy,
 )
 from vires.models import Job
 from vires.util import unique, exclude, include, full
@@ -57,12 +57,13 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_variables, parse_filters2,
-    IndexKp, IndexDst, OrbitCounter,
+    IndexKp, IndexDst, OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     with_cache_session, get_username, get_user,
     VariableResolver, SpacecraftLabel, SunPosition,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
+    DipoleTiltAnglePosition,
 )
 
 # TODO: Make the limits configurable.
@@ -268,7 +269,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
             self.access_logger.error(message)
-            raise InvalidParameterValue('end_time', message)
+            raise InvalidInputValueError('end_time', message)
 
         # log the request
         self.access_logger.info(
@@ -297,9 +298,11 @@ class FetchFilteredDataAsync(WPSProcess):
             )
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
+            index_f10 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
+            model_tilt_angle = DipoleTiltAnglePosition()
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
@@ -334,7 +337,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # auxiliary slaves
-                for slave in (index_kp, index_dst):
+                for slave in (index_kp, index_dst, index_f10):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
@@ -363,9 +366,9 @@ class FetchFilteredDataAsync(WPSProcess):
                     resolver.add_model(Sat2SatResidual(msc, ssc, cols))
 
                 # models
-                aux_models = chain(
-                    (model_qdc, model_mlt, model_sun), models_with_residuals
-                )
+                aux_models = chain((
+                    model_qdc, model_mlt, model_sun, model_tilt_angle,
+                ), models_with_residuals)
                 for model in aux_models:
                     resolver.add_model(model)
 
@@ -449,8 +452,8 @@ class FetchFilteredDataAsync(WPSProcess):
                     dataset, filters_left = dataset.filter(resolver.filters)
 
                     # subordinate interpolated datasets
-                    times = dataset[resolver.master.TIME_VARIABLE]
-                    cdf_type = dataset.cdf_type[resolver.master.TIME_VARIABLE]
+                    times = dataset[resolver.master.time_variable]
+                    cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
                         dataset.merge(
                             slave.interpolate(times, variables, {}, cdf_type)
@@ -471,7 +474,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         # NOTE: Technically this error should not happen
                         # the unresolved filters should be detected by the
                         # resolver.
-                        raise InvalidParameterValue(
+                        raise InvalidInputValueError(
                             'filters',
                             "Failed to apply some of the filters "
                             "due to missing source variables! filters: %s" %
@@ -486,7 +489,7 @@ class FetchFilteredDataAsync(WPSProcess):
                             "count of %d samples!",
                             total_count, MAX_SAMPLES_COUNT,
                         )
-                        raise InvalidParameterValue(
+                        raise InvalidInputValueError(
                             'end_time',
                             "Requested data exceeds the maximum limit of %d "
                             "records!" % MAX_SAMPLES_COUNT

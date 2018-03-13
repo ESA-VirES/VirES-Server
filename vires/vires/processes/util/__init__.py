@@ -28,7 +28,6 @@
 #-------------------------------------------------------------------------------
 
 from .cache import with_cache_session
-from .dataset import Dataset
 from .filters import (
     Filter, ScalarRangeFilter, VectorComponentRangeFilter,
     BoundingBoxFilter,
@@ -42,6 +41,7 @@ from .model import Model
 from .model_magmod import MagneticModelResidual, MagneticModel
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
 from .model_sunpos import SunPosition
+from .model_tilt_angle import DipoleTiltAnglePosition
 from .label import Label, SpacecraftLabel
 from .input_parsers import (
     parse_style, parse_collections,

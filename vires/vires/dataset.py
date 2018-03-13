@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Dataset Class
+#  Dataset Class - data container
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -29,24 +29,21 @@
 
 from collections import OrderedDict
 from numpy import array, concatenate, inf
-from vires.util import include, unique
-from vires.cdf_util import CDF_DOUBLE_TYPE
-from vires.interpolate import Interp1D
+from .util import include, unique
+from .cdf_util import CDF_DOUBLE_TYPE
+from .interpolate import Interp1D
 
 
 class Dataset(OrderedDict):
-    """ Dataset class.  Basically an ordered dictionary with a few additional
+    """ Dataset class an ordered dictionary of arrays with a few additional
     properties and methods.
     """
-
-    def __init__(self, *args, **kwds):
-        OrderedDict.__init__(self, *args, **kwds)
+    def __init__(self, dataset=None):
+        OrderedDict.__init__(self)
         self.cdf_type = {}
         self.cdf_attr = {}
-        if args and hasattr(args[0], 'cdf_type'):
-            self.cdf_type.update(args[0].cdf_type)
-        if args and hasattr(args[0], 'cdf_attr'):
-            self.cdf_attr.update(args[0].cdf_attr)
+        if dataset is not None:
+            self.update(dataset)
 
     @property
     def length(self):
@@ -58,12 +55,11 @@ class Dataset(OrderedDict):
     def set(self, variable, data, cdf_type=None, cdf_attr=None):
         """ Set variable. """
         data = array(data, copy=False)
-        if len(self):
-            if self.itervalues().next().shape[0] != data.shape[0]:
-                raise ValueError(
-                    "Array size mismatch! variable: %s, size: %s, dataset: %s" %
-                    (variable, data.shape[0], self.itervalues().next().shape[0])
-                )
+        if len(self) and self.length != data.shape[0]:
+            raise ValueError(
+                "Array size mismatch! variable: %s, size: %s, dataset: %s" %
+                (variable, data.shape[0], self.length)
+            )
         self[variable] = data
         if cdf_type is not None:
             self.cdf_type[variable] = cdf_type
@@ -71,10 +67,16 @@ class Dataset(OrderedDict):
             self.cdf_attr[variable] = dict(cdf_attr)
 
     def merge(self, dataset):
-        """ Merge a dataset to this one. Unlike the update method the merge
-        does not replace the existing variables and only the new variables
-        are added to this dataset.
+        """ Merge datasets.
+        The merge adds variables from the given dataset if these are not already
+        present otherwise the variables are ignored.
         """
+        if self and dataset and self.length != dataset.length:
+            raise ValueError(
+                "Dataset length mismatch! %s != %s" %
+                (dataset.length, self.length)
+            )
+
         for variable, data in dataset.iteritems():
             if variable not in self:
                 self.set(
@@ -83,23 +85,43 @@ class Dataset(OrderedDict):
                     dataset.cdf_attr.get(variable)
                 )
 
+    def update(self, dataset):
+        """ Update the given dataset with this one.
+        The merge adds variables from the given dataset replacing variables
+        already present in the dataset.
+        """
+        if self and dataset and self.length != dataset.length:
+            raise ValueError(
+                "Dataset length mismatch! %s != %s" %
+                (dataset.length, self.length)
+            )
+
+        for variable, data in dataset.iteritems():
+            self.set(
+                variable, data,
+                dataset.cdf_type.get(variable),
+                dataset.cdf_attr.get(variable)
+            )
+
     def append(self, dataset):
         """ Append dataset of the same kind to this dataset. All variables
         are concatenated with the current dataset data.
         """
         if dataset: # ignore empty datasets
-            if self: # concatenate with the current data
-                self.update(
+            if len(self) == 0:
+                # fill empty dataset
+                self.update(dataset)
+            else:
+                if set(dataset) != set(self):
+                    raise ValueError("Dataset variables mismatch! %s != %s " % (
+                        list(set(dataset) - set(self)), 
+                        list(set(self) - set(dataset))
+                    ))
+                # concatenate with the current data
+                OrderedDict.update(self, (
                     (variable, concatenate((data, dataset[variable]), axis=0))
                     for variable, data in self.iteritems()
-                )
-            else: # fill empty dataset
-                for variable, data in dataset.iteritems():
-                    self.set(
-                        variable, data,
-                        dataset.cdf_type.get(variable),
-                        dataset.cdf_attr.get(variable)
-                    )
+                ))
 
     def subset(self, index, always_copy=True):
         """ Get subset of the dataset defined by the array of indices. """
@@ -110,17 +132,19 @@ class Dataset(OrderedDict):
             # multi-dimensional array.
             dataset = Dataset(self)
         else:
-            dataset = Dataset(
-                ((var, data[index]) for var, data in self.iteritems()),
-            )
-            dataset.cdf_type.update(self.cdf_type)
-            dataset.cdf_attr.update(self.cdf_attr)
+            dataset = Dataset()
+            for variable, data in self.iteritems():
+                dataset.set(
+                    variable, data[index],
+                    self.cdf_type.get(variable),
+                    self.cdf_attr.get(variable)
+                )
         return dataset
 
     def extract(self, variables):
         """ Get new subset containing only the selected variables. """
         dataset = Dataset()
-        for variable in variables:
+        for variable in set(variables):
             try:
                 data = self[variable]
             except KeyError:
@@ -140,6 +164,8 @@ class Dataset(OrderedDict):
         dictionary. The supported kinds are: last, nearest, linear.
         The values as well the variable must be sorted in ascending order.
         """
+        if kinds is None:
+            kinds = {}
         dataset = Dataset()
 
         interp1d = Interp1D(
@@ -150,7 +176,7 @@ class Dataset(OrderedDict):
         )
 
         for variable in variables:
-            kind = (kinds or {}).get(variable, 'nearest')
+            kind = kinds.get(variable, 'nearest')
             data = self[variable]
             dataset.set(
                 variable, interp1d(data, kind).astype(data.dtype),
@@ -174,3 +200,15 @@ class Dataset(OrderedDict):
             else:
                 remaining.append(filter_)
         return self.subset(index, always_copy), remaining
+
+    def __str__(self):
+        def _generate_():
+            yield "Dataset:"
+            for key in self:
+                data = self[key]
+                yield "%s: shape: %s" % (key, data.shape)
+                yield "%s: dtype: %s" % (key, data.dtype)
+                yield "%s: cdf_type: %s" % (key, self.cdf_type.get(key))
+                yield "%s: cdf_attr: %s" % (key, self.cdf_attr.get(key, {}))
+                yield "%s: data:\n%s" % (key, data)
+        return "\n".join(_generate_())
