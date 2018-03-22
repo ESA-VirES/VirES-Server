@@ -29,6 +29,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
 
+import msgpack
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from cStringIO import StringIO
@@ -40,9 +41,10 @@ from eoxserver.services.ows.wps.parameters import (
     FormatText, FormatJSON,
     CDFileWrapper,
     FormatBinaryRaw,
+    CDObject,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
-from vires.util import unique, exclude
+from vires.util import unique, exclude, include
 from vires.time_util import (
     naive_to_utc,
     timedelta_to_iso_duration,
