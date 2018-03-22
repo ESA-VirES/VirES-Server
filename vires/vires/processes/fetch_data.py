@@ -39,6 +39,7 @@ from eoxserver.services.ows.wps.parameters import (
     ComplexData,
     FormatText, FormatJSON,
     CDFileWrapper,
+    FormatBinaryRaw,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.util import unique, exclude
@@ -153,7 +154,11 @@ class FetchData(WPSProcess):
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Output data", formats=FormatText('text/csv')
+            'output', title="Output data", formats=(
+                FormatText('text/csv'),
+                FormatBinaryRaw("application/msgpack"),
+                FormatBinaryRaw("application/x-msgpack"),
+            )
         )),
     ]
 
@@ -406,42 +411,73 @@ class FetchData(WPSProcess):
                 total_count, output['mime_type'], ", ".join(output_variables)
             )
 
-        # write the output
-        output_fobj = StringIO()
-        time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
+        if output['mime_type'] == "text/csv":
+            # write the output
+            output_fobj = StringIO()
+            time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
-        if sources:
-            # write CSV header
-            output_fobj.write("id,")
-            output_fobj.write(",".join(output_variables))
-            output_fobj.write("\r\n")
-
-        for label, dataset in _generate_data_():
-            formatters = []
-            data = []
-            for variable in output_variables:
-                data_item = dataset.get(variable)
-                # convert time variables to the target file-format
-                cdf_type = dataset.cdf_type.get(variable)
-                if cdf_type == CDF_EPOCH_TYPE:
-                    data_item = time_convertor(data_item, cdf_type)
-                # collect all data items
-                data.append(data_item)
-                # collect formatters for the available data items
-                if data_item is not None:
-                    formatters.append(get_formatter(data_item, cdf_type))
-            # construct format string
-            format_ = ",".join(
-                "nan" if item is None else "%s" for item in data
-            )
-            # iterate the rows and write the CSV records
-            label_prefix = "%s," % label
-            for row in izip(*(item for item in data if item is not None)):
-                output_fobj.write(label_prefix)
-                output_fobj.write(
-                    format_ % tuple(f(v) for f, v in zip(formatters, row))
-                )
+            if sources:
+                # write CSV header
+                output_fobj.write("id,")
+                output_fobj.write(",".join(output_variables))
                 output_fobj.write("\r\n")
 
-        http_headers = ()
-        return CDFileWrapper(output_fobj, headers=http_headers, **output)
+            for label, dataset in _generate_data_():
+                formatters = []
+                data = []
+                for variable in output_variables:
+                    data_item = dataset.get(variable)
+                    # convert time variables to the target file-format
+                    cdf_type = dataset.cdf_type.get(variable)
+                    if cdf_type == CDF_EPOCH_TYPE:
+                        data_item = time_convertor(data_item, cdf_type)
+                    # collect all data items
+                    data.append(data_item)
+                    # collect formatters for the available data items
+                    if data_item is not None:
+                        formatters.append(get_formatter(data_item, cdf_type))
+                # construct format string
+                format_ = ",".join(
+                    "nan" if item is None else "%s" for item in data
+                )
+                # iterate the rows and write the CSV records
+                label_prefix = "%s," % label
+                for row in izip(*(item for item in data if item is not None)):
+                    output_fobj.write(label_prefix)
+                    output_fobj.write(
+                        format_ % tuple(f(v) for f, v in zip(formatters, row))
+                    )
+                    output_fobj.write("\r\n")
+
+            http_headers = ()
+            return CDFileWrapper(output_fobj, headers=http_headers, **output)
+
+        elif output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
+
+            time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
+
+
+            output_dict = {}
+            for label, dataset in _generate_data_():
+                available = tuple(include(output_variables, dataset))
+                for variable in available:
+                    data_item = dataset.get(variable)
+                    cdf_type = dataset.cdf_type.get(variable)
+                    if cdf_type == CDF_EPOCH_TYPE:
+                        data_item = time_convertor(data_item, cdf_type)
+                    if variable in output_dict:
+                        output_dict[variable].extend(data_item.tolist())
+                    else:
+                        output_dict[variable] = data_item.tolist()
+            
+            # encode as messagepack
+            encoded = StringIO(msgpack.dumps(output_dict))
+
+            return CDObject(
+                encoded, filename="swarm_data.mp", **output
+            )
+        else:
+            InvalidOutputDefError(
+                'output',
+                "Unexpected output format %r requested!" % output['mime_type']
+            )
