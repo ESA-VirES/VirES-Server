@@ -32,11 +32,13 @@ from eoxmagmod import read_model_shc
 from eoxserver.services.ows.wps.exceptions import (
     MissingRequiredInputError, InvalidInputValueError
 )
-from vires.util import get_color_scale, get_model
+from vires.util import get_color_scale
 from vires.models import ProductCollection
 from .time_series_product import ProductTimeSeries
 from .model_magmod import MagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
+from .magnetic_models import get_model
+
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
 RE_RESIDUAL_VARIABLE = re.compile(r'(.+)_res([ABC])([ABC])')
