@@ -43,7 +43,7 @@ from vires.aux import update_kp, update_dst
 # URL time-out in seconds
 URL_TIMEOUT = 25
 
-def update(source, destination, updater, label):
+def update(source, destination, updater, label, tmp_extension=None):
     """ Update index from the given source. """
     print "Updating %s from %s" % (
         label, source if source != '-' else '<standard input>'
@@ -55,7 +55,7 @@ def update(source, destination, updater, label):
         source.startswith("ftp://")
     )
 
-    destination_tmp = destination + ".tmp.cdf"
+    destination_tmp = destination + (tmp_extension or ".tmp")
     if exists(destination_tmp):
         remove(destination_tmp)
 

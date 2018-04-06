@@ -102,6 +102,9 @@ def cdf_open(filename, mode="r"):
     Allowed modes are 'r' (read-only) and 'w' (read-write).
     A new CDF file is created in for the 'w' mode if it does not exist.
     The returned object can be used with the `with` command.
+
+    NOTE: for the newly created CDF files the pycdf.CDF adds the '.cdf'
+    extension to the filename if it does not end by this extension already.
     """
     if mode == "r":
         cdf = pycdf.CDF(filename)
