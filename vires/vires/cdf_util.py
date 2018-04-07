@@ -98,10 +98,12 @@ def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
 
 
 def cdf_open(filename, mode="r"):
-    """ Open a new or an existing  CDF file.
+    """ Open a new or existing  CDF file.
     Allowed modes are 'r' (read-only) and 'w' (read-write).
-    A new CDF file is created in for the 'w' mode if it does not exist.
-    The returned object can be used with the `with` command.
+    A new CDF file is created if the 'w' mode is chosen and the file does not
+    exist.
+    The returned object is a context manager which can be used with the `with`
+    command.
 
     NOTE: for the newly created CDF files the pycdf.CDF adds the '.cdf'
     extension to the filename if it does not end by this extension already.
@@ -127,7 +129,8 @@ def cdf_open(filename, mode="r"):
 
 
 def cdf_rawtime_to_seconds(raw_time_delta, cdf_type):
-    """ Covert a CDF raw time difference to `datetime.timedelta` object """
+    """ Convert CDF raw time to second. The epoch offset is unchanged.
+    """
     if cdf_type == CDF_EPOCH_TYPE:
         # TODO: handle vectors
         return raw_time_delta * 1e-3
@@ -136,7 +139,8 @@ def cdf_rawtime_to_seconds(raw_time_delta, cdf_type):
 
 
 def seconds_to_cdf_rawtime(time_seconds, cdf_type):
-    """ Covert a CDF raw time difference to `datetime.timedelta` object """
+    """ Convert time in seconds to CDF raw time. The epoch offset is unchanged.
+    """
     if cdf_type == CDF_EPOCH_TYPE:
         # TODO: handle vectors
         return time_seconds * 1e3
@@ -145,7 +149,8 @@ def seconds_to_cdf_rawtime(time_seconds, cdf_type):
 
 
 def cdf_rawtime_to_timedelta(raw_time_delta, cdf_type):
-    """ Covert a CDF raw time difference to `datetime.timedelta` object """
+    """ Convert a CDF raw time difference to `datetime.timedelta` object.
+    """
     if cdf_type == CDF_EPOCH_TYPE:
         # TODO: handle vectors
         return timedelta(seconds=raw_time_delta*1e-3)
@@ -154,7 +159,8 @@ def cdf_rawtime_to_timedelta(raw_time_delta, cdf_type):
 
 
 def timedelta_to_cdf_rawtime(time_delta, cdf_type):
-    """ Covert `datetime.timedelta` object to CDF raw time scale. """
+    """ Convert `datetime.timedelta` object to CDF raw time scale.
+    """
     if cdf_type == CDF_EPOCH_TYPE:
         # TODO: handle vectors
         return time_delta.total_seconds() * 1e3
@@ -174,7 +180,9 @@ def datetime_to_cdf_rawtime(time, cdf_type):
 
 
 def cdf_rawtime_to_datetime(raw_time, cdf_type):
-    """ Convert array of CDF raw time values to array of `dateitme`. """
+    """ Convert an array of CDF raw time values to an array
+    of `dateitme.datetime` objects.
+    """
     if cdf_type == CDF_EPOCH_TYPE:
         if isinstance(raw_time, ndarray):
             return pycdf.lib.v_epoch_to_datetime(raw_time)
@@ -185,7 +193,8 @@ def cdf_rawtime_to_datetime(raw_time, cdf_type):
 
 
 def cdf_rawtime_to_unix_epoch(raw_time, cdf_type):
-    """ Convert array of CDF raw time values to array of MJD2000 values. """
+    """ Convert an array of CDF raw time values to an array of Unix epoch values.
+    """
     if cdf_type == CDF_EPOCH_TYPE:
         return (raw_time - CDF_EPOCH_1970) * 1e-3
     else:
@@ -193,7 +202,8 @@ def cdf_rawtime_to_unix_epoch(raw_time, cdf_type):
 
 
 def cdf_rawtime_to_mjd2000(raw_time, cdf_type):
-    """ Convert array of CDF raw time values to array of MJD2000 values. """
+    """ Convert an array of CDF raw time values to array of MJD2000 values.
+    """
     if cdf_type == CDF_EPOCH_TYPE:
         return (raw_time - CDF_EPOCH_2000) / 86400000.0
     else:
@@ -201,7 +211,8 @@ def cdf_rawtime_to_mjd2000(raw_time, cdf_type):
 
 
 def mjd2000_to_cdf_rawtime(time, cdf_type):
-    """ Convert array of CDF raw time values to array of MJD2000 values. """
+    """ Convert an array of MJD2000 values to an array of CDF raw time values.
+    """
     if cdf_type == CDF_EPOCH_TYPE:
         return CDF_EPOCH_2000 + time * 86400000.0
     else:
@@ -209,8 +220,8 @@ def mjd2000_to_cdf_rawtime(time, cdf_type):
 
 
 def cdf_rawtime_to_decimal_year_fast(raw_time, cdf_type, year):
-    """ Convert array of CDF raw time values to array of decimal years.
-    This function expect all dates to of the same year and this year has
+    """ Convert an array of CDF raw time values to an array of decimal years.
+    This function assumes all dates to be of the same year and this year has
     to be provided as a parameter.
     """
     if cdf_type == CDF_EPOCH_TYPE:
@@ -222,7 +233,9 @@ def cdf_rawtime_to_decimal_year_fast(raw_time, cdf_type, year):
 
 
 def cdf_rawtime_to_decimal_year(raw_time, cdf_type):
-    """ Convert array of CDF raw time values to array of decimal years.
+    """ Convert an array of CDF raw time values to an array of decimal years.
+    This function makes not assumption about the year and does the full fledged
+    conversion for each item.
     """
     v_mjd2000_to_decimal_year = vectorize(
         mjd2000_to_decimal_year, otypes=(dt_float64,)
