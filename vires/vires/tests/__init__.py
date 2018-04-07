@@ -28,42 +28,48 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from numpy import abs as aabs, array, isnan
+from numpy import asarray
+from numpy.testing import assert_equal, assert_allclose
 
 
 class ArrayMixIn(object):
     """ Mix-in class adding handy array assertions. """
     # pylint: disable=invalid-name
 
-    def assertAllTrue(self, arr):
-        if not array(arr).all():
+    @staticmethod
+    def assertAllTrue(arr):
+        if not asarray(arr).all():
             raise AssertionError("Not all array elements are True!")
 
-    def assertAllEqual(self, arr0, arr1):
-        arr0 = array(arr0)
-        arr1 = array(arr1)
+    @staticmethod
+    def assertAllEqual(arr0, arr1):
+        arr0 = asarray(arr0)
+        arr1 = asarray(arr1)
 
         if arr0.shape != arr1.shape:
             raise AssertionError(
-                "Array size mismatch! %s != %s" % (arr0.shape, arr1.shape)
+                "Array shape mismatch! %s != %s" % (arr0.shape, arr1.shape)
             )
 
-        if not (isnan(arr0) == isnan(arr1)).all():
-            raise AssertionError("NaN mask mismatch!")
+        try:
+            assert_equal(arr0, arr1)
+        except AssertionError as exc:
+            raise AssertionError("Not all array elements are equal!\n%s" % exc)
 
-        if not (arr0[~isnan(arr0)] == arr1[~isnan(arr1)]).all():
-            raise AssertionError("Not all array elements are equal!")
 
+    @staticmethod
+    def assertAllAlmostEqual(arr0, arr1, delta=1e-7):
+        arr0 = asarray(arr0)
+        arr1 = asarray(arr1)
 
-    def assertAllAlmostEqual(self, arr0, arr1, delta=1e-7):
-        arr0 = array(arr0)
-        arr1 = array(arr1)
         if arr0.shape != arr1.shape:
             raise AssertionError(
-                "Array size mismatch! %s != %s" % (arr0.shape, arr1.shape)
+                "Array shape mismatch! %s != %s" % (arr0.shape, arr1.shape)
             )
-        if not (isnan(arr0) == isnan(arr1)).all():
-            raise AssertionError("NaN mask mismatch!")
-        if not (aabs(arr0[~isnan(arr0)] - arr1[~isnan(arr1)]) <= delta).all():
-            raise AssertionError("Not all array elements are almost equal!")
-        self.assertAllTrue(aabs(arr0 - arr1) <= delta)
+
+        try:
+            assert_allclose(arr0, arr1, atol=delta)
+        except AssertionError as exc:
+            raise AssertionError(
+                "Not all array elements are almost equal!\n%s" % exc
+            )
