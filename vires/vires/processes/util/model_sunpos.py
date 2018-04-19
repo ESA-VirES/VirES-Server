@@ -96,7 +96,7 @@ class SunPosition(Model):
             # extract input data
             times, lats, lons, rads = (dataset[var] for var in req_var[:4])
             times_cdf_type = dataset.cdf_type.get(req_var[0], None)
-            coords = sunpos(
+            results = sunpos(
                 cdf_rawtime_to_mjd2000(times, times_cdf_type),
                 lats, lons,  # lat/lon in deg.
                 rads * 1e-3, # radius in km
@@ -105,6 +105,6 @@ class SunPosition(Model):
 
             for variable in variables:
                 idx, cdf_type, cdf_attr = self.VARIABLES[variable]
-                output_ds.set(variable, coords[..., idx], cdf_type, cdf_attr)
+                output_ds.set(variable, result[idx], cdf_type, cdf_attr)
 
         return output_ds
