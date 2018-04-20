@@ -31,10 +31,7 @@
 from logging import getLogger, LoggerAdapter
 from eoxmagmod import sunpos
 from vires.util import include, unique
-from vires.cdf_util import (
-    cdf_rawtime_to_mjd2000,
-    CDF_DOUBLE_TYPE,
-)
+from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from .model import Model
 
@@ -82,6 +79,14 @@ class SunPosition(Model):
     def required_variables(self):
         return self._required_variables
 
+    def _extract_required_variables(self, dataset):
+        time, latitude, longitude, radius = self._required_variables
+        # Note: radius is converted from metres to kilometres
+        return (
+            cdf_rawtime_to_mjd2000(dataset[time], dataset.cdf_type[time]),
+            dataset[latitude], dataset[longitude], 1e-3*dataset[radius],
+        )
+
     def eval(self, dataset, variables=None, **kwargs):
         variables = (
             self.variables if variables is None else
@@ -92,16 +97,9 @@ class SunPosition(Model):
         output_ds = Dataset()
 
         if variables:
-            req_var = self.required_variables
-            # extract input data
-            times, lats, lons, rads = (dataset[var] for var in req_var[:4])
-            times_cdf_type = dataset.cdf_type.get(req_var[0], None)
-            results = sunpos(
-                cdf_rawtime_to_mjd2000(times, times_cdf_type),
-                lats, lons,  # lat/lon in deg.
-                rads * 1e-3, # radius in km
-                0 # FIXME: UTC to TT offset
-            )
+            times, lats, lons, rads = self._extract_required_variables(dataset)
+            # FIXME: UTC to TT offset
+            result = sunpos(times, lats, lons, rads, 0)
 
             for variable in variables:
                 idx, cdf_type, cdf_attr = self.VARIABLES[variable]

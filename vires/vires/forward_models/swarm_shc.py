@@ -28,7 +28,13 @@
 #-------------------------------------------------------------------------------
 
 from django.conf import settings
-from eoxmagmod import read_model_shc
+from eoxmagmod import (
+    load_model_shc,
+    load_model_swarm_mma_2c_internal,
+    load_model_swarm_mma_2c_external,
+    load_model_swarm_mio_internal,
+    load_model_swarm_mio_external,
+)
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
 
@@ -40,38 +46,103 @@ class SwarmL2SHCForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return read_model_shc(settings.VIRES_CACHED_PRODUCTS[self.identifier])
+        return load_model_shc(settings.VIRES_CACHED_PRODUCTS[self.product_type])
 
 
-class Swarm_MCO_SHA_2C_ForwardModel(SwarmL2SHCForwardModel):
+class SwarmMIO2CPrimaryForwardModel(SwarmL2SHCForwardModel):
+    """ Swarm L2 MIO_SHA_2C product primary field model.
+    """
+    product_type = "MIO_SHA_2C"
+    identifier = "MIO_SHA_2C-Primary"
+
+    @cached_property
+    def model(self):
+        return load_model_swarm_mio_external(
+            settings.VIRES_CACHED_PRODUCTS[self.product_type]
+        )
+
+class SwarmMIO2DPrimaryForwardModel(SwarmMIO2DPrimaryForwardModel)
+    """ Swarm L2 MIO_SHA_2D product primary field model.
+    """
+    product_type = "MIO_SHA_2D"
+    identifier = "MIO_SHA_2D-Primary"
+
+
+class SwarmMIO2CSecondaryForwardModel(SwarmL2SHCForwardModel):
+    """ Swarm L2 MIO_SHA_2C product secondary field model.
+    """
+    product_type = "MIO_SHA_2C"
+    identifier = "MIO_SHA_2C-Secondary"
+
+    @cached_property
+    def model(self):
+        return load_model_swarm_mio_internal(
+            settings.VIRES_CACHED_PRODUCTS[self.product_type]
+        )
+
+
+class SwarmMIO2DSecondaryForwardModel(SwarmL2SHCForwardModel):
+    """ Swarm L2 MIO_SHA_2D product secondary field model.
+    """
+    product_type = "MIO_SHA_2D"
+    identifier = "MIO_SHA_2D-Secondary"
+
+
+class SwarmMMA2CPrimaryForwardModel(SwarmL2SHCForwardModel):
+    """ Swarm L2 MMA_SHA_2C product primary field model.
+    """
+    product_type = "MMA_SHA_2C"
+    identifier = "MMA_SHA_2C-Primary"
+
+    @cached_property
+    def model(self):
+        return load_model_swarm_mma_2c_external(
+            settings.VIRES_CACHED_PRODUCTS[self.product_type]
+        )
+
+
+class SwarmMMA2CSecondaryForwardModel(SwarmL2SHCForwardModel):
+    """ Swarm L2 MMA_SHA_2C product secondary field model.
+    """
+    product_type = "MMA_SHA_2C"
+    identifier = "MMA_SHA_2C-Secondary"
+
+    @cached_property
+    def model(self):
+        return load_model_swarm_mma_2c_internal(
+            settings.VIRES_CACHED_PRODUCTS[self.product_type]
+        )
+
+
+class SwarmMCO2CForwardModel(SwarmL2SHCForwardModel):
     """ Swarm L2 MCO_SHA_2C product.
     """
     product_type = "MCO_SHA_2C"
     identifier = "MCO_SHA_2C"
 
 
-class Swarm_MCO_SHA_2D_ForwardModel(SwarmL2SHCForwardModel):
+class SwarmMCO2DForwardModel(SwarmL2SHCForwardModel):
     """ Swarm L2 MCO_SHA_2D product.
     """
     product_type = "MCO_SHA_2D"
     identifier = "MCO_SHA_2D"
 
 
-class Swarm_MCO_SHA_2F_ForwardModel(SwarmL2SHCForwardModel):
+class SwarmMCO2FForwardModel(SwarmL2SHCForwardModel):
     """ Swarm L2 MCO_SHA_2F product.
     """
     product_type = "MCO_SHA_2F"
     identifier = "MCO_SHA_2F"
 
 
-class Swarm_MLI_SHA_2C_ForwardModel(SwarmL2SHCForwardModel):
+class SwarmMLI2CForwardModel(SwarmL2SHCForwardModel):
     """ Swarm L2 MLI_SHA_2C product.
     """
     product_type = "MLI_SHA_2C"
     identifier = "MLI_SHA_2C"
 
 
-class Swarm_MLI_SHA_2D_ForwardModel(SwarmL2SHCForwardModel):
+class SwarmMLI2DForwardModel(SwarmL2SHCForwardModel):
     """ Swarm L2 MLI_SHA_2D product.
     """
     product_type = "MLI_SHA_2D"

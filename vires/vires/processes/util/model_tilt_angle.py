@@ -30,18 +30,18 @@
 
 from math import pi
 from logging import getLogger, LoggerAdapter
-from numpy import hstack, ones, array, dot, arcsin
+from numpy import ones, arcsin, stack, broadcast_to
 from eoxmagmod import (
     vnorm, convert, GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN,
 )
-from vires.util import include, unique, get_model
 from vires.cdf_util import (
-    cdf_rawtime_to_datetime,
+    cdf_rawtime_to_mjd2000,
     CDF_DOUBLE_TYPE,
 )
 from vires.dataset import Dataset
-from vires.time_util import datetime_mean, datetime_to_decimal_year
+from vires.time_util import mjd2000_to_datetime
 from .model import Model
+from .magnetic_models import get_model
 
 RAD2DEG = 180.0/pi
 
@@ -102,66 +102,98 @@ class DipoleTiltAnglePosition(Model):
 
     @property
     def required_variables(self):
-        return self._required_variables
+        return list(self._required_variables)
+
+    def _extract_required_variables(self, dataset):
+        times, longitude, sundecl, sunhang = self.required_variables
+        return (
+            cdf_rawtime_to_mjd2000(dataset[times], dataset.cdf_type[times]),
+            dataset[longitude], dataset[sundecl], dataset[sunhang],
+        )
+
+    @staticmethod
+    def _eval_dipole_tilt_angle(earth_sun_vector, north_pole_vector):
+        return RAD2DEG * arcsin(
+            (earth_sun_vector * north_pole_vector).sum(axis=1)
+        )
+
+    @staticmethod
+    def _eval_earth_sun_vector(longitude, sundecl, sunhang):
+        return convert(
+            stack((sundecl, (longitude - sunhang), ones(sundecl.size)), axis=1),
+            GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN
+        )
+
+    def _eval_dipole_axis(self, times):
+        if times.size == 0:
+            broadcast_to([0, 0, 0], (0, 3))
+
+
+        time_start, time_end = times.min(), times.max()
+        mean_time = 0.5*(time_start + time_end)
+
+        self.logger.debug(
+            "requested time-span %s, %s",
+            mjd2000_to_datetime(time_start),
+            mjd2000_to_datetime(time_end)
+        )
+        self.logger.debug(
+            "applied mean time %s (%s)",
+            mjd2000_to_datetime(mean_time), mean_time
+        )
+
+        # construct north pointing unit vector of the dipole axis
+        # from the spherical harmonic coefficients
+        self.logger.debug("extracting dipole axis from %s", self.model_name)
+
+        coeff = self.model.coefficients(mean_time, max_degree=1)
+        north_pole_vector = coeff[[2, 2, 1], [0, 1, 0]]
+        north_pole_vector *= -1.0/vnorm(north_pole_vector)
+
+        return broadcast_to(north_pole_vector, (times.size, 3))
 
     def eval(self, dataset, variables=None, **kwargs):
-        variables = (
-            self.variables if variables is None else
-            list(include(unique(variables), self.variables))
-        )
-        self.logger.debug("requested variables %s", variables)
-
         output_ds = Dataset()
+        variables = set(self.variables if variables is None else variables)
+        self.logger.debug(
+            "requested variables %s", list(set(self.variables) & variables)
+        )
 
-        if variables:
-            req_var = self.required_variables
-            times, longitude, sundecl, sunhang = (
-                dataset[var] for var in req_var[:4]
+        (
+            dipole_tilt_angle_variable,
+            earth_sun_vector_variable,
+            north_pole_vector_variable,
+        ) = self.variables
+
+        _produce_dipole_tilt_angle = dipole_tilt_angle_variable in variables
+        _produce_earth_sun_vector = earth_sun_vector_variable in variables
+        _produce_north_pole_vector = north_pole_vector_variable in variables
+
+        def _set_output(variable, data):
+            output_ds.set(variable, data, *self.VARIABLES[variable])
+
+        times, longitude, sundecl, sunhang = (
+            self._extract_required_variables(dataset)
+        )
+
+        if _produce_dipole_tilt_angle or _produce_earth_sun_vector:
+            earth_sun_vector = self._eval_earth_sun_vector(
+                longitude, sundecl, sunhang
             )
-            times_cdf_type = dataset.cdf_type.get(req_var[0], None)
 
-            earth_sun_vector = convert(
-                hstack((
-                    sundecl.reshape((sundecl.size, 1)),
-                    (longitude - sunhang).reshape((sunhang.size, 1)),
-                    ones((sundecl.size, 1))
-                )),
-                GEOCENTRIC_SPHERICAL,
-                GEOCENTRIC_CARTESIAN,
+        if _produce_dipole_tilt_angle or _produce_north_pole_vector:
+            north_pole_vector = self._eval_dipole_axis(times)
+
+        if _produce_dipole_tilt_angle:
+            dipole_tilt_angle = self._eval_dipole_tilt_angle(
+                earth_sun_vector, north_pole_vector
             )
+            _set_output(dipole_tilt_angle_variable, dipole_tilt_angle)
 
-            if len(times) > 0:
-                start = cdf_rawtime_to_datetime(min(times), times_cdf_type)
-                stop = cdf_rawtime_to_datetime(max(times), times_cdf_type)
-                mean_time = datetime_mean(start, stop)
-                mean_time_dy = datetime_to_decimal_year(mean_time)
-                self.logger.debug("requested time-span %s, %s", start, stop)
-                self.logger.debug(
-                    "applied mean time %s (%s)", mean_time, mean_time_dy
-                )
-            else:
-                mean_time_dy = 2000.0 # default in case of an empty time array
+        if _produce_earth_sun_vector:
+            _set_output(earth_sun_vector_variable, earth_sun_vector)
 
-            # construct north pointing unit vector of the dipole axis
-            # from the spherical harmonic coefficients
-            self.logger.debug("extracting dipole axis from %s", self.model_name)
-            coef_g, coef_h = self.model.get_coef_static(mean_time_dy)
-            north_pole_vector = array([coef_g[2], coef_h[2], coef_g[1]])
-            north_pole_vector /= -vnorm(north_pole_vector)
-
-            for variable in variables:
-                cdf_type, cdf_attr = self.VARIABLES[variable]
-                if variable == "DipoleTiltAngle":
-                    output_ds.set(variable, RAD2DEG*arcsin(dot(
-                        earth_sun_vector,
-                        north_pole_vector.reshape((3, 1))
-                    ).ravel()), cdf_type, cdf_attr)
-                elif variable == "SunVector":
-                    output_ds.set(variable, earth_sun_vector, cdf_type, cdf_attr)
-                elif variable == "DipoleAxisVector":
-                    output_ds.set(variable, dot(
-                        ones((times.size, 1)),
-                        north_pole_vector.reshape((1, 3))
-                    ), cdf_type, cdf_attr)
+        if _produce_north_pole_vector:
+            _set_output(north_pole_vector_variable, north_pole_vector)
 
         return output_ds

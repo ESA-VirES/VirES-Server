@@ -28,7 +28,7 @@
 #-------------------------------------------------------------------------------
 import re
 from collections import OrderedDict
-from eoxmagmod import read_model_shc
+from eoxmagmod import load_model_shc
 from eoxserver.services.ows.wps.exceptions import (
     MissingRequiredInputError, InvalidInputValueError
 )
@@ -139,7 +139,7 @@ def parse_model(input_id, model_id, shc, shc_input_id="shc"):
             raise MissingRequiredInputError(shc_input_id)
 
         try:
-            model = read_model_shc(shc)
+            model = load_model_shc(shc)
         except ValueError:
             raise InvalidInputValueError(
                 shc_input_id, "Failed to parse the custom model coefficients."

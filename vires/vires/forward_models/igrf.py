@@ -27,11 +27,11 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod import (
-    read_model_igrf11, read_model_shc, DATA_IGRF11, DATA_IGRF12,
-)
+from eoxmagmod import load_model_igrf, load_model_shc
+from eoxmagmod.date import IGRF11, IGRF12
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
+
 
 class IGRF11ForwardModel(BaseForwardModel):
     """ Forward model calculator for the IGRF11.
@@ -40,7 +40,7 @@ class IGRF11ForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return read_model_igrf11(DATA_IGRF11)
+        return load_model_igrf(IGRF11)
 
 
 class IGRF12ForwardModel(BaseForwardModel):
@@ -50,7 +50,7 @@ class IGRF12ForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return read_model_shc(DATA_IGRF12)
+        return load_model_shc(IGRF12)
 
 
 class IGRFForwardModel(IGRF12ForwardModel):

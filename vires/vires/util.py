@@ -34,7 +34,6 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cm import get_cmap
 from itertools import ifilter, ifilterfalse
 from vires.contrib.colormaps import cmaps
-import eoxmagmod as mm
 
 try:
     from numpy import full

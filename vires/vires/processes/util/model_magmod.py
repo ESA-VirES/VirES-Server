@@ -29,15 +29,10 @@
 #pylint: disable=too-many-locals
 
 from logging import getLogger, LoggerAdapter
-from numpy import hstack
-from eoxmagmod import vnorm, GEOCENTRIC_SPHERICAL
+from numpy import stack
+from eoxmagmod import vnorm
 from vires.util import include, unique
-from vires.time_util import datetime_mean, datetime_to_decimal_year
-from vires.cdf_util import (
-    cdf_rawtime_to_datetime,
-    CDF_EPOCH_TYPE,
-    CDF_DOUBLE_TYPE,
-)
+from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from .model import Model
 
@@ -75,32 +70,33 @@ class MagneticModelResidual(Model):
         )
         if proceed:
             self.logger.debug("requested dataset length %s", dataset.length)
-
-            # prepare CDF attributes
-            src_attr = dataset.cdf_attr.get(self.variable)
-            if src_attr is None:
-                attr = None
-            else:
-                if self.variable == "B_NEC":
-                    base = 'Magnetic field vector residual, NEC frame'
-                else:
-                    base = "%s residual" % src_attr['DESCRIPTION']
-
-                attr = {
-                    'DESCRIPTION': (
-                        '%s, calculated as a difference of the measurement and '
-                        'value of the %s spherical harmonic model' %
-                        (base, self.model_name)
-                    ),
-                    'UNITS': src_attr['UNITS']
-                }
-
             output_ds.set(
                 self.output_variable,
                 dataset[self.variable] - dataset[self.model_variable],
-                dataset.cdf_type[self.variable], attr
+                dataset.cdf_type[self.variable],
+                self._get_attributes(dataset, self.variable),
             )
         return output_ds
+
+
+    def _get_attributes(self, dataset, variable):
+        src_attr = dataset.cdf_attr.get(variable)
+        if not src_attr:
+            return None
+
+        if variable == "B_NEC":
+            base = 'Magnetic field vector residual, NEC frame'
+        else:
+            base = "%s residual" % src_attr['DESCRIPTION']
+
+        return {
+            'DESCRIPTION': (
+                '%s, calculated as a difference of the measurement and '
+                'value of the %s spherical harmonic model' %
+                (base, self.model_name)
+            ),
+            'UNITS': src_attr['UNITS']
+        }
 
 
 class MagneticModel(Model):
@@ -127,6 +123,26 @@ class MagneticModel(Model):
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "model_name": model_name,
         })
+        self.attrib = self._variable_attributes()
+
+    def _variable_attributes(self):
+        f_var, b_var = self.variables
+        return {
+            f_var: {
+                'DESCRIPTION': (
+                    'Magnetic field intensity, calculated by '
+                    'the %s spherical harmonic model' % self.name
+                ),
+                'UNITS': 'nT',
+            },
+            b_var: {
+                'DESCRIPTION': (
+                    'Magnetic field vector, NEC frame, calculated by '
+                    'the %s spherical harmonic model' % self.name
+                ),
+                'UNITS': 'nT',
+            },
+        }
 
     @property
     def variables(self):
@@ -136,65 +152,37 @@ class MagneticModel(Model):
     def required_variables(self):
         return self._required_variables
 
+    def _extract_required_variables(self, dataset):
+        time, latitude, longitude, radius = self._required_variables
+        # Note: radius is converted from metres to kilometres
+        return (
+            cdf_rawtime_to_mjd2000(dataset[time], dataset.cdf_type[time]),
+            dataset[latitude], dataset[longitude], 1e-3*dataset[radius],
+        )
+
     def eval(self, dataset, variables=None, **kwargs):
-        req_var = self.required_variables
         variables = (
             self.variables if variables is None else
             list(include(unique(variables), self.variables))
         )
         self.logger.debug("requested variables %s", variables)
         output_ds = Dataset()
+
         if variables:
-            # extract input data
-            times, lats, lons, rads = (dataset[var] for var in req_var[:4])
-            cdf_type = dataset.cdf_type.get(req_var[0], None)
-            # TODO: support for different CDF time types
-            if cdf_type != CDF_EPOCH_TYPE:
-                raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+            times, lats, lons, rads = self._extract_required_variables(dataset)
 
-            self.logger.debug("requested dataset length %s", len(times))
-            if len(times) > 0:
-                start = cdf_rawtime_to_datetime(min(times), cdf_type)
-                stop = cdf_rawtime_to_datetime(max(times), cdf_type)
-                mean_time = datetime_mean(start, stop)
-                mean_time_dy = datetime_to_decimal_year(mean_time)
-                self.logger.debug("requested time-span %s, %s", start, stop)
-                self.logger.debug(
-                    "applied mean time %s (%s)", mean_time, mean_time_dy
-                )
-            else:
-                mean_time_dy = 2000.0 # default in case of an empty time array
-
-            # extract variable names
-            # evaluate model
-            model_data = self.model.eval(
-                hstack((
-                    lats.reshape((lats.size, 1)),
-                    lons.reshape((lons.size, 1)),
-                    rads.reshape((lons.size, 1)) * 1e-3, # radius in km
-                )),
-                mean_time_dy,
-                GEOCENTRIC_SPHERICAL,
-                GEOCENTRIC_SPHERICAL,
-                check_validity=False,
+            result = self.model.eval(
+                times, stack((lats, lons, rads), axis=1), scale=[1, 1, -1]
             )
-            model_data[:, 2] *= -1
-            # set the dataset
+
             f_var, b_var = self.variables
             if f_var in variables:
-                output_ds.set(f_var, vnorm(model_data), CDF_DOUBLE_TYPE, {
-                    'DESCRIPTION': (
-                        'Magnetic field intensity, calculated by '
-                        'the %s spherical harmonic model' % self.name
-                    ),
-                    'UNITS': 'nT',
-                })
+                output_ds.set(
+                    f_var, vnorm(result), CDF_DOUBLE_TYPE, self.attrib[f_var]
+                )
             if b_var in variables:
-                output_ds.set(b_var, model_data, CDF_DOUBLE_TYPE, {
-                    'DESCRIPTION': (
-                        'Magnetic field vector, NEC frame, calculated by '
-                        'the %s spherical harmonic model' % self.name
-                    ),
-                    'UNITS': 'nT',
-                })
+                output_ds.set(
+                    b_var, result, CDF_DOUBLE_TYPE, self.attrib[b_var]
+                )
+
         return output_ds

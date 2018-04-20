@@ -28,46 +28,79 @@
 
 from os.path import exists
 from django.conf import settings
+from eoxmagmod.data import (
+    CHAOS5_CORE_V4, CHAOS5_STATIC, CHAOS6_CORE_X3, CHAOS6_STATIC,
+    WMM_2010, WMM_2015, EMM_2010_STATIC, EMM_2010_SECVAR,
+    IGRF11, IGRF12, SIFM,
+)
 from eoxmagmod import (
-    DATA_CHAOS6_CORE_X3, DATA_CHAOS6_STATIC,
-    DATA_CHAOS5_CORE_V4, DATA_CHAOS5_STATIC,
-    DATA_IGRF12, DATA_SIFM,
-    read_model_wmm2015, read_model_wmm2010, read_model_emm2010,
-    read_model_igrf11, read_model_shc,
+    load_model_shc,
+    load_model_shc_combined,
+    load_model_igrf,
+    load_model_wmm,
+    load_model_emm,
+    load_model_swarm_mma_2c_internal,
+    load_model_swarm_mma_2c_external,
+    load_model_swarm_mio_internal,
+    load_model_swarm_mio_external,
 )
 
 MODELS_FACTORIES = {
+    "IGRF11":
+        lambda: load_model_igrf(IGRF11),
+    "IGRF12":
+        lambda: load_model_shc(IGRF12),
+    "SIFM":
+        lambda: load_model_shc(SIFM),
+    "WMM2010":
+        lambda: load_model_wmm(WMM_2010),
+    "WMM2015":
+        lambda: load_model_wmm(WMM_2015),
+    "EMM2010":
+        lambda: load_model_emm(EMM_2010_STATIC, EMM_2010_SECVAR),
     "CHAOS-6-Combined":
-        lambda: (
-            read_model_shc(DATA_CHAOS6_CORE_X3) +
-            read_model_shc(DATA_CHAOS6_STATIC)
-        ),
+        lambda: load_model_shc_combined(CHAOS6_CORE_X3, CHAOS6_STATIC),
+    "CHAOS-6-Core":
+        lambda: load_model_shc(CHAOS6_CORE_X3),
+    "CHAOS-6-Static":
+        lambda: load_model_shc(CHAOS6_STATIC),
     "CHAOS-5-Combined":
-        lambda: (
-            read_model_shc(DATA_CHAOS5_CORE_V4) +
-            read_model_shc(DATA_CHAOS5_STATIC)
-        ),
-    "IGRF12": lambda: read_model_shc(DATA_IGRF12),
-    "IGRF11": read_model_igrf11,
-    "IGRF": lambda: read_model_shc(DATA_IGRF12),
-    "SIFM": lambda: read_model_shc(DATA_SIFM),
-    "WMM": read_model_wmm2015,
-    "WMM2010": read_model_wmm2010,
-    "WMM2015": read_model_wmm2015,
-    "EMM": read_model_emm2010,
-    "EMM2010": read_model_emm2010,
-    "CHAOS-6-Core": lambda: read_model_shc(DATA_CHAOS6_CORE_X3),
-    "CHAOS-6-Static": lambda: read_model_shc(DATA_CHAOS6_STATIC),
-    "CHAOS-5-Core": lambda: read_model_shc(DATA_CHAOS5_CORE_V4),
-    "CHAOS-5-Static": lambda: read_model_shc(DATA_CHAOS5_STATIC),
+        lambda: load_model_shc_combined(CHAOS5_CORE_V4, CHAOS5_STATIC),
+    "CHAOS-5-Core":
+        lambda: load_model_shc(CHAOS5_CORE_V4),
+    "CHAOS-5-Static":
+        lambda: load_model_shc(CHAOS5_STATIC),
+}
+MODELS_FACTORIES["IGRF"] = MODELS_FACTORIES["IGRF12"]
+MODELS_FACTORIES["WMM"] = MODELS_FACTORIES["WMM2015"]
+MODELS_FACTORIES["EMM"] = MODELS_FACTORIES["EMM2010"]
+MODELS_FACTORIES["CHAOS-Combined"] = MODELS_FACTORIES["CHAOS-6-Combined"]
+MODELS_FACTORIES["CHAOS-Static"] = MODELS_FACTORIES["CHAOS-6-Static"]
+MODELS_FACTORIES["CHAOS-Core"] = MODELS_FACTORIES["CHAOS-6-Core"]
+
+
+#FIXME - MIO primary/external below ionosphere
+CACHED_MODEL_LOADERS = {
+    "MCO_SHA_2C": load_model_shc,
+    "MCO_SHA_2D": load_model_shc,
+    "MCO_SHA_2F": load_model_shc,
+    "MLI_SHA_2C": load_model_shc,
+    "MLI_SHA_2D": load_model_shc,
+    "MMA_SHA_2C-Primary": load_model_swarm_mma_2c_external,
+    "MMA_SHA_2C-Secondary": load_model_swarm_mma_2c_internal,
+    "MIO_SHA_2C-Primary": load_model_swarm_mio_external,
+    "MIO_SHA_2C-Secondary": load_model_swarm_mio_internal,
+    "MIO_SHA_2D-Primary": load_model_swarm_mio_external,
+    "MIO_SHA_2D-Secondary": load_model_swarm_mio_internal,
 }
 
-CACHED_MODEL_LOADERS = {
-    "MCO_SHA_2C": read_model_shc,
-    "MCO_SHA_2D": read_model_shc,
-    "MCO_SHA_2F": read_model_shc,
-    "MLI_SHA_2C": read_model_shc,
-    "MLI_SHA_2D": read_model_shc,
+MODEL_SOURCES = {
+    "MMA_SHA_2C-Primary": "MMA_SHA_2C",
+    "MMA_SHA_2C-Secondary": "MMA_SHA_2C",
+    "MIO_SHA_2C-Primary": "MIO_SHA_2C",
+    "MIO_SHA_2C-Secondary": "MIO_SHA_2C",
+    "MIO_SHA_2D-Primary": "MIO_SHA_2D",
+    "MIO_SHA_2D-Secondary": "MIO_SHA_2D",
 }
 
 
@@ -75,7 +108,7 @@ def _get_cached_model(model_id):
     cached_products = getattr(settings, "VIRES_CACHED_PRODUCTS", {})
     try:
         loader = CACHED_MODEL_LOADERS[model_id]
-        path = cached_products.get[model_id]
+        path = cached_products.get[MODEL_SOURCES.get(model_id, model_id)]
     except KeyError:
         return None
     return loader(path) if exists(path) else None
@@ -88,43 +121,3 @@ def get_model(model_id):
         return read_model()
     else:
         return _get_cached_model(model_id)
-
-
-def parse_model(input_id, model_id, shc, shc_input_id="shc"):
-    """ Parse model identifier and returns the corresponding model."""
-    if model_id == "Custom_Model":
-        if shc is None:
-            raise MissingRequiredInputError(shc_input_id)
-
-        try:
-            model = read_model_shc(shc)
-        except ValueError:
-            raise InvalidInputValueError(
-                shc_input_id, "Failed to parse the custom model coefficients."
-            )
-    else:
-        model = get_model(model_id)
-        if model is None:
-            raise InvalidInputValueError(
-                input_id, "Invalid model identifier %r!" % model_id
-            )
-    return model
-
-
-def parse_models(input_id, model_ids, shc, shc_input_id="shc"):
-    """ Parse model identifiers and returns an ordered dictionary
-    of the corresponding models.
-    """
-    models = OrderedDict()
-    if model_ids.strip():
-        for model_id in (id_.strip() for id_ in model_ids.split(",")):
-            models[model_id] = parse_model(
-                input_id, model_id, shc, shc_input_id
-            )
-    return models
-
-
-def parse_models2(input_id, model_ids, shc, shc_input_id="shc"):
-    """ Parse model identifiers and returns a list of the model sources. """
-    models = parse_models(input_id, model_ids, shc, shc_input_id)
-    return [MagneticModel(id_, model) for id_, model in models.iteritems()]
