@@ -60,6 +60,13 @@ class QuasiDipoleCoordinates(Model):
         },
     }
 
+    @property
+    def variables(self):
+        return ["QDLat", "QDLon", "QDBasis"]
+
+    @property
+    def required_variables(self):
+        return list(self._required_variables)
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -71,14 +78,6 @@ class QuasiDipoleCoordinates(Model):
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
         ]
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
-
-    @property
-    def required_variables(self):
-        return list(self._required_variables)
-
-    @property
-    def variables(self):
-        return list(self.VARIABLES)
 
     def _extract_required_variables(self, dataset):
         time, latitude, longitude, radius = self._required_variables
@@ -136,6 +135,14 @@ class MagneticLocalTime(Model):
         'UNITS': 'h',
     }
 
+    @property
+    def variables(self):
+        return [self.VARIABLE]
+
+    @property
+    def required_variables(self):
+        return list(self._required_variables)
+
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return 'MLT: %s' % msg, kwargs
@@ -146,14 +153,6 @@ class MagneticLocalTime(Model):
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
         ]
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
-
-    @property
-    def required_variables(self):
-        return list(self._required_variables)
-
-    @property
-    def variables(self):
-        return [self.VARIABLE]
 
     def _extract_required_variables(self, dataset):
         time, qdlon = self._required_variables

@@ -40,8 +40,8 @@ from .time_series_orbit_counter import OrbitCounter
 from .model import Model
 from .model_magmod import MagneticModelResidual, MagneticModel
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
-from .model_sunpos import SunPosition
-from .model_tilt_angle import DipoleTiltAnglePosition
+from .model_sunpos import SunPosition, SubSolarPoint
+from .model_dipole import MagneticDipole, DipoleTiltAngle
 from .label import Label, SpacecraftLabel
 from .input_parsers import (
     parse_style, parse_collections,

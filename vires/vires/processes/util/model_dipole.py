@@ -30,10 +30,8 @@
 
 from math import pi
 from logging import getLogger, LoggerAdapter
-from numpy import ones, arcsin, stack, broadcast_to
-from eoxmagmod import (
-    vnorm, convert, GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN,
-)
+from numpy import empty, broadcast_to, arcsin, arctan2
+from eoxmagmod import vnorm
 from vires.cdf_util import (
     cdf_rawtime_to_mjd2000,
     CDF_DOUBLE_TYPE,
@@ -46,28 +44,12 @@ from .magnetic_models import get_model
 RAD2DEG = 180.0/pi
 
 
-class DipoleTiltAnglePosition(Model):
-    """ Dipole tilt angle calculation.
-    The dipole tilt angle is 0 if the dipole axis is perpendicular
-    to the Earth-Sun line and positive if the dipole axis is inclined towards
-    Sun. The dipole tilt angle is in degrees.
+class MagneticDipole(Model):
+    """ Magnetic dipole, north magnetic pole coordinates calculation.
     """
-    DEFAULT_REQUIRED_VARIABLES = [
-        "Timestamp", "Longitude", "SunDeclination", "SunHourAngle",
-    ]
+    DEFAULT_REQUIRED_VARIABLES = ["Timestamp"]
 
     VARIABLES = {
-        "DipoleTiltAngle": (CDF_DOUBLE_TYPE, {
-            'DESCRIPTION': 'Dipole tilt angle',
-            'UNITS': 'deg',
-        }),
-        "SunVector": (CDF_DOUBLE_TYPE, {
-            'DESCRIPTION': (
-                'Unit vector pointing to Sun in geocentric '
-                'Cartesian coordinate system.'
-            ),
-            'UNITS': '-',
-        }),
         "DipoleAxisVector": (CDF_DOUBLE_TYPE, {
             'DESCRIPTION': (
                 'Dipole axis - north-pointing unit vector in geocentric '
@@ -75,41 +57,44 @@ class DipoleTiltAnglePosition(Model):
             ),
             'UNITS': '-',
         }),
+        "NGPLatitude": (CDF_DOUBLE_TYPE, {
+            'DESCRIPTION': "North Geomagnetic Pole latitude.",
+            'UNITS': 'deg',
+        }),
+        "NGPLongitude": (CDF_DOUBLE_TYPE, {
+            'DESCRIPTION': "North Geomagnetic Pole longitude.",
+            'UNITS': 'deg',
+        }),
     }
+
+    @property
+    def variables(self):
+        return ["DipoleAxisVector", "NGPLatitude", "NGPLongitude"]
+
+    @property
+    def required_variables(self):
+        return list(self._required_variables)
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
-            return 'DipoleTiltAngle: %s' % msg, kwargs
+            return 'MageticDipole: %s' % msg, kwargs
 
     def __init__(self, model="IGRF", logger=None, varmap=None):
-
         if isinstance(model, basestring):
             self.model_name = model
             self.model = get_model(model)
         else:
             self.model_name = model.name
             self.model = model.model
-
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
         ]
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
 
-    @property
-    def variables(self):
-        return list(self.VARIABLES)
-
-    @property
-    def required_variables(self):
-        return list(self._required_variables)
-
     def _extract_required_variables(self, dataset):
-        times, longitude, sundecl, sunhang = self.required_variables
-        return (
-            cdf_rawtime_to_mjd2000(dataset[times], dataset.cdf_type[times]),
-            dataset[longitude], dataset[sundecl], dataset[sunhang],
-        )
+        times, = self.required_variables
+        return cdf_rawtime_to_mjd2000(dataset[times], dataset.cdf_type[times])
 
     @staticmethod
     def _eval_dipole_tilt_angle(earth_sun_vector, north_pole_vector):
@@ -117,17 +102,9 @@ class DipoleTiltAnglePosition(Model):
             (earth_sun_vector * north_pole_vector).sum(axis=1)
         )
 
-    @staticmethod
-    def _eval_earth_sun_vector(longitude, sundecl, sunhang):
-        return convert(
-            stack((sundecl, (longitude - sunhang), ones(sundecl.size)), axis=1),
-            GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN
-        )
-
     def _eval_dipole_axis(self, times):
         if times.size == 0:
-            broadcast_to([0, 0, 0], (0, 3))
-
+            return empty((0, 3))
 
         time_start, time_end = times.min(), times.max()
         mean_time = 0.5*(time_start + time_end)
@@ -146,7 +123,7 @@ class DipoleTiltAnglePosition(Model):
         # from the spherical harmonic coefficients
         self.logger.debug("extracting dipole axis from %s", self.model_name)
 
-        coeff = self.model.coefficients(mean_time, max_degree=1)
+        coeff, _ = self.model.coefficients(mean_time, max_degree=1)
         north_pole_vector = coeff[[2, 2, 1], [0, 1, 0]]
         north_pole_vector *= -1.0/vnorm(north_pole_vector)
 
@@ -159,41 +136,103 @@ class DipoleTiltAnglePosition(Model):
             "requested variables %s", list(set(self.variables) & variables)
         )
 
-        (
-            dipole_tilt_angle_variable,
-            earth_sun_vector_variable,
-            north_pole_vector_variable,
-        ) = self.variables
+        if not variables:
+            return output_ds
 
-        _produce_dipole_tilt_angle = dipole_tilt_angle_variable in variables
-        _produce_earth_sun_vector = earth_sun_vector_variable in variables
-        _produce_north_pole_vector = north_pole_vector_variable in variables
+        times = self._extract_required_variables(dataset)
+        north_pole_vector = self._eval_dipole_axis(times)
 
         def _set_output(variable, data):
             output_ds.set(variable, data, *self.VARIABLES[variable])
 
-        times, longitude, sundecl, sunhang = (
+        (
+            north_pole_vector_variable, ngp_latitude_variable,
+            ngp_longitude_variable,
+        ) = self.variables
+
+        if north_pole_vector_variable in variables:
+            _set_output(north_pole_vector_variable, north_pole_vector)
+
+        if ngp_latitude_variable in variables:
+            ngp_latitude = RAD2DEG*arcsin(north_pole_vector[..., 2])
+            _set_output(ngp_latitude_variable, ngp_latitude)
+
+        if ngp_longitude_variable in variables:
+            ngp_longitude = RAD2DEG*arctan2(
+                north_pole_vector[..., 1], north_pole_vector[..., 0]
+            )
+            _set_output(ngp_longitude_variable, ngp_longitude)
+
+        return output_ds
+
+
+class DipoleTiltAngle(Model):
+    """ Magnetic dipole tilt angle calculation.
+    The dipole tilt angle is 0 if the dipole axis is perpendicular
+    to the Earth-Sun line and positive if the dipole axis is inclined towards
+    Sun. The dipole tilt angle is in degrees.
+    """
+    DEFAULT_REQUIRED_VARIABLES = ["SunVector", "DipoleAxisVector"]
+
+    VARIABLES = {
+        "DipoleTiltAngle": (CDF_DOUBLE_TYPE, {
+            'DESCRIPTION': 'Dipole tilt angle',
+            'UNITS': 'deg',
+        }),
+    }
+
+    @property
+    def variables(self):
+        return ["DipoleTiltAngle"]
+
+    @property
+    def required_variables(self):
+        return list(self._required_variables)
+
+    class _LoggerAdapter(LoggerAdapter):
+        def process(self, msg, kwargs):
+            return 'DipoleTiltAngle: %s' % msg, kwargs
+
+    def __init__(self, logger=None, varmap=None):
+        varmap = varmap or {}
+        self._required_variables = [
+            varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
+        ]
+        self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
+
+    def _extract_required_variables(self, dataset):
+        sunvect, dipvect = self.required_variables
+        return dataset[sunvect], dataset[dipvect]
+
+    @staticmethod
+    def _eval_dipole_tilt_angle(earth_sun_vector, north_pole_vector):
+        return RAD2DEG * arcsin(
+            (earth_sun_vector * north_pole_vector).sum(axis=1)
+        )
+
+
+    def eval(self, dataset, variables=None, **kwargs):
+        output_ds = Dataset()
+        variables = set(self.variables if variables is None else variables)
+        self.logger.debug(
+            "requested variables %s", list(set(self.variables) & variables)
+        )
+
+        if not variables:
+            return output_ds
+
+        earth_sun_vector, north_pole_vector = (
             self._extract_required_variables(dataset)
         )
 
-        if _produce_dipole_tilt_angle or _produce_earth_sun_vector:
-            earth_sun_vector = self._eval_earth_sun_vector(
-                longitude, sundecl, sunhang
-            )
+        dipole_tilt_angle = self._eval_dipole_tilt_angle(
+            earth_sun_vector, north_pole_vector
+        )
 
-        if _produce_dipole_tilt_angle or _produce_north_pole_vector:
-            north_pole_vector = self._eval_dipole_axis(times)
+        def _set_output(variable, data):
+            output_ds.set(variable, data, *self.VARIABLES[variable])
 
-        if _produce_dipole_tilt_angle:
-            dipole_tilt_angle = self._eval_dipole_tilt_angle(
-                earth_sun_vector, north_pole_vector
-            )
-            _set_output(dipole_tilt_angle_variable, dipole_tilt_angle)
-
-        if _produce_earth_sun_vector:
-            _set_output(earth_sun_vector_variable, earth_sun_vector)
-
-        if _produce_north_pole_vector:
-            _set_output(north_pole_vector_variable, north_pole_vector)
+        dipole_tilt_angle_variable, = self.variables
+        _set_output(dipole_tilt_angle_variable, dipole_tilt_angle)
 
         return output_ds

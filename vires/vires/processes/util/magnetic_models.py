@@ -108,7 +108,7 @@ def _get_cached_model(model_id):
     cached_products = getattr(settings, "VIRES_CACHED_PRODUCTS", {})
     try:
         loader = CACHED_MODEL_LOADERS[model_id]
-        path = cached_products.get[MODEL_SOURCES.get(model_id, model_id)]
+        path = cached_products[MODEL_SOURCES.get(model_id, model_id)]
     except KeyError:
         return None
     return loader(path) if exists(path) else None

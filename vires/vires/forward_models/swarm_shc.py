@@ -61,7 +61,7 @@ class SwarmMIO2CPrimaryForwardModel(SwarmL2SHCForwardModel):
             settings.VIRES_CACHED_PRODUCTS[self.product_type]
         )
 
-class SwarmMIO2DPrimaryForwardModel(SwarmMIO2DPrimaryForwardModel)
+class SwarmMIO2DPrimaryForwardModel(SwarmMIO2CPrimaryForwardModel):
     """ Swarm L2 MIO_SHA_2D product primary field model.
     """
     product_type = "MIO_SHA_2D"
@@ -80,8 +80,7 @@ class SwarmMIO2CSecondaryForwardModel(SwarmL2SHCForwardModel):
             settings.VIRES_CACHED_PRODUCTS[self.product_type]
         )
 
-
-class SwarmMIO2DSecondaryForwardModel(SwarmL2SHCForwardModel):
+class SwarmMIO2DSecondaryForwardModel(SwarmMIO2CSecondaryForwardModel):
     """ Swarm L2 MIO_SHA_2D product secondary field model.
     """
     product_type = "MIO_SHA_2D"
