@@ -46,9 +46,8 @@ from vires.util import cached_property
 
 DG2RAD = math.pi / 180.0
 
-MIN_MJD2000 = decimal_year_to_mjd2000(1800.0)
-MAX_MJD2000 = decimal_year_to_mjd2000(2300.0)
-
+MIN_MJD2000 = decimal_year_to_mjd2000(1.0)
+MAX_MJD2000 = decimal_year_to_mjd2000(4000.0)
 
 def diff_row(array):
     """ Diferentiate 2D arrayay columns along the row."""
@@ -271,7 +270,7 @@ class BaseForwardModel(Component):
         """ Get the validity interval of the given model. """
         return tuple(
             naive_to_utc(mjd2000_to_datetime(
-                max(MIN_MJD2000, max(MAX_MJD2000, time))
+                max(MIN_MJD2000, min(MAX_MJD2000, time))
             )) for time in model.validity
         )
 

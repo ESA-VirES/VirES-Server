@@ -28,7 +28,7 @@
 #-------------------------------------------------------------------------------
 
 from eoxmagmod import load_model_igrf, load_model_shc
-from eoxmagmod.date import IGRF11, IGRF12
+from eoxmagmod.data import IGRF11, IGRF12
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
 
