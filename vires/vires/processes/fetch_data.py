@@ -59,9 +59,9 @@ from vires.processes.util import (
     IndexKp, IndexDst, OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    VariableResolver, SpacecraftLabel, SunPosition,
+    VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
-    DipoleTiltAnglePosition,
+    MagneticDipole, DipoleTiltAngle,
 )
 
 
@@ -243,7 +243,9 @@ class FetchData(WPSProcess):
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
-            model_tilt_angle = DipoleTiltAnglePosition()
+            model_subsol = SubSolarPoint()
+            model_dipole = MagneticDipole()
+            model_tilt_angle = DipoleTiltAngle()
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
             ))
@@ -307,7 +309,8 @@ class FetchData(WPSProcess):
 
                 # models
                 aux_models = chain((
-                    model_qdc, model_mlt, model_sun, model_tilt_angle,
+                    model_qdc, model_mlt, model_sun,
+                    model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals)
                 for model in aux_models:
                     resolver.add_model(model)
@@ -471,7 +474,7 @@ class FetchData(WPSProcess):
                         output_dict[variable].extend(data_item.tolist())
                     else:
                         output_dict[variable] = data_item.tolist()
-            
+
             # encode as messagepack
             encoded = StringIO(msgpack.dumps(output_dict))
 

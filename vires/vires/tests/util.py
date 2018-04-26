@@ -35,17 +35,10 @@ from matplotlib.colors import Colormap
 from vires.tests import ArrayMixIn
 from vires.util import (
     between, between_co, float_array_slice, datetime_array_slice,
-    get_total_seconds, get_color_scale, get_model,
+    get_total_seconds, get_color_scale,
 )
 
 class TestUtil(ArrayMixIn, unittest.TestCase):
-    # NOTE: The IGRF12 and SIFM models are broken!
-    MODELS = [
-        "CHAOS-6-Combined", "CHAOS-6-Core", "CHAOS-6-Static",
-        "CHAOS-5-Combined", "CHAOS-5-Core", "CHAOS-5-Static",
-        "WMM", "WMM2010", "WMM2015", "EMM", "EMM2010",
-        "IGRF", "IGRF11", "IGRF12", "SIFM",
-    ]
 
     COLOR_MAPS = [
         "blackwhite", "coolwarm", "rainbow", "diverging_2", "ylgnbu", "greens",
@@ -65,15 +58,6 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
 
         with self.assertRaises(ValueError):
             get_color_scale("-invalid-")
-
-    def test_model(self):
-        for model_id in self.MODELS:
-            try:
-                self.assertTrue(get_model(model_id) is not None)
-            except:
-                print "Test failed for model %r!" % model_id
-                raise
-        self.assertTrue(get_model("-invalid-model-") is None)
 
     def test_between(self):
         self.assertAllEqual(

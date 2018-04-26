@@ -27,12 +27,11 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-# NOTE: eoxmagmod >= 0.3.4 is required.
-from eoxmagmod import (
-    read_model_shc, DATA_CHAOS6_CORE_X3, DATA_CHAOS6_STATIC,
-)
+from eoxmagmod import load_model_shc, load_model_shc_combined
+from eoxmagmod.data import CHAOS6_CORE_X3, CHAOS6_STATIC
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
+
 
 class CHAOS6CoreForwardModel(BaseForwardModel):
     """ Forward model calculator for the CHAOS-6 core field.
@@ -41,7 +40,7 @@ class CHAOS6CoreForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return read_model_shc(DATA_CHAOS6_CORE_X3)
+        return load_model_shc(CHAOS6_CORE_X3)
 
 
 class CHAOS6StaticForwardModel(BaseForwardModel):
@@ -51,7 +50,7 @@ class CHAOS6StaticForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return read_model_shc(DATA_CHAOS6_STATIC)
+        return load_model_shc(CHAOS6_STATIC)
 
 
 class CHAOS6CombinedForwardModel(BaseForwardModel):
@@ -61,12 +60,22 @@ class CHAOS6CombinedForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return (
-            read_model_shc(DATA_CHAOS6_CORE_X3) +
-            read_model_shc(DATA_CHAOS6_STATIC)
-        )
+        return load_model_shc_combined(CHAOS6_CORE_X3, CHAOS6_STATIC)
 
-    @cached_property
-    def time_validity(self):
-        """ Get the validity interval of the model. """
-        return self._time_validity(read_model_shc(DATA_CHAOS6_CORE_X3))
+
+class CHAOSCoreForwardModel(CHAOS6CoreForwardModel):
+    """ Forward model calculator for the CHAOS core field.
+    """
+    identifier = "CHAOS-Core"
+
+
+class CHAOSStaticForwardModel(CHAOS6StaticForwardModel):
+    """ Forward model calculator for the CHAOS static field.
+    """
+    identifier = "CHAOS-Static"
+
+
+class CHAOSCombinedForwardModel(CHAOS6CombinedForwardModel):
+    """ Forward model calculator for the CHAOS Combined field.
+    """
+    identifier = "CHAOS-Combined"

@@ -34,7 +34,6 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cm import get_cmap
 from itertools import ifilter, ifilterfalse
 from vires.contrib.colormaps import cmaps
-import eoxmagmod as mm
 
 try:
     from numpy import full
@@ -139,38 +138,6 @@ def datetime_array_slice(start, stop, first, last, step, tolerance):
         0.0, (last - first).total_seconds(),
         step.total_seconds(), tolerance.total_seconds()
     )
-
-
-MODELS_FACTORIES = {
-    "CHAOS-6-Combined":
-        lambda: (
-            mm.read_model_shc(mm.DATA_CHAOS6_CORE_X3) +
-            mm.read_model_shc(mm.DATA_CHAOS6_STATIC)
-        ),
-    "CHAOS-5-Combined":
-        lambda: (
-            mm.read_model_shc(mm.DATA_CHAOS5_CORE_V4) +
-            mm.read_model_shc(mm.DATA_CHAOS5_STATIC)
-        ),
-    "IGRF12": lambda: mm.read_model_shc(mm.DATA_IGRF12),
-    "IGRF11": mm.read_model_igrf11,
-    "IGRF": lambda: mm.read_model_shc(mm.DATA_IGRF12),
-    "SIFM": lambda: mm.read_model_shc(mm.DATA_SIFM),
-    "WMM": mm.read_model_wmm2015,
-    "WMM2010": mm.read_model_wmm2010,
-    "WMM2015": mm.read_model_wmm2015,
-    "EMM": mm.read_model_emm2010,
-    "EMM2010": mm.read_model_emm2010,
-    "CHAOS-6-Core": lambda: mm.read_model_shc(mm.DATA_CHAOS6_CORE_X3),
-    "CHAOS-6-Static": lambda: mm.read_model_shc(mm.DATA_CHAOS6_STATIC),
-    "CHAOS-5-Core": lambda: mm.read_model_shc(mm.DATA_CHAOS5_CORE_V4),
-    "CHAOS-5-Static": lambda: mm.read_model_shc(mm.DATA_CHAOS5_STATIC),
-}
-
-def get_model(model_id):
-    """ Get model for given identifier. """
-    read_model = MODELS_FACTORIES.get(model_id)
-    return read_model() if read_model else None
 
 
 def get_color_scale(name):
