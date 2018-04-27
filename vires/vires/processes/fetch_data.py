@@ -29,6 +29,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
 
+import msgpack
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from cStringIO import StringIO
@@ -39,9 +40,11 @@ from eoxserver.services.ows.wps.parameters import (
     ComplexData,
     FormatText, FormatJSON,
     CDFileWrapper,
+    FormatBinaryRaw,
+    CDObject,
 )
-from eoxserver.services.ows.wps.exceptions import InvalidParameterValue
-from vires.util import unique, exclude
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from vires.util import unique, exclude, include
 from vires.time_util import (
     naive_to_utc,
     timedelta_to_iso_duration,
@@ -53,11 +56,12 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_variables,
-    IndexKp, IndexDst, OrbitCounter,
+    IndexKp, IndexDst, OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    VariableResolver, SpacecraftLabel,
-    Sat2SatResidual, group_residual_variables,
+    VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
+    Sat2SatResidual, group_residual_variables, get_residual_variables,
+    MagneticDipole, DipoleTiltAngle,
 )
 
 
@@ -152,7 +156,11 @@ class FetchData(WPSProcess):
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Output data", formats=FormatText('text/csv')
+            'output', title="Output data", formats=(
+                FormatText('text/csv'),
+                FormatBinaryRaw("application/msgpack"),
+                FormatBinaryRaw("application/x-msgpack"),
+            )
         )),
     ]
 
@@ -163,8 +171,8 @@ class FetchData(WPSProcess):
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
         models = parse_models2("model_ids", model_ids, shc)
-        requested_variables, residual_variables = (
-            parse_variables('requested_variables', requested_variables)
+        requested_variables = parse_variables(
+            'requested_variables', requested_variables
         )
         self.logger.debug(
             "requested variables: %s", ", ".join(requested_variables)
@@ -181,7 +189,7 @@ class FetchData(WPSProcess):
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
             self.access_logger.error(message)
-            raise InvalidParameterValue('end_time', message)
+            raise InvalidInputValueError('end_time', message)
 
         # log the request
         self.access_logger.info(
@@ -194,8 +202,6 @@ class FetchData(WPSProcess):
             ),
             ", ".join(model.name for model in models),
         )
-
-        # TODO: calculate the optimal sampling step
 
         if bbox:
             relative_area = abs(
@@ -213,11 +219,11 @@ class FetchData(WPSProcess):
         self.logger.debug("relative area: %s", relative_area)
         self.logger.debug("relative time: %s", relative_time)
 
+        min_step = timedelta(0) if relative_time <= 1 else BASE_MIN_STEP
         sampling_step = timedelta(seconds=(
             relative_area * (
-                BASE_MIN_STEP.total_seconds() +
-                relative_time *
-                (BASE_SAMPLIG_STEP - BASE_MIN_STEP).total_seconds()
+                min_step.total_seconds() +
+                relative_time * (BASE_SAMPLIG_STEP - min_step).total_seconds()
             )
         ))
 
@@ -233,8 +239,13 @@ class FetchData(WPSProcess):
             )
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
+            index_f10 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
+            model_sun = SunPosition()
+            model_subsol = SubSolarPoint()
+            model_dipole = MagneticDipole()
+            model_tilt_angle = DipoleTiltAngle()
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
             ))
@@ -271,7 +282,7 @@ class FetchData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # auxiliary slaves
-                for slave in (index_kp, index_dst):
+                for slave in (index_kp, index_dst, index_f10):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
@@ -285,15 +296,23 @@ class FetchData(WPSProcess):
                     )
 
                 # prepare spacecraft to spacecraft residuals
+                # NOTE: No residual variables required by the filters.
+                residual_variables = get_residual_variables(requested_variables)
+                self.logger.debug("residual variables: %s", ", ".join(
+                    var for var, _ in residual_variables
+                ))
                 grouped_res_vars = group_residual_variables(
                     product_sources, residual_variables
                 )
-                self.logger.debug("%s", grouped_res_vars)
                 for (msc, ssc), cols in grouped_res_vars.items():
                     resolver.add_model(Sat2SatResidual(msc, ssc, cols))
 
                 # models
-                for model in chain((model_qdc, model_mlt), models_with_residuals):
+                aux_models = chain((
+                    model_qdc, model_mlt, model_sun,
+                    model_subsol, model_dipole, model_tilt_angle,
+                ), models_with_residuals)
+                for model in aux_models:
                     resolver.add_model(model)
 
                 # filters
@@ -366,7 +385,7 @@ class FetchData(WPSProcess):
                             "count of %d samples per collection!",
                             collection_count, MAX_SAMPLES_COUNT_PER_COLLECTION
                         )
-                        raise InvalidParameterValue(
+                        raise InvalidInputValueError(
                             'end_time',
                             "Requested data exceeds the maximum limit of %d "
                             "samples per collection!" %
@@ -374,8 +393,8 @@ class FetchData(WPSProcess):
                         )
 
                     # subordinate interpolated datasets
-                    times = dataset[resolver.master.TIME_VARIABLE]
-                    cdf_type = dataset.cdf_type[resolver.master.TIME_VARIABLE]
+                    times = dataset[resolver.master.time_variable]
+                    cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
                         dataset.merge(
                             slave.interpolate(times, variables, {}, cdf_type)
@@ -397,42 +416,73 @@ class FetchData(WPSProcess):
                 total_count, output['mime_type'], ", ".join(output_variables)
             )
 
-        # write the output
-        output_fobj = StringIO()
-        time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
+        if output['mime_type'] == "text/csv":
+            # write the output
+            output_fobj = StringIO()
+            time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
-        if sources:
-            # write CSV header
-            output_fobj.write("id,")
-            output_fobj.write(",".join(output_variables))
-            output_fobj.write("\r\n")
-
-        for label, dataset in _generate_data_():
-            formatters = []
-            data = []
-            for variable in output_variables:
-                data_item = dataset.get(variable)
-                # convert time variables to the target file-format
-                cdf_type = dataset.cdf_type.get(variable)
-                if cdf_type == CDF_EPOCH_TYPE:
-                    data_item = time_convertor(data_item, cdf_type)
-                # collect all data items
-                data.append(data_item)
-                # collect formatters for the available data items
-                if data_item is not None:
-                    formatters.append(get_formatter(data_item, cdf_type))
-            # construct format string
-            format_ = ",".join(
-                "nan" if item is None else "%s" for item in data
-            )
-            # iterate the rows and write the CSV records
-            label_prefix = "%s," % label
-            for row in izip(*(item for item in data if item is not None)):
-                output_fobj.write(label_prefix)
-                output_fobj.write(
-                    format_ % tuple(f(v) for f, v in zip(formatters, row))
-                )
+            if sources:
+                # write CSV header
+                output_fobj.write("id,")
+                output_fobj.write(",".join(output_variables))
                 output_fobj.write("\r\n")
 
-        http_headers = ()
-        return CDFileWrapper(output_fobj, headers=http_headers, **output)
+            for label, dataset in _generate_data_():
+                formatters = []
+                data = []
+                for variable in output_variables:
+                    data_item = dataset.get(variable)
+                    # convert time variables to the target file-format
+                    cdf_type = dataset.cdf_type.get(variable)
+                    if cdf_type == CDF_EPOCH_TYPE:
+                        data_item = time_convertor(data_item, cdf_type)
+                    # collect all data items
+                    data.append(data_item)
+                    # collect formatters for the available data items
+                    if data_item is not None:
+                        formatters.append(get_formatter(data_item, cdf_type))
+                # construct format string
+                format_ = ",".join(
+                    "nan" if item is None else "%s" for item in data
+                )
+                # iterate the rows and write the CSV records
+                label_prefix = "%s," % label
+                for row in izip(*(item for item in data if item is not None)):
+                    output_fobj.write(label_prefix)
+                    output_fobj.write(
+                        format_ % tuple(f(v) for f, v in zip(formatters, row))
+                    )
+                    output_fobj.write("\r\n")
+
+            http_headers = ()
+            return CDFileWrapper(output_fobj, headers=http_headers, **output)
+
+        elif output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
+
+            time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
+
+
+            output_dict = {}
+            for label, dataset in _generate_data_():
+                available = tuple(include(output_variables, dataset))
+                for variable in available:
+                    data_item = dataset.get(variable)
+                    cdf_type = dataset.cdf_type.get(variable)
+                    if cdf_type == CDF_EPOCH_TYPE:
+                        data_item = time_convertor(data_item, cdf_type)
+                    if variable in output_dict:
+                        output_dict[variable].extend(data_item.tolist())
+                    else:
+                        output_dict[variable] = data_item.tolist()
+
+            # encode as messagepack
+            encoded = StringIO(msgpack.dumps(output_dict))
+
+            return CDObject(
+                encoded, filename="swarm_data.mp", **output
+            )
+        else:
+            InvalidOutputDefError(
+                'output',
+                "Unexpected output format %r requested!" % output['mime_type']
+            )

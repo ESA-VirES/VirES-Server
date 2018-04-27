@@ -27,8 +27,10 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from vires.cdf_util import CDF_EPOCH_TYPE
+from numpy import asarray
+from vires.cdf_util import CDF_EPOCH_TYPE, mjd2000_to_cdf_rawtime
 from vires.util import include, unique
+
 
 class TimeSeries(object):
     """ Base time-series data source class. """
@@ -69,5 +71,23 @@ class TimeSeries(object):
         Set valid_only to True to remove invalid records (NaNs due to the
         out-of-bounds interpolation).
         The input and output time-stamps are encoded as CDF-epoch times.
+
+        If cdf_type set to None, the time values are reinterpreted as
+        MJD2000 values.
         """
         raise NotImplementedError
+
+    @staticmethod
+    def _convert_time(times, cdf_type):
+        # handle scalar input
+        times = asarray(times)
+        if times.ndim == 0:
+            times = times.reshape(1)
+
+        if cdf_type != CDF_EPOCH_TYPE:
+            if cdf_type is None:
+                times = mjd2000_to_cdf_rawtime(times, CDF_EPOCH_TYPE)
+                cdf_type = CDF_EPOCH_TYPE
+            else:
+                raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+        return times, cdf_type

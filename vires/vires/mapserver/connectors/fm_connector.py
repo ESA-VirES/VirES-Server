@@ -41,6 +41,7 @@ from eoxserver.services.mapserver.interfaces import ConnectorInterface
 from vires.util import cached_property
 from vires.forward_models.util import get_forward_model_providers
 from vires.perf_util import ElapsedTimeLogger
+from vires.time_util import datetime_to_mjd2000
 
 
 class ForwardModelConnector(Component):
@@ -91,7 +92,7 @@ class ForwardModelConnector(Component):
             # fast Cubic Spline model interpolation
             pixel_array = model_provider.evaluate_int(
                 data_item, band.identifier, bbox, size_x, size_y, elevation,
-                time, coeff_min, coeff_max
+                datetime_to_mjd2000(time), coeff_min, coeff_max, grid_step=(8, 8)
             )
             # scale pixel values
             # scale_factor = 255.0 / (range_max - range_min)

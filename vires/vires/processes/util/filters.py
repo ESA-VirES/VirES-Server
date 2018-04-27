@@ -57,7 +57,7 @@ class RejectAll(object):
 
     @property
     def required_variables(self):
-        raise ()
+        return ()
 
     def filter(self, dataset, index=None):
         return array([], dtype='int64')
@@ -166,4 +166,4 @@ class BoundingBoxFilter(Filter):
         return index
 
     def __str__(self):
-        ";".join(str(filter_) for filter_ in self.filters)
+        return ";".join(str(filter_) for filter_ in self.filters)

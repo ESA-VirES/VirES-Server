@@ -32,8 +32,8 @@
 from logging import getLogger, LoggerAdapter
 from vires.cdf_util import CDF_CHAR_TYPE
 from vires.util import full
+from vires.dataset import Dataset
 from .model import Model
-from .dataset import Dataset
 
 
 class Label(Model):

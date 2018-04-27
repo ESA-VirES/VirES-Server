@@ -27,7 +27,8 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod.wmm import read_model_wmm, DATA_WMM_2010, DATA_WMM_2015
+from eoxmagmod import load_model_wmm
+from eoxmagmod.data import WMM_2010, WMM_2015
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
 
@@ -38,7 +39,7 @@ class WMM2010ForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return read_model_wmm(DATA_WMM_2010)
+        return load_model_wmm(WMM_2010)
 
 
 class WMM2015ForwardModel(BaseForwardModel):
@@ -48,7 +49,7 @@ class WMM2015ForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return read_model_wmm(DATA_WMM_2015)
+        return load_model_wmm(WMM_2015)
 
 
 class WMMForwardModel(WMM2015ForwardModel):

@@ -28,7 +28,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-import unittest
+from unittest import TestCase, main
 from logging import getLogger, DEBUG, INFO, Formatter, StreamHandler
 from numpy import array, nan, empty
 from vires.util import full
@@ -36,6 +36,14 @@ from vires.tests import ArrayMixIn
 from vires.interpolate import Interp1D
 
 LOG_LEVEL = INFO
+
+GLOBAL_X_DST = array([
+    0, 3, 5, 7,
+    10, 13, 15, 17, 20, 23, 25, 27, 30, 33, 35, 37,
+    40, 43, 45, 47, 50, 53, 55, 57, 60, 63, 65, 67,
+    70, 73, 75, 77, 80, 83, 85, 87, 90, 93, 95, 97,
+])
+
 
 def set_stream_handler(logger, level=DEBUG):
     """ Set stream handler to the logger. """
@@ -49,481 +57,809 @@ def set_stream_handler(logger, level=DEBUG):
 set_stream_handler(getLogger(), LOG_LEVEL)
 
 
-class TestUtil(ArrayMixIn, unittest.TestCase):
+class InterplateTestMixIn(ArrayMixIn):
+    GAP_THRESHOLD = 10
+    SEGMENT_NEIGHBOURHOOD = 0
+    KIND = None
+    X_SRC = None
+    Y_SRC = None
+    X_DST = None
+    Y_DST = None
 
-    def test_1d_interp(self):
-        gap_threshold = 10
+    def test_interp1d(self):
+        x_src = array(self.X_SRC)
+        y_src = array(self.Y_SRC)
+        x_dst = array(self.X_DST)
+        y_dst = array(self.Y_DST)
+        result = Interp1D(
+            x_src, x_dst, self.GAP_THRESHOLD,
+            self.SEGMENT_NEIGHBOURHOOD
+        )(y_src, self.KIND)
+        try:
+            self.assertAllEqual(result, self.Y_DST)
+        except:
+            print
+            print self.__class__.__name__
+            print "x_src:", x_src
+            print "x_dst:", x_dst
+            print "y_src:", y_src
+            print "expected:", y_dst
+            print "received:", result
+            raise
 
-        def test(x_src, x_dst, y_src, y_dst,
-                 segment_neighbourhood=0, kind='nearest'):
-            result = Interp1D(
-                x_src, x_dst, gap_threshold, segment_neighbourhood
-            )(y_src, kind)
-            try:
-                self.assertAllEqual(result, y_dst)
-            except:
-                print "x_src:", x_src
-                print "x_dst:", x_dst
-                print "y_src:", y_src
-                print "expected:", y_dst
-                print "received:", result
-                raise
+#-------------------------------------------------------------------------------
 
-        x_dst = array([
-            0, 3, 5, 7,
-            10, 13, 15, 17, 20, 23, 25, 27, 30, 33, 35, 37,
-            40, 43, 45, 47, 50, 53, 55, 57, 60, 63, 65, 67,
-            70, 73, 75, 77, 80, 83, 85, 87, 90, 93, 95, 97,
-        ])
+class TestI1DErrors(TestCase):
+    
+    def test_size_mismatch(self):
+        x_src = array([10, 20, 30, 40, 50, 60, 70, 80, 90])
+        y_src = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        x_dst = array(GLOBAL_X_DST)
 
-        # scalar/ empty target array
-        test(
-            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), array([]),
-            array([1, 2, 3, 4, 5, 6, 7, 8, 9]),
-            array([]),
-        )
+        with self.assertRaises(ValueError):
+            Interp1D(x_src, x_dst)(y_src, "nearest")
+    
+    def test_invalid_kind(self):
+        x_src = array([10, 20, 30, 40, 50, 60, 70, 80, 90])
+        y_src = array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        x_dst = array(GLOBAL_X_DST)
 
-        # vector / empty target array
-        test(
-            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), array([]),
-            array([
-                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
-                [5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
-            ]), empty((0, 3)),
-        )
+        with self.assertRaises(ValueError):
+            Interp1D(x_src, x_dst)(y_src, "-= invalid =-")
 
-        # scalar / empty source array
-        test(
-            array([]), array([10, 20, 30, 40, 50, 60, 70, 80, 90]),
-            array([]), array([nan, nan, nan, nan, nan, nan, nan, nan, nan]),
-        )
+#-------------------------------------------------------------------------------
 
-        # vector / empty source array
-        test(
-            array([]), array([10, 20, 30, 40, 50, 60, 70, 80, 90]),
-            empty((0, 3)), full((9, 3), nan)
-        )
+class TestI1DNearestScalarEmptyTarget(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+    Y_SRC = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    X_DST = []
+    Y_DST = []
 
-        # scalar / no gap
-        test(
-            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), x_dst,
-            array([1, 2, 3, 4, 5, 6, 7, 8, 9]),
-            array([
-                nan, nan, nan, nan,
-                1, 1, 1, 2,
-                2, 2, 2, 3,
-                3, 3, 3, 4,
-                4, 4, 4, 5,
-                5, 5, 5, 6,
-                6, 6, 6, 7,
-                7, 7, 7, 8,
-                8, 8, 8, 9,
-                9, nan, nan, nan,
-            ]),
-        )
-        # vector / no gap
-        test(
-            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), x_dst,
-            array([
-                [1, 1, 1],
-                [2, 2, 2],
-                [3, 3, 3],
-                [4, 4, 4],
-                [5, 5, 5],
-                [6, 6, 6],
-                [7, 7, 7],
-                [8, 8, 8],
-                [9, 9, 9]
-            ]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
-                [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
-                [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
-                [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
-                [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
-                [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
-                [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
-                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
-                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-            ]),
-        )
 
-        # scalar / 1 gap - 2 segments
-        test(
-            array([10, 20, 30, 40, 60, 70, 80, 90]), x_dst,
-            array([1, 2, 3, 4, 6, 7, 8, 9]),
-            array([
-                nan, nan, nan, nan,
-                1, 1, 1, 2,
-                2, 2, 2, 3,
-                3, 3, 3, 4,
-                4, nan, nan, nan,
-                nan, nan, nan, nan,
-                6, 6, 6, 7,
-                7, 7, 7, 8,
-                8, 8, 8, 9,
-                9, nan, nan, nan,
-            ]),
-        )
+class TestI1DZeroScalarEmptyTarget(TestI1DNearestScalarEmptyTarget):
+    KIND = 'zero'
 
-        # vector / 1 gap - 2 segments
-        test(
-            array([10, 20, 30, 40, 60, 70, 80, 90]), x_dst,
-            array([
-                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
-                [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
-            ]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
-                [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
-                [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
-                [4, 4, 4], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
-                [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
-                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
-                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-            ]),
-        )
 
-        # scalar / 2 gaps - 3 segments
-        test(
-            array([10, 20, 40, 50, 60, 80, 90]), x_dst,
-            array([1, 2, 4, 5, 6, 8, 9]),
-            array([
-                nan, nan, nan, nan,
-                1, 1, 1, 2,
-                2, nan, nan, nan,
-                nan, nan, nan, nan,
-                4, 4, 4, 5,
-                5, 5, 5, 6,
-                6, nan, nan, nan,
-                nan, nan, nan, nan,
-                8, 8, 8, 9,
-                9, nan, nan, nan,
-            ]),
-        )
+class TestI1DNearestScalarEmptyTargetWithNeighbourhood(TestI1DNearestScalarEmptyTarget):
+    SEGMENT_NEIGHBOURHOOD = 4
 
-        # vector / 2 gaps - 3 segments
-        test(
-            array([10, 20, 40, 50, 60, 80, 90]), x_dst,
-            array([[1, 1, 1], [2, 2, 2], [4, 4, 4], [5, 5, 5], [6, 6, 6], [8, 8, 8], [9, 9, 9]]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
-                [2, 2, 2], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
-                [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
-                [6, 6, 6], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
-                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-            ]),
-        )
 
-        # scalar / 2 gaps - 3 segments - 1 zero-length segment
-        test(
-            array([10, 20, 50, 80, 90]), x_dst,
-            array([1, 2, 5, 8, 9]),
-            array([
-                nan, nan, nan, nan,
-                1, 1, 1, 2,
-                2, nan, nan, nan,
-                nan, nan, nan, nan,
-                nan, nan, nan, nan,
-                5, nan, nan, nan,
-                nan, nan, nan, nan,
-                nan, nan, nan, nan,
-                8, 8, 8, 9,
-                9, nan, nan, nan,
-            ]),
-        )
+class TestI1DZeroScalarEmptyTargetWithNeighbourhood(TestI1DZeroScalarEmptyTarget):
+    SEGMENT_NEIGHBOURHOOD = 4
 
-        # vector / 2 gaps - 3 segments - 1 zero-length segment
-        test(
-            array([10, 20, 50, 80, 90]), x_dst,
-            array([[1, 1, 1], [2, 2, 2], [5, 5, 5], [8, 8, 8], [9, 9, 9]]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
-                [2, 2, 2], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [5, 5, 5], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
-                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-            ]),
-        )
+#-------------------------------------------------------------------------------
 
-        # scalar / 4 gaps - 5 segments - 5 zero-length segment
-        test(
-            array([10, 30, 50, 70, 90]), x_dst,
-            array([1, 3, 5, 7, 9]),
-            array([
-                nan, nan, nan, nan,
-                1, nan, nan, nan,
-                nan, nan, nan, nan,
-                3, nan, nan, nan,
-                nan, nan, nan, nan,
-                5, nan, nan, nan,
-                nan, nan, nan, nan,
-                7, nan, nan, nan,
-                nan, nan, nan, nan,
-                9, nan, nan, nan,
-            ]),
-        )
+class TestI1DNearestVectorEmptyTarget(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+    Y_SRC = [
+        [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
+        [5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
+    ]
+    X_DST = []
+    Y_DST = empty((0, 3))
 
-        # vector / 4 gaps - 5 segments - 5 zero-length segment
-        test(
-            array([10, 30, 50, 70, 90]), x_dst,
-            array([[1, 1, 1], [3, 3, 3], [5, 5, 5], [7, 7, 7], [9, 9, 9]]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [1, 1, 1], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [3, 3, 3], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [5, 5, 5], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [7, 7, 7], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-            ]),
-        )
 
-        # scalar/ empty target array
-        test(
-            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), array([]),
-            array([1, 2, 3, 4, 5, 6, 7, 8, 9]),
-            array([]),
-            segment_neighbourhood=4,
-        )
+class TestI1DZeroVectorEmptyTarget(TestI1DNearestVectorEmptyTarget):
+    KIND = 'zero'
 
-        # vector / empty target array
-        test(
-            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), array([]),
-            array([
-                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
-                [5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
-            ]), empty((0, 3)),
-            segment_neighbourhood=4,
-        )
 
-        # scalar / empty source array
-        test(
-            array([]), array([10, 20, 30, 40, 50, 60, 70, 80, 90]),
-            array([]), array([nan, nan, nan, nan, nan, nan, nan, nan, nan]),
-            segment_neighbourhood=4,
-        )
+class TestI1DNearestVectorEmptyTargetWithNeighbourhood(TestI1DNearestVectorEmptyTarget):
+    SEGMENT_NEIGHBOURHOOD = 4
 
-        # vector / empty source array
-        test(
-            array([]), array([10, 20, 30, 40, 50, 60, 70, 80, 90]),
-            empty((0, 3)), full((9, 3), nan),
-            segment_neighbourhood=4,
-        )
 
-        # scalar / no gap + neighbourhood
-        test(
-            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), x_dst,
-            array([1, 2, 3, 4, 5, 6, 7, 8, 9]),
-            array([
-                nan, nan, nan, 1,
-                1, 1, 1, 2,
-                2, 2, 2, 3,
-                3, 3, 3, 4,
-                4, 4, 4, 5,
-                5, 5, 5, 6,
-                6, 6, 6, 7,
-                7, 7, 7, 8,
-                8, 8, 8, 9,
-                9, 9, nan, nan,
-            ]),
-            segment_neighbourhood=4,
-        )
+class TestI1DZeroVectorEmptyTargetWithNeighbourhood(TestI1DZeroVectorEmptyTarget):
+    SEGMENT_NEIGHBOURHOOD = 4
 
-        # vector / no gap + neighbourhood
-        test(
-            array([10, 20, 30, 40, 50, 60, 70, 80, 90]), x_dst,
-            array([
-                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
-                [5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
-            ]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
-                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
-                [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
-                [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
-                [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
-                [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
-                [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
-                [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
-                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
-                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
-            ]),
-            segment_neighbourhood=4,
-        )
+#-------------------------------------------------------------------------------
 
-        # scalar /  1 gap - 2 segments + neighbourhood
-        test(
-            array([10, 20, 30, 40, 60, 70, 80, 90]), x_dst,
-            array([1, 2, 3, 4, 6, 7, 8, 9]),
-            array([
-                nan, nan, nan, 1,
-                1, 1, 1, 2,
-                2, 2, 2, 3,
-                3, 3, 3, 4,
-                4, 4, nan, nan,
-                nan, nan, nan, 6,
-                6, 6, 6, 7,
-                7, 7, 7, 8,
-                8, 8, 8, 9,
-                9, 9, nan, nan,
-            ]),
-            segment_neighbourhood=4,
-        )
+class TestI1DNearestScalarEmptySource(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = []
+    Y_SRC = []
+    X_DST = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+    Y_DST = [nan, nan, nan, nan, nan, nan, nan, nan, nan]
 
-        # vector /  1 gap - 2 segments + neighbourhood
-        test(
-            array([10, 20, 30, 40, 60, 70, 80, 90]), x_dst,
-            array([
-                [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
-                [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
-            ]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
-                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
-                [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
-                [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
-                [4, 4, 4], [4, 4, 4], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [6, 6, 6],
-                [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
-                [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
-                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
-                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
-            ]),
-            segment_neighbourhood=4,
-        )
 
-        # scalar /  2 gaps - 3 segments + neighbourhood
-        test(
-            array([10, 20, 40, 50, 60, 80, 90]), x_dst,
-            array([1, 2, 4, 5, 6, 8, 9]),
-            array([
-                nan, nan, nan, 1,
-                1, 1, 1, 2,
-                2, 2, nan, nan,
-                nan, nan, nan, 4,
-                4, 4, 4, 5,
-                5, 5, 5, 6,
-                6, 6, nan, nan,
-                nan, nan, nan, 8,
-                8, 8, 8, 9,
-                9, 9, nan, nan,
-            ]),
-            segment_neighbourhood=4,
-        )
+class TestI1DZeroScalarEmptySource(TestI1DNearestScalarEmptySource):
+    KIND = 'zero'
 
-        # vector /  2 gaps - 3 segments + neighbourhood
-        test(
-            array([10, 20, 40, 50, 60, 80, 90]), x_dst,
-            array([[1, 1, 1], [2, 2, 2], [4, 4, 4], [5, 5, 5], [6, 6, 6], [8, 8, 8], [9, 9, 9]]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
-                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
-                [2, 2, 2], [2, 2, 2], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [4, 4, 4],
-                [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
-                [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
-                [6, 6, 6], [6, 6, 6], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [8, 8, 8],
-                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
-                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
-            ]),
-            segment_neighbourhood=4,
-        )
 
-        # scalar /  2 gaps - 3 segments - 1 zero-length segment + neighbourhood
-        test(
-            array([10, 20, 50, 80, 90]), x_dst,
-            array([1, 2, 5, 8, 9]),
-            array([
-                nan, nan, nan, 1,
-                1, 1, 1, 2,
-                2, 2, nan, nan,
-                nan, nan, nan, nan,
-                nan, nan, nan, 5,
-                5, 5, nan, nan,
-                nan, nan, nan, nan,
-                nan, nan, nan, 8,
-                8, 8, 8, 9,
-                9, 9, nan, nan,
-            ]),
-            segment_neighbourhood=4,
-        )
+class TestI1DNearestScalarEmptySourceWithNeighbourhood(TestI1DNearestScalarEmptySource):
+    SEGMENT_NEIGHBOURHOOD = 4
 
-        # vector /  2 gaps - 3 segments - 1 zero-length segment + neighbourhood
-        test(
-            array([10, 20, 50, 80, 90]), x_dst,
-            array([[1, 1, 1], [2, 2, 2], [5, 5, 5], [8, 8, 8], [9, 9, 9]]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
-                [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
-                [2, 2, 2], [2, 2, 2], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [5, 5, 5],
-                [5, 5, 5], [5, 5, 5], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [8, 8, 8],
-                [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
-                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
-            ]),
-            segment_neighbourhood=4,
-        )
 
-        # scalar /  4 gaps - 5 segments - 5 zero-length segment + neighbourhood
-        test(
-            array([10, 30, 50, 70, 90]), x_dst,
-            array([1, 3, 5, 7, 9]),
-            array([
-                nan, nan, nan, 1,
-                1, 1, nan, nan,
-                nan, nan, nan, 3,
-                3, 3, nan, nan,
-                nan, nan, nan, 5,
-                5, 5, nan, nan,
-                nan, nan, nan, 7,
-                7, 7, nan, nan,
-                nan, nan, nan, 9,
-                9, 9, nan, nan,
-            ]),
-            segment_neighbourhood=4,
-        )
+class TestI1DZeroScalarEmptySourceWithNeighbourhood(TestI1DZeroScalarEmptySource):
+    SEGMENT_NEIGHBOURHOOD = 4
 
-        # vector /  4 gaps - 5 segments - 5 zero-length segment + neighbourhood
-        test(
-            array([10, 30, 50, 70, 90]), x_dst,
-            array([[1, 1, 1], [3, 3, 3], [5, 5, 5], [7, 7, 7], [9, 9, 9]]),
-            array([
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
-                [1, 1, 1], [1, 1, 1], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [3, 3, 3],
-                [3, 3, 3], [3, 3, 3], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [5, 5, 5],
-                [5, 5, 5], [5, 5, 5], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [7, 7, 7],
-                [7, 7, 7], [7, 7, 7], [nan, nan, nan], [nan, nan, nan],
-                [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [9, 9, 9],
-                [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
-            ]),
-            segment_neighbourhood=4,
-        )
+#-------------------------------------------------------------------------------
 
+class TestI1DNearestVectorEmptySource(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = []
+    Y_SRC = empty((0, 3))
+    X_DST = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+    Y_DST = full((9, 3), nan)
+
+
+class TestI1DZeroVectorEmptySource(TestI1DNearestVectorEmptySource):
+    KIND = 'zero'
+
+
+class TestI1DNearestVectorEmptySourceWithNeighbourhood(TestI1DNearestVectorEmptySource):
+    SEGMENT_NEIGHBOURHOOD = 4
+
+
+class TestI1DZeroVectorEmptySourceWithNeighbourhood(TestI1DZeroVectorEmptySource):
+    SEGMENT_NEIGHBOURHOOD = 4
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestScalarNoGap(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+    Y_SRC = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 2,
+        2, 2, 2, 3,
+        3, 3, 3, 4,
+        4, 4, 4, 5,
+        5, 5, 5, 6,
+        6, 6, 6, 7,
+        7, 7, 7, 8,
+        8, 8, 8, 9,
+        9, nan, nan, nan,
+    ]
+
+
+class TestI1DZeroScalarNoGap(TestI1DNearestScalarNoGap):
+    KIND = 'zero'
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 1,
+        2, 2, 2, 2,
+        3, 3, 3, 3,
+        4, 4, 4, 4,
+        5, 5, 5, 5,
+        6, 6, 6, 6,
+        7, 7, 7, 7,
+        8, 8, 8, 8,
+        9, nan, nan, nan,
+    ]
+
+
+
+class TestI1DNearestScalarNoGapWithNeighbourhood(TestI1DNearestScalarNoGap):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, 1,
+        1, 1, 1, 2,
+        2, 2, 2, 3,
+        3, 3, 3, 4,
+        4, 4, 4, 5,
+        5, 5, 5, 6,
+        6, 6, 6, 7,
+        7, 7, 7, 8,
+        8, 8, 8, 9,
+        9, 9, nan, nan,
+    ]
+
+
+class TestI1DZeroScalarNoGapWithNeighbourhood(TestI1DZeroScalarNoGap):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 1,
+        2, 2, 2, 2,
+        3, 3, 3, 3,
+        4, 4, 4, 4,
+        5, 5, 5, 5,
+        6, 6, 6, 6,
+        7, 7, 7, 7,
+        8, 8, 8, 8,
+        9, 9, nan, nan,
+    ]
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestVectorNoGap(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+    Y_SRC = [
+        [1, 1, 1], [2, 2, 2], [3, 3, 3],
+        [4, 4, 4], [5, 5, 5], [6, 6, 6],
+        [7, 7, 7], [8, 8, 8], [9, 9, 9]
+    ]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+        [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
+        [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
+        [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
+        [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
+        [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
+        [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+        [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DZeroVectorNoGap(TestI1DNearestVectorNoGap):
+    KIND = 'zero'
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+        [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2],
+        [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3],
+        [4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4],
+        [5, 5, 5], [5, 5, 5], [5, 5, 5], [5, 5, 5],
+        [6, 6, 6], [6, 6, 6], [6, 6, 6], [6, 6, 6],
+        [7, 7, 7], [7, 7, 7], [7, 7, 7], [7, 7, 7],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [8, 8, 8],
+        [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DNearestVectorNoGapWithNeighbourhood(TestI1DNearestVectorNoGap):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+        [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
+        [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
+        [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
+        [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
+        [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
+        [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DZeroVectorNoGapWithNeighbourhood(TestI1DZeroVectorNoGap):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+        [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2],
+        [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3],
+        [4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4],
+        [5, 5, 5], [5, 5, 5], [5, 5, 5], [5, 5, 5],
+        [6, 6, 6], [6, 6, 6], [6, 6, 6], [6, 6, 6],
+        [7, 7, 7], [7, 7, 7], [7, 7, 7], [7, 7, 7],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [8, 8, 8],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestScalar1Gap2Segments(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 30, 40, 60, 70, 80, 90]
+    Y_SRC = [1, 2, 3, 4, 6, 7, 8, 9]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 2,
+        2, 2, 2, 3,
+        3, 3, 3, 4,
+        4, nan, nan, nan,
+        nan, nan, nan, nan,
+        6, 6, 6, 7,
+        7, 7, 7, 8,
+        8, 8, 8, 9,
+        9, nan, nan, nan,
+    ]
+
+
+class TestI1DZeroScalar1Gap2Segments(TestI1DNearestScalar1Gap2Segments):
+    KIND = 'zero'
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 1,
+        2, 2, 2, 2,
+        3, 3, 3, 3,
+        4, nan, nan, nan,
+        nan, nan, nan, nan,
+        6, 6, 6, 6,
+        7, 7, 7, 7,
+        8, 8, 8, 8,
+        9, nan, nan, nan,
+    ]
+
+
+class TestI1DNearestScalar1Gap2SegmentsWithNeighbourhood(TestI1DNearestScalar1Gap2Segments):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, 1,
+        1, 1, 1, 2,
+        2, 2, 2, 3,
+        3, 3, 3, 4,
+        4, 4, nan, nan,
+        nan, nan, nan, 6,
+        6, 6, 6, 7,
+        7, 7, 7, 8,
+        8, 8, 8, 9,
+        9, 9, nan, nan,
+    ]
+
+
+class TestI1DZeroScalar1Gap2SegmentsWithNeighbourhood(TestI1DZeroScalar1Gap2Segments):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 1,
+        2, 2, 2, 2,
+        3, 3, 3, 3,
+        4, 4, nan, nan,
+        nan, nan, nan, nan,
+        6, 6, 6, 6,
+        7, 7, 7, 7,
+        8, 8, 8, 8,
+        9, 9, nan, nan,
+    ]
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestVector1Gap2Segments(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 30, 40, 60, 70, 80, 90]
+    Y_SRC = [
+        [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
+        [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9]
+    ]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+        [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
+        [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
+        [4, 4, 4], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
+        [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+        [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DZeroVector1Gap2Segments(TestI1DNearestVector1Gap2Segments):
+    KIND = 'zero'
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+        [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2],
+        [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3],
+        [4, 4, 4], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [6, 6, 6], [6, 6, 6], [6, 6, 6], [6, 6, 6],
+        [7, 7, 7], [7, 7, 7], [7, 7, 7], [7, 7, 7],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [8, 8, 8],
+        [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DNearestVector1Gap2SegmentsWithNeighbourhood(TestI1DNearestVector1Gap2Segments):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+        [2, 2, 2], [2, 2, 2], [2, 2, 2], [3, 3, 3],
+        [3, 3, 3], [3, 3, 3], [3, 3, 3], [4, 4, 4],
+        [4, 4, 4], [4, 4, 4], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [6, 6, 6],
+        [6, 6, 6], [6, 6, 6], [6, 6, 6], [7, 7, 7],
+        [7, 7, 7], [7, 7, 7], [7, 7, 7], [8, 8, 8],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DZeroVector1Gap2SegmentsWithNeighbourhood(TestI1DZeroVector1Gap2Segments):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+        [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2],
+        [3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3],
+        [4, 4, 4], [4, 4, 4], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [6, 6, 6], [6, 6, 6], [6, 6, 6], [6, 6, 6],
+        [7, 7, 7], [7, 7, 7], [7, 7, 7], [7, 7, 7],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [8, 8, 8],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestScalar2Gaps3Segments(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 40, 50, 60, 80, 90]
+    Y_SRC = [1, 2, 4, 5, 6, 8, 9]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 2,
+        2, nan, nan, nan,
+        nan, nan, nan, nan,
+        4, 4, 4, 5,
+        5, 5, 5, 6,
+        6, nan, nan, nan,
+        nan, nan, nan, nan,
+        8, 8, 8, 9,
+        9, nan, nan, nan,
+    ]
+
+
+class TestI1DZeroScalar2Gaps3Segments(TestI1DNearestScalar2Gaps3Segments):
+    KIND = 'zero'
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 1,
+        2, nan, nan, nan,
+        nan, nan, nan, nan,
+        4, 4, 4, 4,
+        5, 5, 5, 5,
+        6, nan, nan, nan,
+        nan, nan, nan, nan,
+        8, 8, 8, 8,
+        9, nan, nan, nan,
+    ]
+
+
+class TestI1DNearestScalar2Gaps3SegmentsWithNeighbourhood(TestI1DNearestScalar2Gaps3Segments):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, 1,
+        1, 1, 1, 2,
+        2, 2, nan, nan,
+        nan, nan, nan, 4,
+        4, 4, 4, 5,
+        5, 5, 5, 6,
+        6, 6, nan, nan,
+        nan, nan, nan, 8,
+        8, 8, 8, 9,
+        9, 9, nan, nan,
+    ]
+
+
+class TestI1DZeroScalar2Gaps3SegmentsWithNeighbourhood(TestI1DZeroScalar2Gaps3Segments):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 1,
+        2, 2, nan, nan,
+        nan, nan, nan, nan,
+        4, 4, 4, 4,
+        5, 5, 5, 5,
+        6, 6, nan, nan,
+        nan, nan, nan, nan,
+        8, 8, 8, 8,
+        9, 9, nan, nan,
+    ]
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestVector2Gaps3Segments(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 40, 50, 60, 80, 90]
+    Y_SRC = [
+        [1, 1, 1], [2, 2, 2], [4, 4, 4], [5, 5, 5],
+        [6, 6, 6], [8, 8, 8], [9, 9, 9]
+    ]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+        [2, 2, 2], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
+        [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
+        [6, 6, 6], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+        [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DZeroVector2Gaps3Segments(TestI1DNearestVector2Gaps3Segments):
+    KIND = 'zero'
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+        [2, 2, 2], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4],
+        [5, 5, 5], [5, 5, 5], [5, 5, 5], [5, 5, 5],
+        [6, 6, 6], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [8, 8, 8],
+        [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DNearestVector2Gaps3SegmentsWithNeighbourhood(TestI1DNearestVector2Gaps3Segments):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+        [2, 2, 2], [2, 2, 2], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [4, 4, 4],
+        [4, 4, 4], [4, 4, 4], [4, 4, 4], [5, 5, 5],
+        [5, 5, 5], [5, 5, 5], [5, 5, 5], [6, 6, 6],
+        [6, 6, 6], [6, 6, 6], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [8, 8, 8],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DZeroVector2Gaps3SegmentsWithNeighbourhood(TestI1DZeroVector2Gaps3Segments):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+        [2, 2, 2], [2, 2, 2], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4],
+        [5, 5, 5], [5, 5, 5], [5, 5, 5], [5, 5, 5],
+        [6, 6, 6], [6, 6, 6], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [8, 8, 8],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestScalar2Gaps3Segments1Single(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 50, 80, 90]
+    Y_SRC = [1, 2, 5, 8, 9]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 2,
+        2, nan, nan, nan,
+        nan, nan, nan, nan,
+        nan, nan, nan, nan,
+        5, nan, nan, nan,
+        nan, nan, nan, nan,
+        nan, nan, nan, nan,
+        8, 8, 8, 9,
+        9, nan, nan, nan,
+    ]
+
+
+class TestI1DZeroScalar2Gaps3Segments1Single(TestI1DNearestScalar2Gaps3Segments1Single):
+    KIND = 'zero'
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 1,
+        2, nan, nan, nan,
+        nan, nan, nan, nan,
+        nan, nan, nan, nan,
+        5, nan, nan, nan,
+        nan, nan, nan, nan,
+        nan, nan, nan, nan,
+        8, 8, 8, 8,
+        9, nan, nan, nan,
+    ]
+
+
+class TestI1DNearestScalar2Gaps3Segments1SingleWithNeighbourhood(TestI1DNearestScalar2Gaps3Segments1Single):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, 1,
+        1, 1, 1, 2,
+        2, 2, nan, nan,
+        nan, nan, nan, nan,
+        nan, nan, nan, 5,
+        5, 5, nan, nan,
+        nan, nan, nan, nan,
+        nan, nan, nan, 8,
+        8, 8, 8, 9,
+        9, 9, nan, nan,
+    ]
+
+
+class TestI1DZeroScalar2Gaps3Segments1SingleWithNeighbourhood(TestI1DZeroScalar2Gaps3Segments1Single):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, 1, 1,
+        2, 2, nan, nan,
+        nan, nan, nan, nan,
+        nan, nan, nan, nan,
+        5, 5, nan, nan,
+        nan, nan, nan, nan,
+        nan, nan, nan, nan,
+        8, 8, 8, 8,
+        9, 9, nan, nan,
+    ]
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestVector2Gaps3Segments1Single(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 20, 50, 80, 90]
+    Y_SRC = [[1, 1, 1], [2, 2, 2], [5, 5, 5], [8, 8, 8], [9, 9, 9]]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+        [2, 2, 2], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [5, 5, 5], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+        [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DZeroVector2Gaps3Segments1Single(TestI1DNearestVector2Gaps3Segments1Single):
+    KIND = 'zero'
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+        [2, 2, 2], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [5, 5, 5], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [8, 8, 8],
+        [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DNearestVector2Gaps3Segments1SingleWithNeighbourhood(TestI1DNearestVector2Gaps3Segments1Single):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2],
+        [2, 2, 2], [2, 2, 2], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [5, 5, 5],
+        [5, 5, 5], [5, 5, 5], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [8, 8, 8],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [9, 9, 9],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DZeroVector2Gaps3Segments1SingleWithNeighbourhood(TestI1DZeroVector2Gaps3Segments1Single):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+        [2, 2, 2], [2, 2, 2], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [5, 5, 5], [5, 5, 5], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [8, 8, 8], [8, 8, 8], [8, 8, 8], [8, 8, 8],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestScalar4Gaps5Segments5Singles(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 30, 50, 70, 90]
+    Y_SRC = [1, 3, 5, 7, 9]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, nan, nan, nan,
+        nan, nan, nan, nan,
+        3, nan, nan, nan,
+        nan, nan, nan, nan,
+        5, nan, nan, nan,
+        nan, nan, nan, nan,
+        7, nan, nan, nan,
+        nan, nan, nan, nan,
+        9, nan, nan, nan,
+    ]
+
+
+class TestI1DZeroScalar4Gaps5Segments5Singles(TestI1DNearestScalar4Gaps5Segments5Singles):
+    KIND = 'zero'
+
+
+class TestI1DNearestScalar4Gaps5Segments5SinglesWithNeighbourhood(TestI1DNearestScalar4Gaps5Segments5Singles):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, 1,
+        1, 1, nan, nan,
+        nan, nan, nan, 3,
+        3, 3, nan, nan,
+        nan, nan, nan, 5,
+        5, 5, nan, nan,
+        nan, nan, nan, 7,
+        7, 7, nan, nan,
+        nan, nan, nan, 9,
+        9, 9, nan, nan,
+    ]
+
+class TestI1DZeroScalar4Gaps5Segments5SinglesWithNeighbourhood(TestI1DZeroScalar4Gaps5Segments5Singles):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        nan, nan, nan, nan,
+        1, 1, nan, nan,
+        nan, nan, nan, nan,
+        3, 3, nan, nan,
+        nan, nan, nan, nan,
+        5, 5, nan, nan,
+        nan, nan, nan, nan,
+        7, 7, nan, nan,
+        nan, nan, nan, nan,
+        9, 9, nan, nan,
+    ]
+
+#-------------------------------------------------------------------------------
+
+class TestI1DNearestVector4Gaps5Segments5Singles(InterplateTestMixIn, TestCase):
+    KIND = 'nearest'
+    X_SRC = [10, 30, 50, 70, 90]
+    Y_SRC = [[1, 1, 1], [3, 3, 3], [5, 5, 5], [7, 7, 7], [9, 9, 9]]
+    X_DST = GLOBAL_X_DST
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [3, 3, 3], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [5, 5, 5], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [7, 7, 7], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [9, 9, 9], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+
+class TestI1DZeroVector4Gaps5Segments5Singles(TestI1DNearestVector4Gaps5Segments5Singles):
+    KIND = 'zero'
+
+
+class TestI1DNearestVector4Gaps5Segments5SinglesWithNeighbourhood(TestI1DNearestVector4Gaps5Segments5Singles):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [1, 1, 1],
+        [1, 1, 1], [1, 1, 1], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [3, 3, 3],
+        [3, 3, 3], [3, 3, 3], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [5, 5, 5],
+        [5, 5, 5], [5, 5, 5], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [7, 7, 7],
+        [7, 7, 7], [7, 7, 7], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [9, 9, 9],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+class TestI1DZeroVector4Gaps5Segments5SinglesWithNeighbourhood(TestI1DZeroVector4Gaps5Segments5Singles):
+    SEGMENT_NEIGHBOURHOOD = 4
+    Y_DST = [
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [1, 1, 1], [1, 1, 1], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [3, 3, 3], [3, 3, 3], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [5, 5, 5], [5, 5, 5], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [7, 7, 7], [7, 7, 7], [nan, nan, nan], [nan, nan, nan],
+        [nan, nan, nan], [nan, nan, nan], [nan, nan, nan], [nan, nan, nan],
+        [9, 9, 9], [9, 9, 9], [nan, nan, nan], [nan, nan, nan],
+    ]
+
+#-------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

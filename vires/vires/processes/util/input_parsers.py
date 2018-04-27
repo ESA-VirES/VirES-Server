@@ -28,13 +28,17 @@
 #-------------------------------------------------------------------------------
 import re
 from collections import OrderedDict
-from eoxmagmod import read_model_shc
-from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
-from vires.util import get_color_scale, get_model
+from eoxmagmod import load_model_shc
+from eoxserver.services.ows.wps.exceptions import (
+    MissingRequiredInputError, InvalidInputValueError
+)
+from vires.util import get_color_scale
 from vires.models import ProductCollection
 from .time_series_product import ProductTimeSeries
 from .model_magmod import MagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
+from .magnetic_models import get_model
+
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
 RE_RESIDUAL_VARIABLE = re.compile(r'(.+)_res([ABC])([ABC])')
@@ -131,8 +135,11 @@ def parse_collections(input_id, source):
 def parse_model(input_id, model_id, shc, shc_input_id="shc"):
     """ Parse model identifier and returns the corresponding model."""
     if model_id == "Custom_Model":
+        if shc is None:
+            raise MissingRequiredInputError(shc_input_id)
+
         try:
-            model = read_model_shc(shc)
+            model = load_model_shc(shc)
         except ValueError:
             raise InvalidInputValueError(
                 shc_input_id, "Failed to parse the custom model coefficients."
@@ -210,13 +217,15 @@ def parse_filters2(input_id, filter_string):
 def parse_variables(input_id, variables_strings):
     """ Variable parsers.  """
     variables_strings = str(variables_strings.strip())
-    if variables_strings:
-        variables = [var.strip() for var in variables_strings.split(',')]
-        residual_variables = [
-            (variable, match.groups()) for variable, match in (
-                (var, RE_RESIDUAL_VARIABLE.match(var)) for var in variables
-            ) if match
-        ]
-        return (variables, residual_variables)
-    else:
-        return [], []
+    return [
+        var.strip() for var in variables_strings.split(',')
+    ] if variables_strings else []
+
+
+def get_residual_variables(variables):
+    """ Extract residual variables from a list of all variables. """
+    return [
+        (variable, match.groups()) for variable, match in (
+            (var, RE_RESIDUAL_VARIABLE.match(var)) for var in variables
+        ) if match
+    ]

@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 #
-# IGRF magnetic models
+#  Scalar F107 value retrieval.
 #
 # Project: VirES
-# Authors: Fabian Schindler <fabian.schindler@eox.at>
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,34 +26,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-locals, too-many-arguments
 
-from eoxmagmod import load_model_igrf, load_model_shc
-from eoxmagmod.data import IGRF11, IGRF12
-from vires.forward_models.base import BaseForwardModel
-from vires.util import cached_property
+from django.conf import settings
+from .time_series_product import ProductTimeSeries
 
-
-class IGRF11ForwardModel(BaseForwardModel):
-    """ Forward model calculator for the IGRF11.
-    """
-    identifier = "IGRF11"
-
-    @cached_property
-    def model(self):
-        return load_model_igrf(IGRF11)
+F107_VARIABLE = "F10_INDEX"
 
 
-class IGRF12ForwardModel(BaseForwardModel):
-    """ Forward model calculator for the IGRF12.
-    """
-    identifier = "IGRF12"
-
-    @cached_property
-    def model(self):
-        return load_model_shc(IGRF12)
-
-
-class IGRFForwardModel(IGRF12ForwardModel):
-    """ Forward model calculator for the applicable IGRF model.
-    """
-    identifier = "IGRF"
+def get_f107_value(mjd2000):
+    """ Get F10.7 index value for the given MJD2000 time. """
+    index_f10 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+    dataset = index_f10.interpolate(
+        mjd2000, variables=[F107_VARIABLE], cdf_type=None
+    )
+    return dataset[F107_VARIABLE][0]

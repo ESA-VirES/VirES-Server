@@ -34,8 +34,8 @@ from os import remove
 from os.path import join, exists
 from uuid import uuid4
 from datetime import datetime
-from numpy import empty, linspace, meshgrid, amin, amax
 from matplotlib.colors import Normalize
+from numpy import empty, linspace, meshgrid, amin, amax
 from eoxmagmod import GEODETIC_ABOVE_WGS84
 from eoxserver.services.ows.wps.parameters import (
     BoundingBox, BoundingBoxData, ComplexData, CDFile,
@@ -43,11 +43,13 @@ from eoxserver.services.ows.wps.parameters import (
     LiteralData, AllowedRange
 )
 from vires.config import SystemConfigReader
-from vires.time_util import datetime_to_decimal_year, naive_to_utc
+from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.forward_models.base import EVAL_VARIABLE
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_model, parse_style, data_to_png
+from vires.processes.util import (
+    parse_model, parse_style, data_to_png, get_f107_value,
+)
 
 
 class EvalModel(WPSProcess):
@@ -151,8 +153,8 @@ class EvalModel(WPSProcess):
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
-        mean_decimal_year = datetime_to_decimal_year(
-            (end_time - begin_time)/2 + begin_time
+        mean_time = 0.5 * (
+            datetime_to_mjd2000(end_time) + datetime_to_mjd2000(begin_time)
         )
 
         self.access_logger.info(
@@ -160,8 +162,8 @@ class EvalModel(WPSProcess):
             "model: %s, coeff_range: (%d, %d), variable: %s, "
             "image-size: (%d, %d), mime-type: %s",
             begin_time.isoformat("T"), end_time.isoformat("T"),
-            bbox[0] + bbox[1], model_id, coeff_min, coeff_max, variable,
-            width, height, output['mime_type'],
+            bbox[0] + bbox[1], elevation, model_id, coeff_min, coeff_max,
+            variable, width, height, output['mime_type'],
         )
 
         (y_min, x_min), (y_max, x_max) = bbox
@@ -180,18 +182,20 @@ class EvalModel(WPSProcess):
 
         self.logger.debug("coefficient range: %s", (coeff_min, coeff_max))
 
+        options = {}
+        if "f107" in model.parameters:
+            options["f107"] = get_f107_value(mean_time)
+
+        self.logger.debug("model options: %s", options)
+
         with ElapsedTimeLogger("%s.%s %dx%dpx %s evaluated in" % (
             model_id, variable, width, height, bbox[0] + bbox[1],
         ), self.logger):
             model_field = model.eval(
-                coord_gdt,
-                mean_decimal_year,
-                GEODETIC_ABOVE_WGS84,
-                GEODETIC_ABOVE_WGS84,
-                secvar=False,
-                mindegree=coeff_min,
-                maxdegree=coeff_max,
-                check_validity=False
+                mean_time, coord_gdt,
+                GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
+                min_degree=coeff_min, max_degree=coeff_max,
+                scale=[1, 1, -1], **options
             )
 
         pixel_array = EVAL_VARIABLE[variable](model_field, coord_gdt)

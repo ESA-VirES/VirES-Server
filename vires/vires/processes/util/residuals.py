@@ -30,7 +30,7 @@
 
 from logging import LoggerAdapter, getLogger
 from itertools import chain
-from numpy import searchsorted
+from numpy import searchsorted, zeros
 from django.conf import settings
 from vires.models import ProductCollection
 from vires.orbit_counter import (
@@ -41,9 +41,9 @@ from vires.cdf_util import (
     cdf_rawtime_to_datetime, seconds_to_cdf_rawtime, cdf_rawtime_to_seconds,
 )
 from vires.util import include
+from vires.dataset import Dataset
 from .time_series_product import ProductTimeSeries
 from .model import Model
-from .dataset import Dataset
 
 
 def group_residual_variables(sources, residual_variables):
@@ -186,20 +186,39 @@ class Sat2SatResidual(Model):
         variables = self.variables if variables is None else tuple(
             include(variables, self.variables)
         )
-        var_set = set(variables)
         self.logger.debug("requested dataset length %s", dataset.length)
         self.logger.debug("variables: %s", ", ".join(variables))
         if not variables:
             return output_ds # stop if no variable required
+        variables = set(variables)
 
         # get master ANX times and longitudes
         time_master = dataset['Timestamp']
         time_cdf_type = dataset.cdf_type.get('Timestamp')
-        # FIXME: handle gracefully zero-length time
+
         if len(time_master) < 1:
-            # This happens regularly in empty elections so for now i will remove
-            # raising of the error returning output_ds instead
-            # raise ValueError("Zero length time array!")
+            # empty master time line
+            if self._dtime_anx in variables:
+                output_ds.set(
+                    self._dtime_anx, [], CDF_DOUBLE_TYPE, self._dtime_anx_attr,
+                )
+            if self._dlat_anx in variables:
+                output_ds.set(
+                    self._dlat_anx, [], CDF_DOUBLE_TYPE, self._dlat_anx_attr,
+                )
+
+            for _, (_, var_pairs) in self._collections.items():
+                var_pairs = tuple((u, v) for u, v in var_pairs if u in variables)
+                for output_var, source_var in var_pairs:
+                    cdf_type, cdf_attr = self._delta_cdf_type(
+                        dataset.cdf_type[source_var],
+                        dict(dataset.cdf_attr.get(source_var, {}))
+                    )
+                    data = dataset[source_var]
+                    output_ds.set(
+                        output_var, zeros(data.shape, data.dtype),
+                        cdf_type, cdf_attr
+                    )
             return output_ds
 
         orbcnt_master = fetch_orbit_counter_data(
@@ -245,7 +264,7 @@ class Sat2SatResidual(Model):
         )
 
         for col_id, (slave_source, var_pairs) in self._collections.items():
-            var_pairs = tuple((u, v) for u, v in var_pairs if u in var_set)
+            var_pairs = tuple((u, v) for u, v in var_pairs if u in variables)
             slave_vars = tuple(v for u, v in var_pairs)
             self.logger.debug("%s: %s", col_id, ", ".join(slave_vars))
             slave_ds = slave_source.interpolate(
@@ -254,20 +273,24 @@ class Sat2SatResidual(Model):
 
             for output_var, source_var in var_pairs:
                 cdf_type = dataset.cdf_type[source_var]
-                cdf_attr = dict(dataset.cdf_attr.get(source_var, {}))
-                if cdf_attr and "DESCRIPTION" in cdf_attr:
-                    description = cdf_attr["DESCRIPTION"]
-                    cdf_attr["DESCRIPTION"] = (
-                        "%s %s" % (self._attr_label, description)
-                    )
                 data = dataset[source_var] - slave_ds[source_var]
-
-                # special handling of the temporal difference
                 if cdf_type == CDF_EPOCH_TYPE:
                     data = cdf_rawtime_to_seconds(data, cdf_type)
-                    cdf_type = CDF_DOUBLE_TYPE
-                    cdf_attr["UNITS"] = "sec"
-
+                cdf_type, cdf_attr = self._delta_cdf_type(
+                    cdf_type, dict(dataset.cdf_attr.get(source_var, {}))
+                )
                 output_ds.set(output_var, data, cdf_type, cdf_attr)
 
         return output_ds
+
+    def _delta_cdf_type(self, cdf_type, cdf_attr):
+        """ Prepare residual CDF type and attributes. """
+        if cdf_attr and "DESCRIPTION" in cdf_attr:
+            description = cdf_attr["DESCRIPTION"]
+            cdf_attr["DESCRIPTION"] = (
+                "%s %s" % (self._attr_label, description)
+            )
+        if cdf_type == CDF_EPOCH_TYPE:
+            cdf_type = CDF_DOUBLE_TYPE
+            cdf_attr["UNITS"] = "sec"
+        return cdf_type, cdf_attr

@@ -33,22 +33,21 @@
 from itertools import izip
 from cStringIO import StringIO
 from datetime import datetime
-from numpy import empty, linspace, meshgrid
-
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize, LogNorm
+from numpy import empty, linspace, meshgrid
 
-from eoxmagmod import GEODETIC_ABOVE_WGS84, GEOCENTRIC_CARTESIAN, vnorm
+from eoxmagmod import (
+    trace_field_line, GEODETIC_ABOVE_WGS84, GEOCENTRIC_CARTESIAN, vnorm
+)
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, BoundingBoxData, ComplexData, CDFileWrapper, FormatText,
     AllowedRange,
 )
-from vires.time_util import (
-    datetime_to_decimal_year, naive_to_utc, datetime_mean,
-)
+from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_models, parse_style
+from vires.processes.util import parse_models, parse_style, get_f107_value
 
 
 class RetrieveFieldLines(WPSProcess):
@@ -142,8 +141,8 @@ class RetrieveFieldLines(WPSProcess):
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
-        mean_decimal_year = datetime_to_decimal_year(
-            datetime_mean(begin_time, begin_time)
+        mean_time = 0.5 * (
+            datetime_to_mjd2000(end_time) + datetime_to_mjd2000(begin_time)
         )
 
         self.access_logger.info(
@@ -164,36 +163,38 @@ class RetrieveFieldLines(WPSProcess):
         def generate_field_lines():
             n_lines = lines_per_row * lines_per_col
             coord_gdt = empty((lines_per_col, lines_per_row, 3))
-            coord_gdt[:, :, 1], coord_gdt[:, :, 0] = meshgrid(
+            coord_gdt[..., 1], coord_gdt[..., 0] = meshgrid(
                 linspace(bbox.lower[1], bbox.upper[1], lines_per_row),
                 linspace(bbox.lower[0], bbox.upper[0], lines_per_col)
             )
-            coord_gdt[:, :, 2] = elevation
+            coord_gdt[..., 2] = elevation
 
             total_count = 0
             for model_id, model in models.iteritems():
                 model_count = 0
+
+                model_options = {}
+                if "f107" in model.parameters:
+                    model_options["f107"] = get_f107_value(mean_time)
+
+                self.logger.debug("%s model options: %s", model_id, model_options)
+
                 for point in coord_gdt.reshape((n_lines, 3)):
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
                         "%s field line " % model_id, self.logger
                     ) as etl:
-                        line_coords, line_field = model.field_line(
-                            point,
-                            mean_decimal_year,
-                            GEODETIC_ABOVE_WGS84,
-                            GEOCENTRIC_CARTESIAN,
-                            check_validity=False
+                        line_coords, line_field = trace_field_line(
+                            model, mean_time, point,
+                            GEODETIC_ABOVE_WGS84, GEOCENTRIC_CARTESIAN,
+                            model_options=model_options,
                         )
                         etl.message += (
                             "with %d points integrated in" % len(line_coords)
                         )
                     # convert coordinates from kilometres to metres
-                    line_coords *= 1e3
-                    # get scalar field strength
-                    line_values = vnorm(line_field)
-                    yield model_id, line_coords, line_values
-                    model_count += len(line_values)
+                    yield model_id, 1e3*line_coords, vnorm(line_field)
+                    model_count += line_coords.shape[0]
 
                 self.access_logger.info(
                     "model: %s, lines: %d, points: %d",

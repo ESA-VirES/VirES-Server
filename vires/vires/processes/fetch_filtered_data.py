@@ -43,7 +43,7 @@ from eoxserver.services.ows.wps.parameters import (
     CDFile,
 )
 from eoxserver.services.ows.wps.exceptions import (
-    InvalidParameterValue, InvalidOutputDefError,
+    InvalidInputValueError, InvalidOutputDefError,
 )
 from vires.config import SystemConfigReader
 from vires.util import unique, exclude, include, full
@@ -57,11 +57,12 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_models2, parse_variables, parse_filters2,
-    IndexKp, IndexDst, OrbitCounter,
+    IndexKp, IndexDst, OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    VariableResolver, SpacecraftLabel,
-    Sat2SatResidual, group_residual_variables,
+    VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
+    Sat2SatResidual, group_residual_variables, get_residual_variables,
+    MagneticDipole, DipoleTiltAngle,
 )
 
 # TODO: Make the limits configurable.
@@ -177,8 +178,8 @@ class FetchFilteredData(WPSProcess):
         sources = parse_collections('collection_ids', collection_ids.data)
         models = parse_models2("model_ids", model_ids, shc)
         filters = parse_filters2("filters", filters)
-        requested_variables, residual_variables = (
-            parse_variables('requested_variables', requested_variables)
+        requested_variables = parse_variables(
+            'requested_variables', requested_variables
         )
         self.logger.debug(
             "requested variables: %s", ", ".join(requested_variables)
@@ -195,7 +196,7 @@ class FetchFilteredData(WPSProcess):
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
             self.access_logger.error(message)
-            raise InvalidParameterValue('end_time', message)
+            raise InvalidInputValueError('end_time', message)
 
         # log the request
         self.access_logger.info(
@@ -224,8 +225,13 @@ class FetchFilteredData(WPSProcess):
             )
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
+            index_f10 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
+            model_sun = SunPosition()
+            model_subsol = SubSolarPoint()
+            model_dipole = MagneticDipole()
+            model_tilt_angle = DipoleTiltAngle()
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
@@ -260,7 +266,7 @@ class FetchFilteredData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # auxiliary slaves
-                for slave in (index_kp, index_dst):
+                for slave in (index_kp, index_dst, index_f10):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
@@ -274,15 +280,26 @@ class FetchFilteredData(WPSProcess):
                     )
 
                 # prepare spacecraft to spacecraft residuals
+                residual_variables = get_residual_variables(unique(chain(
+                    requested_variables, chain.from_iterable(
+                        filter_.required_variables for filter_ in filters
+                    )
+                )))
+                self.logger.debug("residual variables: %s", ", ".join(
+                    var for var, _ in residual_variables
+                ))
                 grouped_res_vars = group_residual_variables(
                     product_sources, residual_variables
                 )
-                self.logger.debug("%s", grouped_res_vars)
                 for (msc, ssc), cols in grouped_res_vars.items():
                     resolver.add_model(Sat2SatResidual(msc, ssc, cols))
 
                 # models
-                for model in chain((model_qdc, model_mlt), models_with_residuals):
+                aux_models = chain((
+                    model_qdc, model_mlt, model_sun,
+                    model_subsol, model_dipole, model_tilt_angle,
+                ), models_with_residuals)
+                for model in aux_models:
                     resolver.add_model(model)
 
                 # filters
@@ -347,8 +364,8 @@ class FetchFilteredData(WPSProcess):
                     dataset, filters_left = dataset.filter(resolver.filters)
 
                     # subordinate interpolated datasets
-                    times = dataset[resolver.master.TIME_VARIABLE]
-                    cdf_type = dataset.cdf_type[resolver.master.TIME_VARIABLE]
+                    times = dataset[resolver.master.time_variable]
+                    cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
                         dataset.merge(
                             slave.interpolate(times, variables, {}, cdf_type)
@@ -369,7 +386,7 @@ class FetchFilteredData(WPSProcess):
                         # NOTE: Technically this error should not happen
                         # the unresolved filters should be detected by the
                         # resolver.
-                        raise InvalidParameterValue(
+                        raise InvalidInputValueError(
                             'filters',
                             "Failed to apply some of the filters "
                             "due to missing source variables! filters: %s" %
@@ -384,7 +401,7 @@ class FetchFilteredData(WPSProcess):
                             "count of %d samples!",
                             total_count, MAX_SAMPLES_COUNT,
                         )
-                        raise InvalidParameterValue(
+                        raise InvalidInputValueError(
                             'end_time',
                             "Requested data exceeds the maximum limit of %d "
                             "records!" % MAX_SAMPLES_COUNT

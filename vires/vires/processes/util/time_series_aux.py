@@ -40,7 +40,7 @@ from vires.aux import (
     query_dst, query_dst_int,
     query_kp, query_kp_int,
 )
-from .dataset import Dataset
+from vires.dataset import Dataset
 from .time_series import TimeSeries
 
 
@@ -93,15 +93,17 @@ class AuxiliaryDataTimeSeries(TimeSeries):
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
                     cdf_type=CDF_EPOCH_TYPE, valid_only=False):
-        # TODO: support for different CDF time types
-        if cdf_type != CDF_EPOCH_TYPE:
-            raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+        times, cdf_type = self._convert_time(times, cdf_type)
 
         if len(times) == 0: # return an empty dataset
-            return Dataset(
-                (variable, empty(0))
-                for variable in self.get_extracted_variables(variables)
-            )
+            dataset = Dataset()
+            for variable in self.get_extracted_variables(variables):
+                dataset.set(
+                    variable, empty(0),
+                    self.CDF_TYPE.get(variable),
+                    self.CDF_ATTR.get(variable)
+                )
+            return dataset
 
         variables = list(
             include(variables, self.variables) if variables is not None else
