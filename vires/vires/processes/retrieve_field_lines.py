@@ -47,7 +47,7 @@ from eoxserver.services.ows.wps.parameters import (
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_models, parse_style
+from vires.processes.util import parse_models, parse_style, get_f107_value
 
 
 class RetrieveFieldLines(WPSProcess):
@@ -172,6 +172,13 @@ class RetrieveFieldLines(WPSProcess):
             total_count = 0
             for model_id, model in models.iteritems():
                 model_count = 0
+
+                model_options = {}
+                if "f107" in model.parameters:
+                    model_options["f107"] = get_f107_value(mean_time)
+
+                self.logger.debug("%s model options: %s", model_id, model_options)
+
                 for point in coord_gdt.reshape((n_lines, 3)):
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
@@ -180,6 +187,7 @@ class RetrieveFieldLines(WPSProcess):
                         line_coords, line_field = trace_field_line(
                             model, mean_time, point,
                             GEODETIC_ABOVE_WGS84, GEOCENTRIC_CARTESIAN,
+                            model_options=model_options,
                         )
                         etl.message += (
                             "with %d points integrated in" % len(line_coords)

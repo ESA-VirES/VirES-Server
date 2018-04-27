@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities
+#  Scalar F107 value retrieval.
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -26,40 +26,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-locals, too-many-arguments
 
-from .cache import with_cache_session
-from .filters import (
-    Filter, ScalarRangeFilter, VectorComponentRangeFilter,
-    BoundingBoxFilter,
-)
-from .filters_subsampling import MinStepSampler, GroupingSampler
-from .time_series import TimeSeries
+from django.conf import settings
 from .time_series_product import ProductTimeSeries
-from .time_series_aux import  IndexKp, IndexDst
-from .time_series_orbit_counter import OrbitCounter
-from .model import Model
-from .model_magmod import MagneticModelResidual, MagneticModel
-from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
-from .model_sunpos import SunPosition, SubSolarPoint
-from .model_dipole import MagneticDipole, DipoleTiltAngle
-from .label import Label, SpacecraftLabel
-from .input_parsers import (
-    parse_style, parse_collections,
-    parse_model, parse_models, parse_models2,
-    parse_filters, parse_filters2,
-    parse_variables, get_residual_variables,
-)
-from .png_output import data_to_png, array_to_png
-from .auth import get_username, get_user
-from .resolver import VariableResolver
-from .residuals import group_residual_variables, Sat2SatResidual
-from .f107 import get_f107_value
+
+F107_VARIABLE = "F10_INDEX"
 
 
-# other miscellaneous utilities
-def format_filters(filters):
-    """ Convert filters to string. """
-    return "; ".join(
-        "%s: %g,%g" % (key, vmin, vmax)
-        for key, (vmin, vmax) in filters.iteritems()
+def get_f107_value(mjd2000):
+    """ Get F10.7 index value for the given MJD2000 time. """
+    index_f10 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+    dataset = index_f10.interpolate(
+        mjd2000, variables=[F107_VARIABLE], cdf_type=None
     )
+    return dataset[F107_VARIABLE][0]
