@@ -43,6 +43,8 @@ from eoxmagmod import (
 from vires.interfaces import ForwardModelProviderInterface
 from vires.time_util import mjd2000_to_datetime, naive_to_utc
 from vires.util import cached_property
+from vires.processes.util import get_f107_value
+
 
 DG2RAD = math.pi / 180.0
 
@@ -158,11 +160,16 @@ class BaseForwardModel(Component):
         coeff_min = coeff_min if coeff_min is not None else -1
         coeff_max = coeff_max if coeff_max is not None else -1
 
+        options = {}
+        if "f107" in self.model.parameters:
+            options["f107"] = get_f107_value(time)
+
         # Evaluate the magnetic field vector components
         # (northing, easting, up-pointing)
         field_components = self.model.eval(
             time, coord_gdt, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
-            max_degree=coeff_max, min_degree=coeff_min, scale=[1, 1, -1]
+            max_degree=coeff_max, min_degree=coeff_min, scale=[1, 1, -1],
+            **options
         )
 
         try:
@@ -231,11 +238,16 @@ class BaseForwardModel(Component):
         coeff_min = coeff_min if coeff_min is not None else -1
         coeff_max = coeff_max if coeff_max is not None else -1
 
+        options = {}
+        if "f107" in self.model.parameters:
+            options["f107"] = get_f107_value(time)
+
         # Evaluate the magnetic field vector components
         # (northing, easting, up-pointing)
         field_components_int = self.model.eval(
             time, coord_gdt_int, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
-            max_degree=coeff_max, min_degree=coeff_min, scale=[1, 1, -1]
+            max_degree=coeff_max, min_degree=coeff_min, scale=[1, 1, -1],
+            **options
         )
 
         # interpolation pixel grid

@@ -47,8 +47,9 @@ from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.forward_models.base import EVAL_VARIABLE
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_model, parse_style, data_to_png
-
+from vires.processes.util import (
+    parse_model, parse_style, data_to_png, get_f107_value,
+)
 
 class EvalModelDiff(WPSProcess):
     """ This process calculates difference of two magnetic models.
@@ -186,6 +187,12 @@ class EvalModelDiff(WPSProcess):
 
         self.logger.debug("coefficient range: %s", (coeff_min, coeff_max))
 
+        options = {}
+        if "f107" in model1.parameters or "f107" in model2.parameters:
+            options["f107"] = get_f107_value(mean_time)
+
+        self.logger.debug("model options: %s", options)
+
         def _model_eval(model, model_id):
             with ElapsedTimeLogger("%s.%s %dx%dpx %s evaluated in" % (
                 model_id, variable, width, height, bbox[0] + bbox[1],
@@ -194,7 +201,7 @@ class EvalModelDiff(WPSProcess):
                     mean_time, coord_gdt,
                     GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
                     min_degree=coeff_min, max_degree=coeff_max,
-                    scale=[1, 1, -1]
+                    scale=[1, 1, -1], **options
                 )
 
         model1_field = _model_eval(model1, model1_id)

@@ -93,9 +93,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
                     cdf_type=CDF_EPOCH_TYPE, valid_only=False):
-        # TODO: support for different CDF time types
-        if cdf_type != CDF_EPOCH_TYPE:
-            raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+        times, cdf_type = self._convert_time(times, cdf_type)
 
         if len(times) == 0: # return an empty dataset
             dataset = Dataset()
