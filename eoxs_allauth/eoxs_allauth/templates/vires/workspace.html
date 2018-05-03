@@ -434,14 +434,14 @@
           <hr>
 
           <div style="text-align: center">
-            <p style="text-align: center;">Sign up directly:</p>
+            <!-- <p style="text-align: center;">Sign up directly:</p> -->
             <div style="margin-top: 2em;">
               <a class="linkbutton" href="{% url 'account_signup' %}">Sign-up</a>
             </div>
-            <p style="text-align: center; margin-top: 2em;">or sign up using your preferred social provider:</p>
+            <!-- <p style="text-align: center; margin-top: 2em;">or sign up using your preferred social provider:</p>
             <ul class="socialaccount_providers">
-              {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
-            </ul>
+              {#% include "socialaccount/snippets/provider_list.html" with process="signup" %#}
+            </ul> -->
             <div class="divider"></div>
             <p style="text-align: center;">The service will work on most modern browsers, but using the service on Google Chrome has been found to give the best results. We therefore recommend the use of Chrome.</p>
           </div>
@@ -470,11 +470,12 @@
       </div><!--/row-->
 
      <div class="col-sm-4 col-sm-offset-4 larger">
-      <p style="text-align: center;">Log in using your preferred social provider:</p>
+      <!-- <p style="text-align: center;">Log in using your preferred social provider:</p>
       <ul class="socialaccount_providers">
-        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+        {#% include "socialaccount/snippets/provider_list.html" with process="login" %#}
       </ul>
-      <p style="text-align: center;">or directly with your account credentials here:</p>
+      <p style="text-align: center;">or directly with your account credentials here:</p> -->
+      <p style="text-align: center;">Log in using your account credentials here:</p>
       <form class="form-horizontal inputwide" method="POST" action="{% url 'account_login' %}">
           {% csrf_token %}
           <fieldset>
