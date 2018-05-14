@@ -95,11 +95,13 @@ class Command(CommandOutputMixIn, BaseCommand):
             update(
                 kwargs["dst_filename"],
                 settings.VIRES_AUX_DB_DST,
-                update_dst, 'Dst-index'
+                update_dst, 'Dst-index',
+                tmp_extension=".tmp.cdf"
             )
         if kwargs["kp_filename"] is not None:
             update(
                 kwargs["kp_filename"],
                 settings.VIRES_AUX_DB_KP,
-                update_kp, 'Kp-index'
+                update_kp, 'Kp-index',
+                tmp_extension=".tmp.cdf"
             )
