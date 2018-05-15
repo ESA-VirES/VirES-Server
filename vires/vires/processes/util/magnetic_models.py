@@ -41,6 +41,8 @@ from eoxmagmod import (
     load_model_emm,
     load_model_swarm_mma_2c_internal,
     load_model_swarm_mma_2c_external,
+    load_model_swarm_mma_2f_geo_internal,
+    load_model_swarm_mma_2f_geo_external,
     load_model_swarm_mio_internal,
     load_model_swarm_mio_external,
 )
@@ -88,6 +90,8 @@ CACHED_MODEL_LOADERS = {
     "MLI_SHA_2D": load_model_shc,
     "MMA_SHA_2C-Primary": load_model_swarm_mma_2c_external,
     "MMA_SHA_2C-Secondary": load_model_swarm_mma_2c_internal,
+    "MMA_SHA_2F-Primary": load_model_swarm_mma_2f_geo_external,
+    "MMA_SHA_2F-Secondary": load_model_swarm_mma_2f_geo_internal,
     "MIO_SHA_2C-Primary": load_model_swarm_mio_external,
     "MIO_SHA_2C-Secondary": load_model_swarm_mio_internal,
     "MIO_SHA_2D-Primary": load_model_swarm_mio_external,
@@ -97,6 +101,8 @@ CACHED_MODEL_LOADERS = {
 MODEL_SOURCES = {
     "MMA_SHA_2C-Primary": "MMA_SHA_2C",
     "MMA_SHA_2C-Secondary": "MMA_SHA_2C",
+    "MMA_SHA_2F-Primary": "MMA_SHA_2F",
+    "MMA_SHA_2F-Secondary": "MMA_SHA_2F",
     "MIO_SHA_2C-Primary": "MIO_SHA_2C",
     "MIO_SHA_2C-Secondary": "MIO_SHA_2C",
     "MIO_SHA_2D-Primary": "MIO_SHA_2D",
