@@ -27,10 +27,6 @@
 #-------------------------------------------------------------------------------
 
 import sys
-from os import rename, remove
-from os.path import exists
-from contextlib import closing
-from urllib2 import urlopen
 from optparse import make_option
 
 from django.conf import settings
@@ -39,41 +35,10 @@ from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
 )
 from vires.aux import update_kp, update_dst
+from vires.cached_products import update_cached_product
 
 # URL time-out in seconds
 URL_TIMEOUT = 25
-
-def update(source, destination, updater, label, tmp_extension=None):
-    """ Update index from the given source. """
-    print "Updating %s from %s" % (
-        label, source if source != '-' else '<standard input>'
-    )
-
-    is_url = (
-        source.startswith("https://") or
-        source.startswith("http://") or
-        source.startswith("ftp://")
-    )
-
-    destination_tmp = destination + (tmp_extension or ".tmp")
-    if exists(destination_tmp):
-        remove(destination_tmp)
-
-    try:
-        if is_url:
-            with closing(urlopen(source, timeout=URL_TIMEOUT)) as fin:
-                updater(fin, destination_tmp)
-        elif source == '-':
-            updater(sys.stdin, destination_tmp)
-        else:
-            with open(source) as fin:
-                updater(fin, destination_tmp)
-        rename(destination_tmp, destination)
-    except Exception:
-        if exists(destination_tmp):
-            remove(destination_tmp)
-        raise
-
 
 class Command(CommandOutputMixIn, BaseCommand):
     option_list = BaseCommand.option_list + (
@@ -92,14 +57,14 @@ class Command(CommandOutputMixIn, BaseCommand):
     #@nested_commit_on_success # There is no Django DB modification.
     def handle(self, *args, **kwargs):
         if kwargs["dst_filename"] is not None:
-            update(
+            update_cached_product(
                 kwargs["dst_filename"],
                 settings.VIRES_AUX_DB_DST,
                 update_dst, 'Dst-index',
                 tmp_extension=".tmp.cdf"
             )
         if kwargs["kp_filename"] is not None:
-            update(
+            update_cached_product(
                 kwargs["kp_filename"],
                 settings.VIRES_AUX_DB_KP,
                 update_kp, 'Kp-index',

@@ -31,7 +31,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
 from vires.orbit_counter import update_orbit_counter_file
-from vires.management.commands.vires_update_aux import update
+from vires.cached_products import update_cached_product
 
 
 class Command(CommandOutputMixIn, BaseCommand):
@@ -72,7 +72,7 @@ class Command(CommandOutputMixIn, BaseCommand):
     def handle(self, *args, **kwargs):
         for opt_name, destination, label in self.options:
             if kwargs[opt_name] is not None:
-                update(
+                update_cached_product(
                     kwargs[opt_name], destination,
                     update_orbit_counter_file, label,
                     tmp_extension=".tmp.cdf"

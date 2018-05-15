@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer <http://eoxserver.org>
-# Authors: Martin Paces <martin.paces@eox.at>
+# Cached product management command.
 #
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2018 EOX IT Services GmbH
 #
@@ -25,14 +25,12 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from shutil import copyfileobj
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
+from vires.aux import update_kp, update_dst
 from vires.orbit_counter import update_orbit_counter_file
-from vires.management.commands.vires_update_aux import (
-    update, update_dst, update_kp,
-)
+from vires.cached_products import copy_file, update_cached_product
 
 
 class Command(CommandOutputMixIn, BaseCommand):
@@ -50,18 +48,13 @@ class Command(CommandOutputMixIn, BaseCommand):
 
     def handle(self, product_type, source, **kwargs):
         product_info = CACHED_PRODUCTS[product_type]
-        update(
+        update_cached_product(
             source=source,
             destination=product_info["filename"],
-            updater=product_info.get("updater", self.default_updater),
+            updater=product_info.get("updater", copy_file),
             label=product_info.get("label", "%s product" % product_type),
             tmp_extension=product_info.get("tmp_extension"),
         )
-
-    @staticmethod
-    def default_updater(file_in, destination):
-        with file(destination, "wb") as file_out:
-            copyfileobj(file_in, file_out, 1024*1024)
 
 
 # load the default cached products
