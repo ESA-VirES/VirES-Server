@@ -25,12 +25,16 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+from logging import getLogger
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
 from vires.aux import update_kp, update_dst
 from vires.orbit_counter import update_orbit_counter_file
-from vires.cached_products import copy_file, update_cached_product
+from vires.cached_products import (
+    copy_file, update_cached_product, simple_cached_product_updater,
+    InvalidSourcesError,
+)
 
 
 class Command(CommandOutputMixIn, BaseCommand):
@@ -43,18 +47,21 @@ class Command(CommandOutputMixIn, BaseCommand):
             choices=list(sorted(CACHED_PRODUCTS)),
         )
         parser.add_argument(
-            "source", help="Source filename or URL."
+            "source", nargs="+", help="Source filename or URL."
         )
 
     def handle(self, product_type, source, **kwargs):
         product_info = CACHED_PRODUCTS[product_type]
-        update_cached_product(
-            source=source,
-            destination=product_info["filename"],
-            updater=product_info.get("updater", copy_file),
-            label=product_info.get("label", "%s product" % product_type),
-            tmp_extension=product_info.get("tmp_extension"),
-        )
+        try:
+            update_cached_product(
+                sources=source,
+                destination=product_info["filename"],
+                updater=product_info.get("updater", copy_file),
+                tmp_extension=product_info.get("tmp_extension"),
+                logger=getLogger(__name__)
+            )
+        except InvalidSourcesError as exc:
+            raise CommandError(str(exc))
 
 
 # load the default cached products
@@ -69,31 +76,31 @@ CACHED_PRODUCTS.update({
     "AUXAORBCNT": {
         "filename": settings.VIRES_ORBIT_COUNTER_DB['A'],
         "label": "Swarm A orbit counter",
-        "updater": update_orbit_counter_file,
+        "updater": simple_cached_product_updater(update_orbit_counter_file),
         "tmp_extension": ".tmp.cdf",
     },
     "AUXBORBCNT": {
         "filename": settings.VIRES_ORBIT_COUNTER_DB['B'],
         "label": "Swarm B orbit counter",
-        "updater": update_orbit_counter_file,
+        "updater": simple_cached_product_updater(update_orbit_counter_file),
         "tmp_extension": ".tmp.cdf",
     },
     "AUXCORBCNT": {
         "filename": settings.VIRES_ORBIT_COUNTER_DB['C'],
         "label": "Swarm C orbit counter",
-        "updater": update_orbit_counter_file,
+        "updater": simple_cached_product_updater(update_orbit_counter_file),
         "tmp_extension": ".tmp.cdf",
     },
     "GFZ_AUX_DST": {
         "filename": settings.VIRES_AUX_DB_DST,
         "label": 'Dst-index',
-        "updater": update_dst,
+        "updater": simple_cached_product_updater(update_dst),
         "tmp_extension": ".tmp.cdf",
     },
     "GFZ_AUX_KP": {
         "filename": settings.VIRES_AUX_DB_KP,
         "label": 'Kp-index',
-        "updater": update_kp,
+        "updater": simple_cached_product_updater(update_kp),
         "tmp_extension": ".tmp.cdf",
     },
 })

@@ -26,7 +26,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import sys
+from logging import getLogger
 from optparse import make_option
 
 from django.conf import settings
@@ -35,12 +35,18 @@ from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
 )
 from vires.aux import update_kp, update_dst
-from vires.cached_products import update_cached_product
+from vires.cached_products import (
+    update_cached_product, simple_cached_product_updater,
+)
 
-# URL time-out in seconds
-URL_TIMEOUT = 25
+DEPRECATION_WARNING =(
+    "The 'vires_update_aux' command is deprecated! "
+    "Use 'vires_update_cached_file' instead."
+)
+
 
 class Command(CommandOutputMixIn, BaseCommand):
+    help = DEPRECATION_WARNING
     option_list = BaseCommand.option_list + (
         make_option(
             "--dst-url", "--dst-filename", "--dst", dest="dst_filename",
@@ -54,19 +60,22 @@ class Command(CommandOutputMixIn, BaseCommand):
         ),
     )
 
-    #@nested_commit_on_success # There is no Django DB modification.
     def handle(self, *args, **kwargs):
-        if kwargs["dst_filename"] is not None:
+        logger=getLogger(__name__)
+        logger.warn(DEPRECATION_WARNING)
+
+        def _update(source, destination, updater):
             update_cached_product(
-                kwargs["dst_filename"],
-                settings.VIRES_AUX_DB_DST,
-                update_dst, 'Dst-index',
-                tmp_extension=".tmp.cdf"
+                [source], destination, simple_cached_product_updater(updater),
+                tmp_extension=".tmp.cdf", logger=logger
             )
+
+        if kwargs["dst_filename"] is not None:
+            _update(
+                kwargs["dst_filename"], settings.VIRES_AUX_DB_DST, update_dst
+            )
+
         if kwargs["kp_filename"] is not None:
-            update_cached_product(
-                kwargs["kp_filename"],
-                settings.VIRES_AUX_DB_KP,
-                update_kp, 'Kp-index',
-                tmp_extension=".tmp.cdf"
+            _update(
+                kwargs["kp_filename"], settings.VIRES_AUX_DB_KP, update_kp
             )

@@ -31,13 +31,19 @@ from os.path import exists
 from shutil import copyfileobj
 from contextlib import closing
 from urllib2 import urlopen
+from logging import getLogger
 
 # URL time-out in seconds
 URL_TIMEOUT = 25
 
 
-def update_cached_product(source, destination, updater, label=None,
-                          tmp_extension=None):
+class InvalidSourcesError(ValueError):
+    """ Exception raised in case of invalid number of updater sources. """
+    pass
+
+
+def update_cached_product(sources, destination, updater,
+                          tmp_extension=None, logger=None):
     """ Update cached file from the given source using the provided
     updater subroutine.
     The optional label can contain the name of the updated product.
@@ -45,26 +51,58 @@ def update_cached_product(source, destination, updater, label=None,
     NOTE: When the cached product is stored as CDF then change the default
     tmp_extension '.tmp' to '.tmp.cdf'.
     """
-    print "Updating %s from %s" % (
-        label or destination, source if source != '-' else '<standard input>'
-    )
+    logger = logger or getLogger(__name__)
+
+    logger.info("Updating %s from %s", destination, ", ".join(
+        source if source != '-' else '<standard input>'
+        for source in sources
+    ))
 
     temporary_file = destination + (tmp_extension or ".tmp")
     remove_if_exists(temporary_file)
 
     try:
-        if is_url(source):
-            with closing(urlopen(source, timeout=URL_TIMEOUT)) as fin:
-                updater(fin, temporary_file)
-        elif source == '-':
-            updater(stdin, temporary_file)
-        else:
-            with open(source) as fin:
-                updater(fin, temporary_file)
+        updater(sources, temporary_file)
         rename(temporary_file, destination)
-    except Exception:
+    except Exception as exc:
+        logger.error("Failed to update %s! %s", destination, exc)
         remove_if_exists(temporary_file)
         raise
+
+
+def simple_cached_product_updater(updater):
+    """ Decorator for a simple cached product updater consuming single source
+    file.
+    """
+    def _simple_cached_product_updater_(sources, destination):
+        if len(sources) > 1:
+            raise InvalidSourcesError(
+                "Too many sources! Only one source file expected."
+            )
+        with open_source(sources[0]) as fin:
+            updater(fin, destination)
+    return _simple_cached_product_updater_
+
+
+@simple_cached_product_updater
+def copy_file(file_in, destination):
+    """ Read content from the input file object and copy it to the destination
+    path without modification.
+    """
+    with file(destination, "wb") as file_out:
+        copyfileobj(file_in, file_out, 1024*1024)
+
+
+def open_source(source):
+    """ Open the source for reading and return a context-manger-enabled file
+    object.
+    """
+    if is_url(source):
+        return closing(urlopen(source, timeout=URL_TIMEOUT))
+    elif source == '-':
+        return stdin
+    else:
+        return open(source, "rb")
 
 
 def remove_if_exists(filename):
@@ -80,11 +118,3 @@ def is_url(source):
         source.startswith("http://") or
         source.startswith("ftp://")
     )
-
-
-def copy_file(file_in, destination):
-    """ Read content from the input file object and copy it to the destination
-    path without modification.
-    """
-    with file(destination, "wb") as file_out:
-        copyfileobj(file_in, file_out, 1024*1024)

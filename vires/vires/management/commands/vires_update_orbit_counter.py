@@ -26,16 +26,24 @@
 #-------------------------------------------------------------------------------
 
 from optparse import make_option
-
+from logging import getLogger
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
 from vires.orbit_counter import update_orbit_counter_file
-from vires.cached_products import update_cached_product
+from vires.cached_products import (
+    update_cached_product, simple_cached_product_updater,
+)
 
+DEPRECATION_WARNING =(
+    "The 'vires_update_orbit_counter' command is deprecated! "
+    "Use 'vires_update_cached_file' instead."
+)
 
 class Command(CommandOutputMixIn, BaseCommand):
-    """ Update Swarm orbit counter files from the given source. """
+    """ Update Swarm orbit counter files from the given source.
+    """
+    help = DEPRECATION_WARNING
     option_list = BaseCommand.option_list + (
         make_option(
             "-a", "--alpha-url", "--alpha-filename", "--alpha",
@@ -55,25 +63,19 @@ class Command(CommandOutputMixIn, BaseCommand):
     )
 
     options = [
-        (
-            "filename_a", settings.VIRES_ORBIT_COUNTER_DB['A'],
-            "Swarm A orbit counter"
-        ),
-        (
-            "filename_b", settings.VIRES_ORBIT_COUNTER_DB['B'],
-            "Swarm B orbit counter"
-        ),
-        (
-            "filename_c", settings.VIRES_ORBIT_COUNTER_DB['C'],
-            "Swarm C orbit counter"
-        ),
+        ("filename_a", settings.VIRES_ORBIT_COUNTER_DB['A']),
+        ("filename_b", settings.VIRES_ORBIT_COUNTER_DB['B']),
+        ("filename_c", settings.VIRES_ORBIT_COUNTER_DB['C']),
     ]
 
     def handle(self, *args, **kwargs):
-        for opt_name, destination, label in self.options:
+        logger=getLogger(__name__)
+        logger.warn(DEPRECATION_WARNING)
+
+        for opt_name, destination in self.options:
             if kwargs[opt_name] is not None:
                 update_cached_product(
-                    kwargs[opt_name], destination,
-                    update_orbit_counter_file, label,
-                    tmp_extension=".tmp.cdf"
+                    [kwargs[opt_name]], destination,
+                    simple_cached_product_updater(update_orbit_counter_file),
+                    tmp_extension=".tmp.cdf", logger=logger,
                 )
