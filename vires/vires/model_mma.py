@@ -35,11 +35,16 @@ MMA_SHA_2F_TIME_VARIABLE = "t_qs"
 MMA_SHA_2F_VARIABLES = ["t_qs", "qs_geo", "t_gh", "gh_geo"]
 
 
-def update_mma_sha_2f(sources, destination):
-    """ Update cached MMA_SHA_2F product. """
-    sources = filter_and_sort_sources(
+def filter_mma_sha_2f(sources):
+    """ Filter and sort the input MMA_SHA_2F products. """
+    return filter_and_sort_sources(
         sources, MMA_SHA_2F_TIME_VARIABLE, MMA_SHA_2F_MAX_ALLOWED_TIME_GAP
     )
+
+
+def update_mma_sha_2f(sources, destination):
+    """ Update cached MMA_SHA_2F product. """
+    sources = filter_mma_sha_2f(sources)
     models = list(_load_models(sources, MMA_SHA_2F_VARIABLES))
     create_merged_mma_sha_2f(destination, sources, models)
 

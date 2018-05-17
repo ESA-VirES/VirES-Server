@@ -42,7 +42,7 @@ class InvalidSourcesError(ValueError):
     pass
 
 
-def update_cached_product(sources, destination, updater,
+def update_cached_product(sources, destination, updater, filter_=None,
                           tmp_extension=None, logger=None):
     """ Update cached file from the given source using the provided
     updater subroutine.
@@ -52,6 +52,9 @@ def update_cached_product(sources, destination, updater,
     tmp_extension '.tmp' to '.tmp.cdf'.
     """
     logger = logger or getLogger(__name__)
+
+    if filter_:
+        sources = filter_(sources)
 
     logger.info("Updating %s from %s", destination, ", ".join(
         source if source != '-' else '<standard input>'

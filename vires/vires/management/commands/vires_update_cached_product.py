@@ -31,7 +31,7 @@ from django.core.management.base import BaseCommand, CommandError
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
 from vires.aux import update_kp, update_dst
 from vires.orbit_counter import update_orbit_counter_file
-from vires.model_mma import update_mma_sha_2f
+from vires.model_mma import update_mma_sha_2f, filter_mma_sha_2f
 from vires.cached_products import (
     copy_file, update_cached_product, simple_cached_product_updater,
     InvalidSourcesError,
@@ -58,6 +58,7 @@ class Command(CommandOutputMixIn, BaseCommand):
                 sources=source,
                 destination=product_info["filename"],
                 updater=product_info.get("updater", copy_file),
+                filter_=product_info.get("filter"),
                 tmp_extension=product_info.get("tmp_extension"),
                 logger=getLogger(__name__)
             )
@@ -76,6 +77,7 @@ CACHED_PRODUCTS = {
 if "MMA_SHA_2F" in CACHED_PRODUCTS:
     CACHED_PRODUCTS["MMA_SHA_2F"].update({
         "updater": update_mma_sha_2f,
+        "filter": filter_mma_sha_2f,
         "tmp_extension": ".tmp.cdf",
     })
 
