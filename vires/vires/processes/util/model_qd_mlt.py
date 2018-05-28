@@ -172,7 +172,7 @@ class MagneticLocalTime(Model):
         if proceed:
             self.logger.debug("requested dataset length %s", dataset.length)
             times, qdlons = self._extract_required_variables(dataset)
-            mlt = eval_mlt(qdlon, times)
+            mlt = eval_mlt(qdlons, times)
             output_ds.set(variable, mlt, CDF_DOUBLE_TYPE, self.ATTRIB)
 
         return output_ds
