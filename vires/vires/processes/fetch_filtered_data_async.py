@@ -61,10 +61,10 @@ from vires.processes.util import (
     MinStepSampler, GroupingSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     with_cache_session, get_username, get_user,
-    VariableResolver, SpacecraftLabel, SunPosition,
+    VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
-    DipoleTiltAnglePosition, IonosphericCurrentModel,
-    AssociatedMagneticModel,
+    MagneticDipole, DipoleTiltAngle,
+    IonosphericCurrentModel, AssociatedMagneticModel,
 )
 
 # TODO: Make the limits configurable.
@@ -303,7 +303,9 @@ class FetchFilteredDataAsync(WPSProcess):
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
-            model_tilt_angle = DipoleTiltAnglePosition()
+            model_subsol = SubSolarPoint()
+            model_dipole = MagneticDipole()
+            model_tilt_angle = DipoleTiltAngle()
             model_amps_cur = IonosphericCurrentModel()
             model_amps_mag = AssociatedMagneticModel()
 
@@ -371,7 +373,8 @@ class FetchFilteredDataAsync(WPSProcess):
 
                 # models
                 aux_models = chain((
-                    model_qdc, model_mlt, model_sun, model_tilt_angle,
+                    model_qdc, model_mlt, model_sun,
+                    model_subsol, model_dipole, model_tilt_angle,
                     model_amps_cur, model_amps_mag,
                 ), models_with_residuals)
                 for model in aux_models:

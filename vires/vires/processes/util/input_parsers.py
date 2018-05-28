@@ -28,15 +28,17 @@
 #-------------------------------------------------------------------------------
 import re
 from collections import OrderedDict
-from eoxmagmod import read_model_shc
+from eoxmagmod import load_model_shc
 from eoxserver.services.ows.wps.exceptions import (
     MissingRequiredInputError, InvalidInputValueError
 )
-from vires.util import get_color_scale, get_model
+from vires.util import get_color_scale
 from vires.models import ProductCollection
 from .time_series_product import ProductTimeSeries
 from .model_magmod import MagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
+from .magnetic_models import get_model
+
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
 RE_RESIDUAL_VARIABLE = re.compile(r'(.+)_res([ABC])([ABC])')
@@ -137,7 +139,7 @@ def parse_model(input_id, model_id, shc, shc_input_id="shc"):
             raise MissingRequiredInputError(shc_input_id)
 
         try:
-            model = read_model_shc(shc)
+            model = load_model_shc(shc)
         except ValueError:
             raise InvalidInputValueError(
                 shc_input_id, "Failed to parse the custom model coefficients."

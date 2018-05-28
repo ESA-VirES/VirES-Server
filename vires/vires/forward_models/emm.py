@@ -27,9 +27,11 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod.emm import read_model_emm2010
+from eoxmagmod import load_model_emm
+from eoxmagmod.data import EMM_2010_STATIC, EMM_2010_SECVAR
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
+
 
 class EMM2010ForwardModel(BaseForwardModel):
     """ Forward model calculator for the EMM2010.
@@ -38,7 +40,7 @@ class EMM2010ForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return read_model_emm2010()
+        return load_model_emm(EMM_2010_STATIC, EMM_2010_SECVAR)
 
 
 class EMMForwardModel(EMM2010ForwardModel):

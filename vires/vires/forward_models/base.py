@@ -37,13 +37,19 @@ from eoxserver.core import Component, implements
 from eoxmagmod import (
     vnorm, convert, vincdecnorm,
     GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL,
+    decimal_year_to_mjd2000,
 )
 
 from vires.interfaces import ForwardModelProviderInterface
-from vires.time_util import decimal_year_to_datetime, naive_to_utc
+from vires.time_util import mjd2000_to_datetime, naive_to_utc
 from vires.util import cached_property
+from vires.processes.util import get_f107_value
+
 
 DG2RAD = math.pi / 180.0
+
+MIN_MJD2000 = decimal_year_to_mjd2000(1.0)
+MAX_MJD2000 = decimal_year_to_mjd2000(4000.0)
 
 def diff_row(array):
     """ Diferentiate 2D arrayay columns along the row."""
@@ -81,7 +87,7 @@ EVAL_VARIABLE = {
     # northing magnetic field component
     "Y": lambda f, c: f[..., 1],
     # down-pointing magnetic field component
-    "Z": lambda f, c: -f[..., 2],
+    "Z": lambda f, c: f[..., 2],
     # magnetic field inclination
     "I": lambda f, c: vincdecnorm(f)[0],
     # magnetic field inclination
@@ -93,8 +99,8 @@ EVAL_VARIABLE = {
     # along the easting coordinate
     "Y_EW": lambda f, c: diff_row(f[..., 1]) / dist_ew(c),
     # northing magnetic field component derivative
-    # along the easting coordinate
-    "Z_EW": lambda f, c: diff_row(-f[..., 2]) / dist_ew(c),
+    # along the down-pointing radial coordinate
+    "Z_EW": lambda f, c: diff_row(f[..., 2]) / dist_ew(c),
 }
 
 
@@ -107,7 +113,7 @@ class BaseForwardModel(Component):
 
 
     def evaluate(self, data_item, field, bbox, size_x, size_y, elevation,
-                 date, coeff_min=None, coeff_max=None):
+                 time, coeff_min=None, coeff_max=None):
         """ Evaluate forward expansion model.
         Inputs:
             data_item - ???
@@ -131,7 +137,7 @@ class BaseForwardModel(Component):
             size_x - number of samples longitude row
             size_y - number of samples latitude column
             elevation - elevation elevation above to WGS84 ellipsoid
-            date - decimal Julian date (e.g., 2016.2345)
+            time - MJD2000 time
             coeff_min - optional minimal coefficient trim
             coeff_max - optional maximum coefficient trim
 
@@ -154,11 +160,16 @@ class BaseForwardModel(Component):
         coeff_min = coeff_min if coeff_min is not None else -1
         coeff_max = coeff_max if coeff_max is not None else -1
 
+        options = {}
+        if "f107" in self.model.parameters:
+            options["f107"] = get_f107_value(time)
+
         # Evaluate the magnetic field vector components
         # (northing, easting, up-pointing)
         field_components = self.model.eval(
-            coord_gdt, date, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
-            maxdegree=coeff_max, mindegree=coeff_min, check_validity=False
+            time, coord_gdt, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
+            max_degree=coeff_max, min_degree=coeff_min, scale=[1, 1, -1],
+            **options
         )
 
         try:
@@ -168,7 +179,7 @@ class BaseForwardModel(Component):
 
 
     def evaluate_int(self, data_item, field, bbox, size_x, size_y, elevation,
-                     date, coeff_min=None, coeff_max=None, grid_step=None):
+                     time, coeff_min=None, coeff_max=None, grid_step=None):
         """ Interpolated evaluation of the forward expansion model.
         Inputs:
             data_item - ???
@@ -192,7 +203,7 @@ class BaseForwardModel(Component):
             size_x - number of samples longitude row
             size_y - number of samples latitude column
             elevation - elevation elevation above to WGS84 ellipsoid
-            date - decimal Julian date (e.g., 2016.2345)
+            time - MJD2000 time
             coeff_min - optional minimal coefficient trim
             coeff_max - optional maximum coefficient trim
             grid_step - a (dx, dy) tuple defining the desired grid cell size in
@@ -227,11 +238,16 @@ class BaseForwardModel(Component):
         coeff_min = coeff_min if coeff_min is not None else -1
         coeff_max = coeff_max if coeff_max is not None else -1
 
+        options = {}
+        if "f107" in self.model.parameters:
+            options["f107"] = get_f107_value(time)
+
         # Evaluate the magnetic field vector components
         # (northing, easting, up-pointing)
         field_components_int = self.model.eval(
-            coord_gdt_int, date, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
-            maxdegree=coeff_max, mindegree=coeff_min, check_validity=False
+            time, coord_gdt_int, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
+            max_degree=coeff_max, min_degree=coeff_min, scale=[1, 1, -1],
+            **options
         )
 
         # interpolation pixel grid
@@ -264,9 +280,11 @@ class BaseForwardModel(Component):
     @staticmethod
     def _time_validity(model):
         """ Get the validity interval of the given model. """
-        return [
-            naive_to_utc(decimal_year_to_datetime(dy)) for dy in model.validity
-        ]
+        return tuple(
+            naive_to_utc(mjd2000_to_datetime(
+                max(MIN_MJD2000, min(MAX_MJD2000, time))
+            )) for time in model.validity
+        )
 
     @cached_property
     def time_validity(self):

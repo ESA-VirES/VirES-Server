@@ -22,6 +22,7 @@
 <div style="margin-bottom: 2em;">
   <ul>
     <li><a href="#sync">What is the synchronization status and last available data?</a></li>
+    <li><a href="#tec_vis">What does the Total Electron Content (TEC) data visualization represent on the virtual globe?</a></li>
     <li><a href="#models">How does VirES evaluate the magnetic models?</a></li>
     <li><a href="#qdl_mlt">How does VirES evaluate the Apex Quasi-Dipole latitude and Magnetic Local Time?</a></li>
     <li><a href="#shc">How does VirES treat my uploaded field model coefficients?</a></li>
@@ -44,7 +45,12 @@
     Swarm product data are synchronized with the mission’s official product archive such that latest data are accessible via VirES at maximum 4 hours after publication by ESA. This applies also when reprocessed versions of historic product data are published. Dst- and Kp-Indices are being synchronized at 4 hour intervals currently with the service provided by GFZ Potsdam.
   </div>
 </div>
-
+<div class="panel panel-default">
+  <div class="panel-heading"><a name="tec_vis">What does the Total Electron Content (TEC) data visualization represent on the virtual globe?</a></div>
+  <div class="panel-body">
+    <p>On the globe multiple vectors display the direction to the corresponding GPS satellite related to the measurement. There are multiple measurements per time-stamp, that is why multiple of these vectors are represented at one position. The Swarm measurements are very dense, that is why to be able to recognize each individual set of vectors a minimum sub-setting of 40 seconds has been introduced, i.e. the closest two measurement timestamps are together.</p>
+  </div>
+</div>
 <div class="panel panel-default">
   <div class="panel-heading"><a name="models">How does VirES evaluate the magnetic models?</a></div>
   <div class="panel-body">
@@ -94,8 +100,7 @@
 <div class="panel panel-default">
   <div class="panel-heading"><a name="bubbles">How does VirES visualize Bubble Index Data?</a></div>
   <div class="panel-body">
-    <p></p>
-    <p></p>
+    <p>The timeline on the bottom of the workspace shows points where the "Bubble_Probability" is greater or equal to 0.1</p>
   </div>
 </div>
 <div class="panel panel-default">

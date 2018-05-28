@@ -34,8 +34,8 @@ from os import remove
 from os.path import join, exists
 from uuid import uuid4
 from datetime import datetime
-from numpy import empty, linspace, meshgrid, amin, amax
 from matplotlib.colors import Normalize
+from numpy import empty, linspace, meshgrid, amin, amax
 from eoxmagmod import GEODETIC_ABOVE_WGS84
 from eoxserver.services.ows.wps.parameters import (
     BoundingBox, BoundingBoxData, ComplexData, CDFile,
@@ -43,12 +43,13 @@ from eoxserver.services.ows.wps.parameters import (
     LiteralData, AllowedRange
 )
 from vires.config import SystemConfigReader
-from vires.time_util import datetime_to_decimal_year, naive_to_utc
+from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.forward_models.base import EVAL_VARIABLE
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_model, parse_style, data_to_png
-
+from vires.processes.util import (
+    parse_model, parse_style, data_to_png, get_f107_value,
+)
 
 class EvalModelDiff(WPSProcess):
     """ This process calculates difference of two magnetic models.
@@ -157,8 +158,8 @@ class EvalModelDiff(WPSProcess):
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
-        mean_decimal_year = datetime_to_decimal_year(
-            (end_time - begin_time)/2 + begin_time
+        mean_time = 0.5 * (
+            datetime_to_mjd2000(end_time) + datetime_to_mjd2000(begin_time)
         )
 
         self.access_logger.info(
@@ -166,8 +167,8 @@ class EvalModelDiff(WPSProcess):
             "model: %s, reference-model: %s, coeff_range: (%d, %d), "
             "variable: %s, image-size: (%d, %d), mime-type: %s",
             begin_time.isoformat("T"), end_time.isoformat("T"),
-            bbox[0] + bbox[1], model1_id, model2_id, coeff_min, coeff_max,
-            variable, width, height, output['mime_type'],
+            bbox[0] + bbox[1], elevation, model1_id, model2_id,
+            coeff_min, coeff_max, variable, width, height, output['mime_type'],
         )
 
         (y_min, x_min), (y_max, x_max) = bbox
@@ -186,57 +187,30 @@ class EvalModelDiff(WPSProcess):
 
         self.logger.debug("coefficient range: %s", (coeff_min, coeff_max))
 
-        if variable in ("F_vect", "H_vect", "X", "Y", "Z"):
-            with ElapsedTimeLogger("(%s - %s).%s %dx%dpx %s evaluated in" % (
-                model1_id, model2_id, variable, width, height,
-                bbox[0] + bbox[1],
-            ), self.logger):
-                model_field_diff = (model1 - model2).eval(
-                    coord_gdt,
-                    mean_decimal_year,
-                    GEODETIC_ABOVE_WGS84,
-                    GEODETIC_ABOVE_WGS84,
-                    secvar=False,
-                    mindegree=coeff_min,
-                    maxdegree=coeff_max,
-                    check_validity=False
-                )
+        options = {}
+        if "f107" in model1.parameters or "f107" in model2.parameters:
+            options["f107"] = get_f107_value(mean_time)
 
-            pixel_array = EVAL_VARIABLE[variable[0]](model_field_diff, None)
+        self.logger.debug("model options: %s", options)
 
-        else:
+        def _model_eval(model, model_id):
             with ElapsedTimeLogger("%s.%s %dx%dpx %s evaluated in" % (
-                model1_id, variable, width, height, bbox[0] + bbox[1],
+                model_id, variable, width, height, bbox[0] + bbox[1],
             ), self.logger):
-                model1_field = model1.eval(
-                    coord_gdt,
-                    mean_decimal_year,
-                    GEODETIC_ABOVE_WGS84,
-                    GEODETIC_ABOVE_WGS84,
-                    secvar=False,
-                    mindegree=coeff_min,
-                    maxdegree=coeff_max,
-                    check_validity=False
+                return model.eval(
+                    mean_time, coord_gdt,
+                    GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
+                    min_degree=coeff_min, max_degree=coeff_max,
+                    scale=[1, 1, -1], **options
                 )
 
-            with ElapsedTimeLogger("%s.%s %dx%dpx %s evaluated in" % (
-                model2_id, variable, width, height, bbox[0] + bbox[1],
-            ), self.logger):
-                model2_field = model2.eval(
-                    coord_gdt,
-                    mean_decimal_year,
-                    GEODETIC_ABOVE_WGS84,
-                    GEODETIC_ABOVE_WGS84,
-                    secvar=False,
-                    mindegree=coeff_min,
-                    maxdegree=coeff_max,
-                    check_validity=False
-                )
+        model1_field = _model_eval(model1, model1_id)
+        model2_field = _model_eval(model2, model2_id)
 
-            pixel_array = (
-                EVAL_VARIABLE[variable](model1_field, coord_gdt) -
-                EVAL_VARIABLE[variable](model2_field, coord_gdt)
-            )
+        pixel_array = (
+            EVAL_VARIABLE[variable](model1_field, coord_gdt) -
+            EVAL_VARIABLE[variable](model2_field, coord_gdt)
+        )
 
         range_min = amin(pixel_array) if range_min is None else range_min
         range_max = amax(pixel_array) if range_max is None else range_max
