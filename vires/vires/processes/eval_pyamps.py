@@ -55,7 +55,7 @@ from vires.dataset import Dataset
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.util import (
     parse_style, data_to_png, ProductTimeSeries,
-    SunPosition, DipoleTiltAnglePosition,
+    SunPosition, DipoleTiltAngle,
 )
 from vires.cdf_util import (
     datetime_to_cdf_rawtime,
@@ -103,7 +103,6 @@ class EvalAMPS(WPSProcess):
             "bbox", crss=None, optional=True, title="Area of interest",
             abstract="Optional area of interest encoded ",
             default=BoundingBox(((-90., -180.), (+90., +180.))),
-
         )),
         ("width", LiteralData(
             "width", int, optional=False, title="Image width in pixels.",
@@ -171,7 +170,7 @@ class EvalAMPS(WPSProcess):
 
         product_aux_imf2 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
         model_sun = SunPosition()
-        model_tilt_angle = DipoleTiltAnglePosition()
+        model_tilt_angle = DipoleTiltAngle()
 
         # get AUX_IMF2_ variables
         dataset.update(
