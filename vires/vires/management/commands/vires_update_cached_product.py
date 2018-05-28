@@ -29,7 +29,8 @@ from logging import getLogger
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
-from vires.aux import update_kp, update_dst
+from vires.aux_kp import update_kp
+from vires.aux_dst import update_dst
 from vires.orbit_counter import update_orbit_counter_file
 from vires.model_mma import update_mma_sha_2f, filter_mma_sha_2f
 from vires.cached_products import (

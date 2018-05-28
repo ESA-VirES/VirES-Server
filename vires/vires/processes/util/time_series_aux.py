@@ -36,10 +36,8 @@ from vires.cdf_util import (
     mjd2000_to_cdf_rawtime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_datetime,
     CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDF_UINT2_TYPE,
 )
-from vires.aux import (
-    query_dst, query_dst_int,
-    query_kp, query_kp_int,
-)
+from vires.aux_kp import query_kp, query_kp_int
+from vires.aux_dst import query_dst, query_dst_int
 from vires.dataset import Dataset
 from .time_series import TimeSeries
 
