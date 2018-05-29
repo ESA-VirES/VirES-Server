@@ -55,7 +55,7 @@ from vires.dataset import Dataset
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.util import (
     parse_style, data_to_png, ProductTimeSeries,
-    SunPosition, DipoleTiltAngle,
+    SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle,
 )
 from vires.cdf_util import (
     datetime_to_cdf_rawtime,
@@ -170,6 +170,8 @@ class EvalAMPS(WPSProcess):
 
         product_aux_imf2 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
         model_sun = SunPosition()
+        model_subsol = SubSolarPoint()
+        model_dipole = MagneticDipole()
         model_tilt_angle = DipoleTiltAngle()
 
         # get AUX_IMF2_ variables
@@ -182,10 +184,12 @@ class EvalAMPS(WPSProcess):
         dataset.update(
             model_sun.eval(dataset, ["SunDeclination", "SunHourAngle"])
         )
+        # get earth-sun vector
+        dataset.update(model_subsol.eval(dataset, ["SunVector"]))
+        # get dipole axis vector
+        dataset.update(model_dipole.eval(dataset, ["DipoleAxisVector"]))
         # get tilt angle
-        dataset.update(
-            model_tilt_angle.eval(dataset, ["DipoleTiltAngle"])
-        )
+        dataset.update(model_tilt_angle.eval(dataset, ["DipoleTiltAngle"]))
         # extract scalars from the dataset
         amps_parameters = (dataset[key][0] for key in [
             "IMF_V", "IMF_BY_GSM", "IMF_BZ_GSM", "F10_INDEX", "DipoleTiltAngle"
