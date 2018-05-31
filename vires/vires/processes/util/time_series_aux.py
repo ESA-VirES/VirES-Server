@@ -38,6 +38,10 @@ from vires.cdf_util import (
 )
 from vires.aux_kp import query_kp, query_kp_int
 from vires.aux_dst import query_dst, query_dst_int
+from vires.aux_f107 import (
+    FIELD_TIME as FIELD_F107_TIME, FIELD_F107,
+    query_aux_f107_2_, query_aux_f107_2__int,
+)
 from vires.dataset import Dataset
 from .time_series import TimeSeries
 
@@ -182,4 +186,27 @@ class IndexDst(AuxiliaryDataTimeSeries):
         AuxiliaryDataTimeSeries.__init__(
             self, "Dst", filename, query_dst, query_dst_int,
             {'time': 'Timestamp', 'dst': 'Dst'}, logger
+        )
+
+
+class IndexF107(AuxiliaryDataTimeSeries):
+    """ F10.7 index (AUX_F10_2_) time-series source class. """
+    CDF_TYPE = {'Timestamp': CDF_EPOCH_TYPE, 'F107': CDF_DOUBLE_TYPE}
+    CDF_INTERP_TYPE = {'F107': CDF_DOUBLE_TYPE}
+    CDF_ATTR = {
+        'Timestamp': {
+            'DESCRIPTION': 'Time stamp',
+            'UNITS': '-',
+        },
+        'F107': {
+            'DESCRIPTION': 'Assembled daily observed values of solar flux F10.7',
+            'UNITS': '10e-22 W m^-2 Hz^-1',
+        },
+    }
+
+    def __init__(self, filename, logger=None):
+        AuxiliaryDataTimeSeries.__init__(
+            self, "F107", filename,
+            query_aux_f107_2_, query_aux_f107_2__int,
+            {FIELD_F107_TIME: 'Timestamp', FIELD_F107: 'F107'}, logger
         )
