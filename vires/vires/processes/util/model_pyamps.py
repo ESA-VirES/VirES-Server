@@ -47,7 +47,9 @@ class IonosphericCurrentModel(Model):
     VECTOR_TRANSFORM_MODE = 1
     FILTER45_MODE = 2
 
-    MODEL_PARAMETERS = ['IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F10_INDEX']
+    MODEL_PARAMETERS = [
+        'IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F107'
+    ]
 
     DEFAULT_REQUIRED_VARIABLES = [
         "Timestamp", "QDLat", "MLT", "QDBasis"
@@ -146,7 +148,9 @@ class IonosphericCurrentModel(Model):
 
 class AssociatedMagneticModel(Model):
     """ Associated magnetic field of AMPS model. """
-    MODEL_PARAMETERS = ['IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F10_INDEX']
+    MODEL_PARAMETERS = [
+        'IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F107'
+    ]
 
     DEFAULT_REQUIRED_VARIABLES = [
         "Timestamp", "Latitude", "Longitude", "Radius"
@@ -199,7 +203,9 @@ class AssociatedMagneticModel(Model):
                     raise TypeError("Unsupported CDF time type %r !" % cdf_type)
                 times_dt = cdf_rawtime_to_datetime(times, cdf_type)
                 epoch = float(cdf_rawtime_to_decimal_year(median_time, cdf_type))
-                v_imf, by_imf, bz_imf, tilt, f107 = (dataset[var] for var in self.MODEL_PARAMETERS)
+                v_imf, by_imf, bz_imf, tilt, f107 = (
+                    dataset[var] for var in self.MODEL_PARAMETERS
+                )
                 b_amps = get_B_space(
                     glat=lats,
                     glon=lons,
