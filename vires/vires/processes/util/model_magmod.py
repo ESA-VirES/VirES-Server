@@ -103,7 +103,7 @@ class MagneticModel(Model):
     SOURCE_VARIABLES = {
         "time": ["Timestamp"],
         "location": ["Latitude", "Longitude", "Radius"],
-        "f107": ["F10_INDEX"],
+        "f107": ["F107"],
         "subsolar_point": ["SunDeclination", "SunLongitude"]
     }
     BASE_VARIABLES = ["F", "B_NEC"]
