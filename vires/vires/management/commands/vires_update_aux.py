@@ -34,7 +34,8 @@ from django.core.management.base import CommandError, BaseCommand
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
 )
-from vires.aux import update_kp, update_dst
+from vires.aux_kp import update_kp
+from vires.aux_dst import update_dst
 from vires.cached_products import (
     update_cached_product, simple_cached_product_updater,
 )

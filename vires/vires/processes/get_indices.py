@@ -34,7 +34,8 @@ from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, CDFileWrapper,
 )
-from vires.aux import query_dst, query_kp
+from vires.aux_kp import query_kp
+from vires.aux_dst import query_dst
 from vires.time_util import (
     mjd2000_to_datetime, mjd2000_to_unix_epoch, naive_to_utc,
 )

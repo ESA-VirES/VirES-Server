@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Auxiliary data files handling.
+# Kp index file handling.
 #
 # Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
@@ -37,16 +37,6 @@ from .time_util import datetime_to_mjd2000
 
 
 KP_FLAGS = {"D": 0, "Q": 1} # Definitive / Quick-look
-DST_FLAGS = {"D": 0, "P": 1} # Definitive / Preliminary(?)
-
-
-def parse_dst(src_file):
-    """ Parse Dst index text file. """
-    data = loadtxt(src_file, converters={4: lambda v: float(DST_FLAGS[v])})
-    return (
-        data[:, 0], data[:, 1], data[:, 2], data[:, 3],
-        array(data[:, 4], 'uint8')
-    )
 
 
 def parse_kp(src_file):
@@ -58,30 +48,10 @@ def parse_kp(src_file):
     )
 
 
-def update_dst(src_file, dst_file):
-    """ Update Dst index file. """
-    with cdf_open(dst_file, "w") as cdf:
-        cdf["time"], cdf["dst"], cdf["est"], cdf["ist"], cdf["flag"] = (
-            parse_dst(src_file)
-        )
-
-
 def update_kp(src_file, dst_file):
     """ Update Kp index file. """
     with cdf_open(dst_file, "w") as cdf:
         cdf["time"], cdf["kp"], cdf["ap"], cdf["flag"] = parse_kp(src_file)
-
-
-def query_dst(filename, start, stop, fields=("time", "dst")):
-    """ Query non-interpolated Dst index values. """
-    if not exists(filename):
-        return dict((field, array([])) for field in fields)
-
-    with cdf_open(filename) as cdf:
-        return dict(cdf_time_subset(
-            cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
-            fields=fields, margin=1
-        ))
 
 
 def query_kp(filename, start, stop, fields=("time", "kp")):
@@ -94,21 +64,6 @@ def query_kp(filename, start, stop, fields=("time", "kp")):
             cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
             fields=fields, margin=1
         ))
-
-
-def query_dst_int(filename, time, nodata=None, fields=("dst",)):
-    """ Query interpolated Dst index values. """
-    if exists(filename):
-        with cdf_open(filename) as cdf:
-            return dict(cdf_time_interp(
-                cdf, time, fields, nodata=nodata, kind="linear"
-            ))
-    else:
-        nodata = nodata or {}
-        return dict(
-            (field, full(time.shape, nodata.get(field, nan)))
-            for field in fields
-        )
 
 
 def query_kp_int(filename, time, nodata=None, fields=("kp",)):
