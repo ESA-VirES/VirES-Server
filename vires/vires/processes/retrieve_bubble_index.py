@@ -30,38 +30,26 @@
 # pylint: disable=too-many-arguments, too-many-locals, missing-docstring
 # pylint: disable=too-many-statements, no-self-use
 
-import json
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from itertools import izip
 from cStringIO import StringIO
-import numpy as np
-from django.conf import settings
-from eoxserver.services.ows.wps.exceptions import ExecuteError
+from numpy import arange
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData, FormatText, AllowedRange, BoundingBoxData,
-    CDFileWrapper,
+    LiteralData, ComplexData, FormatText, CDFileWrapper,
 )
 from eoxserver.backends.access import connect
-from vires.aux import query_kp_int, query_dst_int
-from vires.util import datetime_array_slice, between
-from vires.time_util import (
-    datetime_to_decimal_year, naive_to_utc, datetime_mean,
-    timedelta_to_iso_duration,
-)
+from vires.util import datetime_array_slice
+from vires.time_util import naive_to_utc
 from vires.cdf_util import (
-    cdf_open, cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year_fast,
-    cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch, get_formatter,
+    cdf_open, cdf_rawtime_to_mjd2000,
+    cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
 )
 from vires.models import ProductCollection, Product
-from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_models
-from eoxmagmod import vnorm, GEOCENTRIC_SPHERICAL
-from eoxmagmod.qd import eval_qdlatlon, eval_mlt
 
 REQUIRED_FIELDS = [
-    "Timestamp", "Bubble_Probability", 
+    "Timestamp", "Bubble_Probability",
 ]
 
 # time selection tolerance
@@ -111,14 +99,11 @@ class RetrieveBubbleIndex(WPSProcess):
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
 
-
         output_fobj = StringIO()
 
         collection = ProductCollection.objects.filter(
             identifier=collection_id
         )
-
-
 
         # TODO: assert that the range_type is equal for collection
         # prepare fields
@@ -144,7 +129,7 @@ class RetrieveBubbleIndex(WPSProcess):
                 product.sampling_period, TIME_TOLERANCE
             )
 
-            data, count, cdf_type = self.handle(
+            data, _, cdf_type = self.handle(
                 product, data_fields, low, high, 1
             )
 
@@ -156,18 +141,12 @@ class RetrieveBubbleIndex(WPSProcess):
             )
 
             if initialize:
-                output_fobj.write(','.join('"{0}"'.format(w) for w in 
-                    ["starttime","endtime","bbox","identifier"])
-                )
+                output_fobj.write(','.join(
+                    '"{0}"'.format(w)
+                    for w in ["starttime", "endtime", "bbox", "identifier"]
+                ))
                 output_fobj.write("\r\n")
                 initialize = False
-
-            cid_prefix = "%s," % collection_id
-            formatters = [
-                get_formatter(data[field], cdf_type.get(field))
-                for field in data
-            ]
-
 
             start = False
             previoustime = 0
@@ -182,7 +161,7 @@ class RetrieveBubbleIndex(WPSProcess):
 
                 if dif != timedelta(seconds=1):
                     output_fobj.write(
-                        ','.join('"{0}"'.format(w) for w in [ 
+                        ','.join('"{0}"'.format(w) for w in [
                             (start.isoformat("T") + "Z"),
                             (previoustime.isoformat("T") + "Z"),
                             "(0,0,0,0)", collection_id
@@ -197,7 +176,7 @@ class RetrieveBubbleIndex(WPSProcess):
             # meaning start is not a boolean
             if start:
                 output_fobj.write(
-                    ','.join('"{0}"'.format(w) for w in [ 
+                    ','.join('"{0}"'.format(w) for w in [
                         (start.isoformat("T") + "Z"),
                         (previoustime.isoformat("T") + "Z"),
                         "(0,0,0,0)", collection_id
@@ -229,9 +208,9 @@ class RetrieveBubbleIndex(WPSProcess):
             # Some tests filtering out data not flagged with bubble index
             if "Bubble_Probability" in fields:
                 # initialize indices
-                index = np.arange(len(data['Bubble_Probability']))
+                index = arange(len(data['Bubble_Probability']))
                 # filter the indices
-                index = index[ data["Bubble_Probability"][index] >= 0.1 ] 
+                index = index[data["Bubble_Probability"][index] >= 0.1]
                 # data update
                 data = OrderedDict(
                     (field, values[index]) for field, values in data.iteritems()

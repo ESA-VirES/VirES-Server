@@ -74,5 +74,6 @@ class Command(CommandOutputMixIn, BaseCommand):
             if kwargs[opt_name] is not None:
                 update(
                     kwargs[opt_name], destination,
-                    update_orbit_counter_file, label
+                    update_orbit_counter_file, label,
+                    tmp_extension=".tmp.cdf"
                 )

@@ -67,7 +67,7 @@
     // Used to display/hide terrain attribution
     function toggle(e) { e.style.display = (e.style.display == 'block' ? 'none' : 'block'); }
   </script>
-    
+
     <script type="text/javascript">
       this.NAVBARITEMS = [{
         "name": "{% user_display user %}",
@@ -161,7 +161,7 @@
 
 
       .bg-1 {
-        background: url('{% static 'images/Core_and_crust_from_Swarm.jpg' %}') no-repeat center center fixed; 
+        background: url('{% static 'images/Core_and_crust_from_Swarm.jpg' %}') no-repeat center center fixed;
           -webkit-background-size: cover;
           -moz-background-size: cover;
           -o-background-size: cover;
@@ -169,7 +169,7 @@
       }
 
       .bg-2 {
-        background: url('{% static 'images/VirES_Swarm_banner2.jpg' %}') no-repeat center center fixed; 
+        background: url('{% static 'images/VirES_Swarm_banner2.jpg' %}') no-repeat center center fixed;
           -webkit-background-size: cover;
           -moz-background-size: cover;
           -o-background-size: cover;
@@ -177,7 +177,7 @@
       }
 
       .bg-3 {
-        background: url('{% static 'images/Group_Picture_full.jpg' %}') no-repeat center center fixed; 
+        background: url('{% static 'images/Group_Picture_full.jpg' %}') no-repeat center center fixed;
           -webkit-background-size: cover;
           -moz-background-size: cover;
           -o-background-size: cover;
@@ -203,7 +203,7 @@
         <!-- Wrap all page content here -->
     <div id="wrap">
 
-     
+
     <header class="masthead">
 
         <div class="CoverImage FlexEmbed FlexEmbed--3by1"
@@ -211,11 +211,11 @@
            <div class="image-attribution">&copy; ESA/EOX/AOES Medialab</div>
         </div>
 
-        
-      
+
+
     </header>
-      
-      
+
+
     <!-- Fixed navbar -->
     <div class="navbar navbar-custom navbar-inverse navbar-static-top" id="nav">
         <div class="container">
@@ -236,11 +236,11 @@
           </div><!--/.nav-collapse -->
         </div><!--/.container -->
     </div><!--/.navbar -->
-      
+
     <!-- Begin page content -->
 
     <div class="container">
-      
+
 
       <div class="page-header text-center">
         <h1>Earth's magnetic field as observed by satellite</h1>
@@ -248,14 +248,14 @@
       </div>
 
         <p class="lead current-version text-center">
-          <strong>Version 2.1</strong> (<a href="/accounts/changelog">Changelog</a>)<br>
-          <em>October 2017</em>  
+          <strong>Version 2.2</strong> (<a href="/accounts/changelog">Changelog</a>)<br>
+          <em>June 2018</em>
         </p>
 
         <p class="lead text-center">
           VirES for Swarm is a highly interactive data manipulation and retrieval interface for the <a href="https://earth.esa.int/swarm" target="_blank">ESA Swarm constellation mission</a> products. It includes tools for studying various geomagnetic models by comparing them to the Swarm satellite measurements at given space weather and ionospheric conditions.
-        </p> 
-        
+        </p>
+
         <hr>
 
       </div>
@@ -266,7 +266,7 @@
       <div class="image-attribution">&copy; ESA/DTU Space/ATG medialab</div>
       <div class="col-sm-6 col-sm-offset-3 text-center"></div>
     </section>
-      
+
     <div class="divider" id="Features"></div>
 
     <div class="row">
@@ -275,7 +275,7 @@
 
           <hr>
             <p>
-              Here is a demonstration of the VirES for Swarm tools and main features. 
+              Here is a demonstration of the VirES for Swarm tools and main features.
             </p>
 
           <div class="divider"></div>
@@ -289,7 +289,7 @@
           <div class="divider"></div>
 
           <p>
-              Magnetic and plasmatic Swarm product data can be visualized on the platform 
+              Magnetic and plasmatic Swarm product data can be visualized on the platform
               plotted over the globe and shown in a scatterplot. The scatterplot allows for dual y-axes with independent zoom and panning features.
               The time slider and various controls offer the
               possibility to make selections and set criteria for data filtering and visualization
@@ -297,71 +297,111 @@
           </p>
           <p>
               The subset of Swarm data selected by the user in this way can be downloaded in different encoding
-              formats. The data downloaded can be combined to fit various use cases. 
+              formats. The data downloaded can be combined to fit various use cases.
           </p>
           <p>
-              VirES enables 
-              visual and numerical comparison with geomagnetic models, analysis with respect to 
+              VirES enables
+              visual and numerical comparison with geomagnetic models, analysis with respect to
               various ancillary data and generation of publication-ready plots and diagrammes in an
               intuitive and powerful yet customizable interface.
-          </p> 
-          
+          </p>
+
           <hr>
-        
+
         </div><!--/col-->
     </div><!--/container-->
 
     <div class="divider" id="Data"></div>
 
     <section class="bg-2">
-      <div class="image-attribution">&copy; ESA–P. Carril, 2013</div>
+      <div class="image-attribution">&copy; ESA&nbsp;-&nbsp;P. Carril, 2013</div>
     </section>
 
 
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3 larger">
           <h1>Data</h1>
-          
+
           <hr>
-         
+
           <p>The following products are taken from all three Swarm Satellites:</p>
           <ul>
-            <li style="list-style-type: circle;"> 
-            The magnetic vector and scalar data at a 1 Hz at exact UTC seconds (<a target="_blank" href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_1b_Product_Definitions#MAGX_LR_1B_Product">Swarm MAGX_LR_1B</a>).
+            <li style="list-style-type: circle;">
+              The magnetic vector and scalar data at a 1 Hz at exact UTC seconds (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product">Swarm MAGX_LR_1B</a>).
             </li>
             <li style="list-style-type: circle;">
-            The official plasma data including electron temperature and density at 2 Hz (<a target="_blank" href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_1b_Product_Definitions#EFIX_PL_1B_Product">Swarm EFIX_PL_1B</a>).
+              The official plasma data including electron temperature and density at 2 Hz (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#EFIX_PL_1B_Product">Swarm EFIX_PL_1B</a>).
             <li style="list-style-type: circle;">
-            The ionospheric bubble index data (<a target="_blank" href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_2_Product_Definitions">Swarm IBIxTMS_2F</a>).
+              The ionospheric bubble index data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#IBIxTMS_2F">Swarm IBIxTMS_2F</a>).
             </li>
-            <li style="list-style-type: circle;">The ionospheric total electron content data (Swarm TECxTMS_2F)</li>
-            <li style="list-style-type: circle;">The single and combined S/C solution for the current density data (Swarm FACxTMS_2F and FAC_TMS)</li>
-            <li style="list-style-type: circle;">The dayside equatorial electric field data (Swarm EEFxTMS_2F)</li>
+            <li style="list-style-type: circle;">
+              The ionospheric total electron content data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#TECxTMS_2F">Swarm TECxTMS_2F)</a></li>
+            <li style="list-style-type: circle;">
+              The single and combined S/C solution for the current density data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#FACxTMS_2F">Swarm FACxTMS_2F</a> and <a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#FAC_TMS_2F">FAC_TMS)</a></li>
+            <li style="list-style-type: circle;">
+              The dayside equatorial electric field data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#EEFxTMS_2F">Swarm EEFxTMS_2F)</a></li>
           </ul>
-          
+
           <p>The following models of the Earth's magnetic field and its time variation are pre-loaded:</p>
           <ul>
-            <li style="list-style-type: circle;"> 
+            <li style="list-style-type: circle;">
               The Swarm Initial Field Model for 2014 derived from the first year of data from the Swarm satellite trio (<a target="_blank" href="http://onlinelibrary.wiley.com/doi/10.1002/2014GL062659/abstract">SIFM</a>)
             </li>
-            <li style="list-style-type: circle;"> 
+            <li style="list-style-type: circle;">
               The 12th Generation International Geomagnetic Reference Field (<a target="_blank" href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0228-9">IGRF 12</a>) released in 2015 by the International Association of Geomagnetism and Aeronomy
             </li>
-            <li style="list-style-type: circle;"> 
+            <li style="list-style-type: circle;">
               The CHAOS-6 high resolution geomagnetic field model, derived primarily from Swarm, CHAMP, and Ørsted satellite magnetic data along with ground observatory data (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/">CHAOS-6-x3</a>)
             </li>
           </ul>
+          <p>The following Spherical Harmonic Models of the Core Field are available:</p>
+          <ul>
+            <li style="list-style-type: circle;">
+              Spherical harmonic model of the main (core) field and its temporal variation (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MCO_SHA_2C">MCO_SHA_2C</a>)
+            </li>
+            <li style="list-style-type: circle;">
+              Spherical harmonic model of the main (core) field and its temporal variation (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MCO_SHA_2D">MCO_SHA_2D</a>)
+            </li>
+            <li style="list-style-type: circle;">
+              Spherical harmonic model of the main (core) field and its temporal variation (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MCO_SHA_2F">MCO_SHA_2F</a>)
+            </li>
+          </ul>
+          <p>The following Spherical Harmonic Models of the Lithosphereic Field are available:</p>
+          <ul>
+            <li style="list-style-type: circle;">
+              Spherical harmonic model of the lithospheric field (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MLI_SHA_2C">MLI_SHA_2C</a>)
+            </li>
+            <li style="list-style-type: circle;">
+              Spherical harmonic model of the lithospheric field (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MLI_SHA_2D">MLI_SHA_2D</a>)
+            </li>
+          </ul>
+          <p>The following Spherical Harmonic Models of the Magnetospheric Field are available:</p>
+          <ul>
+            <li style="list-style-type: circle;">
+              Spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MMA_SHA_2C">MMA_SHA_2C-Primary &amp; MMA_SHA_2C-Secondary Field</a>)
+            </li>
+          </ul>
+          <p>The following Spherical Harmonic Models of the Daily Geomagnetic Variation are available:</p>
+          <ul>
+            <li style="list-style-type: circle;">
+              Spherical harmonic model of the daily geomagnetic variation at middle latitudes (Sq) and low latitudes (EEJ) (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MIO_SHA_2C">MIO_SHA_2C-Primary &amp; MIO_SHA_2C-Secondary Field</a>)
+            </li>
+            <li style="list-style-type: circle;">
+              Spherical harmonic model of the daily geomagnetic variation at middle latitudes (Sq) and low latitudes (EEJ) (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MIO_SHA_2D">MIO_SHA_2D-Primary &amp; MIO_SHA_2D-Secondary Field</a>)
+            </li>
+          </ul>
+
           <p>Users can also work with Custom Models and upload Spherical Harmonic Expansion coefficients (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-5/SHC-Format-Decsription.pdf">SHC file format</a>)</p>
           <p>The global context of space weather is provided in form of:</p>
           <ul>
-            <li style="list-style-type: circle;"> 
+            <li style="list-style-type: circle;">
               The Disturbance storm time index (<a target="_blank" href="https://en.wikipedia.org/wiki/Disturbance_storm_time_index">Dst Index</a>)
             </li>
             <li style="list-style-type: circle;">
               The disturbances in the horizontal component of the Earth's magnetic field (<a target="_blank" href="https://en.wikipedia.org/wiki/K-index">planetary Kp Index</a>)
             </li>
           </ul>
-          
+
           <p>
             The data accessible on VirES consists of the newest versions available and any new data will appear within 4 hours of generation.
           </p>
@@ -382,15 +422,15 @@
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3 larger">
           <h1>Sign up</h1>
-          
+
           <hr>
-         
+
           <p>
             To access Swarm data you simply sign up (register) as a user by providing user profile information
             such as username, email and optionally title, country, institution and an executive
             description of the the project in which your Swarm data is being used.
           </p>
-          
+
           <hr>
 
           <div style="text-align: center">
@@ -405,28 +445,28 @@
             <div class="divider"></div>
             <p style="text-align: center;">The service will work on most modern browsers, but using the service on Google Chrome has been found to give the best results. We therefore recommend the use of Chrome.</p>
           </div>
-          
+
         </div><!--/col-->
     </div><!--/container-->
     <div class="row form-group">
         <div class="col-xs-10">
-          
+
         </div>
     </div>
-      
-  
+
+
     <div class="divider" id="Login"></div>
 
     <div class="row">
-      
+
       <hr>
-      
+
       <div class="col-sm-6 col-sm-offset-3 larger">
-          
+
         <div class="row form-group">
           <h1>Log in</h1>
         </div>
-      
+
       </div><!--/row-->
 
      <div class="col-sm-4 col-sm-offset-4 larger">
@@ -477,14 +517,14 @@
           Feedback and ideas are very welcome, feel free to contact us under <a href="mailto:feedback@vires.services">feedback@vires.services</a>.
         </p>
      </div>
-      
+
     <div class="container">
         <div class="col-sm-8 col-sm-offset-2 text-center">
 
-          
+
         </div><!--/col-->
     </div><!--/container-->
-      
+
     </div><!--/wrap-->
 
     <div id="footer">
@@ -509,7 +549,7 @@
           </div>
 
           <div class="col-md-6 text-muted" style="text-align: center; margin-top:15px;">
-            <a style="display:inline; margin-right:5px;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a> | 
+            <a style="display:inline; margin-right:5px;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a> |
             <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a> |
             <a href="https://earth.esa.int/swarm" target="_blank">Swarm Official Site</a>
           </div>
@@ -532,5 +572,5 @@
     <!-- End landing page -->
 
   {% endif %}
-  
+
 {% endblock %}

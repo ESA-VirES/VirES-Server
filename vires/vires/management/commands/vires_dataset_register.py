@@ -420,16 +420,50 @@ def save(model):
 
 class VirESMetadataReader(object):
 
+    LATLON_KEYS = [
+        ("Longitude", "Latitude"),
+        ("longitude", "latitude"),
+    ]
+
+    TIME_KEYS = [
+        "Timestamp",
+        "timestamp",
+        "Epoch"
+    ]
+
+    @classmethod
+    def get_times(cls, data):
+        # iterate possible time keys and try to extract the values
+        for time_key in cls.TIME_KEYS:
+            try:
+                times = data[time_key][:]
+            except KeyError:
+                continue
+            else:
+                break
+        else:
+            raise KeyError("Temporal variable not found!")
+
+        return times
+
     @classmethod
     def get_coords(cls, data):
-        try:
-            coords = np.empty((len(data["Longitude"]), 2))
-            coords[:, 0] = data["Longitude"][:]
-            coords[:, 1] = data["Latitude"][:]
-        except KeyError:
-            coords = np.empty((len(data["longitude"]), 2))
-            coords[:, 0] = data["longitude"][:]
-            coords[:, 1] = data["latitude"][:]
+        # iterate possible lat/lon keys and try to extract the values
+        for lat_key, lon_key in cls.LATLON_KEYS:
+            try:
+                lat_data = data[lat_key][:]
+                lon_data = data[lon_key][:]
+            except KeyError:
+                continue
+            else:
+                coords = np.empty((len(lon_data), 2))
+                coords[:, 0] = lon_data
+                coords[:, 1] = lat_data
+                break
+        else:
+            # values not extracted assume global product
+            coords = np.array([(-180.0, -90.0), (+180.0, +90.0)])
+
         return coords
 
     @classmethod
@@ -449,37 +483,32 @@ class VirESMetadataReader(object):
         return geos.MultiLineString(segments)
 
     @classmethod
-    def get_bounding_box(cls, coords):
+    def coords_to_bounding_box(cls, coords):
         lon_min, lat_min = np.floor(np.amin(coords, 0))
         lon_max, lat_max = np.ceil(np.amax(coords, 0))
         return (lon_min, lat_min, lon_max, lat_max)
 
     @classmethod
-    def read(cls, data):
-        # NOTE: For sake of simplicity we take geocentric (ITRF) coordinates
-        #       as geodetic coordinates.
-        try:
-            size = (len(data["Timestamp"]), 0)
-        except KeyError:
-            size = (len(data["timestamp"]), 0)
-        coords = cls.get_coords(data)
-        #ground_path = cls.get_ground_path(coords)
-        #bbox = ground_path.extent
-        #footprint = geos.MultiPolygon(ground_path.buffer(0.01))
-        bbox = cls.get_bounding_box(coords)
-        ground_path = geos.MultiLineString([])
-        footprint = geos.MultiPolygon(
+    def bounding_box_to_geometry(cls, bbox):
+        return geos.MultiPolygon(
             geos.Polygon((
                 (bbox[0], bbox[1]), (bbox[2], bbox[1]),
                 (bbox[2], bbox[3]), (bbox[0], bbox[3]), (bbox[0], bbox[1]),
             ))
         )
-        try:
-            begintime = naive_to_utc(data["Timestamp"][0])
-            endtime = naive_to_utc(data["Timestamp"][-1])
-        except KeyError:
-            begintime = naive_to_utc(data["timestamp"][0])
-            endtime = naive_to_utc(data["timestamp"][-1])
+
+    @classmethod
+    def read(cls, data):
+        # NOTE: For sake of simplicity we take geocentric (ITRF) coordinates
+        #       as geodetic coordinates.
+        times = cls.get_times(data)
+        coords = cls.get_coords(data)
+        size = (len(times), 0)
+        bbox = cls.coords_to_bounding_box(coords)
+        ground_path = geos.MultiLineString([])
+        footprint = cls.bounding_box_to_geometry(bbox)
+        begintime = naive_to_utc(times[0])
+        endtime = naive_to_utc(times[-1])
 
         return {
             "format": "CDF",

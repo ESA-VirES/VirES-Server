@@ -1222,4 +1222,84 @@
         }
     ],
     "name": "SWARM_TEC"
+},
+{
+    "name": "AUX_IMF_2_",
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Epoch Time",
+            "identifier": "Epoch",
+            "name": "Epoch",
+            "nil_values": [
+                {
+                    "reason": "http://www.opengis.net/def/nil/OGC/0/unknown",
+                    "value": -1e+31
+                }
+            ],
+            "uom": "s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "1AU IP By (nT), GSM",
+            "identifier": "BY_GSM",
+            "name": "BY_GSM",
+            "nil_values": [
+                {
+                    "reason": "http://www.opengis.net/def/nil/OGC/0/unknown",
+                    "value": 999.9
+                }
+            ],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "1AU IP Bz (nT), GSM",
+            "identifier": "BZ_GSM",
+            "name": "BZ_GSM",
+            "nil_values": [
+                {
+                    "reason": "http://www.opengis.net/def/nil/OGC/0/unknown",
+                    "value": 999.9
+                }
+            ],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "1AU IP plasma flow speed (km/s)",
+            "identifier": "V",
+            "name": "V",
+            "nil_values": [
+                {
+                    "reason": "http://www.opengis.net/def/nil/OGC/0/unknown",
+                    "value": 999.9
+                }
+            ],
+            "uom": "km.s-1"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "F10.7 - Daily 10.7 cm solar radio flux, units: 10**(-22) Joules/second/square-meter/Hertz, from NGDC (1963/001-2016/366)",
+            "identifier": "F10_INDEX",
+            "name": "F10_INDEX",
+            "nil_values": [
+                {
+                    "reason": "http://www.opengis.net/def/nil/OGC/0/unknown",
+                    "value": 999.9
+                }
+            ],
+            "uom": "10-22.J.s-1.m-2.Hz-1"
+        }
+    ]
 }]

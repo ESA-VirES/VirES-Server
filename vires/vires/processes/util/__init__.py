@@ -28,7 +28,6 @@
 #-------------------------------------------------------------------------------
 
 from .cache import with_cache_session
-from .dataset import Dataset
 from .filters import (
     Filter, ScalarRangeFilter, VectorComponentRangeFilter,
     BoundingBoxFilter,
@@ -41,7 +40,8 @@ from .time_series_orbit_counter import OrbitCounter
 from .model import Model
 from .model_magmod import MagneticModelResidual, MagneticModel
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
-from .model_sunpos import SunPosition
+from .model_sunpos import SunPosition, SubSolarPoint
+from .model_dipole import MagneticDipole, DipoleTiltAngle
 from .label import Label, SpacecraftLabel
 from .input_parsers import (
     parse_style, parse_collections,
@@ -49,13 +49,11 @@ from .input_parsers import (
     parse_filters, parse_filters2,
     parse_variables, get_residual_variables,
 )
-from .png_output import (
-    data_to_png,
-    array_to_png,
-)
+from .png_output import data_to_png, array_to_png
 from .auth import get_username, get_user
 from .resolver import VariableResolver
 from .residuals import group_residual_variables, Sat2SatResidual
+from .f107 import get_f107_value
 
 
 # other miscellaneous utilities
