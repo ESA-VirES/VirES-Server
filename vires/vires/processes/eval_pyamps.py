@@ -246,6 +246,7 @@ class EvalAMPS(WPSProcess):
 
         imf_v, imf_by, imf_bz, f107, tilt = self.model_parameters(mean_dt)
 
+
         (y_min, x_min), (y_max, x_max) = bbox
         hd_x = (0.5 / width) * (x_max - x_min)
         hd_y = (0.5 / height) * (y_min - y_max)
@@ -260,29 +261,41 @@ class EvalAMPS(WPSProcess):
         ), self.logger):
             if variable in self.EVAL_CURR_VARIABLE:
                 qdlats, mlts = self.gcoor2qdlatmlt(lats, lons, elevations, mean_dt)
-                model = AMPS(
-                    v=imf_v, By=imf_by, Bz=imf_bz,
-                    tilt=tilt, f107=f107,
-                    height=elevation,
-                    resolution=0, dr=90,
-                )
-                eval_func = self.EVAL_CURR_VARIABLE[variable]
-                pixel_array = eval_func(model, [qdlats, mlts])
-                if variable == "Ju":
-                    pixel_array[np_abs(qdlats) < 45] = nan
+                try:
+                    model = AMPS(
+                        v=imf_v, By=imf_by, Bz=imf_bz,
+                        tilt=tilt, f107=f107,
+                        height=elevation,
+                        resolution=0, dr=90,
+                    )
+                except IndexError:
+                    self.logger.debug(
+                        "Cannot evaluate model at IMF_V: %s, "
+                        "IMF_BY_GSM: %s, IMF_BZ_GSM: %s, "
+                        "F10_INDEX: %s, DipoleTiltAngle: %s",
+                        imf_v, imf_by, imf_bz, f107, tilt
+                    )
+                    pixel_array = full((height, width), nan)
+                else:
+                    eval_func = self.EVAL_CURR_VARIABLE[variable]
+                    pixel_array = eval_func(model, [qdlats, mlts])
+                    if variable == "Ju":
+                        pixel_array[np_abs(qdlats) < 45] = nan
             elif variable in self.EVAL_MAG_VARIABLE:
-                b_nec = array(get_B_space(
-                    glat=lats.flatten(),
-                    glon=lons.flatten(),
-                    height=elevations.flatten(),
-                    time=full(lons.size, mean_dt, dtype=object),
-                    v=full(lons.size, imf_v),
-                    By=full(lons.size, imf_by),
-                    Bz=full(lons.size, imf_bz),
-                    tilt=full(lons.size, tilt),
-                    f107=full(lons.size, f107),
-                    epoch=datetime_to_decimal_year(mean_dt),
-                )).reshape(3, height, width)
+                b_nec = array(
+                    get_B_space(
+                        glat=lats.flatten(),
+                        glon=lons.flatten(),
+                        height=elevations.flatten(),
+                        time=full(lons.size, mean_dt, dtype=object),
+                        v=full(lons.size, imf_v),
+                        By=full(lons.size, imf_by),
+                        Bz=full(lons.size, imf_bz),
+                        tilt=full(lons.size, tilt),
+                        f107=full(lons.size, f107),
+                        epoch=datetime_to_decimal_year(mean_dt),
+                    )
+                ).reshape(3, height, width)
                 pixel_array = self.EVAL_MAG_VARIABLE[variable](b_nec)
 
         range_min = nanmin(pixel_array) if range_min is None else range_min
