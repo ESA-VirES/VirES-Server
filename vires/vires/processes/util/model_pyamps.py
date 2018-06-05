@@ -77,7 +77,7 @@ class IonosphericCurrentModel(Model):
             AMPS.get_upward_current,
             CDF_DOUBLE_TYPE, {
                 'DESCRIPTION': 'AMPS - Upward current',
-                'UNITS': u'\xb5A/m^2' # 'mu'A/m^2
+                'UNITS': '1e-6 A/m^2' # 'mu'A/m^2
             }
         ),
     }
