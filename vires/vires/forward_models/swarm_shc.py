@@ -32,6 +32,8 @@ from eoxmagmod import (
     load_model_shc,
     load_model_swarm_mma_2c_internal,
     load_model_swarm_mma_2c_external,
+    load_model_swarm_mma_2f_geo_internal,
+    load_model_swarm_mma_2f_geo_external,
     load_model_swarm_mio_internal,
     load_model_swarm_mio_external,
 )
@@ -109,6 +111,32 @@ class SwarmMMA2CSecondaryForwardModel(SwarmL2SHCForwardModel):
     @cached_property
     def model(self):
         return load_model_swarm_mma_2c_internal(
+            settings.VIRES_CACHED_PRODUCTS[self.product_type]
+        )
+
+
+class SwarmMMA2FPrimaryForwardModel(SwarmL2SHCForwardModel):
+    """ Swarm L2 MMA_SHA_2F product primary field model.
+    """
+    product_type = "MMA_SHA_2F"
+    identifier = "MMA_SHA_2F-Primary"
+
+    @cached_property
+    def model(self):
+        return load_model_swarm_mma_2f_geo_external(
+            settings.VIRES_CACHED_PRODUCTS[self.product_type]
+        )
+
+
+class SwarmMMA2FSecondaryForwardModel(SwarmL2SHCForwardModel):
+    """ Swarm L2 MMA_SHA_2F product secondary field model.
+    """
+    product_type = "MMA_SHA_2F"
+    identifier = "MMA_SHA_2F-Secondary"
+
+    @cached_property
+    def model(self):
+        return load_model_swarm_mma_2f_geo_internal(
             settings.VIRES_CACHED_PRODUCTS[self.product_type]
         )
 
