@@ -36,6 +36,10 @@ from eoxserver.services.ows.wps.parameters import (
 )
 from vires.aux_kp import query_kp
 from vires.aux_dst import query_dst
+from vires.aux_f107 import (
+    FIELD_TIME as FIELD_F107_TIME, FIELD_F107,
+    query_aux_f107_2_,
+)
 from vires.time_util import (
     mjd2000_to_datetime, mjd2000_to_unix_epoch, naive_to_utc,
 )
@@ -51,8 +55,16 @@ def abs_amax(arr, axis):
 
 # Auxiliary data query function and file sources
 AUX_INDEX = {
-    "kp": (query_kp, settings.VIRES_AUX_DB_KP, amax, "%d"),
-    "dst": (query_dst, settings.VIRES_AUX_DB_DST, abs_amax, "%.6g"),
+    "kp": (
+        query_kp, settings.VIRES_AUX_DB_KP, "time", "kp", amax, "%d"
+    ),
+    "dst": (
+        query_dst, settings.VIRES_AUX_DB_DST, "time", "dst", abs_amax, "%.6g"
+    ),
+    "f107": (
+        query_aux_f107_2_, settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"],
+        FIELD_F107_TIME, FIELD_F107, amax, "%.6g"
+    ),
 }
 
 
@@ -69,7 +81,7 @@ class GetIndices(WPSProcess):
         ("index_id", LiteralData(
             'index_id', str, optional=False,
             abstract="Identifier of the queried auxiliary index.",
-            allowed_values=('kp', 'dst'),
+            allowed_values=('kp', 'dst', 'f107'),
         )),
         ("begin_time", LiteralData(
             'begin_time', datetime, optional=False,
@@ -107,11 +119,13 @@ class GetIndices(WPSProcess):
             index_id, begin_time.isoformat("T"), end_time.isoformat("T"),
         )
 
-        query, filename, lessen, data_format = AUX_INDEX[index_id]
+        query, filename, time_variable, index_variable, lessen, data_format = (
+            AUX_INDEX[index_id]
+        )
         aux_data = query(filename, begin_time, end_time)
 
-        time = aux_data["time"]
-        data = aux_data[index_id]
+        time = aux_data[time_variable]
+        data = aux_data[index_variable]
 
         if time.size > 500:
             bin_size = (time.size - 1)//500 + 1
