@@ -32,6 +32,8 @@ from numpy import array
 from logging import getLogger, LoggerAdapter
 from vires.util import between
 
+class FilterError(Exception):
+    """ Base filter error exception. """
 
 class Filter(object):
     """ Base filter class. """
@@ -111,6 +113,11 @@ class ScalarRangeFilter(BaseRangeFilter):
 
     def filter(self, dataset, index=None):
         data = dataset[self.variable]
+        if data.ndim != 1:
+            raise FilterError(
+                "An attempt to apply scalar range filter to a non-scalar "
+                "variable %s!" % self.variable
+            )
         if index is None:
             index = self._filter(data).nonzero()[0]
         else:
@@ -138,6 +145,11 @@ class VectorComponentRangeFilter(BaseRangeFilter):
 
     def filter(self, dataset, index=None):
         data = dataset[self.variable]
+        if data.ndim != 2:
+            raise FilterError(
+                "An attempt to apply vector component range filter to a "
+                "non-vector variable %s!" % self.variable
+            )
         if index is None:
             index = self._filter(data[:, self.component]).nonzero()[0]
         else:
