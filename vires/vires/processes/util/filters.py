@@ -115,7 +115,7 @@ class ScalarRangeFilter(BaseRangeFilter):
         data = dataset[self.variable]
         if data.ndim != 1:
             raise FilterError(
-                "An attempt to apply scalar range filter to a non-scalar "
+                "An attempt to apply a scalar range filter to a non-scalar "
                 "variable %s!" % self.variable
             )
         if index is None:
@@ -147,7 +147,7 @@ class VectorComponentRangeFilter(BaseRangeFilter):
         data = dataset[self.variable]
         if data.ndim != 2:
             raise FilterError(
-                "An attempt to apply vector component range filter to a "
+                "An attempt to apply a vector component range filter to a "
                 "non-vector variable %s!" % self.variable
             )
         if index is None:
