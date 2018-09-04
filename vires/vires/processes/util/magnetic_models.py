@@ -29,7 +29,7 @@
 from os.path import exists
 from django.conf import settings
 from eoxmagmod.data import (
-    CHAOS5_CORE_V4, CHAOS5_STATIC, CHAOS6_CORE_X3, CHAOS6_STATIC,
+    CHAOS5_CORE_V4, CHAOS5_STATIC, CHAOS6_CORE_LATEST, CHAOS6_STATIC,
     WMM_2010, WMM_2015, EMM_2010_STATIC, EMM_2010_SECVAR,
     IGRF11, IGRF12, SIFM,
 )
@@ -41,6 +41,8 @@ from eoxmagmod import (
     load_model_emm,
     load_model_swarm_mma_2c_internal,
     load_model_swarm_mma_2c_external,
+    load_model_swarm_mma_2f_geo_internal,
+    load_model_swarm_mma_2f_geo_external,
     load_model_swarm_mio_internal,
     load_model_swarm_mio_external,
 )
@@ -59,9 +61,9 @@ MODELS_FACTORIES = {
     "EMM2010":
         lambda: load_model_emm(EMM_2010_STATIC, EMM_2010_SECVAR),
     "CHAOS-6-Combined":
-        lambda: load_model_shc_combined(CHAOS6_CORE_X3, CHAOS6_STATIC),
+        lambda: load_model_shc_combined(CHAOS6_CORE_LATEST, CHAOS6_STATIC),
     "CHAOS-6-Core":
-        lambda: load_model_shc(CHAOS6_CORE_X3),
+        lambda: load_model_shc(CHAOS6_CORE_LATEST),
     "CHAOS-6-Static":
         lambda: load_model_shc(CHAOS6_STATIC),
     "CHAOS-5-Combined":
@@ -88,6 +90,8 @@ CACHED_MODEL_LOADERS = {
     "MLI_SHA_2D": load_model_shc,
     "MMA_SHA_2C-Primary": load_model_swarm_mma_2c_external,
     "MMA_SHA_2C-Secondary": load_model_swarm_mma_2c_internal,
+    "MMA_SHA_2F-Primary": load_model_swarm_mma_2f_geo_external,
+    "MMA_SHA_2F-Secondary": load_model_swarm_mma_2f_geo_internal,
     "MIO_SHA_2C-Primary": load_model_swarm_mio_external,
     "MIO_SHA_2C-Secondary": load_model_swarm_mio_internal,
     "MIO_SHA_2D-Primary": load_model_swarm_mio_external,
@@ -97,6 +101,8 @@ CACHED_MODEL_LOADERS = {
 MODEL_SOURCES = {
     "MMA_SHA_2C-Primary": "MMA_SHA_2C",
     "MMA_SHA_2C-Secondary": "MMA_SHA_2C",
+    "MMA_SHA_2F-Primary": "MMA_SHA_2F",
+    "MMA_SHA_2F-Secondary": "MMA_SHA_2F",
     "MIO_SHA_2C-Primary": "MIO_SHA_2C",
     "MIO_SHA_2C-Secondary": "MIO_SHA_2C",
     "MIO_SHA_2D-Primary": "MIO_SHA_2D",

@@ -49,9 +49,9 @@ from vires.cdf_util import (
     cdf_rawtime_to_decimal_year_fast, datetime_to_cdf_rawtime,
     mjd2000_to_cdf_rawtime, array_slice,
 )
-from vires.aux import parse_dst
+from vires.aux_dst import parse_dst
+from vires.tests.aux_dst import TEST_DST, DATA_DST
 from vires.tests import ArrayMixIn
-from vires.tests.aux import TEST_DST, DATA_DST
 
 
 class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):

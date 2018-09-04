@@ -28,7 +28,7 @@
 #-------------------------------------------------------------------------------
 
 from eoxmagmod import load_model_shc, load_model_shc_combined
-from eoxmagmod.data import CHAOS6_CORE_X3, CHAOS6_STATIC
+from eoxmagmod.data import CHAOS6_CORE_LATEST, CHAOS6_STATIC
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
 
@@ -40,7 +40,7 @@ class CHAOS6CoreForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return load_model_shc(CHAOS6_CORE_X3)
+        return load_model_shc(CHAOS6_CORE_LATEST)
 
 
 class CHAOS6StaticForwardModel(BaseForwardModel):
@@ -60,7 +60,7 @@ class CHAOS6CombinedForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return load_model_shc_combined(CHAOS6_CORE_X3, CHAOS6_STATIC)
+        return load_model_shc_combined(CHAOS6_CORE_LATEST, CHAOS6_STATIC)
 
 
 class CHAOSCoreForwardModel(CHAOS6CoreForwardModel):

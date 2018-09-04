@@ -26,11 +26,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-import sys
-from os import rename, remove
-from os.path import exists
-from contextlib import closing
-from urllib2 import urlopen
+from logging import getLogger
 from optparse import make_option
 
 from django.conf import settings
@@ -38,44 +34,20 @@ from django.core.management.base import CommandError, BaseCommand
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
 )
-from vires.aux import update_kp, update_dst
+from vires.aux_kp import update_kp
+from vires.aux_dst import update_dst
+from vires.cached_products import (
+    update_cached_product, simple_cached_product_updater,
+)
 
-# URL time-out in seconds
-URL_TIMEOUT = 25
-
-def update(source, destination, updater, label, tmp_extension=None):
-    """ Update index from the given source. """
-    print "Updating %s from %s" % (
-        label, source if source != '-' else '<standard input>'
-    )
-
-    is_url = (
-        source.startswith("https://") or
-        source.startswith("http://") or
-        source.startswith("ftp://")
-    )
-
-    destination_tmp = destination + (tmp_extension or ".tmp")
-    if exists(destination_tmp):
-        remove(destination_tmp)
-
-    try:
-        if is_url:
-            with closing(urlopen(source, timeout=URL_TIMEOUT)) as fin:
-                updater(fin, destination_tmp)
-        elif source == '-':
-            updater(sys.stdin, destination_tmp)
-        else:
-            with open(source) as fin:
-                updater(fin, destination_tmp)
-        rename(destination_tmp, destination)
-    except Exception:
-        if exists(destination_tmp):
-            remove(destination_tmp)
-        raise
+DEPRECATION_WARNING =(
+    "The 'vires_update_aux' command is deprecated! "
+    "Use 'vires_update_cached_file' instead."
+)
 
 
 class Command(CommandOutputMixIn, BaseCommand):
+    help = DEPRECATION_WARNING
     option_list = BaseCommand.option_list + (
         make_option(
             "--dst-url", "--dst-filename", "--dst", dest="dst_filename",
@@ -89,19 +61,22 @@ class Command(CommandOutputMixIn, BaseCommand):
         ),
     )
 
-    #@nested_commit_on_success # There is no Django DB modification.
     def handle(self, *args, **kwargs):
-        if kwargs["dst_filename"] is not None:
-            update(
-                kwargs["dst_filename"],
-                settings.VIRES_AUX_DB_DST,
-                update_dst, 'Dst-index',
-                tmp_extension=".tmp.cdf"
+        logger=getLogger(__name__)
+        logger.warn(DEPRECATION_WARNING)
+
+        def _update(source, destination, updater):
+            update_cached_product(
+                [source], destination, simple_cached_product_updater(updater),
+                tmp_extension=".tmp.cdf", logger=logger
             )
+
+        if kwargs["dst_filename"] is not None:
+            _update(
+                kwargs["dst_filename"], settings.VIRES_AUX_DB_DST, update_dst
+            )
+
         if kwargs["kp_filename"] is not None:
-            update(
-                kwargs["kp_filename"],
-                settings.VIRES_AUX_DB_KP,
-                update_kp, 'Kp-index',
-                tmp_extension=".tmp.cdf"
+            _update(
+                kwargs["kp_filename"], settings.VIRES_AUX_DB_KP, update_kp
             )
