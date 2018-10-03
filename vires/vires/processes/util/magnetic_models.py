@@ -96,9 +96,17 @@ CACHED_MODEL_LOADERS = {
     "MIO_SHA_2C-Secondary": load_model_swarm_mio_internal,
     "MIO_SHA_2D-Primary": load_model_swarm_mio_external,
     "MIO_SHA_2D-Secondary": load_model_swarm_mio_internal,
+    "CHAOS-6-MMA-Primary": load_model_swarm_mma_2c_external,
+    "CHAOS-6-MMA-Secondary": load_model_swarm_mma_2c_internal,
+    "CHAOS-MMA-Primary": load_model_swarm_mma_2c_external,
+    "CHAOS-MMA-Secondary": load_model_swarm_mma_2c_internal,
 }
 
 MODEL_SOURCES = {
+    "CHAOS-6-MMA-Primary": "MMA_CHAOS6",
+    "CHAOS-6-MMA-Secondary": "MMA_CHAOS6",
+    "CHAOS-MMA-Primary": "MMA_CHAOS6",
+    "CHAOS-MMA-Secondary": "MMA_CHAOS6",
     "MMA_SHA_2C-Primary": "MMA_SHA_2C",
     "MMA_SHA_2C-Secondary": "MMA_SHA_2C",
     "MMA_SHA_2F-Primary": "MMA_SHA_2F",

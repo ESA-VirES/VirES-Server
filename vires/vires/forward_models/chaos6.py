@@ -31,6 +31,22 @@ from eoxmagmod import load_model_shc, load_model_shc_combined
 from eoxmagmod.data import CHAOS6_CORE_LATEST, CHAOS6_STATIC
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
+from vires.forward_models.swarm_shc import (
+    SwarmMMA2CPrimaryForwardModel,
+    SwarmMMA2CSecondaryForwardModel,
+)
+
+
+class CHAOS6MMAPrimaryForwardModel(SwarmMMA2CPrimaryForwardModel):
+    """ CHAOS-6 MMA primary field model.  """
+    product_type = "MMA_CHAOS6"
+    identifier = "CHAOS-6-MMA-Primary"
+
+
+class CHAOS6MMASecondaryForwardModel(SwarmMMA2CSecondaryForwardModel):
+    """ CHAOS-6 MMA secondary field model.  """
+    product_type = "MMA_CHAOS6"
+    identifier = "CHAOS-6-MMA-Secondary"
 
 
 class CHAOS6CoreForwardModel(BaseForwardModel):
@@ -61,6 +77,16 @@ class CHAOS6CombinedForwardModel(BaseForwardModel):
     @cached_property
     def model(self):
         return load_model_shc_combined(CHAOS6_CORE_LATEST, CHAOS6_STATIC)
+
+
+class CHAOSMMAPrimaryForwardModel(CHAOS6MMAPrimaryForwardModel):
+    """ CHAOS MMA primary field model.  """
+    identifier = "CHAOS-MMA-Primary"
+
+
+class CHAOSMMASecondaryForwardModel(CHAOS6MMASecondaryForwardModel):
+    """ CHAOS MMA secondary field model.  """
+    identifier = "CHAOS-MMA-Secondary"
 
 
 class CHAOSCoreForwardModel(CHAOS6CoreForwardModel):
