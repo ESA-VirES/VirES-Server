@@ -221,12 +221,25 @@ class Sat2SatResidual(Model):
                     )
             return output_ds
 
+        start_time = cdf_rawtime_to_datetime(time_master.min(), time_cdf_type)
+        stop_time = cdf_rawtime_to_datetime(time_master.max(), time_cdf_type)
         orbcnt_master = fetch_orbit_counter_data(
             filename=settings.VIRES_ORBIT_COUNTER_DB[self._master_spacecraft],
-            start=cdf_rawtime_to_datetime(time_master.min(), time_cdf_type),
-            stop=cdf_rawtime_to_datetime(time_master.max(), time_cdf_type),
+            start=start_time, stop=stop_time,
             fields=("orbit", "MJD2000", "phi_AN")
         )
+
+        if orbcnt_master["orbit"].size == 0:
+            raise RuntimeError(
+                "Failed to read orbit numbers for the selected time interval "
+                " %s/%s! The time interval is not covered by the spacecraft %s "
+                "orbit counter file!" %
+                (
+                    start_time.isoformat("T") + "Z",
+                    stop_time.isoformat("T") + "Z",
+                    self._master_spacecraft
+                )
+            )
 
         # get slave ANX times and longitudes
         orbcnt_slave = interpolate_orbit_counter_data(
@@ -238,6 +251,7 @@ class Sat2SatResidual(Model):
 
         # expand time and latitude offsets
         idx = searchsorted(orbcnt_master["orbit"], dataset["OrbitNumber"])
+
         assert (orbcnt_master["orbit"][idx] == dataset["OrbitNumber"]).all()
 
         # ANX time difference in seconds
