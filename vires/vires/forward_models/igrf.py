@@ -50,7 +50,7 @@ class IGRF12ForwardModel(BaseForwardModel):
 
     @cached_property
     def model(self):
-        return load_model_shc(IGRF12)
+        return load_model_shc(IGRF12, interpolate_in_decimal_years=True)
 
 
 class IGRFForwardModel(IGRF12ForwardModel):
