@@ -392,6 +392,171 @@
         },
         {
             "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Synchronization status",
+            "identifier": "SyncStatus",
+            "name": "SyncStatus",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Spacecraft velocity in the ITRF",
+            "identifier": "U_orbit",
+            "name": "U_orbit",
+            "nil_values": [],
+            "uom": "m/s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Plasma density (electron)",
+            "identifier": "Ne",
+            "name": "Ne",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error estimate of plasma density (Ne)",
+            "identifier": "Ne_error",
+            "name": "Ne_error",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Plasma electron temperature",
+            "identifier": "Te",
+            "name": "Te",
+            "nil_values": [],
+            "uom": "K"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error estimate of plasma electron temperature (Te)",
+            "identifier": "Te_error",
+            "name": "Te_error",
+            "nil_values": [],
+            "uom": "K"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Spacecraft potential",
+            "identifier": "Vs",
+            "name": "Vs",
+            "nil_values": [],
+            "uom": "V"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error estimate of spacecraft potential (Vs)",
+            "identifier": "Vs_error",
+            "name": "Vs_error",
+            "nil_values": [],
+            "uom": "V"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags indicating the source/method of LP measurements (Ne, Te, Vs)",
+            "identifier": "Flags_LP",
+            "name": "Flags_LP",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the plasma density measurement",
+            "identifier": "Flags_Ne",
+            "name": "Flags_Ne",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the electron temperature measurement",
+            "identifier": "Flags_Te",
+            "name": "Flags_Te",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the spacecraft potential measurement",
+            "identifier": "Flags_Vs",
+            "name": "Flags_Vs",
+            "nil_values": [],
+            "uom": ""
+        }
+    ],
+    "name": "SWARM_EFI_LP"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Latitude ",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Longitude ",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Radius ",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
             "description": "Spacecraft velocity, NEC frame",
