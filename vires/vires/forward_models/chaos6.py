@@ -29,20 +29,22 @@
 
 from eoxmagmod import load_model_shc, load_model_shc_combined
 from eoxmagmod.time_util import decimal_year_to_mjd2000_simple
-from eoxmagmod.data import CHAOS6_CORE_LATEST, CHAOS6_STATIC
+from eoxmagmod.data import CHAOS6_STATIC
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
+from vires.forward_models.swarm_shc import SwarmL2SHCForwardModel
 
 
-class CHAOS6CoreForwardModel(BaseForwardModel):
+class CHAOS6CoreForwardModel(SwarmL2SHCForwardModel):
     """ Forward model calculator for the CHAOS-6 core field.
     """
+    product_type = "MCO_CHAOS6"
     identifier = "CHAOS-6-Core"
 
-    @cached_property
+    @property
     def model(self):
         return load_model_shc(
-            CHAOS6_CORE_LATEST, to_mjd2000=decimal_year_to_mjd2000_simple
+            self.model_file, to_mjd2000=decimal_year_to_mjd2000_simple
         )
 
 
@@ -56,15 +58,16 @@ class CHAOS6StaticForwardModel(BaseForwardModel):
         return load_model_shc(CHAOS6_STATIC)
 
 
-class CHAOS6CombinedForwardModel(BaseForwardModel):
+class CHAOS6CombinedForwardModel(SwarmL2SHCForwardModel):
     """ Forward model calculator for the CHAOS-6 Combined field.
     """
+    product_type = "MCO_CHAOS6"
     identifier = "CHAOS-6-Combined"
 
-    @cached_property
+    @property
     def model(self):
         return load_model_shc_combined(
-            CHAOS6_CORE_LATEST, CHAOS6_STATIC,
+            self.model_file, CHAOS6_STATIC,
             to_mjd2000=decimal_year_to_mjd2000_simple
         )
 
@@ -73,6 +76,12 @@ class CHAOSCoreForwardModel(CHAOS6CoreForwardModel):
     """ Forward model calculator for the CHAOS core field.
     """
     identifier = "CHAOS-Core"
+
+
+class MCO2FForwardModel(CHAOS6CoreForwardModel):
+    """ Forward model calculator for the CHAOS core field.
+    """
+    identifier = "MCO_SHA_2X"
 
 
 class CHAOSStaticForwardModel(CHAOS6StaticForwardModel):
