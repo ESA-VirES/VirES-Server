@@ -46,12 +46,13 @@ from eoxmagmod import (
     load_model_swarm_mio_internal,
     load_model_swarm_mio_external,
 )
+from eoxmagmod.time_util import decimal_year_to_mjd2000_simple
 
 MODELS_FACTORIES = {
     "IGRF11":
         lambda: load_model_igrf(IGRF11),
     "IGRF12":
-        lambda: load_model_shc(IGRF12),
+        lambda: load_model_shc(IGRF12, interpolate_in_decimal_years=True),
     "SIFM":
         lambda: load_model_shc(SIFM),
     "WMM2010":
@@ -60,29 +61,34 @@ MODELS_FACTORIES = {
         lambda: load_model_wmm(WMM_2015),
     "EMM2010":
         lambda: load_model_emm(EMM_2010_STATIC, EMM_2010_SECVAR),
-    "CHAOS-6-Combined":
-        lambda: load_model_shc_combined(CHAOS6_CORE_LATEST, CHAOS6_STATIC),
-    "CHAOS-6-Core":
-        lambda: load_model_shc(CHAOS6_CORE_LATEST),
-    "CHAOS-6-Static":
-        lambda: load_model_shc(CHAOS6_STATIC),
     "CHAOS-5-Combined":
-        lambda: load_model_shc_combined(CHAOS5_CORE_V4, CHAOS5_STATIC),
+        lambda: load_model_shc_combined(
+            CHAOS5_CORE_V4, CHAOS5_STATIC,
+            to_mjd2000=decimal_year_to_mjd2000_simple
+        ),
     "CHAOS-5-Core":
-        lambda: load_model_shc(CHAOS5_CORE_V4),
+        lambda: load_model_shc(
+            CHAOS5_CORE_V4,
+            to_mjd2000=decimal_year_to_mjd2000_simple
+        ),
     "CHAOS-5-Static":
         lambda: load_model_shc(CHAOS5_STATIC),
+    "CHAOS-6-Static":
+        lambda: load_model_shc(CHAOS6_STATIC),
 }
 MODELS_FACTORIES["IGRF"] = MODELS_FACTORIES["IGRF12"]
 MODELS_FACTORIES["WMM"] = MODELS_FACTORIES["WMM2015"]
 MODELS_FACTORIES["EMM"] = MODELS_FACTORIES["EMM2010"]
-MODELS_FACTORIES["CHAOS-Combined"] = MODELS_FACTORIES["CHAOS-6-Combined"]
 MODELS_FACTORIES["CHAOS-Static"] = MODELS_FACTORIES["CHAOS-6-Static"]
-MODELS_FACTORIES["CHAOS-Core"] = MODELS_FACTORIES["CHAOS-6-Core"]
 
 
-#FIXME - MIO primary/external below ionosphere
 CACHED_MODEL_LOADERS = {
+    "CHAOS-6-Combined": lambda filename: load_model_shc_combined(
+        filename, CHAOS6_STATIC, to_mjd2000=decimal_year_to_mjd2000_simple
+    ),
+    "CHAOS-6-Core": lambda filename: load_model_shc(
+        filename, to_mjd2000=decimal_year_to_mjd2000_simple
+    ),
     "MCO_SHA_2C": load_model_shc,
     "MCO_SHA_2D": load_model_shc,
     "MCO_SHA_2F": load_model_shc,
@@ -101,8 +107,17 @@ CACHED_MODEL_LOADERS = {
     "CHAOS-MMA-Primary": load_model_swarm_mma_2c_external,
     "CHAOS-MMA-Secondary": load_model_swarm_mma_2c_internal,
 }
+CACHED_MODEL_LOADERS["MCO_SHA_2X"] = CACHED_MODEL_LOADERS["CHAOS-6-Core"]
+CACHED_MODEL_LOADERS["CHAOS-Core"] = CACHED_MODEL_LOADERS["CHAOS-6-Core"]
+CACHED_MODEL_LOADERS["CHAOS-Combined"] = CACHED_MODEL_LOADERS["CHAOS-6-Combined"]
 
 MODEL_SOURCES = {
+    "MCO_SHA_2X": "MCO_CHAOS6",
+    "CHAOS-6-Core": "MCO_CHAOS6",
+    "CHAOS-Core": "MCO_CHAOS6",
+    "CHAOS-6-Core": "MCO_CHAOS6",
+    "CHAOS-Combined": "MCO_CHAOS6",
+    "CHAOS-6-Combined": "MCO_CHAOS6",
     "CHAOS-6-MMA-Primary": "MMA_CHAOS6",
     "CHAOS-6-MMA-Secondary": "MMA_CHAOS6",
     "CHAOS-MMA-Primary": "MMA_CHAOS6",
