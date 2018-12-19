@@ -41,8 +41,7 @@ class CHAOS6CoreForwardModel(SwarmL2SHCForwardModel):
     product_type = "MCO_CHAOS6"
     identifier = "CHAOS-6-Core"
 
-    @property
-    def model(self):
+    def laod_model(self):
         return load_model_shc(
             self.model_file, to_mjd2000=decimal_year_to_mjd2000_simple
         )
@@ -64,8 +63,7 @@ class CHAOS6CombinedForwardModel(SwarmL2SHCForwardModel):
     product_type = "MCO_CHAOS6"
     identifier = "CHAOS-6-Combined"
 
-    @property
-    def model(self):
+    def load_model(self):
         return load_model_shc_combined(
             self.model_file, CHAOS6_STATIC,
             to_mjd2000=decimal_year_to_mjd2000_simple
