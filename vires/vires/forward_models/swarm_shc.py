@@ -27,6 +27,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+from os import stat
 from django.conf import settings
 from eoxmagmod import (
     load_model_shc,
@@ -37,6 +38,7 @@ from eoxmagmod import (
     load_model_swarm_mio_internal,
     load_model_swarm_mio_external,
 )
+from vires.util import cached_property
 from vires.forward_models.base import BaseForwardModel
 
 
@@ -45,13 +47,28 @@ class SwarmL2SHCForwardModel(BaseForwardModel):
     abstract = True
     product_type = None
 
-    @property
-    def model_file(self):
-        return settings.VIRES_CACHED_PRODUCTS[self.product_type]
+    def __init__(self):
+        super(SwarmL2SHCForwardModel, self).__init__()
+        self._last_change = None
+        self._cached_model = None
 
     @property
     def model(self):
-        return load_model_shc(self.mode_file)
+        """ Get up-to-date model instance. """
+        last_change = stat(self.model_file).st_mtime
+        if last_change != self._last_change or self._cached_model is None:
+            self._last_change = last_change
+            self._cached_model = self.load_model()
+        return self._cached_model
+
+    def load_model(self):
+        """ Load new model instance. """
+        return load_model_shc(self.model_file)
+
+    @cached_property
+    def model_file(self):
+        """ Get model file. """
+        return settings.VIRES_CACHED_PRODUCTS[self.product_type]
 
 
 class SwarmMIO2CPrimaryForwardModel(SwarmL2SHCForwardModel):
@@ -60,8 +77,7 @@ class SwarmMIO2CPrimaryForwardModel(SwarmL2SHCForwardModel):
     product_type = "MIO_SHA_2C"
     identifier = "MIO_SHA_2C-Primary"
 
-    @property
-    def model(self):
+    def load_model(self):
         return load_model_swarm_mio_external(self.mode_file)
 
 
@@ -78,8 +94,7 @@ class SwarmMIO2CSecondaryForwardModel(SwarmL2SHCForwardModel):
     product_type = "MIO_SHA_2C"
     identifier = "MIO_SHA_2C-Secondary"
 
-    @property
-    def model(self):
+    def load_model(self):
         return load_model_swarm_mio_internal(self.mode_file)
 
 
@@ -96,8 +111,7 @@ class SwarmMMA2CPrimaryForwardModel(SwarmL2SHCForwardModel):
     product_type = "MMA_SHA_2C"
     identifier = "MMA_SHA_2C-Primary"
 
-    @property
-    def model(self):
+    def load_model(self):
         return load_model_swarm_mma_2c_external(self.mode_file)
 
 
@@ -107,8 +121,7 @@ class SwarmMMA2CSecondaryForwardModel(SwarmL2SHCForwardModel):
     product_type = "MMA_SHA_2C"
     identifier = "MMA_SHA_2C-Secondary"
 
-    @property
-    def model(self):
+    def load_model(self):
         return load_model_swarm_mma_2c_internal(self.mode_file)
 
 
@@ -118,8 +131,7 @@ class SwarmMMA2FPrimaryForwardModel(SwarmL2SHCForwardModel):
     product_type = "MMA_SHA_2F"
     identifier = "MMA_SHA_2F-Primary"
 
-    @property
-    def model(self):
+    def load_model(self):
         return load_model_swarm_mma_2f_geo_external(self.mode_file)
 
 
@@ -129,8 +141,7 @@ class SwarmMMA2FSecondaryForwardModel(SwarmL2SHCForwardModel):
     product_type = "MMA_SHA_2F"
     identifier = "MMA_SHA_2F-Secondary"
 
-    @property
-    def model(self):
+    def load_model(self):
         return load_model_swarm_mma_2f_geo_internal(self.mode_file)
 
 
