@@ -160,13 +160,14 @@ class BaseForwardModel(Component):
         coeff_min = coeff_min if coeff_min is not None else -1
         coeff_max = coeff_max if coeff_max is not None else -1
 
+        model = self.model
         options = {}
-        if "f107" in self.model.parameters:
+        if "f107" in model.parameters:
             options["f107"] = get_f107_value(time)
 
         # Evaluate the magnetic field vector components
         # (northing, easting, up-pointing)
-        field_components = self.model.eval(
+        field_components = model.eval(
             time, coord_gdt, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
             max_degree=coeff_max, min_degree=coeff_min, scale=[1, 1, -1],
             **options
@@ -238,13 +239,14 @@ class BaseForwardModel(Component):
         coeff_min = coeff_min if coeff_min is not None else -1
         coeff_max = coeff_max if coeff_max is not None else -1
 
+        model = self.model
         options = {}
-        if "f107" in self.model.parameters:
+        if "f107" in model.parameters:
             options["f107"] = get_f107_value(time)
 
         # Evaluate the magnetic field vector components
         # (northing, easting, up-pointing)
-        field_components_int = self.model.eval(
+        field_components_int = model.eval(
             time, coord_gdt_int, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
             max_degree=coeff_max, min_degree=coeff_min, scale=[1, 1, -1],
             **options
