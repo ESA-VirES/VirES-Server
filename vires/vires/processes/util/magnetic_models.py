@@ -46,12 +46,13 @@ from eoxmagmod import (
     load_model_swarm_mio_internal,
     load_model_swarm_mio_external,
 )
+from eoxmagmod.time_util import decimal_year_to_mjd2000_simple
 
 MODELS_FACTORIES = {
     "IGRF11":
         lambda: load_model_igrf(IGRF11),
     "IGRF12":
-        lambda: load_model_shc(IGRF12),
+        lambda: load_model_shc(IGRF12, interpolate_in_decimal_years=True),
     "SIFM":
         lambda: load_model_shc(SIFM),
     "WMM2010":
@@ -61,15 +62,27 @@ MODELS_FACTORIES = {
     "EMM2010":
         lambda: load_model_emm(EMM_2010_STATIC, EMM_2010_SECVAR),
     "CHAOS-6-Combined":
-        lambda: load_model_shc_combined(CHAOS6_CORE_LATEST, CHAOS6_STATIC),
+        lambda: load_model_shc_combined(
+            CHAOS6_CORE_LATEST, CHAOS6_STATIC,
+            to_mjd2000=decimal_year_to_mjd2000_simple
+        ),
     "CHAOS-6-Core":
-        lambda: load_model_shc(CHAOS6_CORE_LATEST),
+        lambda: load_model_shc(
+            CHAOS6_CORE_LATEST,
+            to_mjd2000=decimal_year_to_mjd2000_simple
+        ),
     "CHAOS-6-Static":
         lambda: load_model_shc(CHAOS6_STATIC),
     "CHAOS-5-Combined":
-        lambda: load_model_shc_combined(CHAOS5_CORE_V4, CHAOS5_STATIC),
+        lambda: load_model_shc_combined(
+            CHAOS5_CORE_V4, CHAOS5_STATIC,
+            to_mjd2000=decimal_year_to_mjd2000_simple
+        ),
     "CHAOS-5-Core":
-        lambda: load_model_shc(CHAOS5_CORE_V4),
+        lambda: load_model_shc(
+            CHAOS5_CORE_V4,
+            to_mjd2000=decimal_year_to_mjd2000_simple
+        ),
     "CHAOS-5-Static":
         lambda: load_model_shc(CHAOS5_STATIC),
 }
@@ -81,7 +94,6 @@ MODELS_FACTORIES["CHAOS-Static"] = MODELS_FACTORIES["CHAOS-6-Static"]
 MODELS_FACTORIES["CHAOS-Core"] = MODELS_FACTORIES["CHAOS-6-Core"]
 
 
-#FIXME - MIO primary/external below ionosphere
 CACHED_MODEL_LOADERS = {
     "MCO_SHA_2C": load_model_shc,
     "MCO_SHA_2D": load_model_shc,
