@@ -62,7 +62,7 @@ from vires.processes.util import (
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
-    MagneticDipole, DipoleTiltAngle,
+    MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
 )
 
 # TODO: Make the limits configurable.
@@ -224,6 +224,14 @@ class FetchFilteredData(WPSProcess):
                     OrbitCounter(
                         "OrbitCounter" + spacecraft,
                         settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
+                    ),
+                    OrbitDirection(
+                        "OrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
+                    ),
+                    QDOrbitDirection(
+                        "QDOrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft]
                     ),
                 ]
                 for spacecraft in settings.VIRES_SPACECRAFTS

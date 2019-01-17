@@ -37,6 +37,7 @@ from .time_series import TimeSeries
 from .time_series_product import ProductTimeSeries
 from .time_series_aux import  IndexKp, IndexDst, IndexF107
 from .time_series_orbit_counter import OrbitCounter
+from .time_series_orbit_direction import OrbitDirection, QDOrbitDirection
 from .model import Model
 from .model_magmod import MagneticModelResidual, MagneticModel
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
