@@ -121,6 +121,9 @@ MODEL_SOURCES = {
     "MIO_SHA_2D-Secondary": "MIO_SHA_2D",
 }
 
+# list of all available models
+MODEL_LIST = list(MODELS_FACTORIES) + list(CACHED_MODEL_LOADERS)
+
 
 def _get_cached_model(model_id):
     cached_products = getattr(settings, "VIRES_CACHED_PRODUCTS", {})
