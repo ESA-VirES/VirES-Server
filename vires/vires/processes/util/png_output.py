@@ -27,18 +27,23 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 from matplotlib.cm import ScalarMappable
-from numpy import array
+from numpy import array, isnan
+from numpy.ma import masked_where
 #from osgeo import gdal; gdal.UseExceptions() #pylint: disable=multiple-statements
 from eoxserver.contrib import gdal
 
 
-def data_to_png(filename, data, norm, cmap=None, ignore_alpha=True):
+def data_to_png(filename, data, norm, cmap=None, ignore_alpha=None):
     """ Convert 2-D array of scalar values to PNG image.
     The data are normalised by means of the provided normaliser (see,
     e.g., http://matplotlib.org/users/colormapnorms.html.
     If provided colour map is used to colour the values. Unless explicitly
     requested the alpha channel of the colour-map is ignored.
     """
+    mask = isnan(data)
+    if ignore_alpha is None:
+        ignore_alpha = not mask.any()
+    data = masked_where(mask, data)
     if cmap:
         colors = ScalarMappable(norm, cmap).to_rgba(data, bytes=True)
         if ignore_alpha:
