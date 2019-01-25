@@ -29,7 +29,6 @@
 
 from os.path import exists
 from numpy import loadtxt, array, nan
-
 from .util import full
 from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
 from .time_util import datetime_to_mjd2000
@@ -54,6 +53,36 @@ def update_orbit_counter_file(src_file, dst_file):
         cdf["orbit"], cdf["MJD2000"], cdf["phi_AN"], cdf["Source"] = (
             parse_orbit_counter_file(src_file)
         )
+
+
+def get_max_orbit_number(filename):
+    """ Get maximum orbit number. """
+    if not exists(filename):
+        raise IOError("File %s does not exist!" % filename)
+
+    with cdf_open(filename) as cdf:
+        return cdf["orbit"][-1] - 1
+
+
+def get_orbit_timerange(filename, start_orbit, end_orbit):
+    """ Get ascending node times for the given range of orbit numbers. """
+    if not exists(filename):
+        raise IOError("File %s does not exist!" % filename)
+
+    def _get_ascending_node_time(orbit_number):
+        orbit_number = min(orbits[-1], max(1, orbit_number))
+        if orbit_number < 1 or orbit_number > orbits[-1]:
+            raise ValueError("Invalid orbit number!")
+        assert orbits[orbit_number - 1] == orbit_number
+        return orbit_number, times[orbit_number - 1]
+
+    with cdf_open(filename) as cdf:
+        orbits = cdf["orbit"][...]
+        times = cdf["MJD2000"][...]
+        start_orbit, start_time = _get_ascending_node_time(start_orbit)
+        end_orbit, end_time = _get_ascending_node_time(end_orbit + 1)
+        end_orbit -= 1
+        return start_orbit, end_orbit, start_time, end_time
 
 
 def fetch_orbit_counter_data(filename, start, stop,
