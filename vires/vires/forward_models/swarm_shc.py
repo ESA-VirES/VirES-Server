@@ -78,7 +78,7 @@ class SwarmMIO2CPrimaryForwardModel(SwarmL2SHCForwardModel):
     identifier = "MIO_SHA_2C-Primary"
 
     def load_model(self):
-        return load_model_swarm_mio_external(self.mode_file)
+        return load_model_swarm_mio_external(self.model_file)
 
 
 class SwarmMIO2DPrimaryForwardModel(SwarmMIO2CPrimaryForwardModel):
@@ -95,7 +95,7 @@ class SwarmMIO2CSecondaryForwardModel(SwarmL2SHCForwardModel):
     identifier = "MIO_SHA_2C-Secondary"
 
     def load_model(self):
-        return load_model_swarm_mio_internal(self.mode_file)
+        return load_model_swarm_mio_internal(self.model_file)
 
 
 class SwarmMIO2DSecondaryForwardModel(SwarmMIO2CSecondaryForwardModel):
@@ -112,7 +112,7 @@ class SwarmMMA2CPrimaryForwardModel(SwarmL2SHCForwardModel):
     identifier = "MMA_SHA_2C-Primary"
 
     def load_model(self):
-        return load_model_swarm_mma_2c_external(self.mode_file)
+        return load_model_swarm_mma_2c_external(self.model_file)
 
 
 class SwarmMMA2CSecondaryForwardModel(SwarmL2SHCForwardModel):
@@ -122,7 +122,7 @@ class SwarmMMA2CSecondaryForwardModel(SwarmL2SHCForwardModel):
     identifier = "MMA_SHA_2C-Secondary"
 
     def load_model(self):
-        return load_model_swarm_mma_2c_internal(self.mode_file)
+        return load_model_swarm_mma_2c_internal(self.model_file)
 
 
 class SwarmMMA2FPrimaryForwardModel(SwarmL2SHCForwardModel):
@@ -132,7 +132,7 @@ class SwarmMMA2FPrimaryForwardModel(SwarmL2SHCForwardModel):
     identifier = "MMA_SHA_2F-Primary"
 
     def load_model(self):
-        return load_model_swarm_mma_2f_geo_external(self.mode_file)
+        return load_model_swarm_mma_2f_geo_external(self.model_file)
 
 
 class SwarmMMA2FSecondaryForwardModel(SwarmL2SHCForwardModel):
@@ -142,7 +142,7 @@ class SwarmMMA2FSecondaryForwardModel(SwarmL2SHCForwardModel):
     identifier = "MMA_SHA_2F-Secondary"
 
     def load_model(self):
-        return load_model_swarm_mma_2f_geo_internal(self.mode_file)
+        return load_model_swarm_mma_2f_geo_internal(self.model_file)
 
 
 class SwarmMCO2CForwardModel(SwarmL2SHCForwardModel):
