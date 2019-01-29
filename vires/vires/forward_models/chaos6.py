@@ -29,20 +29,37 @@
 
 from eoxmagmod import load_model_shc, load_model_shc_combined
 from eoxmagmod.time_util import decimal_year_to_mjd2000_simple
-from eoxmagmod.data import CHAOS6_CORE_LATEST, CHAOS6_STATIC
+from eoxmagmod.data import CHAOS6_STATIC
 from vires.forward_models.base import BaseForwardModel
 from vires.util import cached_property
+from vires.forward_models.swarm_shc import (
+    SwarmL2SHCForwardModel,
+    SwarmMMA2CPrimaryForwardModel,
+    SwarmMMA2CSecondaryForwardModel,
+)
 
 
-class CHAOS6CoreForwardModel(BaseForwardModel):
+class CHAOS6MMAPrimaryForwardModel(SwarmMMA2CPrimaryForwardModel):
+    """ CHAOS-6 MMA primary field model.  """
+    product_type = "MMA_CHAOS6"
+    identifier = "CHAOS-6-MMA-Primary"
+
+
+class CHAOS6MMASecondaryForwardModel(SwarmMMA2CSecondaryForwardModel):
+    """ CHAOS-6 MMA secondary field model.  """
+    product_type = "MMA_CHAOS6"
+    identifier = "CHAOS-6-MMA-Secondary"
+
+
+class CHAOS6CoreForwardModel(SwarmL2SHCForwardModel):
     """ Forward model calculator for the CHAOS-6 core field.
     """
+    product_type = "MCO_CHAOS6"
     identifier = "CHAOS-6-Core"
 
-    @cached_property
-    def model(self):
+    def laod_model(self):
         return load_model_shc(
-            CHAOS6_CORE_LATEST, to_mjd2000=decimal_year_to_mjd2000_simple
+            self.model_file, to_mjd2000=decimal_year_to_mjd2000_simple
         )
 
 
@@ -56,23 +73,39 @@ class CHAOS6StaticForwardModel(BaseForwardModel):
         return load_model_shc(CHAOS6_STATIC)
 
 
-class CHAOS6CombinedForwardModel(BaseForwardModel):
+class CHAOS6CombinedForwardModel(SwarmL2SHCForwardModel):
     """ Forward model calculator for the CHAOS-6 Combined field.
     """
+    product_type = "MCO_CHAOS6"
     identifier = "CHAOS-6-Combined"
 
-    @cached_property
-    def model(self):
+    def load_model(self):
         return load_model_shc_combined(
-            CHAOS6_CORE_LATEST, CHAOS6_STATIC,
+            self.model_file, CHAOS6_STATIC,
             to_mjd2000=decimal_year_to_mjd2000_simple
         )
+
+
+class CHAOSMMAPrimaryForwardModel(CHAOS6MMAPrimaryForwardModel):
+    """ CHAOS MMA primary field model.  """
+    identifier = "CHAOS-MMA-Primary"
+
+
+class CHAOSMMASecondaryForwardModel(CHAOS6MMASecondaryForwardModel):
+    """ CHAOS MMA secondary field model.  """
+    identifier = "CHAOS-MMA-Secondary"
 
 
 class CHAOSCoreForwardModel(CHAOS6CoreForwardModel):
     """ Forward model calculator for the CHAOS core field.
     """
     identifier = "CHAOS-Core"
+
+
+class MCO2FForwardModel(CHAOS6CoreForwardModel):
+    """ Forward model calculator for the CHAOS core field.
+    """
+    identifier = "MCO_SHA_2X"
 
 
 class CHAOSStaticForwardModel(CHAOS6StaticForwardModel):

@@ -33,7 +33,9 @@ from vires.aux_kp import update_kp
 from vires.aux_dst import update_dst
 from vires.aux_f107 import update_aux_f107_2_
 from vires.orbit_counter import update_orbit_counter_file
-from vires.model_mma import update_mma_sha_2f, filter_mma_sha_2f
+from vires.model_mma import (
+    merge_mma_sha_2f, filter_mma_sha_2f, merge_mma_sha_2c, filter_mma_sha_2c,
+)
 from vires.cached_products import (
     copy_file, update_cached_product, simple_cached_product_updater,
     InvalidSourcesError,
@@ -83,8 +85,15 @@ CACHED_PRODUCTS = {
 
 configure_cached_product(
     "MMA_SHA_2F",
-    updater=update_mma_sha_2f,
+    updater=merge_mma_sha_2f,
     filter=filter_mma_sha_2f,
+    tmp_extension=".tmp.cdf"
+)
+
+configure_cached_product(
+    "MMA_CHAOS6",
+    updater=merge_mma_sha_2c,
+    filter=filter_mma_sha_2c,
     tmp_extension=".tmp.cdf"
 )
 
