@@ -92,11 +92,20 @@ class Command(CommandOutputMixIn, BaseCommand):
                 "links are NOT preserved."
             )
         ),
+        make_option(
+            "--overlap", dest="overlap", choices=("IGNORE", "REPLACE"),
+            default="REPLACE", help=(
+                "Define how to resolve registered overlapping products."
+                "By default, the REPLACE option causes the overlapping "
+                "products to be de-registered to prevent duplicated data."
+                "Alternatively, the duplicated data can be IGNORED. "
+            )
+        ),
     )
 
     @nested_commit_on_success
     def _register_product(self, collection, product_id, data_file,
-                          ignore_if_registered):
+                          ignore_registered, ignore_overlaps):
         removed, inserted = [], []
         metadata = read_metadata(data_file)
 
@@ -104,19 +113,23 @@ class Command(CommandOutputMixIn, BaseCommand):
         products = find_time_overlaps(
             collection, metadata["begin_time"], metadata["end_time"]
         )
+
         for product in products:
-            if product.identifier == product_id and ignore_if_registered:
+            if product.identifier == product_id and ignore_registered:
                 is_in_collection = True
             else:
-                delete_product(product)
-                self.print_msg("%s de-registered" % product.identifier)
-                removed.append(product.identifier)
+                if ignore_overlaps and product.identifier != product_id:
+                    self.print_msg("%s ignored" % product.identifier)
+                else:
+                    delete_product(product)
+                    self.print_msg("%s de-registered" % product.identifier)
+                    removed.append(product.identifier)
 
         if not is_in_collection:
             # The product may be registered but not inserted in the collection.
             product = find_product(product_id)
 
-            if product and not ignore_if_registered:
+            if product and not ignore_registered:
                 delete_product(product)
                 self.print_msg("%s de-registered" % product.identifier)
                 removed.append(product.identifier)
@@ -144,7 +157,9 @@ class Command(CommandOutputMixIn, BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        ignore_if_registered = kwargs["conflict"] == "IGNORE"
+        ignore_registered = kwargs["conflict"] == "IGNORE"
+        ignore_overlaps = kwargs["overlap"] == "IGNORE"
+
         range_type = get_range_type(kwargs["range_type_name"])
         collection_id = kwargs["collection_id"]
         collection = get_collection(collection_id)
@@ -174,7 +189,8 @@ class Command(CommandOutputMixIn, BaseCommand):
 
             try:
                 removed, inserted = self._register_product(
-                    collection, product_id, data_file, ignore_if_registered
+                    collection, product_id, data_file, ignore_registered,
+                    ignore_overlaps,
                 )
             except Exception as error:
                 self.print_traceback(error, kwargs)
