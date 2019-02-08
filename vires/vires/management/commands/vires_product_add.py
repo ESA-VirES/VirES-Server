@@ -110,10 +110,10 @@ class Command(CommandOutputMixIn, BaseCommand):
         metadata = read_metadata(data_file)
 
         is_in_collection = False
+
         products = find_time_overlaps(
             collection, metadata["begin_time"], metadata["end_time"]
         )
-
         for product in products:
             if product.identifier == product_id and ignore_registered:
                 is_in_collection = True
@@ -167,22 +167,19 @@ class Command(CommandOutputMixIn, BaseCommand):
         if collection is None:
             if range_type:
                 self.print_wrn(
-                    "The collection '%s' does not exist! A new collection "
-                    "will be created ..." % collection_id
+                    "The product collection '%s' does not exist! A new "
+                    "collection will be created ..." % collection_id
                 )
                 collection = collection_create(collection_id, range_type)
             else:
                 raise CommandError(
-                    "The collection '%s' does not exist! "
+                    "The product collection '%s' does not exist! "
                     "A range type must be specified to create a new one."
                     % collection_id
                 )
 
-        total_count = 0
-        inserted_count = 0
-        removed_count = 0
-        skipped_count = 0
-        failed_count = 0
+        counter = Counter()
+
         for data_file in read_products(kwargs["input_file"], args):
 
             product_id = get_product_id(data_file)
@@ -198,41 +195,68 @@ class Command(CommandOutputMixIn, BaseCommand):
                     "Registration of '%s' failed! Reason: %s"
                     % (product_id, error)
                 )
-                failed_count += 1
+                counter.increment_failed()
             else:
-                removed_count += len(removed)
+                counter.increment_removed(len(removed))
                 if inserted:
-                    inserted_count += 1
+                    counter.increment_inserted()
                 else:
-                    skipped_count += 1
+                    counter.increment_skipped()
             finally:
-                total_count += 1
+                counter.increment()
+
+        counter.print_report(lambda msg: self.print_msg(msg, 1))
 
 
-        if inserted_count > 0:
-            self.print_msg(
+class Counter(object):
+
+    def __init__(self):
+        self._total = 0
+        self._inserted = 0
+        self._removed = 0
+        self._skipped = 0
+        self._failed = 0
+
+    def increment(self, count=1):
+        self._total += count
+
+    def increment_inserted(self, count=1):
+        self._inserted += count
+
+    def increment_removed(self, count=1):
+        self._removed += count
+
+    def increment_skipped(self, count=1):
+        self._skipped += count
+
+    def increment_failed(self, count=1):
+        self._failed += count
+
+    def print_report(self, print_fcn):
+        if self._inserted > 0:
+            print_fcn(
                 "%d of %d product(s) registered."
-                % (inserted_count, total_count), 1
+                % (self._inserted, self._total)
             )
 
-        if skipped_count > 0:
-            self.print_msg(
+        if self._skipped > 0:
+            print_fcn(
                 "%d of %d product(s) skipped."
-                % (skipped_count, total_count), 1
+                % (self._skipped, self._total)
             )
 
-        if removed_count > 0:
-            self.print_msg("%d product(s) de-registered." % removed_count, 1)
+        if self._removed > 0:
+            print_fcn("%d product(s) de-registered." % self._removed)
 
 
-        if failed_count > 0:
-            self.print_msg(
+        if self._failed > 0:
+            print_fcn(
                 "Failed to register %d of %d product(s)."
-                % (failed_count, total_count), 1
+                % (self._failed, self._total)
             )
 
-        if total_count == 0:
-            self.print_msg("No action performed.", 1)
+        if self._total == 0:
+            print_fcn("No action performed.")
 
 
 def read_metadata(data_file):
@@ -316,15 +340,18 @@ def collection_create(identifier, range_type):
 def find_product(product_id):
     """ Return True if the product is already registered. """
     try:
-        return Product.objects.get(identifier=product_id)
+        item = Product.objects.get(identifier=product_id)
     except Product.DoesNotExist:
         return None
+    return item.cast() if item.iscoverage else None
 
 
 def find_time_overlaps(collection, begin_time, end_time):
     """ Lookup products with the same temporal overlap."""
-    return collection.eo_objects.filter(
-        begin_time__lte=end_time, end_time__gte=begin_time
+    return (
+        item.cast() for item in collection.eo_objects.filter(
+            begin_time__lte=end_time, end_time__gte=begin_time
+        ) if item.iscoverage
     )
 
 
@@ -360,7 +387,7 @@ def register_product(range_type, product_id, data_file, metadata):
 
 def delete_product(product):
     """ Delete product object. """
-    product.cast().delete()
+    product.delete()
 
 
 def _get_location_chain(items):
