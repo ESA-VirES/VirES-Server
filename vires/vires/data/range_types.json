@@ -1339,11 +1339,31 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "Absolute slant TE",
+            "description": "Absolute slant TEC",
             "identifier": "Absolute_STEC",
             "name": "Absolute_STEC",
             "nil_values": [],
             "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Absolute vertical TEC",
+            "identifier": "Absolute_VTEC",
+            "name": "Absolute_VTEC",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Elevation Angle",
+            "identifier": "Elevation_Angle",
+            "name": "Elevation_Angle",
+            "nil_values": [],
+            "uom": "degree"
         },
         {
             "color_interpretation": "Undefined",
