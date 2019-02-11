@@ -166,22 +166,21 @@
 <div class="panel panel-default">
   <div class="panel-heading"><a name="csv-precision">Why are the floating-point values downloaded in the CSV format not identical to the values downloaded in the CDF format?</a></div>
     <p>
-      The CSV is a text based data format and due to the text decimal
-      representation of the floating point values the floating-point values
-      in the CSV format may slightly differ from the original binary values
-      read from the Swarm products.
+      The CSV (Comma-Separated Values) is a text based data format and
+      due to the text decimal representation of the floating point
+      values the CSV data may slightly differ from the original the Swarm products.
     </p>
     <p>
       In VirES, the CSV text representation of the floating point values
-      preserves 9 significant decimal places (equivalent to the <pre>%.9g</pre> C
-      formatting).  Thus magnetic field intensity F in order of 1e4 nT with
-      9 significant digits would be, e.g., 46935.8083 (last decimal place tenths
-      of pT).
+      preserves 9 significant decimal places (equivalent to the <code>%.9g</code>
+      C formatting). Thus magnetic field intensity F in nT with
+      9 significant digits would be, e.g., 46935.8083 nT (last decimal
+      place tenths of pT).
     </p>
     <p>
-      Adding more precision to the CSV format would increase significantly
-      the size of the produced file which is already significantly
-      larger then in the compact binary CDF format.
+      Adding more precision to the CSV format would be at a cost
+      of further increase of the already significant CSV file size
+      (especially when compared to the compact CDF format).
       The CSV is therefore a lossy data format and its precision is
       a trade-off between the file size and acceptable precision loss.
     </p>
@@ -189,10 +188,9 @@
       The CDF is a binary format which stores the floating-point values
       as the 64bits IEEE 754
       <a href="https://en.wikipedia.org/wiki/Double-precision_floating-point_format">double precision</a>
-      numbers (usually between 15-17 significant decimal places,
+      numbers (usually having between 15-17 significant decimal places,
       with the exception of the subnormal values).
-      The values in the CDF formats are therefore identical to the original values
-      read from the Swarm products.
+      The data in the CDF format is identical to the original Swarm products.
     </p>
   <div class="panel-body">
   </div>
