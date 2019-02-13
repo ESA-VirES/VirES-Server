@@ -29,10 +29,10 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
 
-import msgpack
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from cStringIO import StringIO
+import msgpack
 from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData,
@@ -43,7 +43,9 @@ from eoxserver.services.ows.wps.parameters import (
     FormatBinaryRaw,
     CDObject,
 )
-from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from eoxserver.services.ows.wps.exceptions import (
+    InvalidInputValueError, InvalidOutputDefError,
+)
 from vires.util import unique, exclude, include
 from vires.time_util import (
     naive_to_utc,
@@ -55,7 +57,7 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2, parse_variables,
+    parse_collections, parse_composed_models, parse_variables,
     IndexKp, IndexDst, IndexF107, OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
@@ -170,7 +172,9 @@ class FetchData(WPSProcess):
         """ Execute process """
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
-        models = parse_models2("model_ids", model_ids, shc)
+        requested_models, source_models = parse_composed_models(
+            "model_ids", model_ids, shc
+        )
         requested_variables = parse_variables(
             'requested_variables', requested_variables
         )
@@ -200,7 +204,10 @@ class FetchData(WPSProcess):
             ", ".join(
                 s.collection.identifier for l in sources.values() for s in l
             ),
-            ", ".join(model.name for model in models),
+            ", ".join(
+                "%s = %s" % (model.name, model.full_expression)
+                for model in requested_models
+            ),
         )
 
         if bbox:
@@ -259,7 +266,9 @@ class FetchData(WPSProcess):
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
-            for model in models:
+            for model in source_models:
+                models_with_residuals.append(model)
+            for model in requested_models:
                 models_with_residuals.append(model)
                 for variable in model.BASE_VARIABLES:
                     models_with_residuals.append(

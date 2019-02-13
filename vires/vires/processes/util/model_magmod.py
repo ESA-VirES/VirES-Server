@@ -26,11 +26,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals
+#pylint: disable=too-many-locals,missing-docstring,import-error
 
 from logging import getLogger, LoggerAdapter
 from itertools import chain
-from numpy import stack
+from numpy import stack, inf, zeros
 from eoxmagmod import vnorm
 from vires.util import include, unique, cached_property
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
@@ -98,8 +98,114 @@ class MagneticModelResidual(Model):
         }
 
 
-class MagneticModel(Model):
-    """ Forward spherical expansion model. """
+class ComposedMagneticModel(Model):
+    """ Combined forward spherical harmonic expansion model. """
+    BASE_VARIABLES = ["F", "B_NEC"]
+
+    @cached_property
+    def variables(self):
+        return [
+            "%s_%s" % (variable, self.name) for variable in self.BASE_VARIABLES
+        ]
+
+    @cached_property
+    def required_variables(self):
+        return ["B_NEC_%s" % model.name for _, model in self.components]
+
+    @cached_property
+    def full_expression(self):
+        """ full composed model expression """
+        def _generate_parts():
+            components = iter(self.components)
+            scale, model = next(components)
+            yield "%s%s" % ("- " if scale < 0 else "", model.short_expression)
+            for scale, model in components:
+                yield "%s %s" % (
+                    "-" if scale < 0 else "+", model.short_expression
+                )
+
+        return " ".join(_generate_parts())
+
+    @cached_property
+    def short_expression(self):
+        """ short model expression """
+        return "'%s'" % self.name
+
+    @property
+    def validity(self):
+        """ Get model validity period. """
+        if not self.components: # empty composed model
+            return -inf, -inf
+
+        start, end = -inf, +inf
+        for _, model in self.components:
+            comp_start, comp_end = model.validity
+            start = max(start, comp_start)
+            end = min(end, comp_end)
+            if start > end: # no validity overlap
+                return -inf, -inf
+
+        return start, end
+
+    class _LoggerAdapter(LoggerAdapter):
+        def process(self, msg, kwargs):
+            return '%s: %s' % (self.extra["model_name"], msg), kwargs
+
+    def __init__(self, name, components, logger=None):
+        self.name = name
+        self.components = components
+        self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
+            "model_name": self.variables[0],
+        })
+
+    def eval(self, dataset, variables=None, **kwargs):
+        variables = (
+            self.variables if variables is None else
+            list(include(unique(variables), self.variables))
+        )
+        self.logger.debug("requested variables %s", variables)
+        output_ds = Dataset()
+
+        if not variables:
+            return output_ds
+
+        b_nec = zeros((dataset.length, 3))
+        for variable, (sign, _) in zip(self.required_variables, self.components):
+            b_nec_source = dataset[variable]
+            if sign < 0:
+                b_nec -= b_nec_source
+            else:
+                b_nec += b_nec_source
+
+        for variable in variables:
+            filter_, type_, attrib = self.output[variable]
+            output_ds.set(variable, filter_(b_nec), type_, attrib)
+
+        return output_ds
+
+    @cached_property
+    def output(self):
+        f_var, b_var = self.variables
+        return {
+            f_var: (vnorm, CDF_DOUBLE_TYPE, {
+                'DESCRIPTION': (
+                    'Magnetic field intensity, calculated by '
+                    'the %s spherical harmonic model' % self.name
+                ),
+                'UNITS': 'nT',
+            }),
+            b_var: (lambda r: r, CDF_DOUBLE_TYPE, {
+                'DESCRIPTION': (
+                    'Magnetic field vector, NEC frame, calculated by '
+                    'the %s spherical harmonic model' % self.name
+                ),
+                'UNITS': 'nT',
+            }),
+        }
+
+
+class SourceMagneticModel(Model):
+    """ Source forward spherical harmonic expansion model. """
     SOURCE_VARIABLES = {
         "time": ["Timestamp"],
         "location": ["Latitude", "Longitude", "Radius"],
@@ -110,10 +216,21 @@ class MagneticModel(Model):
 
     @cached_property
     def variables(self):
-        model_name = self.name
         return [
-            "%s_%s" % (variable, model_name) for variable in self.BASE_VARIABLES
+            "%s_%s" % (variable, self.name) for variable in self.BASE_VARIABLES
         ]
+
+    @cached_property
+    def name(self):
+        """ composed model name """
+        return "'%s'(%s)" % (self.short_name, ",".join(
+            "%s=%s" % item for item in sorted(self.parameters.items())
+        ))
+
+    @property
+    def short_expression(self):
+        """ short model expression """
+        return self.name
 
     @cached_property
     def required_variables(self):
@@ -121,13 +238,20 @@ class MagneticModel(Model):
             variables for variables in self._source_variables.values()
         ))
 
+    @property
+    def validity(self):
+        """ Get model validity period. """
+        return self.model.validity
+
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return '%s: %s' % (self.extra["model_name"], msg), kwargs
 
-    def __init__(self, model_name, model, logger=None, varmap=None):
-        self.name = model_name
+    def __init__(self, model_name, model, parameters=None, logger=None,
+                 varmap=None):
+        self.short_name = model_name
         self.model = model
+        self.parameters = parameters or {}
         varmap = varmap or {}
 
         available_data_extractors = {
@@ -151,7 +275,7 @@ class MagneticModel(Model):
         }
 
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
-            "model_name": model_name,
+            "model_name": self.name,
         })
 
     def eval(self, dataset, variables=None, **kwargs):
@@ -166,6 +290,7 @@ class MagneticModel(Model):
             inputs = {"scale": [1, 1, -1]}
             for extract in self.data_extractors:
                 inputs.update(extract(dataset))
+            inputs.update(self.parameters)
 
             result = self.model.eval(**inputs)
 
