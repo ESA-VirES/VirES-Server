@@ -173,9 +173,7 @@ def _parse_custom_model(input_id, shc_coefficients):
         raise InvalidInputValueError(
             input_id, "Failed to parse the custom model coefficients."
         )
-    return SourceMagneticModel(
-        "Custom_Model", model, 0, model.coefficients.degree
-    )
+    return SourceMagneticModel("Custom_Model", model, 0, model.degree)
 
 
 def _process_composed_model(requested_models, source_models, model_def, input_id):
@@ -223,9 +221,7 @@ def _process_model_component(requested_models, source_models, model_def, input_i
                 input_id, "Invalid model identifier %r!" % model_def.id
             )
         model_obj = _create_source_model(
-            model_id, model, _get_degree_range(
-                parameters, 0, model.coefficients.degree
-            )
+            model_id, model, _get_degree_range(parameters, 0, model.degree)
         )
 
     return scale, model_obj
