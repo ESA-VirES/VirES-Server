@@ -48,7 +48,7 @@ from vires.perf_util import ElapsedTimeLogger
 from vires.forward_models.base import EVAL_VARIABLE
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_model, parse_style, data_to_png, get_f107_value,
+    parse_model_expression, parse_style, data_to_png, get_f107_value,
 )
 
 
@@ -82,10 +82,9 @@ class EvalModel(WPSProcess):
             "end_time", datetime, optional=False,
             abstract="End of the time interval",
         )),
-        ("model_id", LiteralData(
+        ("model_expression", LiteralData(
             "model", str, optional=False,
-            title="The model identifier."
-            #TODO: list available models.
+            title="Model expression."
         )),
         ("variable", LiteralData(
             "variable", str, optional=True, default="F",
@@ -104,16 +103,6 @@ class EvalModel(WPSProcess):
         ("range_max", LiteralData(
             "range_max", float, optional=True, default=None,
             abstract="Maximum displayed value."
-        )),
-        ("coeff_min", LiteralData(
-            "coeff_min", int, optional=True, default=-1,
-            allowed_values=AllowedRange(-1., None, dtype=int),
-            abstract="The lower limit of the applied model coefficients."
-        )),
-        ("coeff_max", LiteralData(
-            "coeff_max", int, optional=True, default=-1,
-            allowed_values=AllowedRange(-1., None, dtype=int),
-            abstract="The upper limit of the applied model coefficients."
         )),
         ("shc", ComplexData(
             "shc", title="SHC file data", optional=True,
@@ -140,15 +129,15 @@ class EvalModel(WPSProcess):
         )),
     ]
 
-    def execute(self, model_id, shc, variable, begin_time, end_time,
+    def execute(self, model_expression, shc, variable, begin_time, end_time,
                 elevation, range_max, range_min, bbox, width, height,
-                style, output, coeff_min, coeff_max, **kwarg):
+                style, output, **kwarg):
         # get configurations
         conf_sys = SystemConfigReader()
 
         # parse models and styles
         color_map = parse_style("style", style)
-        model = parse_model("model", model_id, shc)
+        model, _ = parse_model_expression("model", model_expression, shc)
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
@@ -159,10 +148,9 @@ class EvalModel(WPSProcess):
 
         self.access_logger.info(
             "request: toi: (%s, %s), aoi: %s, elevation: %g, "
-            "model: %s, coeff_range: (%d, %d), variable: %s, "
-            "image-size: (%d, %d), mime-type: %s",
+            "model: %s, variable: %s, image-size: (%d, %d), mime-type: %s",
             begin_time.isoformat("T"), end_time.isoformat("T"),
-            bbox[0] + bbox[1], elevation, model_id, coeff_min, coeff_max,
+            bbox[0] + bbox[1], elevation, model.full_expression,
             variable, width, height, output['mime_type'],
         )
 
@@ -180,21 +168,18 @@ class EvalModel(WPSProcess):
         coord_gdt[:, :, 1] = lons
         coord_gdt[:, :, 2] = elevation
 
-        self.logger.debug("coefficient range: %s", (coeff_min, coeff_max))
-
         options = {}
-        if "f107" in model.parameters:
+        if "f107" in model.model.parameters:
             options["f107"] = get_f107_value(mean_time)
 
         self.logger.debug("model options: %s", options)
 
-        with ElapsedTimeLogger("%s.%s %dx%dpx %s evaluated in" % (
-            model_id, variable, width, height, bbox[0] + bbox[1],
+        with ElapsedTimeLogger("%s:%s %dx%dpx %s evaluated in" % (
+            model.full_expression, variable, width, height, bbox[0] + bbox[1],
         ), self.logger):
-            model_field = model.eval(
+            model_field = model.model.eval(
                 mean_time, coord_gdt,
                 GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
-                min_degree=coeff_min, max_degree=coeff_max,
                 scale=[1, 1, -1], **options
             )
 

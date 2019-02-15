@@ -38,6 +38,8 @@ from vires.models import ProductCollection
 from vires.parsers.exceptions import ParserError
 from vires.parsers.model_list_parser import get_model_list_parser
 from vires.parsers.model_list_lexer import get_model_list_lexer
+from vires.parsers.model_expression_parser import get_model_expression_parser
+from vires.parsers.model_expression_lexer import get_model_expression_lexer
 from .time_series_product import ProductTimeSeries
 from .model_magmod import SourceMagneticModel, ComposedMagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
@@ -136,21 +138,52 @@ def parse_collections(input_id, source):
     )
 
 
-def parse_composed_models(input_id, models_input, shc, shc_input_id="shc"):
-    """ Parse model identifiers and returns a list of the model sources. """
-    requested_models, source_models = OrderedDict(), {}
+def parse_model_expression(input_id, model_input, shc, shc_input_id="shc"):
+    """ Parse model expression and returns composed model and list of model
+    sources.
+    """
+    known_models, source_models = {}, {}
 
     custom_model = _parse_custom_model(shc_input_id, shc)
     if custom_model is not None:
-        requested_models[custom_model.name] = custom_model
-        source_models[custom_model.name] = custom_model
+        known_models[custom_model.name] = custom_model
 
-    for model_def in _parse_model_list_string(input_id, models_input):
-        _process_composed_model(
-            requested_models, source_models, model_def, input_id
+    model_obj = ComposedMagneticModel("<nameless>", [
+        _process_model_component(
+            known_models, source_models, component, input_id
+        ) for component in _parse_model_expression_string(input_id, model_input)
+    ])
+
+    return model_obj, source_models.values()
+
+
+def _parse_model_expression_string(input_id, model_expression_string):
+    lexer = get_model_expression_lexer()
+    parser = get_model_expression_parser()
+    try:
+        return parser.parse(model_expression_string, lexer=lexer)
+    except ParserError as error:
+        raise InvalidInputValueError(
+            input_id, "Invalid model expression! %s" % error
         )
 
-    return requested_models.values(), source_models.values()
+
+def parse_composed_models(input_id, models_input, shc, shc_input_id="shc"):
+    """ Parse model identifiers and return a list of named composed models and
+    source models.
+    """
+    requested_models, known_models, source_models = [], {}, {}
+
+    custom_model = _parse_custom_model(shc_input_id, shc)
+    if custom_model is not None:
+        known_models[custom_model.name] = custom_model
+
+    for model_def in _parse_model_list_string(input_id, models_input):
+        requested_models.append(_process_composed_model(
+            known_models, source_models, model_def, input_id
+        ))
+
+    return requested_models, source_models.values()
 
 
 def _parse_model_list_string(input_id, model_list_string):
@@ -160,7 +193,7 @@ def _parse_model_list_string(input_id, model_list_string):
         return parser.parse(model_list_string, lexer=lexer)
     except ParserError as error:
         raise InvalidInputValueError(
-            input_id, "Invalid models definition! %s" % error
+            input_id, "Invalid model list! %s" % error
         )
 
 
@@ -176,15 +209,15 @@ def _parse_custom_model(input_id, shc_coefficients):
     return SourceMagneticModel("Custom_Model", model, 0, model.degree)
 
 
-def _process_composed_model(requested_models, source_models, model_def, input_id):
-    requested_models[model_def.id] = ComposedMagneticModel(model_def.id, [
+def _process_composed_model(known_models, source_models, model_def, input_id):
+    known_models[model_def.id] = ComposedMagneticModel(model_def.id, [
         _process_model_component(
-            requested_models, source_models, component, input_id
+            known_models, source_models, component, input_id
         ) for component in model_def.components
     ])
 
 
-def _process_model_component(requested_models, source_models, model_def, input_id):
+def _process_model_component(known_models, source_models, model_def, input_id):
 
     def _get_degree_range(parameters, min_degree, max_degree):
         max_degree = min(parameters.get("max_degree", max_degree), max_degree)
@@ -200,7 +233,7 @@ def _process_model_component(requested_models, source_models, model_def, input_i
     parameters = model_def.parameters.copy()
     scale = parameters.pop("scale", 1)
 
-    model_obj = requested_models.get(model_id)
+    model_obj = known_models.get(model_id)
     if model_obj is not None:
         if isinstance(model_obj, SourceMagneticModel):
             model_obj = _create_source_model(
