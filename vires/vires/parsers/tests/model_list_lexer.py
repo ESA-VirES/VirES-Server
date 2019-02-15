@@ -28,19 +28,19 @@
 
 from unittest import TestCase, main
 from vires.parsers.exceptions import ParserError
-from vires.parsers.models_lexer import get_models_lexer
+from vires.parsers.model_list_lexer import get_model_list_lexer
 
 
-class TestModelsLexer(TestCase):
+class TestModelListLexer(TestCase):
 
     def _test_lexer(self, input_, output):
-        lexer = get_models_lexer()
+        lexer = get_model_list_lexer()
         lexer.input(input_)
         tokens = [(token.type, token.value) for token in lexer]
         self.assertEqual(tokens, output)
 
     def _test_lexer_error(self, input_):
-        lexer = get_models_lexer()
+        lexer = get_model_list_lexer()
         lexer.input(input_)
         with self.assertRaises(ParserError):
             list(lexer)

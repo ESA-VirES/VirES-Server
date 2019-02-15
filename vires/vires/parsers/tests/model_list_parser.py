@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Models parser - tests
+# Model list parser - tests
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,15 +28,15 @@
 
 from unittest import TestCase, main
 from vires.parsers.exceptions import ParserError
-from vires.parsers.models_parser import get_models_parser
-from vires.parsers.models_lexer import get_models_lexer
+from vires.parsers.model_list_parser import get_model_list_parser
+from vires.parsers.model_list_lexer import get_model_list_lexer
 
 
-class TestModelsParser(TestCase):
+class TestModelListParser(TestCase):
 
     def _test_parser(self, input_, output):
-        lexer = get_models_lexer()
-        parser = get_models_parser()
+        lexer = get_model_list_lexer()
+        parser = get_model_list_parser()
         raw_result = parser.parse(input_, lexer=lexer)
         result = [
             (id_, [(comp_id, dict(params)) for comp_id, params in components])
@@ -45,11 +45,10 @@ class TestModelsParser(TestCase):
         self.assertEqual(result, output)
 
     def _test_parser_error(self, input_):
-        lexer = get_models_lexer()
-        parser = get_models_parser()
+        lexer = get_model_list_lexer()
+        parser = get_model_list_parser()
         with self.assertRaises(ParserError):
             parser.parse(input_, lexer=lexer)
-            list(lexer)
 
     def test_empty_list(self):
         self._test_parser("\t\r\n ", [])

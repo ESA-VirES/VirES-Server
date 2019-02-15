@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Models lexer
+# Model list lexer
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -30,12 +30,12 @@ from ply.lex import lex
 from .exceptions import ParserError
 
 
-def get_models_lexer():
+def get_model_list_lexer():
     """ Get clone of a compiled lexer instance. """
-    return __MODELS_LEXER.clone()
+    return __MODEL_LIST_LEXER.clone()
 
 
-class ModelsLexer(object):
+class ModelListLexer(object):
     """ Models lexer class. """
     tokens = [
         "model_id",
@@ -83,7 +83,7 @@ class ModelsLexer(object):
     @staticmethod
     def t_model_id(token):
         r"[a-zA-Z][a-zA-Z0-9_-]{0,128}"
-        return ModelsLexer._check_id_length(token, 128)
+        return ModelListLexer._check_id_length(token, 128)
 
     @staticmethod
     def t_newline(token):
@@ -92,7 +92,7 @@ class ModelsLexer(object):
 
     @staticmethod
     def t_error(token):
-        line, column = ModelsLexer.get_line_and_column(token)
+        line, column = ModelListLexer.get_line_and_column(token)
         raise ParserError(
             line, column, "Illegal character %r, line %d, column %d!"
             % (token.value[0], line, column)
@@ -102,7 +102,7 @@ class ModelsLexer(object):
     def _check_id_length(token, limit):
         if len(token.value) <= limit:
             return token
-        line, column = ModelsLexer.get_line_and_column(token)
+        line, column = ModelListLexer.get_line_and_column(token)
         raise ParserError(
             line, column,
             "Identifier longer then %d characters at line %d, column %d!"
@@ -127,7 +127,7 @@ class ModelsLexer(object):
     @staticmethod
     def t_expression_model_id(token):
         r"[a-zA-Z][a-zA-Z0-9_]{0,128}"
-        return ModelsLexer._check_id_length(token, 128)
+        return ModelListLexer._check_id_length(token, 128)
 
     @staticmethod
     def t_assign(token):
@@ -172,7 +172,7 @@ class ModelsLexer(object):
         limit = 9
         digits = token.value[1:] if token.value[0] in "+-" else token.value
         if len(digits) > limit:
-            line, column = ModelsLexer.get_line_and_column(token)
+            line, column = ModelListLexer.get_line_and_column(token)
             raise ParserError(
                 line, column,
                 "Integer value has more then %d digits at line %d, column %d!"
@@ -184,11 +184,11 @@ class ModelsLexer(object):
     @staticmethod
     def t_params_parameter_id(token):
         r"[a-z][a-z0-9_]{0,128}"
-        return ModelsLexer._check_id_length(token, 128)
+        return ModelListLexer._check_id_length(token, 128)
 
     @staticmethod
     def t_params_eof(token):
-        line, column = ModelsLexer.get_line_and_column(token)
+        line, column = ModelListLexer.get_line_and_column(token)
         raise ParserError(line, column, "Missing closing parenthesis!")
 
     #---------------------------------------------------------------------------
@@ -196,7 +196,7 @@ class ModelsLexer(object):
 
     @staticmethod
     def _quoted_id_error(token):
-        line, column = ModelsLexer.get_line_and_column(token)
+        line, column = ModelListLexer.get_line_and_column(token)
         raise ParserError(
             line, column,
             "Illegal character %r in a quoted identifier at line %d, column %d!"
@@ -221,7 +221,7 @@ class ModelsLexer(object):
 
     @staticmethod
     def t_squote_eof(token):
-        line, column = ModelsLexer.get_line_and_column(token)
+        line, column = ModelListLexer.get_line_and_column(token)
         raise ParserError(line, column, "Missing closing single quote!")
 
     #---------------------------------------------------------------------------
@@ -245,11 +245,11 @@ class ModelsLexer(object):
 
     @staticmethod
     def t_dquote_eof(token):
-        line, column = ModelsLexer.get_line_and_column(token)
+        line, column = ModelListLexer.get_line_and_column(token)
         raise ParserError(line, column, "Missing closing double quote!")
 
 
 #--------------------------------------------------------------------------------
 # Main compiled model lexer do not use directly for parsing
 # but its clone created by get_models_lexer() factory function.
-__MODELS_LEXER = ModelsLexer.build()
+__MODEL_LIST_LEXER = ModelListLexer.build()

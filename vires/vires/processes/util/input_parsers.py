@@ -36,8 +36,8 @@ from eoxserver.services.ows.wps.exceptions import (
 from vires.util import get_color_scale
 from vires.models import ProductCollection
 from vires.parsers.exceptions import ParserError
-from vires.parsers.models_parser import get_models_parser
-from vires.parsers.models_lexer import get_models_lexer
+from vires.parsers.model_list_parser import get_model_list_parser
+from vires.parsers.model_list_lexer import get_model_list_lexer
 from .time_series_product import ProductTimeSeries
 from .model_magmod import SourceMagneticModel, ComposedMagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
@@ -145,7 +145,7 @@ def parse_composed_models(input_id, models_input, shc, shc_input_id="shc"):
         requested_models[custom_model.name] = custom_model
         source_models[custom_model.name] = custom_model
 
-    for model_def in _parse_models_string(input_id, models_input):
+    for model_def in _parse_model_list_string(input_id, models_input):
         _process_composed_model(
             requested_models, source_models, model_def, input_id
         )
@@ -153,11 +153,11 @@ def parse_composed_models(input_id, models_input, shc, shc_input_id="shc"):
     return requested_models.values(), source_models.values()
 
 
-def _parse_models_string(input_id, models_string):
-    lexer = get_models_lexer()
-    parser = get_models_parser()
+def _parse_model_list_string(input_id, model_list_string):
+    lexer = get_model_list_lexer()
+    parser = get_model_list_parser()
     try:
-        return parser.parse(models_string, lexer=lexer)
+        return parser.parse(model_list_string, lexer=lexer)
     except ParserError as error:
         raise InvalidInputValueError(
             input_id, "Invalid models definition! %s" % error

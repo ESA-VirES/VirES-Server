@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Models parser
+# Model list parser
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -29,7 +29,7 @@
 from collections import namedtuple
 from ply.yacc import yacc
 from .exceptions import ParserError
-from .models_lexer import ModelsLexer
+from .model_list_lexer import ModelListLexer
 
 #
 # Models grammar:
@@ -72,20 +72,20 @@ from .models_lexer import ModelsLexer
 #       in the model expressions.
 
 
-ALLOWD_MODEL_PARAMETERS = {'max_degree', 'min_degree'}
+ALLOWED_MODEL_PARAMETERS = {'max_degree', 'min_degree'}
 
 Model = namedtuple('Model', ['id', 'components'])
 ModelDefinition = namedtuple('ModelDefinition', ['id', 'parameters'])
 
 
-def get_models_parser():
+def get_model_list_parser():
     """ Get compiled parser. """
-    return MODELS_PARSER
+    return MODEL_LIST_PARSER
 
 
-class ModelsParser(object):
+class ModelListParser(object):
 
-    tokens = list(ModelsLexer.token_labels)
+    tokens = list(ModelListLexer.token_labels)
 
     @classmethod
     def build(cls, write_tables=False, debug=False, **kwargs):
@@ -94,10 +94,10 @@ class ModelsParser(object):
     @staticmethod
     def p_error(token):
         if token is not None:
-            line, column = ModelsLexer.get_line_and_column(token)
+            line, column = ModelListLexer.get_line_and_column(token)
             raise ParserError(
                 line, column, "Unexpected %s %r at line %d, column %d!" % (
-                    ModelsLexer.token_labels[token.type],
+                    ModelListLexer.token_labels[token.type],
                     token.value, line, column
                 )
             )
@@ -198,9 +198,9 @@ class ModelsParser(object):
     @staticmethod
     def p_model_parameter(param):
         'model_parameter : parameter_id assign integer'
-        if param[1] not in ALLOWD_MODEL_PARAMETERS:
+        if param[1] not in ALLOWED_MODEL_PARAMETERS:
             raise ParserError(-1, -1, "Invalid model parameter %r" % param[1])
         param[0] = {param[1]: param[3]}
 
 
-MODELS_PARSER = ModelsParser.build()
+MODEL_LIST_PARSER = ModelListParser.build()
