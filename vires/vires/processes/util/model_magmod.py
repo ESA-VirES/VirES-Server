@@ -129,7 +129,10 @@ class ComposedMagneticModel(Model):
     @cached_property
     def short_expression(self):
         """ short model expression """
-        return "'%s'" % self.name
+        name = self.name
+        if '-' in name:
+            name = "'%s'" % name
+        return name
 
     @property
     def validity(self):
@@ -220,17 +223,24 @@ class SourceMagneticModel(Model):
             "%s_%s" % (variable, self.name) for variable in self.BASE_VARIABLES
         ]
 
+    @staticmethod
+    def _get_name(name, parameters):
+        return "%s(%s)" % (name, ",".join(
+            "%s=%s" % item for item in sorted(parameters.items())
+        ))
+
     @cached_property
     def name(self):
         """ composed model name """
-        return "'%s'(%s)" % (self.short_name, ",".join(
-            "%s=%s" % item for item in sorted(self.parameters.items())
-        ))
+        return self._get_name(self.short_name, self.parameters)
 
     @property
     def short_expression(self):
         """ short model expression """
-        return self.name
+        name = self.short_name
+        if "-" in name:
+            name = "'%s'" % name
+        return self._get_name(name, self.parameters)
 
     @cached_property
     def required_variables(self):
