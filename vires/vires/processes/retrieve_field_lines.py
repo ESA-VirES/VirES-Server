@@ -47,7 +47,9 @@ from eoxserver.services.ows.wps.parameters import (
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_models, parse_style, get_f107_value
+from vires.processes.util import (
+    parse_composed_models, parse_style, get_f107_value,
+)
 
 
 class RetrieveFieldLines(WPSProcess):
@@ -135,7 +137,7 @@ class RetrieveFieldLines(WPSProcess):
                 bbox, lines_per_col, lines_per_row, style, range_min,
                 range_max, log_scale, output, **kwarg):
         # parse model and style
-        models = parse_models("model_ids", model_ids, shc)
+        models, _ = parse_composed_models("model_ids", model_ids, shc)
         color_map = parse_style("style", style)
 
         # fix the time-zone of the naive date-time
@@ -150,7 +152,11 @@ class RetrieveFieldLines(WPSProcess):
             "models: (%s), grid: (%d, %d)",
             begin_time.isoformat("T"), end_time.isoformat("T"),
             bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180), elevation,
-            ", ".join(models), lines_per_col, lines_per_row,
+            ", ".join(
+                "%s = %s" % (model.name, model.full_expression)
+                for model in models
+            ),
+            lines_per_col, lines_per_row,
         )
 
         # parse range bounds
@@ -170,35 +176,35 @@ class RetrieveFieldLines(WPSProcess):
             coord_gdt[..., 2] = elevation
 
             total_count = 0
-            for model_id, model in models.iteritems():
+            for model in models:
                 model_count = 0
 
-                model_options = {}
-                if "f107" in model.parameters:
-                    model_options["f107"] = get_f107_value(mean_time)
+                options = {}
+                if "f107" in model.model.parameters:
+                    options["f107"] = get_f107_value(mean_time)
 
-                self.logger.debug("%s model options: %s", model_id, model_options)
+                self.logger.debug("%s model options: %s", model.name, options)
 
                 for point in coord_gdt.reshape((n_lines, 3)):
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
-                        "%s field line " % model_id, self.logger
+                        "%s field line " % model.name, self.logger
                     ) as etl:
                         line_coords, line_field = trace_field_line(
-                            model, mean_time, point,
+                            model.model, mean_time, point,
                             GEODETIC_ABOVE_WGS84, GEOCENTRIC_CARTESIAN,
-                            model_options=model_options,
+                            model_options=options,
                         )
                         etl.message += (
                             "with %d points integrated in" % len(line_coords)
                         )
                     # convert coordinates from kilometres to metres
-                    yield model_id, 1e3*line_coords, vnorm(line_field)
+                    yield model.name, 1e3*line_coords, vnorm(line_field)
                     model_count += line_coords.shape[0]
 
                 self.access_logger.info(
                     "model: %s, lines: %d, points: %d",
-                    model_id, n_lines, model_count,
+                    model.name, n_lines, model_count,
                 )
                 total_count += model_count
 

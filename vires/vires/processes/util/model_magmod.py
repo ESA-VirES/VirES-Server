@@ -31,7 +31,7 @@
 from logging import getLogger, LoggerAdapter
 from itertools import chain
 from numpy import stack, inf, zeros
-from eoxmagmod import vnorm
+from eoxmagmod import vnorm, ComposedGeomagneticModel
 from vires.util import include, unique, cached_property
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
@@ -149,6 +149,25 @@ class ComposedMagneticModel(Model):
                 return -inf, -inf
 
         return start, end
+
+    @cached_property
+    def model(self):
+        """ Get aggregated model. """
+
+        def _iterate_models(model_obj, scale=1.0):
+            """ iterate models of of a model object. """
+            if isinstance(model_obj, SourceMagneticModel):
+                yield model_obj.model, scale, model_obj.parameters
+            elif isinstance(model_obj, ComposedMagneticModel):
+                for item_scale, item_model_obj in model_obj.components:
+                    for item in _iterate_models(item_model_obj, item_scale*scale):
+                        yield item
+
+        aggregated_model = ComposedGeomagneticModel()
+        for model, scale, parameters in _iterate_models(self):
+            aggregated_model.push(model, scale, **parameters)
+
+        return aggregated_model
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
