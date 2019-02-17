@@ -210,11 +210,13 @@ def _parse_custom_model(input_id, shc_coefficients):
 
 
 def _process_composed_model(known_models, source_models, model_def, input_id):
-    known_models[model_def.id] = ComposedMagneticModel(model_def.id, [
+    model_obj = ComposedMagneticModel(model_def.id, [
         _process_model_component(
             known_models, source_models, component, input_id
         ) for component in model_def.components
     ])
+    known_models[model_def.id] = model_obj
+    return model_obj
 
 
 def _process_model_component(known_models, source_models, model_def, input_id):
