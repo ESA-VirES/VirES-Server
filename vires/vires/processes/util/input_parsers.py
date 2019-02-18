@@ -139,8 +139,8 @@ def parse_collections(input_id, source):
 
 
 def parse_model_expression(input_id, model_input, shc, shc_input_id="shc"):
-    """ Parse model expression and returns composed model and list of model
-    sources.
+    """ Parse model expression and returns the final composed model and
+    a list of model sources.
     """
     known_models, source_models = {}, {}
 
@@ -168,8 +168,8 @@ def _parse_model_expression_string(input_id, model_expression_string):
         )
 
 
-def parse_composed_models(input_id, models_input, shc, shc_input_id="shc"):
-    """ Parse model identifiers and return a list of named composed models and
+def parse_model_list(input_id, models_input, shc, shc_input_id="shc"):
+    """ Parse list of model and return a list of named composed models and
     source models.
     """
     requested_models, known_models, source_models = [], {}, {}

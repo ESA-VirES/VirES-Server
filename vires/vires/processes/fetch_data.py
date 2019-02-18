@@ -57,7 +57,7 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_composed_models, parse_variables,
+    parse_collections, parse_model_list, parse_variables,
     IndexKp, IndexDst, IndexF107, OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
@@ -172,7 +172,7 @@ class FetchData(WPSProcess):
         """ Execute process """
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
-        requested_models, source_models = parse_composed_models(
+        requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
         )
         requested_variables = parse_variables(

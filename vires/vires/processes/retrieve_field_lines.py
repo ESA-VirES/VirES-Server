@@ -47,9 +47,7 @@ from eoxserver.services.ows.wps.parameters import (
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
-from vires.processes.util import (
-    parse_composed_models, parse_style, get_f107_value,
-)
+from vires.processes.util import parse_model_list, parse_style, get_f107_value
 
 
 class RetrieveFieldLines(WPSProcess):
@@ -137,7 +135,7 @@ class RetrieveFieldLines(WPSProcess):
                 bbox, lines_per_col, lines_per_row, style, range_min,
                 range_max, log_scale, output, **kwarg):
         # parse model and style
-        models, _ = parse_composed_models("model_ids", model_ids, shc)
+        models, _ = parse_model_list("model_ids", model_ids, shc)
         color_map = parse_style("style", style)
 
         # fix the time-zone of the naive date-time

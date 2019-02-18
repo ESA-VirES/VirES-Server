@@ -47,7 +47,7 @@ from .model_dipole import MagneticDipole, DipoleTiltAngle
 from .label import Label, SpacecraftLabel
 from .input_parsers import (
     parse_style, parse_collections,
-    parse_model_expression, parse_composed_models,
+    parse_model_expression, parse_model_list,
     parse_filters, parse_filters2,
     parse_variables, get_residual_variables,
 )
