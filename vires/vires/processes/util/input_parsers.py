@@ -206,7 +206,11 @@ def _parse_custom_model(input_id, shc_coefficients):
         raise InvalidInputValueError(
             input_id, "Failed to parse the custom model coefficients."
         )
-    return SourceMagneticModel("Custom_Model", model, 0, model.degree)
+    return ComposedMagneticModel("Custom_Model", [
+        (1.0, SourceMagneticModel(
+            "Custom_Model", model, {"min_degree": 0, "max_degree": model.degree}
+        ))
+    ])
 
 
 def _process_composed_model(known_models, source_models, model_def, input_id):
@@ -222,7 +226,8 @@ def _process_composed_model(known_models, source_models, model_def, input_id):
 def _process_model_component(known_models, source_models, model_def, input_id):
 
     def _get_degree_range(parameters, min_degree, max_degree):
-        max_degree = min(parameters.get("max_degree", max_degree), max_degree)
+        _max_degree = min(parameters.get("max_degree", max_degree), max_degree)
+        max_degree = max_degree if _max_degree < 0 else _max_degree
         min_degree = max(parameters.get("min_degree", min_degree), min_degree)
         return {"min_degree": min_degree, "max_degree": max_degree}
 
@@ -237,6 +242,13 @@ def _process_model_component(known_models, source_models, model_def, input_id):
 
     model_obj = known_models.get(model_id)
     if model_obj is not None:
+        if (
+                isinstance(model_obj, ComposedMagneticModel) and
+                len(model_obj.components) == 1
+            ):
+            model_scale, model_obj = model_obj.components[0]
+            scale *= model_scale
+
         if isinstance(model_obj, SourceMagneticModel):
             model_obj = _create_source_model(
                 model_id, model_obj.model, _get_degree_range(
@@ -246,7 +258,7 @@ def _process_model_component(known_models, source_models, model_def, input_id):
         else:
             for parameter in parameters:
                 raise InvalidInputValueError(input_id, (
-                    "The %s parameter is not allowed for a composed model %s!"
+                    "The %s parameter is not allowed for a non-source model %s!"
                     % (parameter, model_id)
                 ))
     else: # new source model
