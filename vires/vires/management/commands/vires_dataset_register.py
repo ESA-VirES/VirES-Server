@@ -417,7 +417,6 @@ def save(model):
     return model
 
 
-
 class VirESMetadataReader(object):
 
     LATLON_KEYS = [
@@ -432,11 +431,11 @@ class VirESMetadataReader(object):
     ]
 
     @classmethod
-    def get_times(cls, data):
+    def get_time_range_and_size(cls, data):
         # iterate possible time keys and try to extract the values
         for time_key in cls.TIME_KEYS:
             try:
-                times = data[time_key][:]
+                times = data[time_key]
             except KeyError:
                 continue
             else:
@@ -444,7 +443,7 @@ class VirESMetadataReader(object):
         else:
             raise KeyError("Temporal variable not found!")
 
-        return times
+        return (naive_to_utc(times[0]), naive_to_utc(times[-1]), times.shape[0])
 
     @classmethod
     def get_coords(cls, data):
@@ -501,21 +500,18 @@ class VirESMetadataReader(object):
     def read(cls, data):
         # NOTE: For sake of simplicity we take geocentric (ITRF) coordinates
         #       as geodetic coordinates.
-        times = cls.get_times(data)
+        begin_time, end_time, n_times = cls.get_time_range_and_size(data)
         coords = cls.get_coords(data)
-        size = (len(times), 0)
         bbox = cls.coords_to_bounding_box(coords)
         ground_path = geos.MultiLineString([])
         footprint = cls.bounding_box_to_geometry(bbox)
-        begintime = naive_to_utc(times[0])
-        endtime = naive_to_utc(times[-1])
 
         return {
             "format": "CDF",
-            "size": size,
+            "size": (n_times, 0),
             "extent": bbox,
             "footprint": footprint,
             "ground_path": ground_path,
-            "begin_time": begintime,
-            "end_time": endtime,
+            "begin_time": begin_time,
+            "end_time": end_time,
         }
