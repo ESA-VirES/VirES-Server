@@ -29,9 +29,9 @@
 from eoxserver.services.ows.wps.v10.encoders.execute_response_raw import ResultAlt
 from eoxserver.core.decoders import InvalidParameterException
 from eoxserver.services.subset import Trim, Slice
-from vires.processes.util import parse_model_list
+from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.ows.wms.model_renderer import render_model, ALLOWED_VARIABLES
-from vires.processes.util import parse_style
+from vires.processes.util import parse_model_list, parse_style
 
 
 SUPPORTED_SRIDS = (4326,)
@@ -63,7 +63,7 @@ def render_wms_response(layers, srid, bbox, elevation, time, width, height,
     payload, content_type = render_model(
         model=models[-1],
         variable=variable,
-        time=time,
+        mjd2000=datetime_to_mjd2000(naive_to_utc(time)),
         srid=srid,
         bbox=bbox,
         elevation=elevation,

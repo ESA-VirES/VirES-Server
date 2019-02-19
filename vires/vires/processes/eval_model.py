@@ -30,25 +30,17 @@
 # pylint: disable=missing-docstring,too-many-arguments,too-many-locals
 # pylint: disable=unused-argument,no-self-use,too-few-public-methods
 
-from os import remove
-from os.path import join, exists
-from uuid import uuid4
 from datetime import datetime
-from matplotlib.colors import Normalize
-from numpy import empty, linspace, meshgrid, amin, amax
-from eoxmagmod import GEODETIC_ABOVE_WGS84
 from eoxserver.services.ows.wps.parameters import (
-    BoundingBox, BoundingBoxData, ComplexData, CDFile,
+    BoundingBox, BoundingBoxData, ComplexData,
     FormatText, FormatBinaryRaw, FormatBinaryBase64,
     LiteralData, AllowedRange
 )
-from vires.config import SystemConfigReader
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
-from vires.perf_util import ElapsedTimeLogger
-from vires.ows.wms.model_renderer import EVAL_VARIABLE
+from vires.ows.wms.model_renderer import render_model, ALLOWED_VARIABLES
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_model_expression, parse_style, data_to_png, get_f107_value,
+    parse_model_expression, parse_style,
 )
 
 
@@ -89,7 +81,7 @@ class EvalModel(WPSProcess):
         ("variable", LiteralData(
             "variable", str, optional=True, default="F",
             abstract="Variable to be evaluated.",
-            allowed_values=tuple(EVAL_VARIABLE.keys()),
+            allowed_values=tuple(ALLOWED_VARIABLES),
         )),
         ("elevation", LiteralData(
             "elevation", float, optional=True, uoms=(("km", 1.0), ("m", 1e-3)),
@@ -133,7 +125,6 @@ class EvalModel(WPSProcess):
                 elevation, range_max, range_min, bbox, width, height,
                 style, output, **kwarg):
         # get configurations
-        conf_sys = SystemConfigReader()
 
         # parse models and styles
         color_map = parse_style("style", style)
@@ -155,54 +146,22 @@ class EvalModel(WPSProcess):
         )
 
         (y_min, x_min), (y_max, x_max) = bbox
-        hd_x = (0.5 / width) * (x_max - x_min)
-        hd_y = (0.5 / height) * (y_min - y_max)
-        lons, lats = meshgrid(
-            linspace(x_min + hd_x, x_max - hd_x, width, endpoint=True),
-            linspace(y_max + hd_y, y_min - hd_y, height, endpoint=True)
+
+        result, _ = render_model(
+            model=model,
+            variable=variable,
+            mjd2000=mean_time,
+            srid=4326,
+            bbox=(x_min, y_min, x_max, y_max),
+            elevation=elevation,
+            size=(width, height),
+            value_range=(range_min, range_max),
+            colormap=color_map,
+            response_format="image/png",
+            is_transparent=True,
+            grid_step=(1, 1), # no interpolation
+            wps_output_def=output,
         )
-
-        # Geodetic coordinates with elevation above the WGS84 ellipsoid.
-        coord_gdt = empty((height, width, 3))
-        coord_gdt[:, :, 0] = lats
-        coord_gdt[:, :, 1] = lons
-        coord_gdt[:, :, 2] = elevation
-
-        options = {}
-        if "f107" in model.model.parameters:
-            options["f107"] = get_f107_value(mean_time)
-
-        self.logger.debug("model options: %s", options)
-
-        with ElapsedTimeLogger("%s:%s %dx%dpx %s evaluated in" % (
-            model.full_expression, variable, width, height, bbox[0] + bbox[1],
-        ), self.logger):
-            model_field = model.model.eval(
-                mean_time, coord_gdt,
-                GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
-                scale=[1, 1, -1], **options
-            )
-
-        pixel_array = EVAL_VARIABLE[variable](model_field, coord_gdt)
-
-        range_min = amin(pixel_array) if range_min is None else range_min
-        range_max = amax(pixel_array) if range_max is None else range_max
-        if range_max < range_min:
-            range_max, range_min = range_min, range_max
-        self.logger.debug("output data range: %s", (range_min, range_max))
-        data_norm = Normalize(range_min, range_max)
-
-        # the output image
-        temp_basename = uuid4().hex
-        temp_filename = join(conf_sys.path_temp, temp_basename + ".png")
-
-        try:
-            data_to_png(temp_filename, pixel_array, data_norm, color_map)
-            result = CDFile(temp_filename, **output)
-        except Exception:
-            if exists(temp_filename):
-                remove(temp_filename)
-            raise
 
         return {
             "output": result,

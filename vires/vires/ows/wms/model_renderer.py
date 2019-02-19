@@ -39,7 +39,6 @@ from eoxmagmod import (
     decimal_year_to_mjd2000,
 )
 from vires.config import SystemConfigReader
-from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.processes.util import data_to_png, get_f107_value
 from eoxserver.services.ows.wps.parameters import CDFile
 
@@ -106,7 +105,7 @@ EVAL_VARIABLE = {
 ALLOWED_VARIABLES = set(EVAL_VARIABLE)
 
 
-def eval_model(model, variable, time, bbox, srid, elevation, size, **_):
+def eval_model(model, variable, mjd2000, bbox, srid, elevation, size, **_):
     """ Render WMS model view. """
     assert srid == 4326
     size_x, size_y = size
@@ -127,10 +126,10 @@ def eval_model(model, variable, time, bbox, srid, elevation, size, **_):
 
     options = {}
     if "f107" in model.model.parameters:
-        options["f107"] = get_f107_value(time)
+        options["f107"] = get_f107_value(mjd2000)
 
     field_components = model.model.eval(
-        time, coord_gdt, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
+        mjd2000, coord_gdt, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
         scale=[1, 1, -1], **options
     )
 
@@ -140,7 +139,7 @@ def eval_model(model, variable, time, bbox, srid, elevation, size, **_):
         raise ValueError("Invalid variable '%s'." % variable)
 
 
-def eval_model_int(model, variable, time, bbox, srid, elevation, size,
+def eval_model_int(model, variable, mjd2000, bbox, srid, elevation, size,
                    grid_step=None):
     """ Render interpolated WMS model view. """
     assert srid == 4326
@@ -164,12 +163,12 @@ def eval_model_int(model, variable, time, bbox, srid, elevation, size,
 
     options = {}
     if "f107" in model.model.parameters:
-        options["f107"] = get_f107_value(time)
+        options["f107"] = get_f107_value(mjd2000)
 
     # Evaluate the magnetic field vector components
     # (northing, easting, up-pointing)
     field_components_int = model.model.eval(
-        time, coord_gdt_int, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
+        mjd2000, coord_gdt_int, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
         scale=[1, 1, -1], **options
     )
 
@@ -201,7 +200,9 @@ def eval_model_int(model, variable, time, bbox, srid, elevation, size,
         raise Exception("Invalid variable '%s'." % variable)
 
 
-def convert_to_png(data, value_range, colormap, is_transparent):
+def convert_to_png(data, value_range, colormap, is_transparent,
+                   wps_output_def=None):
+    """ Convert data array to coloured PNG image. """
     range_min, range_max = value_range
     range_min = data.min() if range_min is None else range_min
     range_max = data.max() if range_max is None else range_max
@@ -217,7 +218,7 @@ def convert_to_png(data, value_range, colormap, is_transparent):
 
     try:
         data_to_png(temp_filename, data, data_norm, colormap, not is_transparent)
-        result = CDFile(temp_filename)
+        result = CDFile(temp_filename, **(wps_output_def or {}))
     except Exception:
         if exists(temp_filename):
             remove(temp_filename)
@@ -226,21 +227,31 @@ def convert_to_png(data, value_range, colormap, is_transparent):
     return result, "image/png"
 
 
-def render_model(model, variable, time, srid, bbox, elevation, size, value_range,
-                 colormap, response_format, is_transparent):
+def render_model(model, variable, mjd2000, srid, bbox, elevation, size,
+                 value_range, colormap, response_format, is_transparent,
+                 grid_step=None, wps_output_def=None):
     """ render WMS model view """
 
-    data = eval_model_int(
+    if grid_step == (1, 1):
+        eval_model_func = eval_model
+        options = {}
+    else:
+        eval_model_func = eval_model_int
+        options = {"grid_step": grid_step}
+
+    data = eval_model_func(
         model=model,
         variable=variable,
-        time=datetime_to_mjd2000(naive_to_utc(time)),
+        mjd2000=mjd2000,
         bbox=bbox,
         srid=srid,
         elevation=elevation,
         size=size,
-        #grid_step=None,
+        **options
     )
 
     assert response_format == "image/png"
 
-    return convert_to_png(data, value_range, colormap, is_transparent)
+    return convert_to_png(
+        data, value_range, colormap, is_transparent, wps_output_def
+    )
