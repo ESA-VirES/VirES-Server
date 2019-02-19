@@ -46,6 +46,7 @@ from eoxserver.services.ows.wps.parameters import CDFile
 
 DEG2RAD = pi / 180.0
 
+DEFAULT_GRID_STEP = (8, 8) # interpolation grid sampling in pixels
 MIN_MJD2000 = decimal_year_to_mjd2000(1.0)
 MAX_MJD2000 = decimal_year_to_mjd2000(4000.0)
 
@@ -147,7 +148,7 @@ def eval_model_int(model, variable, time, bbox, srid, elevation, size,
     min_x, min_y, max_x, max_y = bbox
 
     # interpolated grid
-    grid_step_x, grid_step_y = grid_step or (16, 16)
+    grid_step_x, grid_step_y = grid_step or DEFAULT_GRID_STEP
     grid_size_x = max(3, int(ceil(size_x / float(grid_step_x))))
     grid_size_y = max(3, int(ceil(size_y / float(grid_step_y))))
     d_x = (max_x - min_x) / float(grid_size_x)
