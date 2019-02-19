@@ -30,8 +30,9 @@ from eoxserver.services.ows.wps.v10.encoders.execute_response_raw import ResultA
 from eoxserver.core.decoders import InvalidParameterException
 from eoxserver.services.subset import Trim, Slice
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
-from vires.ows.wms.model_renderer import render_model, ALLOWED_VARIABLES
-from vires.processes.util import parse_model_list, parse_style
+from vires.processes.util import (
+    parse_model_list, parse_style, render_model, ALLOWED_VARIABLES,
+)
 
 
 SUPPORTED_SRIDS = (4326,)

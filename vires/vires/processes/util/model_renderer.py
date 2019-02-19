@@ -33,14 +33,15 @@ from math import pi, ceil
 from matplotlib.colors import Normalize
 from numpy import cos, meshgrid, empty, linspace, tile
 from scipy.interpolate import RectBivariateSpline
+from eoxserver.services.ows.wps.parameters import CDFile
 from eoxmagmod import (
     vnorm, convert, vincdecnorm,
     GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL,
     decimal_year_to_mjd2000,
 )
 from vires.config import SystemConfigReader
-from vires.processes.util import data_to_png, get_f107_value
-from eoxserver.services.ows.wps.parameters import CDFile
+from .png_output import data_to_png
+from .f107 import get_f107_value
 
 
 DEG2RAD = pi / 180.0

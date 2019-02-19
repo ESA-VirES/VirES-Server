@@ -37,10 +37,10 @@ from eoxserver.services.ows.wps.parameters import (
     LiteralData, AllowedRange
 )
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
-from vires.ows.wms.model_renderer import render_model, ALLOWED_VARIABLES
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_model_expression, parse_style,
+    render_model, ALLOWED_VARIABLES,
 )
 
 

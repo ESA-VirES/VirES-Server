@@ -56,6 +56,7 @@ from .auth import get_username, get_user
 from .resolver import VariableResolver
 from .residuals import group_residual_variables, Sat2SatResidual
 from .f107 import get_f107_value
+from .model_renderer import render_model, ALLOWED_VARIABLES
 
 
 # other miscellaneous utilities
