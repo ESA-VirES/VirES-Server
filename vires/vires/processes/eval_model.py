@@ -45,7 +45,7 @@ from eoxserver.services.ows.wps.parameters import (
 from vires.config import SystemConfigReader
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
-from vires.forward_models.base import EVAL_VARIABLE
+from vires.ows.wms.model_renderer import EVAL_VARIABLE
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_model_expression, parse_style, data_to_png, get_f107_value,
