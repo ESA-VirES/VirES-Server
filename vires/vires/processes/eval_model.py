@@ -147,7 +147,7 @@ class EvalModel(WPSProcess):
 
         (y_min, x_min), (y_max, x_max) = bbox
 
-        result, _ = render_model(
+        result, _, (range_min, range_max) = render_model(
             model=model,
             variable=variable,
             mjd2000=mean_time,

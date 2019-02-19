@@ -60,7 +60,7 @@ def render_wms_response(layers, srid, bbox, elevation, time, width, height,
 
     models = select_models(layers, get_models(query, layers))
 
-    payload, content_type = render_model(
+    payload, content_type, value_range = render_model(
         model=models[-1],
         variable=variable,
         mjd2000=datetime_to_mjd2000(naive_to_utc(time)),

@@ -224,7 +224,7 @@ def convert_to_png(data, value_range, colormap, is_transparent,
             remove(temp_filename)
         raise
 
-    return result, "image/png"
+    return result, "image/png", (range_min, range_max)
 
 
 def render_model(model, variable, mjd2000, srid, bbox, elevation, size,
