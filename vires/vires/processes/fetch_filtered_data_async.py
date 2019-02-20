@@ -56,7 +56,7 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2, parse_variables, parse_filters2,
+    parse_collections, parse_model_list, parse_variables, parse_filters2,
     IndexKp, IndexDst, IndexF107, OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
@@ -249,7 +249,9 @@ class FetchFilteredDataAsync(WPSProcess):
 
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
-        models = parse_models2("model_ids", model_ids, shc)
+        requested_models, source_models = parse_model_list(
+            "model_ids", model_ids, shc
+        )
         filters = parse_filters2("filters", filters)
         requested_variables = parse_variables(
             'requested_variables', requested_variables
@@ -279,10 +281,13 @@ class FetchFilteredDataAsync(WPSProcess):
             ", ".join(
                 s.collection.identifier for l in sources.values() for s in l
             ),
-            ", ".join(model.name for model in models),
+            ", ".join(
+                "%s = %s" % (model.name, model.full_expression)
+                for model in requested_models
+            ),
             ", ".join(
                 "%s: (%g, %g)" % (f.label, f.vmin, f.vmax) for f in filters
-            )
+            ),
         )
 
         if sampling_step is not None:
@@ -322,7 +327,9 @@ class FetchFilteredDataAsync(WPSProcess):
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
-            for model in models:
+            for model in source_models:
+                models_with_residuals.append(model)
+            for model in requested_models:
                 models_with_residuals.append(model)
                 for variable in model.BASE_VARIABLES:
                     models_with_residuals.append(
@@ -622,7 +629,10 @@ class FetchFilteredDataAsync(WPSProcess):
                         begin_time.isoformat(), end_time.isoformat()
                     )).replace("+00:00", "Z"),
                     "DATA_FILTERS": [str(f) for f in filters],
-                    "MAGNETIC_MODELS": [model.name for model in models],
+                    "MAGNETIC_MODELS": [
+                        "%s = %s" % (model.name, model.full_expression)
+                        for model in requested_models
+                    ],
                     "SOURCES": sources.keys(),
                     "ORIGINAL_PRODUCT_NAMES": sum(
                         (s.products for l in sources.values() for s in l), []

@@ -51,6 +51,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
     CDF_TYPE = {}
     CDF_INTERP_TYPE = {}
     CDF_ATTR = {}
+    DATA_CONVERSION = {}
     TIME_VARIABLE = "Timestamp"
 
     class _LoggerAdapter(LoggerAdapter):
@@ -146,6 +147,10 @@ class AuxiliaryDataTimeSeries(TimeSeries):
             )
             for src_var, data in src_data.items():
                 variable = self._varmap[src_var]
+                convert = self.DATA_CONVERSION.get(variable)
+                if convert:
+                    data = convert(data)
+                self.logger.debug("%s: %s", variable, str(data[:10]))
                 dataset.set(
                     variable, data,
                     self.CDF_INTERP_TYPE.get(variable, CDF_DOUBLE_TYPE),

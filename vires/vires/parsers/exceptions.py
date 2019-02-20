@@ -1,12 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# IGRF magnetic models
+# parsers exceptions
 #
-# Project: VirES
-# Authors: Fabian Schindler <fabian.schindler@eox.at>
-#
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,33 +25,9 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod import load_model_igrf, load_model_shc
-from eoxmagmod.data import IGRF11, IGRF12
-from vires.forward_models.base import BaseForwardModel
-from vires.util import cached_property
+class ParserError(Exception):
 
-
-class IGRF11ForwardModel(BaseForwardModel):
-    """ Forward model calculator for the IGRF11.
-    """
-    identifier = "IGRF11"
-
-    @cached_property
-    def model(self):
-        return load_model_igrf(IGRF11)
-
-
-class IGRF12ForwardModel(BaseForwardModel):
-    """ Forward model calculator for the IGRF12.
-    """
-    identifier = "IGRF12"
-
-    @cached_property
-    def model(self):
-        return load_model_shc(IGRF12, interpolate_in_decimal_years=True)
-
-
-class IGRFForwardModel(IGRF12ForwardModel):
-    """ Forward model calculator for the applicable IGRF model.
-    """
-    identifier = "IGRF"
+    def __init__(self, line, column, message):
+        super(ParserError, self).__init__(message)
+        self.line = line
+        self.line = column

@@ -32,7 +32,19 @@ from .cdf_util import cdf_open
 
 MMA_SHA_2F_MAX_ALLOWED_TIME_GAP = 7200000 # ms (2 hours)
 MMA_SHA_2F_TIME_VARIABLE = "t_qs"
-MMA_SHA_2F_VARIABLES = ["t_qs", "qs_geo", "t_gh", "gh_geo"]
+MMA_SHA_2F_VARIABLES = [
+    "t_qs", "qs_geo",
+    "t_gh", "gh_geo",
+]
+
+MMA_SHA_2C_MAX_ALLOWED_TIME_GAP = 7200000 # ms (2 hours)
+MMA_SHA_2C_TIME_VARIABLE = "t_qs_1"
+MMA_SHA_2C_VARIABLES = [
+    "t_qs_1", "qs_1",
+    "t_qs_2", "qs_2",
+    "t_gh_1", "gh_1",
+    "t_gh_2", "gh_2",
+]
 
 
 def filter_mma_sha_2f(sources):
@@ -42,37 +54,68 @@ def filter_mma_sha_2f(sources):
     )
 
 
-def update_mma_sha_2f(sources, destination):
-    """ Update cached MMA_SHA_2F product. """
+def filter_mma_sha_2c(sources):
+    """ Filter and sort the input MMA_SHA_2C products. """
+    return filter_and_sort_sources(
+        sources, MMA_SHA_2C_TIME_VARIABLE, MMA_SHA_2C_MAX_ALLOWED_TIME_GAP
+    )
+
+
+def merge_mma_sha_2f(sources, destination):
+    """ Merge inputs and update the cached MMA_SHA_2F product. """
     sources = filter_mma_sha_2f(sources)
     models = list(_load_models(sources, MMA_SHA_2F_VARIABLES))
-    create_merged_mma_sha_2f(destination, sources, models)
+    create_merged_mma_model(destination, sources, models, _merge_mma_sha_2f)
 
 
-def create_merged_mma_sha_2f(destination, sources, models):
-    """ Create blank MMA_SHA_2F product file.
+def merge_mma_sha_2c(sources, destination):
+    """ Merge inputs and update the cached MMA_SHA_2C product. """
+    sources = filter_mma_sha_2c(sources)
+    models = list(_load_models(sources, MMA_SHA_2C_VARIABLES))
+    create_merged_mma_model(destination, sources, models, _merge_mma_sha_2c)
+
+
+def _merge_mma_sha_2f(cdf_dst, cdf_src, models):
+    """ Merge MMA_SHA_2F product files. """
+    _copy_attributes(cdf_dst, cdf_src)
+    cdf_dst.attrs["TITLE"] = "Merged " + str(cdf_src.attrs["TITLE"])
+    for variable in ["qs", "gh"]:
+        time_variable = "t_" + variable
+        _set_variable(
+            cdf_dst, cdf_src, time_variable,
+            _merge_variable(models, time_variable, axis=1)
+        )
+        _copy_variable(cdf_dst, cdf_src, "nm_" + variable)
+        coeff_variable = variable + "_geo"
+        _set_variable(
+            cdf_dst, cdf_src, coeff_variable,
+            _merge_variable(models, coeff_variable, axis=1)
+        )
+
+
+def _merge_mma_sha_2c(cdf_dst, cdf_src, models):
+    """ Merge MMA_SHA_2C product files. """
+    _copy_attributes(cdf_dst, cdf_src)
+    cdf_dst.attrs["TITLE"] = "Merged " + str(cdf_src.attrs["TITLE"])
+    for variable in ["qs_1", "qs_2", "gh_1", "gh_2"]:
+        time_variable = "t_" + variable
+        _set_variable(
+            cdf_dst, cdf_src, time_variable,
+            _merge_variable(models, time_variable, axis=1)
+        )
+        _copy_variable(cdf_dst, cdf_src, "nm_" + variable)
+        _set_variable(
+            cdf_dst, cdf_src, variable,
+            _merge_variable(models, variable, axis=1)
+        )
+
+
+def create_merged_mma_model(destination, sources, models, merge_models):
+    """ Create merged MMA model.
     """
-    def _create_empty_mma_sha_2f(cdf_dst, cdf_src):
-        _copy_attributes(cdf_dst, cdf_src)
-        cdf_dst.attrs["TITLE"] = "Merged " + str(cdf_src.attrs["TITLE"])
-        _set_variable(
-            cdf_dst, cdf_src, "t_qs", _merge_variable(models, "t_qs", axis=1)
-        )
-        _copy_variable(cdf_dst, cdf_src, "nm_qs")
-        _set_variable(
-            cdf_dst, cdf_src, "qs_geo", _merge_variable(models, "qs_geo", axis=1)
-        )
-        _set_variable(
-            cdf_dst, cdf_src, "t_gh", _merge_variable(models, "t_gh", axis=1)
-        )
-        _copy_variable(cdf_dst, cdf_src, "nm_gh")
-        _set_variable(
-            cdf_dst, cdf_src, "gh_geo", _merge_variable(models, "gh_geo", axis=1)
-        )
-
     with cdf_open(destination, "w") as cdf_dst:
         with cdf_open(sources[-1], "r") as cdf_src:
-            _create_empty_mma_sha_2f(cdf_dst, cdf_src)
+            merge_models(cdf_dst, cdf_src, models)
         set_sources(cdf_dst, sources)
 
 
