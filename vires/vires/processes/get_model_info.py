@@ -33,7 +33,7 @@ from eoxserver.services.ows.wps.parameters import (
 from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
 from vires.time_util import mjd2000_to_datetime, decimal_year_to_mjd2000
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_models2
+from vires.processes.util import parse_model_list
 from vires.processes.util.magnetic_models import MODEL_LIST
 
 
@@ -86,7 +86,8 @@ class GetModelInfo(WPSProcess):
         # parse inputs
         if model_ids is None:
             model_ids = DEFAULT_MODEL_IDS
-        models = parse_models2("model_ids", model_ids, shc)
+
+        models, _ = parse_model_list("model_ids", model_ids, shc)
 
         if output['mime_type'] == "text/csv":
             return self._csv_output(models, output)
@@ -101,13 +102,14 @@ class GetModelInfo(WPSProcess):
     @classmethod
     def _csv_output(cls, models, output):
         output_fobj = StringIO()
-        output_fobj.write("modelId,validityStart,validityStop\r\n")
+        output_fobj.write("modelId,validityStart,validityStop,modelExpression\r\n")
         for model in models:
-            validity_start, validity_stop = model.model.validity
-            output_fobj.write("%s,%s,%s\r\n" % (
-                model.name,
+            validity_start, validity_stop = model.validity
+            output_fobj.write("%s,%s,%s,\"%s\"\r\n" % (
+                name.name,
                 cls._format_time(validity_start),
                 cls._format_time(validity_stop),
+                model.full_expression,
             ))
         return CDFileWrapper(output_fobj, **output)
 
@@ -115,9 +117,10 @@ class GetModelInfo(WPSProcess):
     def _json_output(cls, models, output):
 
         def _get_model_info(model):
-            validity_start, validity_stop = model.model.validity
+            validity_start, validity_stop = model.validity
             return {
                 'name': model.name,
+                'expression': model.full_expression,
                 'validity': {
                     'start': cls._format_time(validity_start),
                     'end': cls._format_time(validity_stop),

@@ -30,25 +30,17 @@
 # pylint: disable=missing-docstring,too-many-arguments,too-many-locals
 # pylint: disable=unused-argument,no-self-use,too-few-public-methods
 
-from os import remove
-from os.path import join, exists
-from uuid import uuid4
 from datetime import datetime
-from matplotlib.colors import Normalize
-from numpy import empty, linspace, meshgrid, amin, amax
-from eoxmagmod import GEODETIC_ABOVE_WGS84
 from eoxserver.services.ows.wps.parameters import (
-    BoundingBox, BoundingBoxData, ComplexData, CDFile,
+    BoundingBox, BoundingBoxData, ComplexData,
     FormatText, FormatBinaryRaw, FormatBinaryBase64,
     LiteralData, AllowedRange
 )
-from vires.config import SystemConfigReader
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
-from vires.perf_util import ElapsedTimeLogger
-from vires.forward_models.base import EVAL_VARIABLE
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_model, parse_style, data_to_png, get_f107_value,
+    parse_model_expression, parse_style,
+    render_model, ALLOWED_VARIABLES,
 )
 
 
@@ -82,15 +74,14 @@ class EvalModel(WPSProcess):
             "end_time", datetime, optional=False,
             abstract="End of the time interval",
         )),
-        ("model_id", LiteralData(
+        ("model_expression", LiteralData(
             "model", str, optional=False,
-            title="The model identifier."
-            #TODO: list available models.
+            title="Model expression."
         )),
         ("variable", LiteralData(
             "variable", str, optional=True, default="F",
             abstract="Variable to be evaluated.",
-            allowed_values=tuple(EVAL_VARIABLE.keys()),
+            allowed_values=tuple(ALLOWED_VARIABLES),
         )),
         ("elevation", LiteralData(
             "elevation", float, optional=True, uoms=(("km", 1.0), ("m", 1e-3)),
@@ -104,16 +95,6 @@ class EvalModel(WPSProcess):
         ("range_max", LiteralData(
             "range_max", float, optional=True, default=None,
             abstract="Maximum displayed value."
-        )),
-        ("coeff_min", LiteralData(
-            "coeff_min", int, optional=True, default=-1,
-            allowed_values=AllowedRange(-1., None, dtype=int),
-            abstract="The lower limit of the applied model coefficients."
-        )),
-        ("coeff_max", LiteralData(
-            "coeff_max", int, optional=True, default=-1,
-            allowed_values=AllowedRange(-1., None, dtype=int),
-            abstract="The upper limit of the applied model coefficients."
         )),
         ("shc", ComplexData(
             "shc", title="SHC file data", optional=True,
@@ -140,15 +121,14 @@ class EvalModel(WPSProcess):
         )),
     ]
 
-    def execute(self, model_id, shc, variable, begin_time, end_time,
+    def execute(self, model_expression, shc, variable, begin_time, end_time,
                 elevation, range_max, range_min, bbox, width, height,
-                style, output, coeff_min, coeff_max, **kwarg):
+                style, output, **kwarg):
         # get configurations
-        conf_sys = SystemConfigReader()
 
         # parse models and styles
         color_map = parse_style("style", style)
-        model = parse_model("model", model_id, shc)
+        model, _ = parse_model_expression("model", model_expression, shc)
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
@@ -159,65 +139,29 @@ class EvalModel(WPSProcess):
 
         self.access_logger.info(
             "request: toi: (%s, %s), aoi: %s, elevation: %g, "
-            "model: %s, coeff_range: (%d, %d), variable: %s, "
-            "image-size: (%d, %d), mime-type: %s",
+            "model: %s, variable: %s, image-size: (%d, %d), mime-type: %s",
             begin_time.isoformat("T"), end_time.isoformat("T"),
-            bbox[0] + bbox[1], elevation, model_id, coeff_min, coeff_max,
+            bbox[0] + bbox[1], elevation, model.full_expression,
             variable, width, height, output['mime_type'],
         )
 
         (y_min, x_min), (y_max, x_max) = bbox
-        hd_x = (0.5 / width) * (x_max - x_min)
-        hd_y = (0.5 / height) * (y_min - y_max)
-        lons, lats = meshgrid(
-            linspace(x_min + hd_x, x_max - hd_x, width, endpoint=True),
-            linspace(y_max + hd_y, y_min - hd_y, height, endpoint=True)
+
+        result, _, (range_min, range_max) = render_model(
+            model=model,
+            variable=variable,
+            mjd2000=mean_time,
+            srid=4326,
+            bbox=(x_min, y_min, x_max, y_max),
+            elevation=elevation,
+            size=(width, height),
+            value_range=(range_min, range_max),
+            colormap=color_map,
+            response_format="image/png",
+            is_transparent=True,
+            grid_step=(1, 1), # no interpolation
+            wps_output_def=output,
         )
-
-        # Geodetic coordinates with elevation above the WGS84 ellipsoid.
-        coord_gdt = empty((height, width, 3))
-        coord_gdt[:, :, 0] = lats
-        coord_gdt[:, :, 1] = lons
-        coord_gdt[:, :, 2] = elevation
-
-        self.logger.debug("coefficient range: %s", (coeff_min, coeff_max))
-
-        options = {}
-        if "f107" in model.parameters:
-            options["f107"] = get_f107_value(mean_time)
-
-        self.logger.debug("model options: %s", options)
-
-        with ElapsedTimeLogger("%s.%s %dx%dpx %s evaluated in" % (
-            model_id, variable, width, height, bbox[0] + bbox[1],
-        ), self.logger):
-            model_field = model.eval(
-                mean_time, coord_gdt,
-                GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
-                min_degree=coeff_min, max_degree=coeff_max,
-                scale=[1, 1, -1], **options
-            )
-
-        pixel_array = EVAL_VARIABLE[variable](model_field, coord_gdt)
-
-        range_min = amin(pixel_array) if range_min is None else range_min
-        range_max = amax(pixel_array) if range_max is None else range_max
-        if range_max < range_min:
-            range_max, range_min = range_min, range_max
-        self.logger.debug("output data range: %s", (range_min, range_max))
-        data_norm = Normalize(range_min, range_max)
-
-        # the output image
-        temp_basename = uuid4().hex
-        temp_filename = join(conf_sys.path_temp, temp_basename + ".png")
-
-        try:
-            data_to_png(temp_filename, pixel_array, data_norm, color_map)
-            result = CDFile(temp_filename, **output)
-        except Exception:
-            if exists(temp_filename):
-                remove(temp_filename)
-            raise
 
         return {
             "output": result,
