@@ -145,6 +145,17 @@ class ModelListParser(object):
         param[0] = [param[1]]
 
     @staticmethod
+    def p_model_expression_item_with_leading_plus(param):
+        'model_expression : plus model_definition'
+        param[0] = [param[2]]
+
+    @staticmethod
+    def p_model_expression_item_with_leading_minus(param):
+        'model_expression : minus model_definition'
+        param[2].parameters["scale"] = -1
+        param[0] = [param[2]]
+
+    @staticmethod
     def p_model_expression_plus(param):
         'model_expression : model_expression plus model_definition'
         param[0] = param[1] + [param[3]]
@@ -152,8 +163,7 @@ class ModelListParser(object):
     @staticmethod
     def p_model_expression_minus(param):
         'model_expression : model_expression minus model_definition'
-        tmp = param[3]
-        tmp.parameters["scale"] = -1
+        param[3].parameters["scale"] = -1
         param[0] = param[1] + [param[3]]
 
     @staticmethod

@@ -38,6 +38,7 @@ class TestModelExpressionParser(TestCase):
         lexer = get_model_expression_lexer()
         parser = get_model_expression_parser()
         raw_result = parser.parse(input_, lexer=lexer)
+        print raw_result
         result = [(comp_id, dict(params)) for comp_id, params in raw_result]
         self.assertEqual(result, output)
 
@@ -52,6 +53,12 @@ class TestModelExpressionParser(TestCase):
 
     def test_model_id(self):
         self._test_parser("MODEL1", [("MODEL1", {})])
+
+    def test_model_id_with_leading_plus(self):
+        self._test_parser("+MODEL1", [("MODEL1", {})])
+
+    def test_model_id_with_leading_minus(self):
+        self._test_parser("-MODEL1", [("MODEL1", {'scale': -1})])
 
     def test_model_id_quoted_single(self):
         self._test_parser("'MODEL-1'", [("MODEL-1", {})])
@@ -91,6 +98,26 @@ class TestModelExpressionParser(TestCase):
 
     def test_invalid_model_with_params_no_assign(self):
         self._test_parser_error('MODEL(max_degree 10)')
+
+    def test_model_composed_with_leading_plus(self):
+        self._test_parser(
+            "+MODEL1-MODEL2+MODEL3",
+            [
+                ("MODEL1", {}),
+                ("MODEL2", {'scale': -1}),
+                ("MODEL3", {}),
+            ]
+        )
+
+    def test_model_composed_with_leading_minus(self):
+        self._test_parser(
+            "-MODEL1+MODEL2-MODEL3",
+            [
+                ("MODEL1", {'scale': -1}),
+                ("MODEL2", {}),
+                ("MODEL3", {'scale': -1}),
+            ]
+        )
 
     def test_model_composed_with_params(self):
         self._test_parser(

@@ -112,6 +112,14 @@ class TestModelListParser(TestCase):
     def test_assigned_model_simple(self):
         self._test_parser('MODEL-1=MODEL', [('MODEL-1', [('MODEL', {})])])
 
+    def test_assigned_model_with_leading_plus(self):
+        self._test_parser("MODEL=+MODEL1", [('MODEL', [("MODEL1", {})])])
+
+    def test_assigned_model_with_leading_minus(self):
+        self._test_parser(
+            "MODEL=-MODEL1", [("MODEL", [("MODEL1", {'scale': -1})])]
+        )
+
     def test_assigned_model_simple_single_quoted(self):
         self._test_parser("MODEL-1='MODEL-2'", [('MODEL-1', [('MODEL-2', {})])])
 
@@ -148,6 +156,26 @@ class TestModelListParser(TestCase):
 
     def test_invalid_assigned_model_simple_with_params_no_assign(self):
         self._test_parser_error('MODEL-1=MODEL(max_degree 10)')
+
+    def test_assigned_model_composed_with_leading_plus(self):
+        self._test_parser(
+            "MODEL=+MODEL1-MODEL2+MODEL3",
+            [('MODEL', [
+                ("MODEL1", {}),
+                ("MODEL2", {'scale': -1}),
+                ("MODEL3", {}),
+            ])]
+        )
+
+    def test_assigned_model_composed_with_leading_minus(self):
+        self._test_parser(
+            "MODEL=-MODEL1+MODEL2-MODEL3",
+            [('MODEL', [
+                ("MODEL1", {'scale': -1}),
+                ("MODEL2", {}),
+                ("MODEL3", {'scale': -1}),
+            ])]
+        )
 
     def test_assigned_model_composed_with_params(self):
         self._test_parser(
