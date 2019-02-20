@@ -38,7 +38,9 @@ from .time_series_product import ProductTimeSeries
 from .time_series_aux import  IndexKp, IndexDst, IndexF107
 from .time_series_orbit_counter import OrbitCounter
 from .model import Model
-from .model_magmod import MagneticModelResidual, MagneticModel
+from .model_magmod import (
+    MagneticModelResidual, SourceMagneticModel, ComposedMagneticModel,
+)
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
 from .model_sunpos import SunPosition, SubSolarPoint
 from .model_dipole import MagneticDipole, DipoleTiltAngle
@@ -46,7 +48,7 @@ from .model_pyamps import IonosphericCurrentModel, AssociatedMagneticModel
 from .label import Label, SpacecraftLabel
 from .input_parsers import (
     parse_style, parse_collections,
-    parse_model, parse_models, parse_models2,
+    parse_model_expression, parse_model_list,
     parse_filters, parse_filters2,
     parse_variables, get_residual_variables,
 )
@@ -55,6 +57,7 @@ from .auth import get_username, get_user
 from .resolver import VariableResolver
 from .residuals import group_residual_variables, Sat2SatResidual
 from .f107 import get_f107_value
+from .model_renderer import render_model, ALLOWED_VARIABLES
 
 
 # other miscellaneous utilities
