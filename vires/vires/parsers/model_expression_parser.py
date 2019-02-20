@@ -46,7 +46,7 @@ from .model_expression_lexer import ModelExpressionLexer
 #                    | <empty>
 #
 #   model_parameters_list : model_parameters_list, model_parameter
-#   model_parameters_list : model_parameter
+#                         | model_parameter
 #
 #   model_parameter : parameter_id = integer
 #

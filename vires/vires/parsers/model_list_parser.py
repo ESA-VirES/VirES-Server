@@ -56,7 +56,7 @@ from .model_list_lexer import ModelListLexer
 #                    | <empty>
 #
 #   model_parameters_list : model_parameters_list, model_parameter
-#   model_parameters_list : model_parameter
+#                         | model_parameter
 #
 #   model_parameter : parameter_id = integer
 #
