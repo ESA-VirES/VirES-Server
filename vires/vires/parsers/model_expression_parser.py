@@ -36,10 +36,11 @@ from .model_expression_lexer import ModelExpressionLexer
 #
 #   model_expression : model_expression + model_definition
 #                    | model_expression - model_definition
+#                    | - model_definition
+#                    | + model_definition
 #                    | model_definition
 #
 #   model_definition : model_id ( model_parameters )
-#                    | model_id
 #
 #   model_parameters : model_parameters_list
 #                    | <empty>
@@ -53,8 +54,7 @@ from .model_expression_lexer import ModelExpressionLexer
 #            | '[a-zA-Z][a-zA-Z0-9_-]{0,127}'
 #            | [a-zA-Z][a-zA-Z0-9_-]{0,127}
 #
-#   parameter_id : max_degree
-#                | min_degree
+#   parameter_id : (max_degree|min_degree)
 #
 #   integer : [-+]?\d{1,9}
 #
