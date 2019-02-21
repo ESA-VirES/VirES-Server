@@ -257,7 +257,9 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
     idx_start, idx_stop = array_slice(
         cdf.raw_var(time_field)[:], start, stop, margin
     )
-    return [(field, cdf[field][idx_start:idx_stop]) for field in fields]
+    return [
+        (field, cdf.raw_var(field)[idx_start:idx_stop]) for field in fields
+    ]
 
 
 def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',

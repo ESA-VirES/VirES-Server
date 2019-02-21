@@ -63,7 +63,7 @@ from vires.processes.util import (
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
-    MagneticDipole, DipoleTiltAngle,
+    MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
 )
 
 
@@ -240,10 +240,23 @@ class FetchData(WPSProcess):
         resolvers = dict()
 
         if sources:
-            orbit_counter = dict(
-                (satellite, OrbitCounter("OrbitCounter" + satellite, path))
-                for satellite, path in settings.VIRES_ORBIT_COUNTER_DB.items()
-            )
+            orbit_info = {
+                spacecraft: [
+                    OrbitCounter(
+                        "OrbitCounter" + spacecraft,
+                        settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
+                    ),
+                    OrbitDirection(
+                        "OrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
+                    ),
+                    QDOrbitDirection(
+                        "QDOrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft]
+                    ),
+                ]
+                for spacecraft in settings.VIRES_SPACECRAFTS
+            }
             index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
@@ -300,10 +313,9 @@ class FetchData(WPSProcess):
                     settings.VIRES_COL2SAT.get(master.collection.identifier)
                 )
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
-                if spacecraft in orbit_counter:
-                    resolver.add_slave(
-                        orbit_counter[spacecraft], 'Timestamp'
-                    )
+
+                for item in orbit_info.get(spacecraft, []):
+                    resolver.add_slave(item, 'Timestamp')
 
                 # prepare spacecraft to spacecraft residuals
                 # NOTE: No residual variables required by the filters.
