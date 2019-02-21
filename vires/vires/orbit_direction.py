@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Orbit direction file handling.
+# Orbit direction file handling
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
