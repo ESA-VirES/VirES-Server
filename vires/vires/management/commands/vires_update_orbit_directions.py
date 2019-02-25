@@ -43,7 +43,7 @@ from vires.orbit_direction_update import OrbitDirectionTables
 
 TIMEDELTA_MAX = timedelta(seconds=1.5)
 TIMEDELTA_MIN = timedelta(seconds=0.5)
-RE_MAG_LR_PRODUCT = re.compile("^(SW_OPER_MAG([A-Z])_LR_1B)_.*_MDR_MAG_LR$")
+RE_MAG_LR_PRODUCT = re.compile("^(SW_OPER_MAG([A-Z])_LR_1B)_.*_MDR_MAG_LR(\.cdf)?$")
 RE_MAG_LR_COLLECTION = re.compile("^(SW_OPER_MAG([A-Z])_LR_1B)$")
 
 
@@ -165,7 +165,7 @@ def update_orbit_direction_tables(data_file):
     match = RE_MAG_LR_PRODUCT.match(product_id)
     if not match:
         raise ValueError("%s is not a MAGx_LR product!" % product_id)
-    collection_id, spacecraft = match.groups()
+    collection_id, spacecraft, _ = match.groups()
 
     try:
         od_geo_file = settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
