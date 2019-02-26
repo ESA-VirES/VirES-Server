@@ -80,6 +80,6 @@ def interpolate_orbit_direction_data(filename, time, nodata=None,
             )
     else:
         return dict(
-            (field, full(time.shape, nodata.get(field, nan), types.get(field)))
+            (field, full(time.shape, nodata.get(field, nan), TYPES.get(field)))
             for field in fields
         )
