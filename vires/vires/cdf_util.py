@@ -35,6 +35,7 @@ from numpy import (
     amin, amax, nan, vectorize, object as dt_object, float64 as dt_float64,
     ndarray, searchsorted,
 )
+import ctypes
 import scipy
 from scipy.interpolate import interp1d
 import spacepy
@@ -45,6 +46,9 @@ from .time_util import (
     mjd2000_to_decimal_year, year_to_day2k, days_per_year,
     datetime, naive_to_utc,
 )
+
+GZIP_COMPRESSION = pycdf.const.GZIP_COMPRESSION
+GZIP_COMPRESSION_LEVEL1 = ctypes.c_long(1)
 
 CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
 CDF_FLOAT_TYPE = pycdf.const.CDF_FLOAT.value
@@ -257,7 +261,9 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
     idx_start, idx_stop = array_slice(
         cdf.raw_var(time_field)[:], start, stop, margin
     )
-    return [(field, cdf[field][idx_start:idx_stop]) for field in fields]
+    return [
+        (field, cdf.raw_var(field)[idx_start:idx_stop]) for field in fields
+    ]
 
 
 def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',

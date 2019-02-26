@@ -37,7 +37,12 @@ setup(
     packages=find_packages(),
     data_files=DATA_FILES,
     include_package_data=True,
-    package_data={'vires': ['data/*.json']},
+    package_data={
+        'vires': [
+            'data/*.json',
+            'tests/data/*.cdf',
+        ]
+    },
     scripts=[],
     install_requires=[
         'EOxServer', 'eoxmagmod>=0.9.0',

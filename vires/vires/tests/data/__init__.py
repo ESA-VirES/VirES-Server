@@ -1,11 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Vires commands
+#  Testing data
 #
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2018 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +25,6 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxserver.backends.cache import setup_cache_session, shutdown_cache_session
+from os.path import dirname, join
 
-
-def cache_session(func):
-    """ Initialize cache session. """
-    def _cache_session(*arg, **kwarg):
-        setup_cache_session()
-        try:
-            return func(*arg, **kwarg)
-        finally:
-            shutdown_cache_session()
-    return _cache_session
+TEST_ORBIT_DIRECTION_CDF = join(dirname(__file__), "test_orbit_directions.cdf")

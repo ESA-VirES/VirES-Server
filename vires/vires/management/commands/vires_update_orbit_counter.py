@@ -35,7 +35,7 @@ from vires.cached_products import (
     update_cached_product, simple_cached_product_updater,
 )
 
-DEPRECATION_WARNING =(
+DEPRECATION_WARNING = (
     "The 'vires_update_orbit_counter' command is deprecated! "
     "Use 'vires_update_cached_file' instead."
 )
@@ -62,17 +62,17 @@ class Command(CommandOutputMixIn, BaseCommand):
         ),
     )
 
-    options = [
-        ("filename_a", settings.VIRES_ORBIT_COUNTER_DB['A']),
-        ("filename_b", settings.VIRES_ORBIT_COUNTER_DB['B']),
-        ("filename_c", settings.VIRES_ORBIT_COUNTER_DB['C']),
+    cached_products = [
+        ("filename_a", settings.VIRES_ORBIT_COUNTER_FILE['A']),
+        ("filename_b", settings.VIRES_ORBIT_COUNTER_FILE['B']),
+        ("filename_c", settings.VIRES_ORBIT_COUNTER_FILE['C']),
     ]
 
     def handle(self, *args, **kwargs):
-        logger=getLogger(__name__)
+        logger = getLogger(__name__)
         logger.warn(DEPRECATION_WARNING)
 
-        for opt_name, destination in self.options:
+        for opt_name, destination in self.cached_products:
             if kwargs[opt_name] is not None:
                 update_cached_product(
                     [kwargs[opt_name]], destination,

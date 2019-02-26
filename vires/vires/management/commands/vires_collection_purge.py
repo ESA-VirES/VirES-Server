@@ -31,23 +31,12 @@
 from os.path import exists
 from optparse import make_option
 from django.core.management.base import CommandError, BaseCommand
-from eoxserver.backends.cache import setup_cache_session, shutdown_cache_session
 from eoxserver.backends.access import connect
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
 )
+from vires.management.commands import cache_session
 from vires.models import ProductCollection
-
-
-def cache_session(func):
-    """ Initialize cache session. """
-    def _cache_session(*arg, **kwarg):
-        setup_cache_session()
-        try:
-            return func(*arg, **kwarg)
-        finally:
-            shutdown_cache_session()
-    return _cache_session
 
 
 class Command(CommandOutputMixIn, BaseCommand):

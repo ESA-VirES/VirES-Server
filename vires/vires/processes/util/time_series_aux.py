@@ -58,6 +58,16 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         def process(self, msg, kwargs):
             return '%s: %s' % (self.extra["index_name"], msg), kwargs
 
+    @staticmethod
+    def _encode_time(times, cdf_type):
+        """ Convert the raw CDF time to the time format of the dataset. """
+        return cdf_rawtime_to_mjd2000(times, cdf_type)
+
+    @staticmethod
+    def _decode_time(times, cdf_type):
+        """ Convert the time format of the dataset to the raw CDF time. """
+        return mjd2000_to_cdf_rawtime(times, cdf_type)
+
     def __init__(self, name, filename, query_fcn, iterp_fcn, varmap,
                  logger=None):
         self._name = name
@@ -88,7 +98,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
                 cdf_type = self.CDF_TYPE.get(variable)
                 cdf_attr = self.CDF_ATTR.get(variable)
                 if variable == self.TIME_VARIABLE:
-                    data = mjd2000_to_cdf_rawtime(data, cdf_type)
+                    data = self._decode_time(data, cdf_type)
                 dataset.set(variable, data, cdf_type, cdf_attr)
 
         self.logger.debug("dataset length: %s", dataset.length)
@@ -130,7 +140,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
             )
         if dependent_variables:
             src_data = self._interp(
-                self._filename, cdf_rawtime_to_mjd2000(times, cdf_type),
+                self._filename, self._encode_time(times, cdf_type),
                 fields=tuple(
                     self._revvarmap[variable] for variable in dependent_variables
                 )

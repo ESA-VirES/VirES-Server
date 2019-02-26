@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Inter satellite residuals
+# Inter-spacecraft difference calculation
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -115,10 +115,10 @@ class Sat2SatResidual(Model):
     def __init__(self, master_spacecraft, slave_spacecraft,
                  grouped_collections, logger=None):
 
-        if master_spacecraft not in settings.VIRES_ORBIT_COUNTER_DB:
+        if master_spacecraft not in settings.VIRES_ORBIT_COUNTER_FILE:
             raise ValueError("Invalid master spacecraft %s!" % master_spacecraft)
 
-        if slave_spacecraft not in settings.VIRES_ORBIT_COUNTER_DB:
+        if slave_spacecraft not in settings.VIRES_ORBIT_COUNTER_FILE:
             raise ValueError("Invalid slave spacecraft %s!" % slave_spacecraft)
 
         self._master_spacecraft = master_spacecraft
@@ -224,7 +224,7 @@ class Sat2SatResidual(Model):
         start_time = cdf_rawtime_to_datetime(time_master.min(), time_cdf_type)
         stop_time = cdf_rawtime_to_datetime(time_master.max(), time_cdf_type)
         orbcnt_master = fetch_orbit_counter_data(
-            filename=settings.VIRES_ORBIT_COUNTER_DB[self._master_spacecraft],
+            filename=settings.VIRES_ORBIT_COUNTER_FILE[self._master_spacecraft],
             start=start_time, stop=stop_time,
             fields=("orbit", "MJD2000", "phi_AN")
         )
@@ -243,7 +243,7 @@ class Sat2SatResidual(Model):
 
         # get slave ANX times and longitudes
         orbcnt_slave = interpolate_orbit_counter_data(
-            filename=settings.VIRES_ORBIT_COUNTER_DB[self._slave_spacecraft],
+            filename=settings.VIRES_ORBIT_COUNTER_FILE[self._slave_spacecraft],
             time=orbcnt_master["MJD2000"],
             fields=("MJD2000", "phi_AN"),
             kind="nearest",

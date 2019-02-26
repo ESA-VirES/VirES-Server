@@ -45,6 +45,8 @@ from .model_list_lexer import ModelListLexer
 #
 #   model_expression : model_expression + model_definition
 #                    | model_expression - model_definition
+#                    | + model_definition
+#                    | - model_definition
 #                    | model_definition
 #
 #   model_definition : model_id ( model_parameters )
@@ -54,7 +56,7 @@ from .model_list_lexer import ModelListLexer
 #                    | <empty>
 #
 #   model_parameters_list : model_parameters_list, model_parameter
-#   model_parameters_list : model_parameter
+#                         | model_parameter
 #
 #   model_parameter : parameter_id = integer
 #
@@ -62,8 +64,7 @@ from .model_list_lexer import ModelListLexer
 #            | '[a-zA-Z][a-zA-Z0-9_-]{0,127}'
 #            | [a-zA-Z][a-zA-Z0-9_-]{0,127}
 #
-#   parameter_id : max_degree
-#                | min_degree
+#   parameter_id : (max_degree|min_degree)
 #
 #   integer : [-+]?\d{1,9}
 #
