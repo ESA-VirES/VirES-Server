@@ -148,7 +148,7 @@ class Command(CommandOutputMixIn, BaseCommand):
                 # update orbit direction tables
                 if RE_MAG_LR_PRODUCT.match(product_id):
                     try:
-                        update_orbit_direction_tables(data_file)
+                        update_orbit_direction_tables(collection, product)
                     except DataIntegrityError as error:
                         self.print_wrn(
                             "Failed to update the orbit direction look-up "

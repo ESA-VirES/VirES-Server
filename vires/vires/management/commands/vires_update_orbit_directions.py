@@ -36,55 +36,70 @@ from django.core.management.base import BaseCommand, CommandError
 from eoxserver.backends.access import connect
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
 from vires.cdf_util import cdf_open
-from vires.models import ProductCollection
+from vires.models import ProductCollection, Product
 from vires.management.commands import cache_session
-from vires.orbit_direction_update import OrbitDirectionTables
+from vires.orbit_direction_update import (
+    OrbitDirectionTables, DataIntegrityError,
+)
 
 
 TIMEDELTA_MAX = timedelta(seconds=1.5)
 TIMEDELTA_MIN = timedelta(seconds=0.5)
-RE_MAG_LR_PRODUCT = re.compile("^(SW_OPER_MAG([A-Z])_LR_1B)_.*_MDR_MAG_LR(\.cdf)?$")
-RE_MAG_LR_COLLECTION = re.compile("^(SW_OPER_MAG([A-Z])_LR_1B)$")
+RE_MAG_LR_PRODUCT = re.compile(r"^(SW_OPER_MAG([A-Z])_LR_1B)_.*_MDR_MAG_LR$")
+RE_MAG_LR_COLLECTION = re.compile(r"^(SW_OPER_MAG([A-Z])_LR_1B)$")
 
 
 class Command(CommandOutputMixIn, BaseCommand):
-    option_list = BaseCommand.option_list
     option_list = BaseCommand.option_list + (
         make_option(
-            "-r", "--rebuild-collection",
-            dest="collection_id", default=None, help=(
-                "Force re-processing of a whole MAGx_LR collection. "
+            "-c", "--collection", dest="collection_id",
+            help="Mandatory collection identifier."
+        ),
+        make_option(
+            "-r", "--rebuild", dest="rebuild_collection",
+            action="store_true", default=False, help=(
+                "Force re-processing of the whole collection. "
             )
         ),
     )
-    args = "[<product> [<product> ...]]"
-
-    help = """
-        Update orbit direction tables from one or more MAGx_LR products.
-    """
+    args = "[<product_id> [<product_id> ...]]"
+    help = """ Update orbit direction lookup tables. """
 
     @cache_session
     def handle(self, *args, **kwargs):
         print_command = lambda msg: self.print_msg(msg, 1)
-        collection_id = kwargs.get('collection_id')
+
+        if not kwargs.get('collection_id'):
+            raise CommandError("Missing the mandatory collection identifier!")
+
         counter = Counter()
-
-        if collection_id:
-            self.rebuild_collection(counter, collection_id)
-
-        self.update_from_files(counter, *args, **kwargs)
+        if kwargs.get('rebuild_collection', False):
+            self.rebuild_collection(counter, kwargs['collection_id'])
+        else:
+            self.update_from_products(counter, *args, **kwargs)
 
         counter.print_report(print_command)
 
-    def update_from_files(self, counter, *args, **kwargs):
+    def update_from_products(self, counter, *args, **kwargs):
         """ update orbit direction table from a list of products. """
-        for data_file in args:
+        collection_id = kwargs['collection_id']
+        collection = get_collection(collection_id)
+        if collection is None:
+            raise ValueError("Collection %s does not exist!" % collection_id)
+
+        def _update_from_product(product_id):
+            product = find_product_by_id(product_id)
+            if product is None:
+                raise ValueError("%s not found!" % product_id)
+            return update_orbit_direction_tables(collection, product)
+
+        for product_id in args:
             try:
-                product_id, processed = update_orbit_direction_tables(data_file)
+                processed = _update_from_product(product_id)
             except Exception as error:
                 self.print_traceback(error, kwargs)
                 self.print_err(
-                    "Processing of '%s' failed! Reason: %s" % (data_file, error)
+                    "Processing of %s failed! Reason: %s" % (product_id, error)
                 )
                 counter.increment_failed()
             else:
@@ -105,24 +120,18 @@ class Command(CommandOutputMixIn, BaseCommand):
     def rebuild_collection(self, counter, collection_id):
         """ Re-build orbit direction lookup tables for the given collection. """
 
-        match = RE_MAG_LR_COLLECTION.match(collection_id)
-        if not match:
-            raise CommandError("%s is not a MAGx_LR collection!" % collection_id)
-        collection_id, spacecraft = match.groups()
-
-        try:
-            od_geo_file = settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
-            od_mag_file = settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft]
-        except KeyError:
-            raise ValueError("Invalid spacecraft identifier %s!" % spacecraft)
-
         od_tables = OrbitDirectionTables(
-            od_geo_file, od_mag_file, reset=True, logger=getLogger(__name__)
+            *get_orbit_direction_tables(
+                collection_to_spacecraft(collection_id)
+            ), reset=True, logger=getLogger(__name__)
         )
 
         collection = get_collection(collection_id)
         if collection is None:
-            self.print_wrn("Collection %s does not exist!" % collection_id)
+            self.print_wrn(
+                "Collection %s does not exist! Blank orbit "
+                "direction lookup tables will be saved." % collection_id
+            )
             od_tables.save()
             return
 
@@ -134,87 +143,137 @@ class Command(CommandOutputMixIn, BaseCommand):
         last_data_file = None
         last_end_time = None
 
-        for data_file in list_collection(collection):
+        for product in list_collection(collection):
             counter.increment()
-            product_id, start_time, end_time = get_product_id_and_time_range(data_file)
+
+            data_file = get_data_file(product)
+            _, start_time, end_time = get_product_id_and_time_range(data_file)
+
             if not last_data_file or last_end_time < start_time:
                 data_file_before = last_data_file if (
                     last_data_file
                     and (start_time - last_end_time) < TIMEDELTA_MAX
                 ) else None
-                od_tables.update(data_file, data_file_before, None)
+                od_tables.update(
+                    product.identifier, data_file, data_file_before, None
+                )
                 last_data_file = data_file
                 last_end_time = end_time
                 counter.increment_processed()
                 self.print_msg(
-                    "%s orbit direction lookup table extracted" % product_id
+                    "%s orbit direction lookup table extracted"
+                    % product.identifier
                 )
             else:
                 self.print_wrn(
                     "%s orbit direction lookup table extraction skipped"
-                    "" % product_id
+                    % product.identifier
                 )
                 counter.increment_skipped()
 
         od_tables.save()
 
 
-def update_orbit_direction_tables(data_file):
-    product_id, start_time, end_time = get_product_id_and_time_range(data_file)
+def update_orbit_direction_tables(collection, product):
+    """ Update orbit direction tables from product and collection. """
+    if collection.range_type != product.range_type:
+        raise ValueError(
+            "The product range type does not match the collection range type!"
+        )
 
-    match = RE_MAG_LR_PRODUCT.match(product_id)
-    if not match:
-        raise ValueError("%s is not a MAGx_LR product!" % product_id)
-    collection_id, spacecraft, _ = match.groups()
+    od_tables = OrbitDirectionTables(
+        *get_orbit_direction_tables(
+            collection_to_spacecraft(collection.identifier)
+        ), logger=getLogger(__name__)
+    )
 
+    if product.identifier in od_tables:
+        return False
+
+    data_file = get_data_file(product)
+    _, start_time, end_time = get_product_id_and_time_range(data_file)
+
+    def _extract_and_check_data_file(product):
+        if product is None:
+            return None
+        if product.identifier not in od_tables:
+            raise DataIntegrityError(
+                "%s not found in orbit direction lookup tables! "
+                "Consider reprocessing of the %s spacecraft orbit direction "
+                "lookup tables."
+            )
+        return get_data_file(product)
+
+    data_file_before = _extract_and_check_data_file(
+        find_product_by_time_interval(
+            collection, start_time - TIMEDELTA_MAX, start_time - TIMEDELTA_MIN
+        )
+    )
+    data_file_after = _extract_and_check_data_file(
+        find_product_by_time_interval(
+            collection, end_time + TIMEDELTA_MIN, end_time + TIMEDELTA_MAX
+        )
+    )
+
+    od_tables.update(
+        product.identifier, data_file, data_file_before, data_file_after
+    )
+    od_tables.save()
+
+    return True
+
+
+def get_orbit_direction_tables(spacecraft):
+    """ Get orbit direction tables for the given spacecraft identifier. """
     try:
-        od_geo_file = settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
-        od_mag_file = settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft]
+        return (
+            settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft],
+            settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft],
+        )
     except KeyError:
         raise ValueError("Invalid spacecraft identifier %s!" % spacecraft)
 
-    od_tables = OrbitDirectionTables(
-        od_geo_file, od_mag_file, logger=getLogger(__name__)
-    )
 
-    if product_id in od_tables:
-        return product_id, False
-
-    collection = get_collection(collection_id)
-    if collection is None:
-        raise ValueError("Collection %s does not exist!" % collection_id)
-
-    data_file_before = find_product_data_file(
-        collection, start_time - TIMEDELTA_MAX, start_time - TIMEDELTA_MIN
-    )
-    data_file_after = find_product_data_file(
-        collection, end_time + TIMEDELTA_MIN, end_time + TIMEDELTA_MAX
-    )
-
-    od_tables.update(data_file, data_file_before, data_file_after)
-    od_tables.save()
-
-    return product_id, True
+def collection_to_spacecraft(collection_id):
+    try:
+        return settings.VIRES_COL2SAT[collection_id]
+    except KeyError:
+        raise ValueError(
+            "Cannot determine spacecraft for collection %s" % collection_id
+        )
 
 
-def find_product_data_file(collection, begin_time, end_time):
+def find_product_by_time_interval(collection, begin_time, end_time):
     """ Locate product matched by the given time interval. """
+    return _find_product(
+        collection.eo_objects, begin_time__lte=end_time, end_time__gte=begin_time
+    )
+
+
+def find_product_by_id(product_id):
+    """ Locate product matched by the given time interval. """
+    return _find_product(Product.objects, identifier=product_id)
+
+
+def _find_product(query_set, **filters):
     products = [
-        item.cast() for item in collection.eo_objects.filter(
-            begin_time__lte=end_time, end_time__gte=begin_time
-        )[:1] if item.iscoverage
+        item.cast() for item in query_set.filter(**filters)[:1]
+        if item.iscoverage
     ]
-    if not products:
-        return None
-    return connect(products[0].data_items.all()[0])
+    return products[0] if products else None
 
 
 def list_collection(collection):
     """ Locate product matched by the given time interval. """
     return (
-        connect(item.cast().data_items.all()[0]) for item
-        in collection.eo_objects.order_by("begin_time") if item.iscoverage
+        item.cast() for item in collection.eo_objects.order_by("begin_time")
+        if item.iscoverage
     )
+
+
+def get_data_file(product):
+    """ Get product data file. """
+    return connect(product.data_items.all()[0])
 
 
 def get_collection(collection_id):

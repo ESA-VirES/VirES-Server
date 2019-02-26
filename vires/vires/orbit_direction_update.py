@@ -99,7 +99,7 @@ class OrbitDirectionTables(object):
         self._geo_table.save()
         self._mag_table.save()
 
-    def update(self, data_file, data_file_before, data_file_after):
+    def update(self, product_id, data_file, data_file_before, data_file_after):
         """ Update orbit direction tables. """
         has_product_before = data_file_before is not None
         has_product_after = data_file_after is not None
@@ -132,12 +132,12 @@ class OrbitDirectionTables(object):
 
         self._geo_table.update(
             process_variable(*get_times_and_latitudes(*data), **opts),
-            data_file, start_time, end_time, SAMPLING * OUTPUT_MARGIN
+            product_id, start_time, end_time, SAMPLING * OUTPUT_MARGIN
         )
 
         self._mag_table.update(
             process_variable(*get_times_and_qd_latitudes(*data), **opts),
-            data_file, start_time, end_time, SAMPLING * OUTPUT_MARGIN
+            product_id, start_time, end_time, SAMPLING * OUTPUT_MARGIN
         )
 
 
@@ -181,13 +181,12 @@ class OrbitDirectionTable(object):
             if exists(tmp_filename):
                 remove(tmp_filename)
 
-    def update(self, data, product_file, start_time, end_time, margin):
+    def update(self, data, product_id, start_time, end_time, margin):
         """ Update orbit direction table file. """
         self._merge_data(data, start_time, end_time, margin)
-        self._merge_products(product_file, start_time, end_time)
+        self._merge_products(product_id, start_time, end_time)
         self.logger.info(
-            "%s orbit direction lookup tables extracted",
-            self._get_product_id(product_file)
+            "%s orbit direction lookup tables extracted", product_id
         )
 
     def dump(self):
@@ -243,8 +242,7 @@ class OrbitDirectionTable(object):
             "%s table is valid", self._get_product_id(self._filename)
         )
 
-    def _merge_products(self, filename, start_time, end_time):
-        product_id = self._get_product_id(filename)
+    def _merge_products(self, product_id, start_time, end_time):
         idx_start = bisect_left(self._products.end_times, start_time)
         idx_end = bisect_right(self._products.start_times, end_time)
         self._products = Products(*join_lists([
