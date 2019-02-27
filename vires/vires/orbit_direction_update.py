@@ -32,7 +32,7 @@ from __future__ import print_function
 from os import remove, rename
 from os.path import exists, basename
 from logging import getLogger
-from itertools import chain
+from itertools import chain, izip_longest
 from collections import namedtuple
 from bisect import bisect_left, bisect_right
 from numpy import (
@@ -94,10 +94,31 @@ class OrbitDirectionTables(object):
             product_id in self._geo_table and product_id in self._mag_table
         )
 
+    @property
+    def changed(self):
+        """ Return true if the tables changed and should be saved. """
+        return self._geo_table.changed or self._mag_table.changed
+
+    @property
+    def products(self):
+        """ Iterate products of the lookup table. """
+        product_set = set()
+        product_set.update(self._geo_table.products)
+        product_set.update(self._mag_table.products)
+        return product_set
+
     def save(self):
         """ Save the tables. """
         self._geo_table.save()
         self._mag_table.save()
+
+    def remove(self, product_id):
+        """ Remove product from the lookup tables. """
+        self._geo_table.remove(product_id)
+        self._mag_table.remove(product_id)
+        self.logger.info(
+            "%s removed from orbit direction lookup tables", product_id
+        )
 
     def update(self, product_id, data_file, data_file_before, data_file_after):
         """ Update orbit direction tables. """
@@ -140,6 +161,10 @@ class OrbitDirectionTables(object):
             product_id, start_time, end_time, SAMPLING * OUTPUT_MARGIN
         )
 
+        self.logger.info(
+            "%s orbit direction lookup tables extracted", product_id
+        )
+
 
 class OrbitDirectionTable(object):
     """ Base orbit direction lookup table class """
@@ -150,6 +175,7 @@ class OrbitDirectionTable(object):
         self._products = None
         self._product_set = None
         self._data = None
+        self._changed = None
         self.logger = logger or getLogger(__name__)
 
         if not reset and exists(filename):
@@ -160,6 +186,16 @@ class OrbitDirectionTable(object):
 
     def __contains__(self, product_id):
         return product_id in self._product_set
+
+    @property
+    def changed(self):
+        """ Return true if the table is changed and should be saved. """
+        return self._changed
+
+    @property
+    def products(self):
+        """ Iterate products of the lookup table. """
+        return set(self._product_set)
 
     def save(self):
         """ Save tables to a file. """
@@ -177,17 +213,24 @@ class OrbitDirectionTable(object):
             self.logger.info(
                 "%s table saved", self._get_product_id(self._filename)
             )
+            self._changed = False
         finally:
             if exists(tmp_filename):
                 remove(tmp_filename)
 
+    def remove(self, product_id):
+        """ Remove product from the lookup tables. """
+        if product_id not in self:
+            return
+        start_time, end_time = self._remove_product(product_id)
+        self._cut_out_data(start_time, end_time)
+        self._changed = True
+
     def update(self, data, product_id, start_time, end_time, margin):
         """ Update orbit direction table file. """
         self._merge_data(data, start_time, end_time, margin)
-        self._merge_products(product_id, start_time, end_time)
-        self.logger.info(
-            "%s orbit direction lookup tables extracted", product_id
-        )
+        self._insert_product(product_id, start_time, end_time)
+        self._changed = True
 
     def dump(self):
         self._dump(self._data)
@@ -198,12 +241,14 @@ class OrbitDirectionTable(object):
         odir2str = {
             FLAG_ASCENDING: "A", FLAG_DESCENDING: "D", FLAG_UNDEFINED: "?"
         }
-        for time, flag, odir in zip(*data):
+        for time, odir, flag in zip(*data):
             print(prefix, time, odir2str[odir], flag2str[flag])
 
     def verify(self):
         """ Verify data. """
-        times, type_flags, pass_flags = self._data
+        times = self._data.times
+        pass_flags = self._data.odirs
+        type_flags = self._data.flags
 
         if not (times[1:] > times[:-1]).all():
             raise DataIntegrityError("Times are not strictly increasing!")
@@ -242,7 +287,18 @@ class OrbitDirectionTable(object):
             "%s table is valid", self._get_product_id(self._filename)
         )
 
-    def _merge_products(self, product_id, start_time, end_time):
+    def _remove_product(self, product_id):
+        idx = self._products.names.index(product_id)
+        start_time = self._products.start_times[idx]
+        end_time = self._products.end_times[idx]
+        self._products = Products(*join_lists([
+            slice_data(self._products, slice(None, idx)),
+            slice_data(self._products, slice(idx + 1, None)),
+        ]))
+        self._product_set.remove(product_id)
+        return start_time, end_time
+
+    def _insert_product(self, product_id, start_time, end_time):
         idx_start = bisect_left(self._products.end_times, start_time)
         idx_end = bisect_right(self._products.start_times, end_time)
         self._products = Products(*join_lists([
@@ -273,6 +329,38 @@ class OrbitDirectionTable(object):
             )),
         ]))
 
+    def _cut_out_data(self, start_time, end_time):
+        """" Remove data within the given time interval. """
+
+        data_items = [
+            OutputData(*slice_data(self._data, sorted_range(
+                self._data.times, None, start_time, right_closed=False
+            )))
+        ]
+
+        data_removed = OutputData(*slice_data(self._data, sorted_range(
+            self._data.times, start_time, end_time
+        )))
+
+        data_tail = OutputData(*slice_data(self._data, sorted_range(
+            self._data.times, end_time, None, right_closed=False
+        )))
+        if data_tail.flags.size and data_tail.flags[0] == FLAG_END:
+            data_tail = OutputData(*slice_data(data_tail, slice(1, None)))
+
+        if data_removed.flags[0] != FLAG_START:
+            data_items.append(OutputData(
+                [start_time], [FLAG_UNDEFINED], [FLAG_END]
+            ))
+
+        if data_tail.flags.size and data_tail.flags[0] != FLAG_START:
+            data_items.append(OutputData(
+                [end_time + SAMPLING], [data_removed.odirs[-1]], [FLAG_START]
+            ))
+
+        data_items.append(data_tail)
+
+        self._data = OutputData(*join_data(data_items))
 
     def _reset_table(self):
         """ Reset the orbit direction table. """
@@ -281,6 +369,7 @@ class OrbitDirectionTable(object):
             empty(0, 'datetime64[ms]'), empty(0, 'int8'), empty(0, 'int8')
         )
         self._product_set = set()
+        self._changed = True
 
     def _load_table(self, cdf):
         """ Load orbit direction table from a CDF file. """
@@ -305,6 +394,7 @@ class OrbitDirectionTable(object):
         self._products = Products(products, start_times, end_times)
         self._data = OutputData(times, odirs, flags)
         self._product_set = set(products)
+        self._changed = False
 
 
     def _save_table(self, cdf):
@@ -369,8 +459,8 @@ def process_variable(times, values, has_product_before, has_product_after):
     def _reformat(extrema_times, ascending_pass):
         return OutputData(
             extrema_times,
-            full(extrema_times.shape, FLAG_MIDDLE, 'int8'),
             FLAGS_ORBIT_DIRECTION[ascending_pass.astype('int')],
+            full(extrema_times.shape, FLAG_MIDDLE, 'int8'),
         )
 
     result = []
@@ -378,8 +468,8 @@ def process_variable(times, values, has_product_before, has_product_after):
     if not has_product_before:
         # start
         result.append(OutputData(
-            [times[0]], [FLAG_START],
-            FLAGS_ORBIT_DIRECTION[[int(values[1] >= values[0])]]
+            [times[0]], FLAGS_ORBIT_DIRECTION[[int(values[1] >= values[0])]],
+            [FLAG_START]
         ))
         # unfiltered head
         result.append(_reformat(*find_inversion_points(times[:3], values[:3])))
@@ -393,7 +483,7 @@ def process_variable(times, values, has_product_before, has_product_after):
         result.append(_reformat(*find_inversion_points(times[-3:], values[-3:])))
         # termination
         result.append(OutputData(
-            [times[-1] + SAMPLING], [FLAG_END], [FLAG_UNDEFINED]
+            [times[-1] + SAMPLING], [FLAG_UNDEFINED], [FLAG_END]
         ))
 
     return OutputData(*join_data(result))

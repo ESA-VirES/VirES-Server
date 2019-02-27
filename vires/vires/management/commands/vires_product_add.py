@@ -152,9 +152,8 @@ class Command(CommandOutputMixIn, BaseCommand):
                     except DataIntegrityError as error:
                         self.print_wrn(
                             "Failed to update the orbit direction look-up "
-                            "tables! Try to rebuild them with 'manage.py "
-                            "vires_update_orbit_directions -r <collection>' "
-                            "command."
+                            "tables! Try to rebuild them with the "
+                            "'vires_update_orbit_directions' command."
                         )
 
                 collection.insert(product)

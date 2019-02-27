@@ -61,6 +61,12 @@ class Command(CommandOutputMixIn, BaseCommand):
                 "Force re-processing of the whole collection. "
             )
         ),
+        make_option(
+            "-u", "--update", dest="update_collection",
+            action="store_true", default=False, help=(
+                "Update lookup tables for the given collection."
+            )
+        ),
     )
     args = "[<product_id> [<product_id> ...]]"
     help = """ Update orbit direction lookup tables. """
@@ -75,6 +81,8 @@ class Command(CommandOutputMixIn, BaseCommand):
         counter = Counter()
         if kwargs.get('rebuild_collection', False):
             self.rebuild_collection(counter, kwargs['collection_id'])
+        if kwargs.get('update_collection', False):
+            self.update_collection(counter, kwargs['collection_id'])
         else:
             self.update_from_products(counter, *args, **kwargs)
 
@@ -117,6 +125,56 @@ class Command(CommandOutputMixIn, BaseCommand):
             finally:
                 counter.increment()
 
+    def update_collection(self, counter, collection_id):
+
+        od_tables = OrbitDirectionTables(
+            *get_orbit_direction_tables(
+                collection_to_spacecraft(collection_id)
+            ), logger=getLogger(__name__)
+        )
+
+        collection = get_collection(collection_id)
+        if collection is None:
+            self.print_wrn(
+                "Collection %s does not exist! Blank orbit "
+                "direction lookup tables will be saved." % collection_id
+            )
+            od_tables.save()
+            return
+
+        self.print_msg((
+            "Updating orbit direction lookup tables for collection "
+            "%s ..." % collection_id
+        ), 1)
+
+        for product_id in od_tables.products.difference(
+                product.identifier for product in list_collection(collection)
+            ):
+            od_tables.remove(product_id)
+            self.print_msg(
+                "%s removed from orbit direction lookup tables" % product_id
+            )
+            counter.increment_removed()
+
+        for product in list_collection(collection):
+            counter.increment()
+            processed = _update_orbit_direction_tables(
+                od_tables, collection, product
+            )
+
+            if processed:
+                counter.increment_processed()
+                self.print_msg(
+                    "%s orbit direction lookup tables extracted"
+                    % product.identifier
+                )
+            else:
+                counter.increment_skipped()
+
+        if od_tables.changed:
+            od_tables.save()
+
+
     def rebuild_collection(self, counter, collection_id):
         """ Re-build orbit direction lookup tables for the given collection. """
 
@@ -136,7 +194,7 @@ class Command(CommandOutputMixIn, BaseCommand):
             return
 
         self.print_msg((
-            "Rebuilding orbit direction lookup tables tables for collection "
+            "Rebuilding orbit direction lookup tables for collection "
             "%s ..." % collection_id
         ), 1)
 
@@ -187,6 +245,26 @@ def update_orbit_direction_tables(collection, product):
         ), logger=getLogger(__name__)
     )
 
+    def _check_neighbour_product(product):
+        if product.identifier not in od_tables:
+            raise DataIntegrityError(
+                "%s not found in orbit direction lookup tables! "
+                "Consider reprocessing of the %s spacecraft orbit direction "
+                "lookup tables."
+            )
+
+    processed = _update_orbit_direction_tables(
+        od_tables, collection, product, _check_neighbour_product
+    )
+
+    od_tables.save()
+
+    return processed
+
+
+def _update_orbit_direction_tables(od_tables, collection, product,
+                                   check_product=None):
+
     if product.identifier in od_tables:
         return False
 
@@ -196,12 +274,8 @@ def update_orbit_direction_tables(collection, product):
     def _extract_and_check_data_file(product):
         if product is None:
             return None
-        if product.identifier not in od_tables:
-            raise DataIntegrityError(
-                "%s not found in orbit direction lookup tables! "
-                "Consider reprocessing of the %s spacecraft orbit direction "
-                "lookup tables."
-            )
+        if check_product:
+            check_product(product)
         return get_data_file(product)
 
     data_file_before = _extract_and_check_data_file(
@@ -218,10 +292,8 @@ def update_orbit_direction_tables(collection, product):
     od_tables.update(
         product.identifier, data_file, data_file_before, data_file_after
     )
-    od_tables.save()
 
     return True
-
 
 def get_orbit_direction_tables(spacecraft):
     """ Get orbit direction tables for the given spacecraft identifier. """
@@ -300,12 +372,16 @@ class Counter(object):
         self._processed = 0
         self._failed = 0
         self._skipped = 0
+        self._removed = 0
 
     def increment(self, count=1):
         self._total += count
 
     def increment_processed(self, count=1):
         self._processed += count
+
+    def increment_removed(self, count=1):
+        self._removed += count
 
     def increment_failed(self, count=1):
         self._failed += count
@@ -330,6 +406,11 @@ class Counter(object):
             print_fcn(
                 "Failed to process %d of %d product(s)."
                 % (self._failed, self._total)
+            )
+
+        if self._removed > 0:
+            print_fcn(
+                "%d old product(s) removed from lookup tables." % self._removed
             )
 
         if self._total == 0:
