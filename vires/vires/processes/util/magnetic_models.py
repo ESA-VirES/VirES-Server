@@ -41,6 +41,7 @@ from eoxmagmod import (
 )
 from eoxmagmod.time_util import decimal_year_to_mjd2000_simple
 
+DIPOLE_MODEL = "IGRF12"
 
 MODELS_FACTORIES = {
     "IGRF12":
