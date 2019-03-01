@@ -38,7 +38,6 @@ class TestModelExpressionParser(TestCase):
         lexer = get_model_expression_lexer()
         parser = get_model_expression_parser()
         raw_result = parser.parse(input_, lexer=lexer)
-        print raw_result
         result = [(comp_id, dict(params)) for comp_id, params in raw_result]
         self.assertEqual(result, output)
 
