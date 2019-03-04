@@ -138,7 +138,7 @@ class ProductTimeSeries(TimeSeries):
         with cdf_open(connect(product.data_items.all()[0])) as cdf:
             for variable in extracted_variables:
                 cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
-                if len(cdf_var.shape) > 0: # regular vector variable
+                if cdf_var.shape: # regular array variable
                     data = cdf_var[idx_low:idx_high]
                 else: # NRV scalar variable
                     data = empty(max(0, idx_high - idx_low), dtype=cdf_var.dtype)
@@ -152,7 +152,7 @@ class ProductTimeSeries(TimeSeries):
         self.logger.debug("extracted variables %s", variables)
 
         try:
-            # we need need at least one product from the collection
+            # we need at least one product from the collection
             # to initialize correctly the empty variables
             product = Product.objects.filter(
                 collections=self.collection
@@ -187,7 +187,7 @@ class ProductTimeSeries(TimeSeries):
         self.logger.debug("subset: %s %s", start, stop)
         self.logger.debug("extracted variables %s", variables)
 
-        if len(variables) == 0: # stop here if no variable is requested
+        if not variables: # stop here if no variables are requested
             return
 
         counter = 0
@@ -238,10 +238,10 @@ class ProductTimeSeries(TimeSeries):
 
         variables = self.get_extracted_variables(variables)
         self.logger.debug("interpolated variables %s", variables)
-        if len(variables) == 0: # stop here if no variable is requested
+        if not variables: # stop here if no variables are requested
             return Dataset()
 
-        if len(times) == 0: # return an empty dataset
+        if times.size == 0: # return an empty dataset
             return self._get_empty_dataset(variables)
 
         # get the time bounds
