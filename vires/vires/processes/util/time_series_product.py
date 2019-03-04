@@ -30,7 +30,7 @@
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
-from numpy import empty
+from numpy import empty, searchsorted
 from eoxserver.backends.access import connect
 from vires.util import between_co
 from vires.cdf_util import (
@@ -132,18 +132,17 @@ class ProductTimeSeries(TimeSeries):
             for band in self.collection.range_type
         ]
 
-    def _extract_dataset(self, product, extracted_variables, idx_low, idx_high):
+    def _extract_dataset(self, cdf, extracted_variables, idx_low, idx_high):
         """ Extract dataset from a product. """
         dataset = Dataset()
-        with cdf_open(connect(product.data_items.all()[0])) as cdf:
-            for variable in extracted_variables:
-                cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
-                if cdf_var.shape: # regular array variable
-                    data = cdf_var[idx_low:idx_high]
-                else: # NRV scalar variable
-                    data = empty(max(0, idx_high - idx_low), dtype=cdf_var.dtype)
-                    data.fill(cdf_var[...])
-                dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
+        for variable in extracted_variables:
+            cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
+            if cdf_var.shape: # regular array variable
+                data = cdf_var[idx_low:idx_high]
+            else: # NRV scalar variable
+                data = empty(max(0, idx_high - idx_low), dtype=cdf_var.dtype)
+                data.fill(cdf_var[...])
+            dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
         return dataset
 
     def _get_empty_dataset(self, variables):
@@ -168,7 +167,8 @@ class ProductTimeSeries(TimeSeries):
         else:
             # generate an empty dataset from the sample product
             self.logger.debug("template product: %s ", product.identifier)
-            return self._extract_dataset(product, variables, 0, 0)
+            with cdf_open(connect(product.data_items.all()[0])) as cdf:
+                return self._extract_dataset(cdf, variables, 0, 0)
 
     def _subset_qs(self, start, stop):
         """ Subset Django query set. """
@@ -205,21 +205,18 @@ class ProductTimeSeries(TimeSeries):
 
                 self.logger.debug(
                     "product time span %s %s",
-                    cdf_rawtime_to_datetime(times.min(), time_type),
-                    cdf_rawtime_to_datetime(times.max(), time_type),
+                    cdf_rawtime_to_datetime(times[0], time_type),
+                    cdf_rawtime_to_datetime(times[-1], time_type),
                 )
 
-                time_idx = between_co(
-                    times, datetime_to_cdf_rawtime(start, time_type),
+                low, high = searchsorted(times, [
+                    datetime_to_cdf_rawtime(start, time_type),
                     datetime_to_cdf_rawtime(stop, time_type),
-                ).nonzero()[0]
-
-                low = time_idx.min() if time_idx.size else 0
-                high = time_idx.max() + 1 if time_idx.size else 0
+                ], 'left')
 
                 self.logger.debug("product slice %s:%s", low, high)
 
-                dataset = self._extract_dataset(product, variables, low, high)
+                dataset = self._extract_dataset(cdf, variables, low, high)
 
             self.logger.debug("dataset length: %s ", dataset.length)
 
