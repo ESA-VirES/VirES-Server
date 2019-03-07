@@ -1489,7 +1489,7 @@
     ]
 },
 {
-    "name": "SWARM_IDP_IRR",
+    "name": "SWARM_IPD_IRR",
     "bands": [
         {
             "color_interpretation": "Undefined",
