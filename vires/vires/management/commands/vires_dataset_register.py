@@ -483,8 +483,12 @@ class VirESMetadataReader(object):
 
     @classmethod
     def coords_to_bounding_box(cls, coords):
-        lon_min, lat_min = np.floor(np.amin(coords, 0))
-        lon_max, lat_max = np.ceil(np.amax(coords, 0))
+        coords = coords[~np.isnan(coords).any(1)]
+        if coords.size:
+            lon_min, lat_min = np.floor(np.amin(coords, 0))
+            lon_max, lat_max = np.ceil(np.amax(coords, 0))
+        else:
+            lon_min, lat_min, lon_max, lat_max = -180, -90, 180, 90
         return (lon_min, lat_min, lon_max, lat_max)
 
     @classmethod
