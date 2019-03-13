@@ -38,6 +38,7 @@ from .time_util import datetime_to_mjd2000
 
 KP_FLAGS = {"D": 0, "Q": 1} # Definitive / Quick-look
 
+# Note: the source Kp are not true Kp but rather Kp times 10.
 
 def parse_kp(src_file):
     """ Parse Kp index text file. """

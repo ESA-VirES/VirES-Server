@@ -56,7 +56,7 @@ def abs_amax(arr, axis):
 # Auxiliary data query function and file sources
 AUX_INDEX = {
     "kp": (
-        query_kp, settings.VIRES_AUX_DB_KP, "time", "kp", amax, "%d"
+        query_kp, settings.VIRES_AUX_DB_KP, "time", "kp", amax, "%.1f"
     ),
     "dst": (
         query_dst, settings.VIRES_AUX_DB_DST, "time", "dst", abs_amax, "%.6g"
@@ -126,6 +126,9 @@ class GetIndices(WPSProcess):
 
         time = aux_data[time_variable]
         data = aux_data[index_variable]
+
+        if index_variable == 'kp':
+            data = 0.1 * data # convert Kp10 to Kp
 
         if time.size > 500:
             bin_size = (time.size - 1)//500 + 1
