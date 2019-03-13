@@ -57,7 +57,8 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters2,
-    IndexKp, IndexDst, IndexF107, OrbitCounter, ProductTimeSeries,
+    IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
+    OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     with_cache_session, get_username, get_user,
@@ -314,10 +315,11 @@ class FetchFilteredDataAsync(WPSProcess):
                 ]
                 for spacecraft in settings.VIRES_SPACECRAFTS
             }
-            index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
+            index_kp10 = IndexKp10(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
             index_imf = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+            model_kp = IndexKpFromKp10()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
@@ -360,7 +362,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # auxiliary slaves
-                for slave in (index_kp, index_dst, index_f10, index_imf):
+                for slave in (index_kp10, index_dst, index_f10, index_imf):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
@@ -389,7 +391,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
                 # models
                 aux_models = chain((
-                    model_qdc, model_mlt, model_sun,
+                    model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals)
                 for model in aux_models:
