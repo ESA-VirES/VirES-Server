@@ -44,6 +44,7 @@ from vires.aux_f107 import (
 )
 from vires.dataset import Dataset
 from .time_series import TimeSeries
+from .model import Model
 
 
 class AuxiliaryDataTimeSeries(TimeSeries):
@@ -150,26 +151,81 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         return dataset
 
 
-class IndexKp(AuxiliaryDataTimeSeries):
-    """ Kp index time-series source class. """
-    CDF_TYPE = {'Timestamp': CDF_EPOCH_TYPE, 'Kp': CDF_UINT2_TYPE}
+class IndexKp10(AuxiliaryDataTimeSeries):
+    """ Kp10 index time-series source class. """
+    CDF_TYPE = {
+        'Timestamp': CDF_EPOCH_TYPE,
+        'Kp10': CDF_UINT2_TYPE,
+    }
     CDF_INTERP_TYPE = {'Kp': CDF_DOUBLE_TYPE}
     CDF_ATTR = {
         'Timestamp': {
             'DESCRIPTION': 'Time stamp',
             'UNITS': '-',
         },
-        'Kp': {
-            'DESCRIPTION': 'Global geo-magnetic storm index.',
+        'Kp10': {
+            'DESCRIPTION': 'Global geo-magnetic storm index multiplied by 10.',
             'UNITS': '-',
         },
     }
 
     def __init__(self, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
-            self, "Kp", filename, query_kp, query_kp_int,
-            {'time': 'Timestamp', 'kp': 'Kp'}, logger
+            self, "Kp10", filename, query_kp, query_kp_int,
+            {'time': 'Timestamp', 'kp': 'Kp10'}, logger
         )
+
+
+
+class IndexKpFromKp10(Model):
+    """ Conversion of Kp10 to Kp.
+    """
+    REQUIRED_VARIABLE = "Kp10"
+    PROVIDED_VARIABLE = "Kp"
+    CDF_VARIABLE = (
+        CDF_DOUBLE_TYPE, {
+            'DESCRIPTION': 'Global geo-magnetic storm index.',
+            'UNITS': '-',
+        }
+    )
+
+    @property
+    def variables(self):
+        return [self.PROVIDED_VARIABLE]
+
+    @property
+    def required_variables(self):
+        return [self._required_variable]
+
+    class _LoggerAdapter(LoggerAdapter):
+        def process(self, msg, kwargs):
+            return 'KpFromKp10: %s' % msg, kwargs
+
+    def __init__(self, logger=None, varmap=None):
+        varmap = varmap or {}
+        self._required_variable = varmap.get(
+            self.REQUIRED_VARIABLE, self.REQUIRED_VARIABLE
+        )
+        self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
+
+    def eval(self, dataset, variables=None, **kwargs):
+        output_ds = Dataset()
+        required_variable = self._required_variable
+        provided_variable = self.PROVIDED_VARIABLE
+
+        eval_kp = variables is None or provided_variable in variables
+
+        self.logger.debug(
+            "requested variables: %s", required_variable if eval_kp else ""
+        )
+
+        if eval_kp:
+            output_ds.set(
+                provided_variable, 0.1*dataset[required_variable],
+                *self.CDF_VARIABLE
+            )
+
+        return output_ds
 
 
 class IndexDst(AuxiliaryDataTimeSeries):
