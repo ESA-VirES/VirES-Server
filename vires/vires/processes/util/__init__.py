@@ -35,7 +35,9 @@ from .filters import (
 from .filters_subsampling import MinStepSampler, GroupingSampler
 from .time_series import TimeSeries
 from .time_series_product import ProductTimeSeries
-from .time_series_aux import  IndexKp, IndexDst, IndexF107
+from .time_series_aux import (
+    IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
+)
 from .time_series_orbit_counter import OrbitCounter
 from .model import Model
 from .model_magmod import MagneticModelResidual, MagneticModel
