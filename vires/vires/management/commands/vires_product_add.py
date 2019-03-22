@@ -41,9 +41,14 @@ from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
 )
 from vires.models import Product, ProductCollection
+from vires.management.commands import cache_session
 from vires.management.commands.vires_dataset_register import (
     VirESMetadataReader
 )
+from vires.management.commands.vires_update_orbit_directions import (
+    RE_MAG_LR_PRODUCT, update_orbit_direction_tables,
+)
+from vires.orbit_direction_update import DataIntegrityError
 from vires.cdf_util import cdf_open
 
 
@@ -139,6 +144,18 @@ class Command(CommandOutputMixIn, BaseCommand):
                 product = register_product(
                     collection.range_type, product_id, data_file, metadata
                 )
+
+                # update orbit direction tables
+                if RE_MAG_LR_PRODUCT.match(product_id):
+                    try:
+                        update_orbit_direction_tables(collection, product)
+                    except DataIntegrityError as error:
+                        self.print_wrn(
+                            "Failed to update the orbit direction look-up "
+                            "tables! Try to rebuild them with the "
+                            "'vires_update_orbit_directions' command."
+                        )
+
                 collection.insert(product)
                 self.print_msg(
                     "%s registered and inserted in %s"
@@ -154,7 +171,7 @@ class Command(CommandOutputMixIn, BaseCommand):
 
         return removed, inserted
 
-
+    @cache_session
     def handle(self, *args, **kwargs):
 
         ignore_registered = kwargs["conflict"] == "IGNORE"

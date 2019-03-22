@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# CHAOS 5 - CORE, STATIC and Combined magnetic models
+# various file utilities
 #
-# Project: VirES
-# Authors: Fabian Schindler <fabian.schindler@eox.at>
-#
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -27,42 +25,38 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod import load_model_shc, load_model_shc_combined
-from eoxmagmod.time_util import decimal_year_to_mjd2000_simple
-from eoxmagmod.data import CHAOS5_CORE_V4, CHAOS5_STATIC
-from vires.forward_models.base import BaseForwardModel
-from vires.util import cached_property
+from errno import ENOENT
+from os.path import getmtime
 
-class CHAOS5CoreForwardModel(BaseForwardModel):
-    """ Forward model calculator for the CHAOS-5 core field.
+
+class FileChangeMonitor(object):
+    """ File change monitor keeps track of the files' last modification times
+    and can be queried if a file has been modified or not.
     """
-    identifier = "CHAOS-5-Core"
+    NO_FILE_MTIME = -float('inf')
 
-    @cached_property
-    def model(self):
-        return load_model_shc(
-            CHAOS5_CORE_V4, to_mjd2000=decimal_year_to_mjd2000_simple
-        )
+    def __init__(self):
+        self._mtimes = {}
 
+    def changed(self, *filenames):
+        """ Return True if any of the queried files has changed. """
+        # Note: A list is used to make sure self.changed() is called for each
+        #       filename. Lazy evaluation is not desired here.
+        return any([self._changed(filename) for filename in filenames])
 
-class CHAOS5StaticForwardModel(BaseForwardModel):
-    """ Forward model calculator for the CHAOS-5 static field.
-    """
-    identifier = "CHAOS-5-Static"
+    def _changed(self, filename):
+        """ Return True if the queried file has changed. """
+        last_mtime = self._mtimes.get(filename)
 
-    @cached_property
-    def model(self):
-        return load_model_shc(CHAOS5_STATIC)
+        try:
+            mtime = getmtime(filename)
+        except OSError as error:
+            if error.errno != ENOENT:
+                raise
+            mtime = self.NO_FILE_MTIME
 
+        if last_mtime == mtime:
+            return False
 
-class CHAOS5CombinedForwardModel(BaseForwardModel):
-    """ Forward model calculator for the CHAOS-5 Combined field.
-    """
-    identifier = "CHAOS-5-Combined"
-
-    @cached_property
-    def model(self):
-        return load_model_shc_combined(
-            CHAOS5_CORE_V4, CHAOS5_STATIC,
-            to_mjd2000=decimal_year_to_mjd2000_simple
-        )
+        self._mtimes[filename] = mtime
+        return True

@@ -1,12 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Swarm Initial Field magnetic model
+#  Testing data
 #
-# Project: VirES
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2018 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,17 +25,6 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from eoxmagmod import load_model_shc
-from eoxmagmod.data import SIFM
-from vires.forward_models.base import BaseForwardModel
-from vires.util import cached_property
+from os.path import dirname, join
 
-
-class SwarmInitialFieldModel(BaseForwardModel):
-    """ Forward model calculator for the SIFM field.
-    """
-    identifier = "SIFM"
-
-    @cached_property
-    def model(self):
-        return load_model_shc(SIFM)
+TEST_ORBIT_DIRECTION_CDF = join(dirname(__file__), "test_orbit_directions.cdf")

@@ -29,10 +29,10 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
 
-import msgpack
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from cStringIO import StringIO
+import msgpack
 from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData,
@@ -43,7 +43,9 @@ from eoxserver.services.ows.wps.parameters import (
     FormatBinaryRaw,
     CDObject,
 )
-from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from eoxserver.services.ows.wps.exceptions import (
+    InvalidInputValueError, InvalidOutputDefError,
+)
 from vires.util import unique, exclude, include
 from vires.time_util import (
     naive_to_utc,
@@ -55,14 +57,14 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2, parse_variables,
+    parse_collections, parse_model_list, parse_variables,
     IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
     OrbitCounter, ProductTimeSeries,
     MinStepSampler, GroupingSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
-    MagneticDipole, DipoleTiltAngle,
+    MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
 )
 
 
@@ -171,7 +173,9 @@ class FetchData(WPSProcess):
         """ Execute process """
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
-        models = parse_models2("model_ids", model_ids, shc)
+        requested_models, source_models = parse_model_list(
+            "model_ids", model_ids, shc
+        )
         requested_variables = parse_variables(
             'requested_variables', requested_variables
         )
@@ -201,7 +205,10 @@ class FetchData(WPSProcess):
             ", ".join(
                 s.collection.identifier for l in sources.values() for s in l
             ),
-            ", ".join(model.name for model in models),
+            ", ".join(
+                "%s = %s" % (model.name, model.full_expression)
+                for model in requested_models
+            ),
         )
 
         if bbox:
@@ -234,10 +241,23 @@ class FetchData(WPSProcess):
         resolvers = dict()
 
         if sources:
-            orbit_counter = dict(
-                (satellite, OrbitCounter("OrbitCounter" + satellite, path))
-                for satellite, path in settings.VIRES_ORBIT_COUNTER_DB.items()
-            )
+            orbit_info = {
+                spacecraft: [
+                    OrbitCounter(
+                        "OrbitCounter" + spacecraft,
+                        settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
+                    ),
+                    OrbitDirection(
+                        "OrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
+                    ),
+                    QDOrbitDirection(
+                        "QDOrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft]
+                    ),
+                ]
+                for spacecraft in settings.VIRES_SPACECRAFTS
+            }
             index_kp10 = IndexKp10(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
@@ -261,7 +281,9 @@ class FetchData(WPSProcess):
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
-            for model in models:
+            for model in source_models:
+                models_with_residuals.append(model)
+            for model in requested_models:
                 models_with_residuals.append(model)
                 for variable in model.BASE_VARIABLES:
                     models_with_residuals.append(
@@ -293,10 +315,9 @@ class FetchData(WPSProcess):
                     settings.VIRES_COL2SAT.get(master.collection.identifier)
                 )
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
-                if spacecraft in orbit_counter:
-                    resolver.add_slave(
-                        orbit_counter[spacecraft], 'Timestamp'
-                    )
+
+                for item in orbit_info.get(spacecraft, []):
+                    resolver.add_slave(item, 'Timestamp')
 
                 # prepare spacecraft to spacecraft residuals
                 # NOTE: No residual variables required by the filters.

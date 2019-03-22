@@ -103,26 +103,34 @@ configure_cached_product(
     tmp_extension=".tmp.cdf"
 )
 
+for spacecraft in getattr(settings, "VIRES_SPACECRAFTS", []):
+    configure_cached_product(
+        "AUX%sORBCNT" % spacecraft,
+        label="Swarm %s orbit counter" % spacecraft,
+        updater=simple_cached_product_updater(update_orbit_counter_file),
+        tmp_extension=".tmp.cdf"
+    )
+
+    configure_cached_product(
+        "AUX%sODBGEO" % spacecraft,
+        label=(
+            "Swarm %s orbit directions in geographic coordinates"
+            % spacecraft
+        ),
+        tmp_extension=".tmp.cdf"
+    )
+
+    configure_cached_product(
+        "AUX%sODBMAG" % spacecraft,
+        label=(
+            "Swarm %s orbit directions in magnetic (QD) coordinates"
+            % spacecraft
+        ),
+        tmp_extension=".tmp.cdf"
+    )
+
 
 CACHED_PRODUCTS.update({
-    "AUXAORBCNT": {
-        "filename": settings.VIRES_ORBIT_COUNTER_DB['A'],
-        "label": "Swarm A orbit counter",
-        "updater": simple_cached_product_updater(update_orbit_counter_file),
-        "tmp_extension": ".tmp.cdf",
-    },
-    "AUXBORBCNT": {
-        "filename": settings.VIRES_ORBIT_COUNTER_DB['B'],
-        "label": "Swarm B orbit counter",
-        "updater": simple_cached_product_updater(update_orbit_counter_file),
-        "tmp_extension": ".tmp.cdf",
-    },
-    "AUXCORBCNT": {
-        "filename": settings.VIRES_ORBIT_COUNTER_DB['C'],
-        "label": "Swarm C orbit counter",
-        "updater": simple_cached_product_updater(update_orbit_counter_file),
-        "tmp_extension": ".tmp.cdf",
-    },
     "GFZ_AUX_DST": {
         "filename": settings.VIRES_AUX_DB_DST,
         "label": 'Dst-index',
