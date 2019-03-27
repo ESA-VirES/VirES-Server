@@ -550,7 +550,7 @@ class FetchFilteredData(WPSProcess):
                 })
 
         else:
-            InvalidOutputDefError(
+            raise InvalidOutputDefError(
                 'output',
                 "Unexpected output format %r requested!" % output['mime_type']
             )

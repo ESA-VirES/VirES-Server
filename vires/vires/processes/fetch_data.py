@@ -506,7 +506,7 @@ class FetchData(WPSProcess):
                 encoded, filename="swarm_data.mp", **output
             )
         else:
-            InvalidOutputDefError(
+            raise InvalidOutputDefError(
                 'output',
                 "Unexpected output format %r requested!" % output['mime_type']
             )
