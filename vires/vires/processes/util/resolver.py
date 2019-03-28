@@ -100,8 +100,7 @@ class VariableResolver(object):
         """ Get list of filters to be applied to the data."""
         if self._unresolved_filters:
             return (RejectAll(),)
-        else:
-            return self.resolved_filters
+        return self.resolved_filters
 
     def add_master(self, master):
         """ Add the master source. Only one master allowed.
@@ -143,3 +142,8 @@ class VariableResolver(object):
             self._resolved_filters.append(filter_)
         else:
             self._unresolved_filters.append(filter_)
+
+    def add_filters(self, filters):
+        """ Add new filters from a sequence. """
+        for filter_ in filters:
+            self.add_filter(filter_)

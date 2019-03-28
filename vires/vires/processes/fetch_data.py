@@ -60,7 +60,7 @@ from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables,
     IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
     OrbitCounter, ProductTimeSeries,
-    MinStepSampler, GroupingSampler, BoundingBoxFilter,
+    MinStepSampler, GroupingSampler, ExtraSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
@@ -273,11 +273,9 @@ class FetchData(WPSProcess):
                 sampling_step, CDF_EPOCH_TYPE
             ))
             grouping_sampler = GroupingSampler('Timestamp')
-            filters = [sampler, grouping_sampler]
+            filters = []
             if bbox:
-                filters.append(
-                    BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
-                )
+                filters.append(BoundingBoxFilter(['Latitude', 'Longitude'], bbox))
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
@@ -292,6 +290,7 @@ class FetchData(WPSProcess):
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.iteritems():
+
                 resolver = VariableResolver(
                     requested_variables, MANDATORY_VARIABLES
                 )
@@ -302,17 +301,30 @@ class FetchData(WPSProcess):
                 master = product_sources[0]
                 resolver.add_master(master)
 
+                # time sampling
+                resolver.add_filter(sampler)
+
                 # slaves
                 for slave in product_sources[1:]:
                     resolver.add_slave(slave, 'Timestamp')
+
+                    # extra sampling for selected collections
+                    if slave.collection.identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
+                        resolver.add_filter(ExtraSampler(
+                            'Timestamp', slave.collection.identifier, slave
+                        ))
+
+                # optional sample grouping
+                if master.collection.identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
+                    resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
                 for slave in (index_kp10, index_dst, index_f10, index_imf):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
-                spacecraft = (
-                    settings.VIRES_COL2SAT.get(master.collection.identifier)
+                spacecraft = settings.VIRES_COL2SAT.get(
+                    master.collection.identifier
                 )
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
 
@@ -339,9 +351,8 @@ class FetchData(WPSProcess):
                 for model in aux_models:
                     resolver.add_model(model)
 
-                # filters
-                for filter_ in filters:
-                    resolver.add_filter(filter_)
+                # add remaining filters
+                resolver.add_filters(filters)
 
                 self.logger.debug(
                     "%s: available variables: %s", label,
@@ -420,6 +431,7 @@ class FetchData(WPSProcess):
                     times = dataset[resolver.master.time_variable]
                     cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
+                        self.logger.debug(variables)
                         dataset.merge(
                             slave.interpolate(times, variables, {}, cdf_type)
                         )

@@ -59,7 +59,7 @@ from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters2,
     IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
     OrbitCounter, ProductTimeSeries,
-    MinStepSampler, GroupingSampler,
+    MinStepSampler, GroupingSampler, ExtraSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     with_cache_session, get_username, get_user,
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
@@ -343,10 +343,12 @@ class FetchFilteredDataAsync(WPSProcess):
                     sampling_step, CDF_EPOCH_TYPE
                 ))
                 grouping_sampler = GroupingSampler('Timestamp')
-                filters = [sampler, grouping_sampler] + filters
+            else:
+                sampler, grouping_sampler = None, None
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.iteritems():
+
                 resolver = VariableResolver(
                     requested_variables, MANDATORY_VARIABLES
                 )
@@ -357,9 +359,23 @@ class FetchFilteredDataAsync(WPSProcess):
                 master = product_sources[0]
                 resolver.add_master(master)
 
+                # optional time sampling
+                if sampler:
+                    resolver.add_filter(sampler)
+
                 # slaves
                 for slave in product_sources[1:]:
                     resolver.add_slave(slave, 'Timestamp')
+
+                    # optional extra sampling for selected collections
+                    if sampler and slave.collection.identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
+                        resolver.add_filter(ExtraSampler(
+                            'Timestamp', slave.collection.identifier, slave
+                        ))
+
+                # optional sample grouping
+                if grouping_sampler and master.collection.identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
+                    resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
                 for slave in (index_kp10, index_dst, index_f10, index_imf):
@@ -397,9 +413,8 @@ class FetchFilteredDataAsync(WPSProcess):
                 for model in aux_models:
                     resolver.add_model(model)
 
-                # filters
-                for filter_ in filters:
-                    resolver.add_filter(filter_)
+                # add remaining filters
+                resolver.add_filters(filters)
 
                 self.logger.debug(
                     "%s: available variables: %s", label,

@@ -31,8 +31,11 @@ from .cache import with_cache_session
 from .filters import (
     Filter, ScalarRangeFilter, VectorComponentRangeFilter,
     BoundingBoxFilter,
+    merge_indices,
 )
-from .filters_subsampling import MinStepSampler, GroupingSampler
+from .filters_subsampling import (
+    MinStepSampler, GroupingSampler, ExtraSampler,
+)
 from .time_series import TimeSeries
 from .time_series_product import ProductTimeSeries
 from .time_series_aux import (
