@@ -44,9 +44,9 @@ class TimeSeries(object):
         """ Expand/filter input variables into applicable variables. """
         if variables is None:
             return self.variables # get all available variables
-        else:
-            # get an applicable subset of the requested variables
-            return list(include(unique(variables), self.variables))
+
+        # get an applicable subset of the requested variables
+        return list(include(unique(variables), self.variables))
 
     def subset(self, start, stop, variables=None):
         """ Generate a sequence of datasets holding the requested temporal

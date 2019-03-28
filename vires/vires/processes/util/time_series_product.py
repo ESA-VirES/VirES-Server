@@ -32,7 +32,6 @@ from logging import getLogger, LoggerAdapter
 from datetime import timedelta
 from numpy import empty, searchsorted
 from eoxserver.backends.access import connect
-from vires.util import between_co
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
     timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
@@ -63,6 +62,7 @@ class SwarmEEFParameters(SwarmDefaultParameters):
 
 
 class AuxImf2Parameters(SwarmDefaultParameters):
+    """ AUX_IMF_2_ parameters """
     INTERPOLATION_KIND = "zero"
     TIME_TOLERANCE = timedelta(minutes=61) # time selection tolerance
     TIME_OVERLAP = timedelta(hours=2) # time interpolation overlap
@@ -229,12 +229,54 @@ class ProductTimeSeries(TimeSeries):
             if dataset:
                 yield dataset
 
+    def subset_times(self, times, variables=None, cdf_type=CDF_EPOCH_TYPE):
+        """ Get subset of the time series overlapping the give array time array.
+        """
+        variables = self.get_extracted_variables(variables)
+        return self._subset_times(times, variables, cdf_type)
+
     def interpolate(self, times, variables=None, interp1d_kinds=None,
                     cdf_type=CDF_EPOCH_TYPE, valid_only=False):
-        times, cdf_type = self._convert_time(times, cdf_type)
 
         variables = self.get_extracted_variables(variables)
-        self.logger.debug("interpolated variables %s", variables)
+        dataset = self._subset_times(
+            times, list(set([self.time_variable] + variables)), cdf_type
+        )
+
+        self.logger.debug("requested dataset length %s", len(times))
+
+        if dataset and dataset.length > 0:
+            _times = dataset[self.time_variable]
+            self.logger.debug(
+                "interpolated time-span %s, %s",
+                cdf_rawtime_to_datetime(_times.min(), cdf_type),
+                cdf_rawtime_to_datetime(_times.max(), cdf_type),
+            )
+        else:
+            self.logger.debug("interpolated time-span is empty")
+
+        self.logger.debug("interpolated dataset length: %s ", dataset.length)
+
+        if not dataset:
+            return dataset
+
+        return dataset.interpolate(
+            times, self.time_variable, variables,
+            kinds=self.interpolation_kinds,
+            gap_threshold=timedelta_to_cdf_rawtime(
+                self.time_gap_threshold, cdf_type
+            ),
+            segment_neighbourhood=timedelta_to_cdf_rawtime(
+                self.segment_neighbourhood, cdf_type
+            )
+        )
+
+    def _subset_times(self, times, variables=None, cdf_type=CDF_EPOCH_TYPE):
+        """ Get subset of the time series overlapping the give array time array.
+        """
+        times, cdf_type = self._convert_time(times, cdf_type)
+
+        self.logger.debug("requested variables %s", variables)
         if not variables: # stop here if no variables are requested
             return Dataset()
 
@@ -248,7 +290,7 @@ class ProductTimeSeries(TimeSeries):
         dataset_iterator = self.subset(
             cdf_rawtime_to_datetime(start, cdf_type) - self.time_overlap,
             cdf_rawtime_to_datetime(stop, cdf_type) + self.time_overlap,
-            [self.time_variable] + variables,
+            variables,
         )
 
         self.logger.debug(
@@ -256,7 +298,6 @@ class ProductTimeSeries(TimeSeries):
             cdf_rawtime_to_datetime(start, cdf_type),
             cdf_rawtime_to_datetime(stop, cdf_type)
         )
-        self.logger.debug("requested dataset length %s", len(times))
 
         dataset = Dataset()
         for item in dataset_iterator:
@@ -271,28 +312,7 @@ class ProductTimeSeries(TimeSeries):
                 self.logger.debug("item time-span is empty")
             dataset.append(item)
 
-        if dataset and dataset.length > 0:
-            _times = dataset[self.time_variable]
-            self.logger.debug(
-                "interpolated time-span %s, %s",
-                cdf_rawtime_to_datetime(_times.min(), cdf_type),
-                cdf_rawtime_to_datetime(_times.max(), cdf_type),
-            )
-        else:
-            self.logger.debug("interpolated time-span is empty")
-
-        self.logger.debug("interpolated dataset length: %s ", dataset.length)
-
-        return dataset.interpolate(
-            times, self.time_variable, variables,
-            kinds=self.interpolation_kinds,
-            gap_threshold=timedelta_to_cdf_rawtime(
-                self.time_gap_threshold, cdf_type
-            ),
-            segment_neighbourhood=timedelta_to_cdf_rawtime(
-                self.segment_neighbourhood, cdf_type
-            )
-        )
+        return dataset
 
     @staticmethod
     def _get_collection(collection_name):
