@@ -56,14 +56,13 @@ class MinStepSampler(Filter):
     def filter(self, dataset, index=None):
         if index is None:
             return self._filter(dataset[self.variable])
-        else:
-            return index[self._filter(dataset[self.variable][index])]
+        return index[self._filter(dataset[self.variable][index])]
 
     def _filter(self, data):
         """ Low-level sub-sampling filter. """
         min_step = self.min_step
         base_value = self.base_value
-        if len(data) > 0: # non-empty array
+        if data.size > 0: # non-empty array
             if base_value is None:
                 base_value = data[0]
             self.logger.debug("min.step: %s, base value: %s", min_step, base_value)
@@ -80,6 +79,7 @@ class MinStepSampler(Filter):
         return "%s: MinStepSampler(%r, %r)" % (
             self.variable, self.min_step, self.base_value
         )
+
 
 class GroupingSampler(Filter):
     """ Filter class sub-sampling the dataset so that the distance
@@ -104,14 +104,13 @@ class GroupingSampler(Filter):
     def filter(self, dataset, index=None):
         if index is None:
             return arange(dataset.length)
-        else:
-            return self._filter(dataset[self.variable], index)
+        return self._filter(dataset[self.variable], index)
 
     def _filter(self, data, index):
         """ Sampler to get possible additional values which have the same
         variable value.
         """
-        if len(data) > 0: # non-empty array
+        if data.size > 0: # non-empty array
             self.logger.debug("initial size: %d", data.size)
             res_index = in1d(data, data[index]).nonzero()[0]
         else: # empty array

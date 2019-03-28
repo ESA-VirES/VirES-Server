@@ -28,12 +28,13 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments
 
-from numpy import array
 from logging import getLogger, LoggerAdapter
+from numpy import array
 from vires.util import between
 
 class FilterError(Exception):
     """ Base filter error exception. """
+
 
 class Filter(object):
     """ Base filter class. """
@@ -54,7 +55,7 @@ class Filter(object):
         raise NotImplementedError
 
 
-class RejectAll(object):
+class RejectAll(Filter):
     """ Filter rejecting all records. """
 
     @property

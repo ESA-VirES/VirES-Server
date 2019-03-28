@@ -32,7 +32,6 @@ from logging import getLogger, LoggerAdapter
 from datetime import timedelta
 from numpy import empty, searchsorted
 from eoxserver.backends.access import connect
-from vires.util import between_co
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
     timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
@@ -63,6 +62,7 @@ class SwarmEEFParameters(SwarmDefaultParameters):
 
 
 class AuxImf2Parameters(SwarmDefaultParameters):
+    """ AUX_IMF_2_ parameters """
     INTERPOLATION_KIND = "zero"
     TIME_TOLERANCE = timedelta(minutes=61) # time selection tolerance
     TIME_OVERLAP = timedelta(hours=2) # time interpolation overlap

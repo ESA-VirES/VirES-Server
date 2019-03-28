@@ -109,7 +109,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
                     cdf_type=CDF_EPOCH_TYPE, valid_only=False):
         times, cdf_type = self._convert_time(times, cdf_type)
 
-        if len(times) == 0: # return an empty dataset
+        if times.size == 0: # return an empty dataset
             dataset = Dataset()
             for variable in self.get_extracted_variables(variables):
                 dataset.set(
@@ -128,10 +128,10 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         ]
         self.logger.debug(
             "requested time-span %s, %s",
-            cdf_rawtime_to_datetime(min(times), cdf_type),
-            cdf_rawtime_to_datetime(max(times), cdf_type)
+            cdf_rawtime_to_datetime(times.min(), cdf_type),
+            cdf_rawtime_to_datetime(times.max(), cdf_type)
         )
-        self.logger.debug("requested dataset length %s", len(times))
+        self.logger.debug("requested dataset length %s", times.size)
         self.logger.debug("variables: %s", variables)
         dataset = Dataset()
         if self.TIME_VARIABLE in variables:
@@ -151,7 +151,6 @@ class AuxiliaryDataTimeSeries(TimeSeries):
                 convert = self.DATA_CONVERSION.get(variable)
                 if convert:
                     data = convert(data)
-                self.logger.debug("%s: %s", variable, str(data[:10]))
                 dataset.set(
                     variable, data,
                     self.CDF_INTERP_TYPE.get(variable, CDF_DOUBLE_TYPE),
