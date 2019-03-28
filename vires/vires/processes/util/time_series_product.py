@@ -26,7 +26,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-locals, too-many-arguments
+# pylint: disable=too-many-locals, too-many-arguments, too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
@@ -82,7 +83,7 @@ class AuxImf2Parameters(SwarmDefaultParameters):
     }
 
 
-DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters
+DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
     "SWARM_EEF": SwarmEEFParameters,
     "AUX_IMF_2_": AuxImf2Parameters,
@@ -170,20 +171,100 @@ class ProductTimeSeries(TimeSeries):
             with cdf_open(connect(product.data_items.all()[0])) as cdf:
                 return self._extract_dataset(cdf, variables, 0, 0)
 
-    def _subset_qs(self, start, stop):
-        """ Subset Django query set. """
-        return Product.objects.filter(
-            collections=self.collection,
-            begin_time__lt=(stop + self.time_tolerance),
-            end_time__gte=(start - self.time_tolerance),
-        )
-
     def subset_count(self, start, stop):
         """ Count matched number of products. """
         return self._subset_qs(start, stop).count()
 
     def subset(self, start, stop, variables=None):
         variables = self.get_extracted_variables(variables)
+        return iter(self._subset(start, stop, variables))
+
+    def subset_times(self, times, variables=None, cdf_type=CDF_EPOCH_TYPE):
+        """ Get subset of the time series overlapping the give array time array.
+        """
+        variables = self.get_extracted_variables(variables)
+        return self._subset_times(times, variables, cdf_type)
+
+    def interpolate(self, times, variables=None, interp1d_kinds=None,
+                    cdf_type=CDF_EPOCH_TYPE, valid_only=False):
+
+        variables = self.get_extracted_variables(variables)
+        dataset = self._subset_times(
+            times, list(set([self.time_variable] + variables)), cdf_type
+        )
+
+        self.logger.debug("requested dataset length %s", len(times))
+
+        if dataset and dataset.length > 0:
+            _times = dataset[self.time_variable]
+            self.logger.debug(
+                "interpolated time-span %s, %s",
+                cdf_rawtime_to_datetime(_times.min(), cdf_type),
+                cdf_rawtime_to_datetime(_times.max(), cdf_type),
+            )
+        else:
+            self.logger.debug("interpolated time-span is empty")
+
+        self.logger.debug("interpolated dataset length: %s ", dataset.length)
+
+        if not dataset:
+            return dataset
+
+        return dataset.interpolate(
+            times, self.time_variable, variables,
+            kinds=self.interpolation_kinds,
+            gap_threshold=timedelta_to_cdf_rawtime(
+                self.time_gap_threshold, cdf_type
+            ),
+            segment_neighbourhood=timedelta_to_cdf_rawtime(
+                self.segment_neighbourhood, cdf_type
+            )
+        )
+
+    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+        """ Get subset of the time series overlapping the give array time array.
+        """
+        times, cdf_type = self._convert_time(times, cdf_type)
+
+        self.logger.debug("requested variables %s", variables)
+        if not variables: # stop here if no variables are requested
+            return Dataset()
+
+        if times.size == 0: # return an empty dataset
+            return self._get_empty_dataset(variables)
+
+        # get the time bounds
+        start, stop = min(times), max(times)
+
+        # load the source interpolated data
+        dataset_iterator = self._subset(
+            cdf_rawtime_to_datetime(start, cdf_type) - self.time_overlap,
+            cdf_rawtime_to_datetime(stop, cdf_type) + self.time_overlap,
+            variables,
+        )
+
+        self.logger.debug(
+            "requested time-span [%s, %s]",
+            cdf_rawtime_to_datetime(start, cdf_type),
+            cdf_rawtime_to_datetime(stop, cdf_type)
+        )
+
+        dataset = Dataset()
+        for item in dataset_iterator:
+            if item and item.length > 0:
+                _times = item[self.time_variable]
+                self.logger.debug(
+                    "item time-span [%s, %s]",
+                    cdf_rawtime_to_datetime(_times.min(), cdf_type),
+                    cdf_rawtime_to_datetime(_times.max(), cdf_type),
+                )
+            else:
+                self.logger.debug("item time-span is empty")
+            dataset.append(item)
+
+        return dataset
+
+    def _subset(self, start, stop, variables):
         self.logger.debug("subset: %s %s", start, stop)
         self.logger.debug("extracted variables %s", variables)
 
@@ -229,90 +310,13 @@ class ProductTimeSeries(TimeSeries):
             if dataset:
                 yield dataset
 
-    def subset_times(self, times, variables=None, cdf_type=CDF_EPOCH_TYPE):
-        """ Get subset of the time series overlapping the give array time array.
-        """
-        variables = self.get_extracted_variables(variables)
-        return self._subset_times(times, variables, cdf_type)
-
-    def interpolate(self, times, variables=None, interp1d_kinds=None,
-                    cdf_type=CDF_EPOCH_TYPE, valid_only=False):
-
-        variables = self.get_extracted_variables(variables)
-        dataset = self._subset_times(
-            times, list(set([self.time_variable] + variables)), cdf_type
+    def _subset_qs(self, start, stop):
+        """ Subset Django query set. """
+        return Product.objects.filter(
+            collections=self.collection,
+            begin_time__lt=(stop + self.time_tolerance),
+            end_time__gte=(start - self.time_tolerance),
         )
-
-        self.logger.debug("requested dataset length %s", len(times))
-
-        if dataset and dataset.length > 0:
-            _times = dataset[self.time_variable]
-            self.logger.debug(
-                "interpolated time-span %s, %s",
-                cdf_rawtime_to_datetime(_times.min(), cdf_type),
-                cdf_rawtime_to_datetime(_times.max(), cdf_type),
-            )
-        else:
-            self.logger.debug("interpolated time-span is empty")
-
-        self.logger.debug("interpolated dataset length: %s ", dataset.length)
-
-        if not dataset:
-            return dataset
-
-        return dataset.interpolate(
-            times, self.time_variable, variables,
-            kinds=self.interpolation_kinds,
-            gap_threshold=timedelta_to_cdf_rawtime(
-                self.time_gap_threshold, cdf_type
-            ),
-            segment_neighbourhood=timedelta_to_cdf_rawtime(
-                self.segment_neighbourhood, cdf_type
-            )
-        )
-
-    def _subset_times(self, times, variables=None, cdf_type=CDF_EPOCH_TYPE):
-        """ Get subset of the time series overlapping the give array time array.
-        """
-        times, cdf_type = self._convert_time(times, cdf_type)
-
-        self.logger.debug("requested variables %s", variables)
-        if not variables: # stop here if no variables are requested
-            return Dataset()
-
-        if times.size == 0: # return an empty dataset
-            return self._get_empty_dataset(variables)
-
-        # get the time bounds
-        start, stop = min(times), max(times)
-
-        # load the source interpolated data
-        dataset_iterator = self.subset(
-            cdf_rawtime_to_datetime(start, cdf_type) - self.time_overlap,
-            cdf_rawtime_to_datetime(stop, cdf_type) + self.time_overlap,
-            variables,
-        )
-
-        self.logger.debug(
-            "requested time-span [%s, %s]",
-            cdf_rawtime_to_datetime(start, cdf_type),
-            cdf_rawtime_to_datetime(stop, cdf_type)
-        )
-
-        dataset = Dataset()
-        for item in dataset_iterator:
-            if item and item.length > 0:
-                _times = item[self.time_variable]
-                self.logger.debug(
-                    "item time-span [%s, %s]",
-                    cdf_rawtime_to_datetime(_times.min(), cdf_type),
-                    cdf_rawtime_to_datetime(_times.max(), cdf_type),
-                )
-            else:
-                self.logger.debug("item time-span is empty")
-            dataset.append(item)
-
-        return dataset
 
     @staticmethod
     def _get_collection(collection_name):
