@@ -28,12 +28,24 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments
 
-from numpy import array
 from logging import getLogger, LoggerAdapter
+from numpy import array, concatenate, unique
 from vires.util import between
+
+
+def merge_indices(*indices):
+    """ Merge indices eliminating duplicate values. """
+    indices = [index for index in indices if index is not None]
+    if len(indices) > 1:
+        return unique(concatenate(indices))
+    elif len(indices) == 1:
+        return indices[0]
+    return array([], dtype='int64')
+
 
 class FilterError(Exception):
     """ Base filter error exception. """
+
 
 class Filter(object):
     """ Base filter class. """
@@ -54,7 +66,7 @@ class Filter(object):
         raise NotImplementedError
 
 
-class RejectAll(object):
+class RejectAll(Filter):
     """ Filter rejecting all records. """
 
     @property

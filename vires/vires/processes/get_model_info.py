@@ -103,10 +103,10 @@ class GetModelInfo(WPSProcess):
     def _csv_output(cls, models, output):
         output_fobj = StringIO()
         output_fobj.write("modelId,validityStart,validityStop,modelExpression\r\n")
-        for model in models:
+        for model in sorted(models, key=lambda model: model.name):
             validity_start, validity_stop = model.validity
             output_fobj.write("%s,%s,%s,\"%s\"\r\n" % (
-                name.name,
+                model.name,
                 cls._format_time(validity_start),
                 cls._format_time(validity_stop),
                 model.full_expression,

@@ -50,12 +50,12 @@ class Dataset(OrderedDict):
         """ Get length of the dataset (length of the arrays held by the
         dataset).
         """
-        return self.itervalues().next().shape[0] if len(self) else 0
+        return next(self.itervalues()).shape[0] if self else 0
 
     def set(self, variable, data, cdf_type=None, cdf_attr=None):
         """ Set variable. """
         data = array(data, copy=False)
-        if len(self) and self.length != data.shape[0]:
+        if self and self.length != data.shape[0]:
             raise ValueError(
                 "Array size mismatch! variable: %s, size: %s, dataset: %s" %
                 (variable, data.shape[0], self.length)
@@ -108,13 +108,13 @@ class Dataset(OrderedDict):
         are concatenated with the current dataset data.
         """
         if dataset: # ignore empty datasets
-            if len(self) == 0:
+            if not self:
                 # fill empty dataset
                 self.update(dataset)
             else:
                 if set(dataset) != set(self):
                     raise ValueError("Dataset variables mismatch! %s != %s " % (
-                        list(set(dataset) - set(self)), 
+                        list(set(dataset) - set(self)),
                         list(set(self) - set(dataset))
                     ))
                 # concatenate with the current data
