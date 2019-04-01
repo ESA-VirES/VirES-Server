@@ -47,6 +47,7 @@ from vires.management.commands.vires_dataset_register import (
 )
 from vires.management.commands.vires_update_orbit_directions import (
     RE_MAG_LR_PRODUCT, update_orbit_direction_tables,
+    sync_orbit_direction_tables,
 )
 from vires.orbit_direction_update import DataIntegrityError
 from vires.cdf_util import cdf_open
@@ -149,12 +150,11 @@ class Command(CommandOutputMixIn, BaseCommand):
                 if RE_MAG_LR_PRODUCT.match(product_id):
                     try:
                         update_orbit_direction_tables(collection, product)
-                    except DataIntegrityError as error:
+                    except DataIntegrityError:
                         self.print_wrn(
-                            "Failed to update the orbit direction look-up "
-                            "tables! Try to rebuild them with the "
-                            "'vires_update_orbit_directions' command."
+                            "Synchronizing orbit direction lookup tables ..."
                         )
+                        sync_orbit_direction_tables(collection)
 
                 collection.insert(product)
                 self.print_msg(
