@@ -30,6 +30,14 @@
 class Model(object):
     """ Base model source class. """
 
+    def __init__(self):
+        self.product_set = set() # stores all recorded source products
+
+    @property
+    def products(self):
+        """ Get list of all accessed products. """
+        return list(self.product_set)
+
     @property
     def variables(self):
         """ Get list of the provided variables. """

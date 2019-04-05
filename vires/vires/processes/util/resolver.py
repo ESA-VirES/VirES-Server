@@ -27,10 +27,27 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
+# pylint: disable=too-many-instance-attributes
 
 from itertools import chain
 from vires.util import unique, include, exclude
 from .filters import RejectAll
+
+
+def extract_product_names(resolvers):
+    """ Extract product names from the resolvers time-series and models. """
+    def _extract_product_sets(resolver):
+        for item in resolver.models:
+            yield item.product_set
+        for item in resolver.time_series:
+            yield item.product_set
+
+    product_set = set()
+    for resolver in resolvers:
+        for item in _extract_product_sets(resolver):
+            product_set.update(item)
+
+    return list(sorted(product_set))
 
 
 class VariableResolver(object):
@@ -62,6 +79,15 @@ class VariableResolver(object):
         self.models = []
         self._resolved_filters = []
         self._unresolved_filters = []
+
+    @property
+    def time_series(self):
+        """ Get list of all time series. """
+        time_series = []
+        if self.master:
+            time_series.append(self.master)
+        time_series.extend(self.slaves)
+        return time_series
 
     @property
     def available(self):

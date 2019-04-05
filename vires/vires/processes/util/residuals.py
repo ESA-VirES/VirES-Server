@@ -27,6 +27,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
+# pylint: disable=too-many-instance-attributes
 
 from logging import LoggerAdapter, getLogger
 from itertools import chain
@@ -114,6 +115,7 @@ class Sat2SatResidual(Model):
 
     def __init__(self, master_spacecraft, slave_spacecraft,
                  grouped_collections, logger=None):
+        super(Sat2SatResidual, self).__init__()
 
         if master_spacecraft not in settings.VIRES_ORBIT_COUNTER_FILE:
             raise ValueError("Invalid master spacecraft %s!" % master_spacecraft)
@@ -284,6 +286,7 @@ class Sat2SatResidual(Model):
             slave_ds = slave_source.interpolate(
                 slave_times, slave_vars, cdf_type=time_cdf_type
             )
+            self.product_set.update(slave_source.product_set)
 
             for output_var, source_var in var_pairs:
                 cdf_type = dataset.cdf_type[source_var]

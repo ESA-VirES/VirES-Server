@@ -26,7 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals,missing-docstring,import-error
+#pylint: disable=too-many-locals,too-many-arguments
 
 from logging import getLogger, LoggerAdapter
 from itertools import chain
@@ -54,6 +54,7 @@ class MagneticModelResidual(Model):
             return '%s: %s' % (self.extra["residual_name"], msg), kwargs
 
     def __init__(self, model_name, variable, logger=None):
+        super(MagneticModelResidual, self).__init__()
         self.model_name = model_name
         self.variable = variable
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
@@ -174,6 +175,7 @@ class ComposedMagneticModel(Model):
             return '%s: %s' % (self.extra["model_name"], msg), kwargs
 
     def __init__(self, name, components, logger=None):
+        super(ComposedMagneticModel, self).__init__()
         self.name = name
         self.components = components
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
@@ -200,13 +202,13 @@ class ComposedMagneticModel(Model):
                 b_nec += b_nec_source
 
         for variable in variables:
-            filter_, type_, attrib = self.output[variable]
+            filter_, type_, attrib = self._output[variable]
             output_ds.set(variable, filter_(b_nec), type_, attrib)
 
         return output_ds
 
     @cached_property
-    def output(self):
+    def _output(self):
         f_var, b_var = self.variables
         return {
             f_var: (vnorm, CDF_DOUBLE_TYPE, {
@@ -278,6 +280,7 @@ class SourceMagneticModel(Model):
 
     def __init__(self, model_name, model, parameters=None, logger=None,
                  varmap=None):
+        super(SourceMagneticModel, self).__init__()
         self.short_name = model_name
         self.model = model
         self.parameters = parameters or {}
@@ -324,13 +327,13 @@ class SourceMagneticModel(Model):
             result = self.model.eval(**inputs)
 
             for variable in variables:
-                filter_, type_, attrib = self.output[variable]
+                filter_, type_, attrib = self._output[variable]
                 output_ds.set(variable, filter_(result), type_, attrib)
 
         return output_ds
 
     @cached_property
-    def output(self):
+    def _output(self):
         f_var, b_var = self.variables
         return {
             f_var: (vnorm, CDF_DOUBLE_TYPE, {

@@ -98,6 +98,8 @@ class ProductTimeSeries(TimeSeries):
             return '%s: %s' % (self.extra["collection_id"], msg), kwargs
 
     def __init__(self, collection, logger=None):
+        super(ProductTimeSeries, self).__init__()
+
         if isinstance(collection, basestring):
             collection = self._get_collection(collection)
 
@@ -112,19 +114,12 @@ class ProductTimeSeries(TimeSeries):
         self.translate_fw = dict(params.VARIABLE_TRANSLATES)
         self.translate_bw = dict((v, k) for k, v in self.translate_fw.iteritems())
 
-        self.product_set = set() # stores all recorded source products
-
         self.time_variable = params.TIME_VARIABLE
         self.time_tolerance = params.TIME_TOLERANCE
         self.time_overlap = params.TIME_OVERLAP
         self.time_gap_threshold = params.TIME_GAP_THRESHOLD
         self.segment_neighbourhood = params.TIME_SEGMENT_NEIGHBOURHOOD
         self.interpolation_kinds = params.VARIABLE_INTERPOLATION_KINDS
-
-    @property
-    def products(self):
-        """ Get list of all accessed products. """
-        return list(self.product_set)
 
     @property
     def variables(self):
