@@ -33,8 +33,7 @@ from numpy import loadtxt, array, nan
 
 from .util import full
 from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
-from .time_util import datetime_to_mjd2000
-
+from .time_util import datetime_to_mjd2000, mjd2000_to_datetime, timedelta
 
 DST_FLAGS = {"D": 0, "P": 1} # Definitive / Preliminary(?)
 
@@ -48,12 +47,26 @@ def parse_dst(src_file):
     )
 
 
+def generate_dst_filename(times):
+    """ Generate normal AUX_DST_2_ Swarm product filename. """
+    def _format_time(mjd2000):
+        dt_ = mjd2000_to_datetime(mjd2000) + timedelta(microseconds=500000)
+        return dt_.strftime("%Y%m%dT%H%M%S")
+
+    return "SW_OPER_AUX_DST_2__%s_%s_0001" % (
+        _format_time(times.min()), _format_time(times.max()),
+    )
+
+
 def update_dst(src_file, dst_file):
     """ Update Dst index file. """
-    with cdf_open(dst_file, "w") as cdf:
-        cdf["time"], cdf["dst"], cdf["est"], cdf["ist"], cdf["flag"] = (
-            parse_dst(src_file)
-        )
+    with open(src_file, "rb"):
+        with cdf_open(dst_file, "w") as cdf:
+            time, dst, est, ist, flag = parse_dst(src_file)
+            cdf["time"], cdf["dst"], cdf["est"], cdf["ist"], cdf["flag"] = (
+                time, dst, est, ist, flag
+            )
+            cdf.attrs['SOURCE'] = generate_dst_filename(time)
 
 
 def query_dst(filename, start, stop, fields=("time", "dst")):

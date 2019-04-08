@@ -33,8 +33,7 @@ from numpy import loadtxt, array, nan
 
 from .util import full
 from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
-from .time_util import datetime_to_mjd2000
-
+from .time_util import datetime_to_mjd2000, mjd2000_to_datetime, timedelta
 
 KP_FLAGS = {"D": 0, "Q": 1} # Definitive / Quick-look
 
@@ -49,10 +48,24 @@ def parse_kp(src_file):
     )
 
 
+def generate_dst_filename(times):
+    """ Generate normal AUX_KP__2_ Swarm product filename. """
+    def _format_time(mjd2000):
+        dt_ = mjd2000_to_datetime(mjd2000) + timedelta(microseconds=500000)
+        return dt_.strftime("%Y%m%dT%H%M%S")
+
+    return "SW_OPER_AUX_KP__2__%s_%s_0001" % (
+        _format_time(times.min()), _format_time(times.max()),
+    )
+
+
 def update_kp(src_file, dst_file):
     """ Update Kp index file. """
-    with cdf_open(dst_file, "w") as cdf:
-        cdf["time"], cdf["kp"], cdf["ap"], cdf["flag"] = parse_kp(src_file)
+    with open(src_file, "rb"):
+        with cdf_open(dst_file, "w") as cdf:
+            time, kp_, ap_, flag = parse_kp(src_file)
+            cdf["time"], cdf["kp"], cdf["ap"], cdf["flag"] = time, kp_, ap_, flag
+            cdf.attrs['SOURCE'] = generate_dst_filename(time)
 
 
 def query_kp(filename, start, stop, fields=("time", "kp")):

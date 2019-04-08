@@ -27,7 +27,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import exists
+from os.path import exists, basename, splitext
 from numpy import loadtxt, array, nan
 from .util import full
 from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
@@ -49,10 +49,12 @@ def parse_orbit_counter_file(src_file):
 
 def update_orbit_counter_file(src_file, dst_file):
     """ Update Swarm orbit counter text file. """
-    with cdf_open(dst_file, "w") as cdf:
-        cdf["orbit"], cdf["MJD2000"], cdf["phi_AN"], cdf["Source"] = (
-            parse_orbit_counter_file(src_file)
-        )
+    with open(src_file, "rb"):
+        with cdf_open(dst_file, "w") as cdf:
+            cdf["orbit"], cdf["MJD2000"], cdf["phi_AN"], cdf["Source"] = (
+                parse_orbit_counter_file(src_file)
+            )
+            cdf.attrs['SOURCE'] = splitext(basename(src_file))[0]
 
 
 def get_max_orbit_number(filename):

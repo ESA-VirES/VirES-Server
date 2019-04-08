@@ -27,7 +27,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import exists
+from os.path import exists, basename, splitext
 from numpy import loadtxt, array, nan
 
 from .util import full
@@ -37,6 +37,7 @@ from .time_util import datetime_to_mjd2000
 FIELD_TIME = "MJD2000"
 FIELD_F107 = "F10.7"
 
+
 def parse_aux_f107_2_(src_file):
     """ Parse AUX_F10_2_ index file. """
     data = loadtxt(src_file)
@@ -45,8 +46,10 @@ def parse_aux_f107_2_(src_file):
 
 def update_aux_f107_2_(src_file, dst_file):
     """ Update AUX_F10_2_ index file. """
-    with cdf_open(dst_file, "w") as cdf:
-        cdf[FIELD_TIME], cdf[FIELD_F107] = parse_aux_f107_2_(src_file)
+    with open(src_file, "rb"):
+        with cdf_open(dst_file, "w") as cdf:
+            cdf[FIELD_TIME], cdf[FIELD_F107] = parse_aux_f107_2_(src_file)
+            cdf.attrs['SOURCE'] = splitext(basename(src_file))[0]
 
 
 def query_aux_f107_2_(filename, start, stop, fields=(FIELD_TIME, FIELD_F107)):
