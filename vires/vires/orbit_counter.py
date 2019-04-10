@@ -28,10 +28,46 @@
 #-------------------------------------------------------------------------------
 
 from os.path import exists, basename, splitext
-from numpy import loadtxt, array, nan
-from .util import full
-from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
-from .time_util import datetime_to_mjd2000
+from numpy import loadtxt
+from .cdf_util import cdf_open
+from .time_util import mjd2000_to_datetime
+from .aux_common import (
+    SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
+)
+
+
+class OrbitCounterReader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
+    """ Orbit counter data reader class. """
+    TIME_FIELD = "MJD2000"
+    DATA_FIELDS = ("orbit", "phi_AN", "Source")
+    TYPES = {"orbit": "int32", "Source": "int8"}
+    NODATA = {"orbit": -1, "Source": -1}
+    INTERPOLATION_KIND = "zero"
+
+
+def update_orbit_counter_file(src_file, dst_file):
+    """ Update Swarm orbit counter text file. """
+    def _write_orbit_counter_file(file_in, src_file, dst_file):
+        with cdf_open(dst_file, "w") as cdf:
+            orbit, time, phi_an, source = parse_orbit_counter_file(file_in)
+            cdf["orbit"], cdf["MJD2000"], cdf["phi_AN"], cdf["Source"] = (
+                orbit, time, phi_an, source
+            )
+            start, end = time.min(), time.max()
+            if src_file:
+                cdf.attrs['SOURCE'] = splitext(basename(src_file))[0]
+            else:
+                cdf.attrs['SOURCE'] = src_file if src_file else render_filename(
+                    "SW_OPER_AUXxORBCNT_{start}_{end}_0001",
+                    mjd2000_to_datetime(start), mjd2000_to_datetime(end)
+                )
+            cdf.attrs['VALIDITY'] = [start, end]
+
+    if isinstance(src_file, basestring):
+        with open(src_file, "rb") as file_in:
+            _write_orbit_counter_file(file_in, src_file, dst_file)
+    else:
+        _write_orbit_counter_file(src_file, None, dst_file)
 
 
 def parse_orbit_counter_file(src_file):
@@ -47,14 +83,10 @@ def parse_orbit_counter_file(src_file):
     )
 
 
-def update_orbit_counter_file(src_file, dst_file):
-    """ Update Swarm orbit counter text file. """
-    with open(src_file, "rb"):
-        with cdf_open(dst_file, "w") as cdf:
-            cdf["orbit"], cdf["MJD2000"], cdf["phi_AN"], cdf["Source"] = (
-                parse_orbit_counter_file(src_file)
-            )
-            cdf.attrs['SOURCE'] = splitext(basename(src_file))[0]
+
+
+
+
 
 
 def get_max_orbit_number(filename):
@@ -85,46 +117,3 @@ def get_orbit_timerange(filename, start_orbit, end_orbit):
         end_orbit, end_time = _get_ascending_node_time(end_orbit + 1)
         end_orbit -= 1
         return start_orbit, end_orbit, start_time, end_time
-
-
-def fetch_orbit_counter_data(filename, start, stop,
-                             fields=("MJD2000", "orbit", "phi_AN", "Source")):
-    """ Extract non-interpolated orbit counter data. """
-    if not exists(filename):
-        return dict((field, array([])) for field in fields)
-
-    with cdf_open(filename) as cdf:
-        return dict(cdf_time_subset(
-            cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
-            fields=fields, margin=1, time_field="MJD2000",
-        ))
-
-
-def interpolate_orbit_counter_data(filename, time, nodata=None,
-                                   fields=("orbit", "phi_AN", "Source"),
-                                   kind='zero'):
-    """ Interpolate orbit counter data.
-    All variables are interpolated using the lower nearest neighbour
-    interpolation.
-    """
-    types = {"orbit": "int32", "Source": "int8"}
-
-    # fill the default no-data type
-    _nodata = {"orbit": -1, "Source": -1}
-    if nodata:
-        _nodata.update(nodata)
-    nodata = _nodata
-
-    if exists(filename):
-        with cdf_open(filename) as cdf:
-            return dict(
-                cdf_time_interp(
-                    cdf, time, fields, types=types, nodata=nodata,
-                    time_field="MJD2000", kind=kind
-                )
-            )
-    else:
-        return dict(
-            (field, full(time.shape, nodata.get(field, nan), types.get(field)))
-            for field in fields
-        )

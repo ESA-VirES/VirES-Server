@@ -27,59 +27,12 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import exists
-from numpy import array, nan
+from .aux_common import NoSourceMixIn, CdfEpochTimeMixIn, BaseReader
 
-from .util import full
-from .cdf_util import (
-    cdf_open, cdf_time_subset, cdf_time_interp, datetime_to_cdf_rawtime,
-    CDF_EPOCH_TYPE,
-)
-
-TYPES = {"OrbitDirection": "int8", "BoundaryType": "int8"}
-NODATA = {"OrbitDirection": 0, "BoundaryType": -1}
-FIELDS_ALL = ("Timestamp", "OrbitDirection", "BoundaryType")
-FIELD_TIME = FIELDS_ALL[0]
-FIELDS_DATA = FIELDS_ALL[1:]
-
-
-def fetch_orbit_direction_data(filename, start, stop, fields=FIELDS_ALL):
-    """ Extract non-interpolated orbit direction data. """
-    def _from_datetime(time):
-        return datetime_to_cdf_rawtime(time, CDF_EPOCH_TYPE)
-
-    if not exists(filename):
-        return dict((field, array([])) for field in fields)
-
-    with cdf_open(filename) as cdf:
-        return dict(cdf_time_subset(
-            cdf, _from_datetime(start), _from_datetime(stop),
-            fields=fields, margin=1, time_field=FIELD_TIME,
-        ))
-
-
-def interpolate_orbit_direction_data(filename, time, nodata=None,
-                                     fields=FIELDS_DATA, kind='zero'):
-    """ Interpolate orbit direction data.
-    All variables are interpolated using the lower nearest neighbour
-    interpolation.
-    """
-    # fill the default no-data type
-    _nodata = dict(NODATA)
-    if nodata:
-        _nodata.update(nodata)
-    nodata = _nodata
-
-    if exists(filename):
-        with cdf_open(filename) as cdf:
-            return dict(
-                cdf_time_interp(
-                    cdf, time, fields, types=TYPES, nodata=nodata,
-                    time_field=FIELD_TIME, kind=kind
-                )
-            )
-    else:
-        return dict(
-            (field, full(time.shape, nodata.get(field, nan), TYPES.get(field)))
-            for field in fields
-        )
+class OrbitDirectionReader(NoSourceMixIn, CdfEpochTimeMixIn, BaseReader):
+    """ Orbit direction data reader class. """
+    TIME_FIELD = "Timestamp"
+    DATA_FIELDS = ("OrbitDirection", "BoundaryType")
+    TYPES = {"OrbitDirection": "int8", "BoundaryType": "int8"}
+    NODATA = {"OrbitDirection": 0, "BoundaryType": -1}
+    INTERPOLATION_KIND = "zero"

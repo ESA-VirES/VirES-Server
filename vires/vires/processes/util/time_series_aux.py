@@ -27,7 +27,6 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 #pylint: disable=too-many-arguments
-# TODO: replace query_* and query_*_int functions
 
 from logging import getLogger, LoggerAdapter
 from numpy import array, empty
@@ -36,12 +35,9 @@ from vires.cdf_util import (
     mjd2000_to_cdf_rawtime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_datetime,
     CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDF_UINT2_TYPE,
 )
-from vires.aux_kp import query_kp, query_kp_int
-from vires.aux_dst import query_dst, query_dst_int
-from vires.aux_f107 import (
-    FIELD_TIME as FIELD_F107_TIME, FIELD_F107,
-    query_aux_f107_2_, query_aux_f107_2__int,
-)
+from vires.aux_kp import KpReader
+from vires.aux_dst import DstReader
+from vires.aux_f107 import F10_2_Reader
 from vires.dataset import Dataset
 from .time_series import TimeSeries
 from .model import Model
@@ -69,13 +65,12 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         """ Convert the time format of the dataset to the raw CDF time. """
         return mjd2000_to_cdf_rawtime(times, cdf_type)
 
-    def __init__(self, name, filename, query_fcn, iterp_fcn, varmap,
+    def __init__(self, name, filename, reader_factory, varmap,
                  logger=None):
         super(AuxiliaryDataTimeSeries, self).__init__()
         self._name = name
         self._filename = filename
-        self._query = query_fcn
-        self._interp = iterp_fcn
+        self._reader = reader_factory(filename, self.product_set)
         self._varmap = varmap
         self._revvarmap = dict((val, key) for key, val in varmap.items())
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
@@ -92,7 +87,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         self.logger.debug("variables: %s", variables)
         dataset = Dataset()
         if variables:
-            src_data = self._query(self._filename, start, stop, fields=tuple(
+            src_data = self._reader.subset(start, stop, fields=tuple(
                 self._revvarmap[variable] for variable in variables
             ))
             for src_var, data in src_data.items():
@@ -141,8 +136,8 @@ class AuxiliaryDataTimeSeries(TimeSeries):
                 self.CDF_ATTR.get(self.TIME_VARIABLE),
             )
         if dependent_variables:
-            src_data = self._interp(
-                self._filename, self._encode_time(times, cdf_type),
+            src_data = self._reader.interpolate(
+                self._encode_time(times, cdf_type),
                 fields=tuple(
                     self._revvarmap[variable] for variable in dependent_variables
                 )
@@ -181,10 +176,9 @@ class IndexKp10(AuxiliaryDataTimeSeries):
 
     def __init__(self, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
-            self, "Kp10", filename, query_kp, query_kp_int,
+            self, "Kp10", filename, KpReader,
             {'time': 'Timestamp', 'kp': 'Kp10'}, logger
         )
-
 
 
 class IndexKpFromKp10(Model):
@@ -256,7 +250,7 @@ class IndexDst(AuxiliaryDataTimeSeries):
 
     def __init__(self, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
-            self, "Dst", filename, query_dst, query_dst_int,
+            self, "Dst", filename, DstReader,
             {'time': 'Timestamp', 'dst': 'Dst'}, logger
         )
 
@@ -278,7 +272,6 @@ class IndexF107(AuxiliaryDataTimeSeries):
 
     def __init__(self, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
-            self, "F107", filename,
-            query_aux_f107_2_, query_aux_f107_2__int,
-            {FIELD_F107_TIME: 'Timestamp', FIELD_F107: 'F107'}, logger
+            self, "F107", filename, F10_2_Reader,
+            {"MJD2000": 'Timestamp', "F10.7": 'F107'}, logger
         )

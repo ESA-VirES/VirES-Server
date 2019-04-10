@@ -26,7 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, invalid-name
 
 from unittest import TestCase, main
 from os import remove
@@ -35,7 +35,7 @@ from StringIO import StringIO
 from numpy import array, linspace
 from numpy.testing import assert_equal
 from scipy.interpolate import interp1d
-from vires.aux_dst import update_dst, query_dst, query_dst_int
+from vires.aux_dst import update_dst, DstReader
 from vires.time_util import mjd2000_to_datetime
 
 
@@ -109,15 +109,15 @@ class TestIndexDst(TestCase):
             remove(self.FILE)
 
     def _test_query_dst(self, start, stop, idx_start, idx_stop):
-        data = query_dst(
-            self.FILE, mjd2000_to_datetime(start), mjd2000_to_datetime(stop)
+        data = DstReader(self.FILE).subset(
+            mjd2000_to_datetime(start), mjd2000_to_datetime(stop)
         )
         assert_equal(data['time'], DATA_DST['time'][idx_start:idx_stop])
         assert_equal(data['dst'], DATA_DST['dst'][idx_start:idx_stop])
 
     def _test_query_dst_int(self, start, stop, count):
         times = linspace(start, stop, count)
-        data = query_dst_int(self.FILE, times)
+        data = DstReader(self.FILE).interpolate(times)
         expected_values = interp1d(
             DATA_DST['time'], DATA_DST['dst'], bounds_error=False
         )(times)

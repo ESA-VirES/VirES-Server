@@ -28,16 +28,45 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import exists
-from numpy import loadtxt, array, nan
+# Note: the source Kp are not true Kp but rather Kp10.
 
-from .util import full
-from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
-from .time_util import datetime_to_mjd2000, mjd2000_to_datetime, timedelta
+from numpy import loadtxt, array
+from .cdf_util import cdf_open
+from .time_util import mjd2000_to_datetime
+from .aux_common import (
+    SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
+)
 
 KP_FLAGS = {"D": 0, "Q": 1} # Definitive / Quick-look
 
-# Note: the source Kp are not true Kp but rather Kp times 10.
+
+class KpReader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
+    """ Kp data reader class. """
+    TIME_FIELD = "time"
+    DATA_FIELDS = ("kp",)
+    INTERPOLATION_KIND = "nearest"
+
+
+def update_kp(src_file, dst_file):
+    """ Update Kp index file. """
+
+    def _write_kp(file_in, dst_file):
+        with cdf_open(dst_file, "w") as cdf:
+            time, kp_, ap_, flag = parse_kp(file_in)
+            cdf["time"], cdf["kp"], cdf["ap"], cdf["flag"] = time, kp_, ap_, flag
+            start, end = time.min(), time.max()
+            cdf.attrs['SOURCE'] = render_filename(
+                "SW_OPER_AUX_KP__2__{start}_{end}_0001",
+                mjd2000_to_datetime(start), mjd2000_to_datetime(end)
+            )
+            cdf.attrs['VALIDITY'] = [start, end]
+
+    if isinstance(src_file, basestring):
+        with open(src_file, "rb") as file_in:
+            _write_kp(file_in, dst_file)
+    else:
+        _write_kp(src_file, dst_file)
+
 
 def parse_kp(src_file):
     """ Parse Kp index text file. """
@@ -46,50 +75,3 @@ def parse_kp(src_file):
         data[:, 0], array(data[:, 1], 'uint16'), array(data[:, 2], 'uint16'),
         array(data[:, 3], 'uint8')
     )
-
-
-def generate_dst_filename(times):
-    """ Generate normal AUX_KP__2_ Swarm product filename. """
-    def _format_time(mjd2000):
-        dt_ = mjd2000_to_datetime(mjd2000) + timedelta(microseconds=500000)
-        return dt_.strftime("%Y%m%dT%H%M%S")
-
-    return "SW_OPER_AUX_KP__2__%s_%s_0001" % (
-        _format_time(times.min()), _format_time(times.max()),
-    )
-
-
-def update_kp(src_file, dst_file):
-    """ Update Kp index file. """
-    with open(src_file, "rb"):
-        with cdf_open(dst_file, "w") as cdf:
-            time, kp_, ap_, flag = parse_kp(src_file)
-            cdf["time"], cdf["kp"], cdf["ap"], cdf["flag"] = time, kp_, ap_, flag
-            cdf.attrs['SOURCE'] = generate_dst_filename(time)
-
-
-def query_kp(filename, start, stop, fields=("time", "kp")):
-    """ Query non-interpolated Kp index values. """
-    if not exists(filename):
-        return dict((field, array([])) for field in fields)
-
-    with cdf_open(filename) as cdf:
-        return dict(cdf_time_subset(
-            cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
-            fields=fields, margin=1
-        ))
-
-
-def query_kp_int(filename, time, nodata=None, fields=("kp",)):
-    """ Query interpolated Kp index values. """
-    if exists(filename):
-        with cdf_open(filename) as cdf:
-            return dict(cdf_time_interp(
-                cdf, time, fields, nodata=nodata, kind="nearest"
-            ))
-    else:
-        nodata = nodata or {}
-        return dict(
-            (field, full(time.shape, nodata.get(field, nan)))
-            for field in fields
-        )
