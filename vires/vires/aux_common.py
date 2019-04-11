@@ -137,7 +137,7 @@ class SingleSourceMixIn(object):
     def _update_product_set(self, cdf, start, end):
         validity_start, validity_end = cdf.attrs['VALIDITY']
         if validity_start <= end and validity_end >= start:
-            self.product_set.add(cdf.attrs['SOURCE'])
+            self.product_set.add(str(cdf.attrs['SOURCE']))
 
 
 class MJD2000TimeMixIn(object):

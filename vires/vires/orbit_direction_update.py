@@ -374,22 +374,19 @@ class OrbitDirectionTable(object):
     def _load_table(self, cdf):
         """ Load orbit direction table from a CDF file. """
 
-        def _parse_time_range(value):
-            start, end = [datetime64(v, 'ms') for v in value.split('/')]
-            return start, end
+        def _read_time_ranges(attr):
+            attr._raw = True
+            data = asarray([CdfTypeEpoch.decode(item) for item in attr])
+            return data[:, 0], data[:, 1]
 
         times = CdfTypeEpoch.decode(cdf.raw_var("Timestamp")[...])
         odirs = cdf["OrbitDirection"][...]
         flags = cdf["BoundaryType"][...]
 
         products = list(cdf.attrs['SOURCES'])
-        time_ranges = [
-            _parse_time_range(str_)
-            for str_ in cdf.attrs['SOURCE_TIME_RANGES']
-        ]
-
-        start_times = [start_time for start_time, _ in time_ranges]
-        end_times = [end_time for _, end_time in time_ranges]
+        start_times, end_times = _read_time_ranges(
+            cdf.attrs['SOURCE_TIME_RANGES']
+        )
 
         self._products = Products(products, start_times, end_times)
         self._data = OutputData(times, odirs, flags)
@@ -410,13 +407,21 @@ class OrbitDirectionTable(object):
             )
             cdf[variable].attrs.update(attrs)
 
+        def _write_time_ranges(attr, start_times, end_times):
+            for item in zip(start_times, end_times):
+                attr.new(data=CdfTypeEpoch.encode(item), type=CDF_EPOCH_TYPE)
+
         cdf.attrs["TITLE"] = self._get_product_id(self._filename)
         cdf.attrs["PRODUCT_DESCRIPTION"] = self.DESCRIPTION or ""
         cdf.attrs["SOURCES"] = self._products.names
-        cdf.attrs["SOURCE_TIME_RANGES"] = [
-            "%sZ/%sZ" % item
-            for item in zip(self._products.start_times, self._products.end_times)
-        ]
+        cdf.attrs.new("SOURCE_TIME_RANGES")
+        _write_time_ranges(
+            cdf.attrs["SOURCE_TIME_RANGES"],
+            self._products.start_times,
+            self._products.end_times
+        )
+        cdf.attrs['NEIGHBOUR_DISTANCE'] = 1000.
+        cdf.attrs['NEIGHBOUR_OVERLAP'] = 3000.
 
         _set_variable(cdf, "Timestamp", self._data.times, {
             "DESCRIPTION": "Time stamp",
