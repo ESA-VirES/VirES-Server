@@ -178,15 +178,24 @@ class ProductTimeSeries(TimeSeries):
         """ Get subset of the time series overlapping the give array time array.
         """
         variables = self.get_extracted_variables(variables)
+        self.logger.debug("requested variables %s", variables)
         return self._subset_times(times, variables, cdf_type)
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
                     cdf_type=CDF_EPOCH_TYPE, valid_only=False):
 
         variables = self.get_extracted_variables(variables)
-        dataset = self._subset_times(
-            times, list(set([self.time_variable] + variables)), cdf_type
-        )
+        self.logger.debug("requested variables %s", variables)
+
+        if not variables:
+            return Dataset()
+
+        if self.time_variable not in variables:
+            subset_variables = [self.time_variable] + variables
+        else:
+            subset_variables = variables
+
+        dataset = self._subset_times(times, subset_variables, cdf_type)
 
         self.logger.debug("requested dataset length %s", len(times))
 
@@ -221,7 +230,6 @@ class ProductTimeSeries(TimeSeries):
         """
         times, cdf_type = self._convert_time(times, cdf_type)
 
-        self.logger.debug("requested variables %s", variables)
         if not variables: # stop here if no variables are requested
             return Dataset()
 
