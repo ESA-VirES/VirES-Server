@@ -65,6 +65,7 @@ from vires.processes.util import (
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
     MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
+    extract_product_names,
 )
 
 
@@ -497,7 +498,6 @@ class FetchData(WPSProcess):
 
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
-
             output_dict = {}
             for label, dataset in _generate_data_():
                 available = tuple(include(output_variables, dataset))
@@ -511,6 +511,10 @@ class FetchData(WPSProcess):
                     else:
                         output_dict[variable] = data_item.tolist()
 
+            # additional metadata
+            output_dict['__info__'] = {
+                'sources': extract_product_names(resolvers.values())
+            }
             # encode as messagepack
             encoded = StringIO(msgpack.dumps(output_dict))
 
