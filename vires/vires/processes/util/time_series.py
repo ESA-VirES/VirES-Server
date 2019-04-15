@@ -26,6 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments
 
 from numpy import asarray
 from vires.cdf_util import CDF_EPOCH_TYPE, mjd2000_to_cdf_rawtime
@@ -34,6 +35,14 @@ from vires.util import include, unique
 
 class TimeSeries(object):
     """ Base time-series data source class. """
+
+    def __init__(self):
+        self.product_set = set() # stores all recorded source products
+
+    @property
+    def products(self):
+        """ Get list of all accessed products. """
+        return list(self.product_set)
 
     @property
     def variables(self):

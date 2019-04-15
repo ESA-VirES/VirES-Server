@@ -27,59 +27,54 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import exists
-from numpy import array, nan
-
-from .util import full
-from .cdf_util import (
-    cdf_open, cdf_time_subset, cdf_time_interp, datetime_to_cdf_rawtime,
-    CDF_EPOCH_TYPE,
-)
-
-TYPES = {"OrbitDirection": "int8", "BoundaryType": "int8"}
-NODATA = {"OrbitDirection": 0, "BoundaryType": -1}
-FIELDS_ALL = ("Timestamp", "OrbitDirection", "BoundaryType")
-FIELD_TIME = FIELDS_ALL[0]
-FIELDS_DATA = FIELDS_ALL[1:]
+from numpy import abs, asarray, searchsorted
+from .aux_common import CdfEpochTimeMixIn, BaseReader
 
 
-def fetch_orbit_direction_data(filename, start, stop, fields=FIELDS_ALL):
-    """ Extract non-interpolated orbit direction data. """
-    def _from_datetime(time):
-        return datetime_to_cdf_rawtime(time, CDF_EPOCH_TYPE)
+class OrbitDirectionReader(CdfEpochTimeMixIn, BaseReader):
+    """ Orbit direction data reader class. """
+    TIME_FIELD = "Timestamp"
+    DATA_FIELDS = ("OrbitDirection", "BoundaryType")
+    TYPES = {"OrbitDirection": "int8", "BoundaryType": "int8"}
+    NODATA = {"OrbitDirection": 0, "BoundaryType": -1}
+    INTERPOLATION_KIND = "zero"
 
-    if not exists(filename):
-        return dict((field, array([])) for field in fields)
+    def _update_product_set(self, cdf, start, end):
 
-    with cdf_open(filename) as cdf:
-        return dict(cdf_time_subset(
-            cdf, _from_datetime(start), _from_datetime(stop),
-            fields=fields, margin=1, time_field=FIELD_TIME,
-        ))
+        def _read_time_ranges(attr):
+            attr._raw = True
+            return asarray([item for item in attr])
 
+        def _add_overlap(starts, ends, distance, overlap):
+            idx, = (abs((starts - ends) - distance) < 5.).nonzero()
+            ends[idx] += overlap
+            starts[idx] -= overlap
 
-def interpolate_orbit_direction_data(filename, time, nodata=None,
-                                     fields=FIELDS_DATA, kind='zero'):
-    """ Interpolate orbit direction data.
-    All variables are interpolated using the lower nearest neighbour
-    interpolation.
-    """
-    # fill the default no-data type
-    _nodata = dict(NODATA)
-    if nodata:
-        _nodata.update(nodata)
-    nodata = _nodata
-
-    if exists(filename):
-        with cdf_open(filename) as cdf:
-            return dict(
-                cdf_time_interp(
-                    cdf, time, fields, types=TYPES, nodata=nodata,
-                    time_field=FIELD_TIME, kind=kind
-                )
+        def _find_subset(starts, ends, start, end, margin=0, offset=0):
+            return (
+                max(0, searchsorted(ends, start, 'left') - margin) + offset,
+                searchsorted(starts, end, 'right') + margin + offset
             )
-    else:
-        return dict(
-            (field, full(time.shape, nodata.get(field, nan), TYPES.get(field)))
-            for field in fields
+
+        neighbour_distance = cdf.attrs['NEIGHBOUR_DISTANCE']
+        neighbour_overlap = cdf.attrs['NEIGHBOUR_OVERLAP']
+        ranges = _read_time_ranges(cdf.attrs['SOURCE_TIME_RANGES'])
+
+        # find first rough subset with margin
+        idx_start, idx_stop = _find_subset(
+            ranges[:, 0], ranges[:, 1], start, end, margin=1
         )
+        ranges_subset = ranges[idx_start:idx_stop, :]
+
+        # add the temporal overlaps
+        _add_overlap(
+            ranges_subset[1:, 0], ranges_subset[:-1, 1],
+            neighbour_distance, neighbour_overlap
+        )
+
+        # find the final exact subset
+        idx_start, idx_stop = _find_subset(
+            ranges_subset[:, 0], ranges_subset[:, 1], start, end,
+            offset=idx_start
+        )
+        self.product_set.update(cdf.attrs['SOURCES'][idx_start:idx_stop])

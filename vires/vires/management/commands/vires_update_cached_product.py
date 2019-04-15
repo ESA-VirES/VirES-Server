@@ -111,23 +111,23 @@ for spacecraft in getattr(settings, "VIRES_SPACECRAFTS", []):
         tmp_extension=".tmp.cdf"
     )
 
-    configure_cached_product(
-        "AUX%sODBGEO" % spacecraft,
-        label=(
-            "Swarm %s orbit directions in geographic coordinates"
-            % spacecraft
-        ),
-        tmp_extension=".tmp.cdf"
-    )
+    #configure_cached_product(
+    #    "AUX%sODBGEO" % spacecraft,
+    #    label=(
+    #        "Swarm %s orbit directions in geographic coordinates"
+    #        % spacecraft
+    #    ),
+    #    tmp_extension=".tmp.cdf"
+    #)
 
-    configure_cached_product(
-        "AUX%sODBMAG" % spacecraft,
-        label=(
-            "Swarm %s orbit directions in magnetic (QD) coordinates"
-            % spacecraft
-        ),
-        tmp_extension=".tmp.cdf"
-    )
+    #configure_cached_product(
+    #    "AUX%sODBMAG" % spacecraft,
+    #    label=(
+    #        "Swarm %s orbit directions in magnetic (QD) coordinates"
+    #        % spacecraft
+    #    ),
+    #    tmp_extension=".tmp.cdf"
+    #)
 
 
 CACHED_PRODUCTS.update({

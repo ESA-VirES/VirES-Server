@@ -28,15 +28,37 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import exists
-from numpy import loadtxt, array, nan
-
-from .util import full
-from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
-from .time_util import datetime_to_mjd2000
-
+from numpy import loadtxt, array
+from .cdf_util import cdf_open
+from .time_util import mjd2000_to_datetime
+from .aux_common import (
+    SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
+)
 
 DST_FLAGS = {"D": 0, "P": 1} # Definitive / Preliminary(?)
+
+
+def update_dst(src_file, dst_file):
+    """ Update Dst index file. """
+
+    def _write_dst(file_in, dst_file):
+        with cdf_open(dst_file, "w") as cdf:
+            time, dst, est, ist, flag = parse_dst(file_in)
+            cdf["time"], cdf["dst"], cdf["est"], cdf["ist"], cdf["flag"] = (
+                time, dst, est, ist, flag
+            )
+            start, end = time.min(), time.max()
+            cdf.attrs['SOURCE'] = render_filename(
+                "SW_OPER_AUX_DST_2__{start}_{end}_0001",
+                mjd2000_to_datetime(start), mjd2000_to_datetime(end)
+            )
+            cdf.attrs['VALIDITY'] = [start, end]
+
+    if isinstance(src_file, basestring):
+        with open(src_file, "rb") as file_in:
+            _write_dst(file_in, dst_file)
+    else:
+        _write_dst(src_file, dst_file)
 
 
 def parse_dst(src_file):
@@ -48,36 +70,8 @@ def parse_dst(src_file):
     )
 
 
-def update_dst(src_file, dst_file):
-    """ Update Dst index file. """
-    with cdf_open(dst_file, "w") as cdf:
-        cdf["time"], cdf["dst"], cdf["est"], cdf["ist"], cdf["flag"] = (
-            parse_dst(src_file)
-        )
-
-
-def query_dst(filename, start, stop, fields=("time", "dst")):
-    """ Query non-interpolated Dst index values. """
-    if not exists(filename):
-        return {field: array([]) for field in fields}
-
-    with cdf_open(filename) as cdf:
-        return dict(cdf_time_subset(
-            cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
-            fields=fields, margin=1
-        ))
-
-
-def query_dst_int(filename, time, nodata=None, fields=("dst",)):
-    """ Query interpolated Dst index values. """
-    if exists(filename):
-        with cdf_open(filename) as cdf:
-            return dict(cdf_time_interp(
-                cdf, time, fields, nodata=nodata, kind="linear"
-            ))
-    else:
-        nodata = nodata or {}
-        return {
-            field: full(time.shape, nodata.get(field, nan))
-            for field in fields
-        }
+class DstReader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
+    """ Dst data reader class. """
+    TIME_FIELD = "time"
+    DATA_FIELDS = ("dst",)
+    INTERPOLATION_KIND = "linear"

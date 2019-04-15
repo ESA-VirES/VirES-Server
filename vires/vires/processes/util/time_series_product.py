@@ -98,6 +98,8 @@ class ProductTimeSeries(TimeSeries):
             return '%s: %s' % (self.extra["collection_id"], msg), kwargs
 
     def __init__(self, collection, logger=None):
+        super(ProductTimeSeries, self).__init__()
+
         if isinstance(collection, basestring):
             collection = self._get_collection(collection)
 
@@ -112,19 +114,12 @@ class ProductTimeSeries(TimeSeries):
         self.translate_fw = dict(params.VARIABLE_TRANSLATES)
         self.translate_bw = dict((v, k) for k, v in self.translate_fw.iteritems())
 
-        self.product_set = set() # stores all recorded source products
-
         self.time_variable = params.TIME_VARIABLE
         self.time_tolerance = params.TIME_TOLERANCE
         self.time_overlap = params.TIME_OVERLAP
         self.time_gap_threshold = params.TIME_GAP_THRESHOLD
         self.segment_neighbourhood = params.TIME_SEGMENT_NEIGHBOURHOOD
         self.interpolation_kinds = params.VARIABLE_INTERPOLATION_KINDS
-
-    @property
-    def products(self):
-        """ Get list of all accessed products. """
-        return list(self.product_set)
 
     @property
     def variables(self):
@@ -183,15 +178,24 @@ class ProductTimeSeries(TimeSeries):
         """ Get subset of the time series overlapping the give array time array.
         """
         variables = self.get_extracted_variables(variables)
+        self.logger.debug("requested variables %s", variables)
         return self._subset_times(times, variables, cdf_type)
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
                     cdf_type=CDF_EPOCH_TYPE, valid_only=False):
 
         variables = self.get_extracted_variables(variables)
-        dataset = self._subset_times(
-            times, list(set([self.time_variable] + variables)), cdf_type
-        )
+        self.logger.debug("requested variables %s", variables)
+
+        if not variables:
+            return Dataset()
+
+        if self.time_variable not in variables:
+            subset_variables = [self.time_variable] + variables
+        else:
+            subset_variables = variables
+
+        dataset = self._subset_times(times, subset_variables, cdf_type)
 
         self.logger.debug("requested dataset length %s", len(times))
 
@@ -226,7 +230,6 @@ class ProductTimeSeries(TimeSeries):
         """
         times, cdf_type = self._convert_time(times, cdf_type)
 
-        self.logger.debug("requested variables %s", variables)
         if not variables: # stop here if no variables are requested
             return Dataset()
 

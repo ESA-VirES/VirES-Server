@@ -36,10 +36,12 @@ from numpy import array, linspace
 from numpy.testing import assert_equal
 from scipy.interpolate import interp1d
 from vires.aux_f107 import (
-    FIELD_TIME, FIELD_F107,
-    update_aux_f107_2_, query_aux_f107_2_, query_aux_f107_2__int,
+    update_aux_f107_2_, F10_2_Reader,
 )
 from vires.time_util import mjd2000_to_datetime
+
+FIELD_TIME = "MJD2000"
+FIELD_F107 = "F10.7"
 
 TEST_AUX_F10_2_ = """
 # Assembled daily observed values of solar flux F10.7
@@ -111,8 +113,8 @@ class TestIndexDst(TestCase):
         pass
 
     def _test_query_f107(self, start, stop, idx_start, idx_stop):
-        data = query_aux_f107_2_(
-            self.FILE, mjd2000_to_datetime(start), mjd2000_to_datetime(stop)
+        data = F10_2_Reader(self.FILE).subset(
+            mjd2000_to_datetime(start), mjd2000_to_datetime(stop)
         )
         assert_equal(
             data[FIELD_TIME], DATA_AUX_F10_2_[FIELD_TIME][idx_start:idx_stop]
@@ -123,7 +125,7 @@ class TestIndexDst(TestCase):
 
     def _test_query_f107_int(self, start, stop, count):
         times = linspace(start, stop, count)
-        data = query_aux_f107_2__int(self.FILE, times)
+        data = F10_2_Reader(self.FILE).interpolate(times)
         expected_values = interp1d(
             DATA_AUX_F10_2_[FIELD_TIME], DATA_AUX_F10_2_[FIELD_F107],
             bounds_error=False
