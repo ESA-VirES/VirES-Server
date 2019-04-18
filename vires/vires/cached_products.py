@@ -27,7 +27,7 @@
 
 from sys import stdin
 from os import rename, remove
-from os.path import exists
+from os.path import exists, basename, splitext
 from shutil import copyfileobj
 from contextlib import closing
 from urllib2 import urlopen
@@ -91,9 +91,15 @@ def copy_file(source, destination):
     """ Read content from the source file and copy it to the destination
     path without modification.
     """
+    source_info_file = splitext(destination)[0] + '.source'
+    source_id = splitext(basename(source))[0]
+
     with open(source, "rb") as file_in:
         with open(destination, "wb") as file_out:
             copyfileobj(file_in, file_out, 1024*1024)
+
+    with open(source_info_file, "wb") as file_out:
+        file_out.write(source_id)
 
 
 def open_source(source):
