@@ -26,9 +26,10 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import basename
-from numpy import concatenate
-from .cdf_util import cdf_open
+from os.path import basename, splitext
+from numpy import concatenate, array, empty
+from .cdf_util import cdf_open, CDF_EPOCH_TYPE
+
 
 MMA_SHA_2F_MAX_ALLOWED_TIME_GAP = 7200000 # ms (2 hours)
 MMA_SHA_2F_TIME_VARIABLE = "t_qs"
@@ -65,14 +66,18 @@ def merge_mma_sha_2f(sources, destination):
     """ Merge inputs and update the cached MMA_SHA_2F product. """
     sources = filter_mma_sha_2f(sources)
     models = list(_load_models(sources, MMA_SHA_2F_VARIABLES))
-    create_merged_mma_model(destination, sources, models, _merge_mma_sha_2f)
+    create_merged_mma_model(
+        destination, sources, models, _merge_mma_sha_2f, MMA_SHA_2F_TIME_VARIABLE
+    )
 
 
 def merge_mma_sha_2c(sources, destination):
     """ Merge inputs and update the cached MMA_SHA_2C product. """
     sources = filter_mma_sha_2c(sources)
     models = list(_load_models(sources, MMA_SHA_2C_VARIABLES))
-    create_merged_mma_model(destination, sources, models, _merge_mma_sha_2c)
+    create_merged_mma_model(
+        destination, sources, models, _merge_mma_sha_2c, MMA_SHA_2C_TIME_VARIABLE
+    )
 
 
 def _merge_mma_sha_2f(cdf_dst, cdf_src, models):
@@ -110,13 +115,15 @@ def _merge_mma_sha_2c(cdf_dst, cdf_src, models):
         )
 
 
-def create_merged_mma_model(destination, sources, models, merge_models):
+def create_merged_mma_model(destination, sources, models, merge_models,
+                            time_variable):
     """ Create merged MMA model.
     """
     with cdf_open(destination, "w") as cdf_dst:
+        set_sources(cdf_dst, sources)
+        set_source_time_ranges(cdf_dst, sources, time_variable)
         with cdf_open(sources[-1], "r") as cdf_src:
             merge_models(cdf_dst, cdf_src, models)
-        set_sources(cdf_dst, sources)
 
 
 def filter_and_sort_sources(sources, time_variable, max_gap):
@@ -144,9 +151,34 @@ def filter_and_sort_sources(sources, time_variable, max_gap):
     return [source for _, _, source in reversed(filtered_sources)]
 
 
-def set_sources(cdf_dst, sources):
+def filename2id(filename):
+    """ Turn product filename into an identifier. """
+    return splitext(basename(filename))[0]
+
+
+def set_sources(cdf, sources):
     """ Set attribute containing list of source files. """
-    cdf_dst.attrs["SOURCES"] = [basename(source) for source in sources]
+    cdf.attrs["SOURCES"] = [filename2id(source) for source in sources]
+
+
+def set_source_time_ranges(cdf, sources, time_variable):
+    """ Set attribute containing list of source time-ranges. """
+    source_validities = array([
+        _read_validity(source, time_variable) for source in sources
+    ])
+    # Note that because of the linear interpolation between two
+    # consecutive models the 'validities' of two consecutive
+    # models overlap.
+    overlaped_validities = empty(source_validities.shape)
+    overlaped_validities[0, 0] = source_validities[0, 0]
+    overlaped_validities[-1, 1] = source_validities[-1, 1]
+    overlaped_validities[1:, 0] = source_validities[:-1, 1]
+    overlaped_validities[:-1, 1] = source_validities[1:, 0]
+
+    cdf.attrs.new("SOURCE_TIME_RANGES")
+    attr = cdf.attrs["SOURCE_TIME_RANGES"]
+    for item in overlaped_validities:
+        attr.new(data=item, type=CDF_EPOCH_TYPE)
 
 
 def _read_validity(source, time_variable):
