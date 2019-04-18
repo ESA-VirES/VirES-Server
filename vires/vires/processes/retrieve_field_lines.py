@@ -30,13 +30,10 @@
 # pylint: disable=missing-docstring, too-many-arguments, too-many-locals
 # pylint: disable=too-few-public-methods, no-self-use
 
-from itertools import izip
 from collections import defaultdict
 from cStringIO import StringIO
 from datetime import datetime
 import msgpack
-from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize, LogNorm
 from numpy import empty, linspace, meshgrid, asarray
 from eoxmagmod import (
     GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN, EARTH_RADIUS,
@@ -50,7 +47,7 @@ from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_model_list, parse_style, get_f107_value
+from vires.processes.util import parse_model_list, get_f107_value
 
 EARTH_RADIUS_M = EARTH_RADIUS * 1e3 # mean Earth radius in meters
 TRACE_OPTIONS = {'max_radius': 25 * EARTH_RADIUS}
@@ -80,18 +77,17 @@ class RetrieveFieldLines(WPSProcess):
             optional=True,
             formats=(FormatText('text/plain'),)
         )),
-        ("begin_time", LiteralData(
-            'begin_time', datetime, optional=False,
-            abstract="Start of the time interval",
+        ("time", LiteralData(
+            'time', datetime, optional=False,
+            abstract="Time at which the fields lines are calculated.",
         )),
-        ("end_time", LiteralData(
-            'end_time', datetime, optional=False,
-            abstract="End of the time interval",
-        )),
-        ("elevation", LiteralData(
-            "elevation", float, optional=True, uoms=(("km", 1.0), ("m", 1e-3)),
+        ("height", LiteralData(
+            "height", float, optional=True, uoms=(("km", 1.0), ("m", 1e-3)),
             default=0.0, allowed_values=AllowedRange(-1., 1000., dtype=float),
-            abstract="Height above WGS84 ellipsoid used to evaluate the model.",
+            abstract=(
+                "Height above the mean Earth radius at which the staring points"
+                " are located."
+            ),
         )),
         ("bbox", BoundingBoxData(
             "bbox", crss=(4326,), optional=False, title="Area of interest",
@@ -111,22 +107,6 @@ class RetrieveFieldLines(WPSProcess):
                 "lines per easing extent of the bounding box."
             ),
         )),
-        ("log_scale", LiteralData(
-            'log_scale', bool, optional=True, default=False,
-            abstract="Apply logarithmic scale field line colouring.",
-        )),
-        ("range_min", LiteralData(
-            "range_min", float, optional=True, default=None,
-            abstract="Minimum displayed value."
-        )),
-        ("range_max", LiteralData(
-            "range_max", float, optional=True, default=None,
-            abstract="Maximum displayed value."
-        )),
-        ("style", LiteralData(
-            'style', str, optional=True, default="jet",
-            abstract="Colour-map to be applied to visualization",
-        )),
     ]
 
     outputs = [
@@ -134,8 +114,6 @@ class RetrieveFieldLines(WPSProcess):
             'output', title="Fields lines",
             abstract="Calculated field lines and coloured field strength.",
             formats=(
-                FormatText('text/csv'),
-                FormatText('text/plain'),
                 FormatJSON(),
                 FormatBinaryRaw("application/msgpack"),
                 FormatBinaryRaw("application/x-msgpack"),
@@ -143,36 +121,24 @@ class RetrieveFieldLines(WPSProcess):
         )),
     ]
 
-    def execute(self, model_ids, shc, begin_time, end_time, elevation,
-                bbox, lines_per_col, lines_per_row, style, range_min,
-                range_max, log_scale, output, **kwarg):
+    def execute(self, model_ids, shc, time, height, bbox, lines_per_col,
+                lines_per_row, output, **kwarg):
         # parse model and style
         models, _ = parse_model_list("model_ids", model_ids, shc)
-        color_map = parse_style("style", style)
 
         # fix the time-zone of the naive date-time
-        begin_time = naive_to_utc(begin_time)
-        end_time = naive_to_utc(end_time)
-        time = begin_time + (end_time - begin_time)/2
-        mean_time = datetime_to_mjd2000(time)
+        mjd2000 = datetime_to_mjd2000(naive_to_utc(time))
 
         self.access_logger.info(
             "request: toi: %s, aoi: %s, elevation: %g, "
             "models: (%s), grid: (%d, %d)",
             time.isoformat("T"),
-            bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180), elevation,
+            bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180), height,
             ", ".join(
                 "%s = %s" % (model.name, model.full_expression)
                 for model in models
             ),
             lines_per_col, lines_per_row,
-        )
-
-        # parse range bounds
-        self.logger.debug(
-            "output %s data range: %s",
-            "logarithmic" if log_scale else "linear",
-            (range_min, range_max)
         )
 
         def generate_field_lines():
@@ -182,7 +148,7 @@ class RetrieveFieldLines(WPSProcess):
                 linspace(bbox.lower[1], bbox.upper[1], lines_per_row),
                 linspace(bbox.lower[0], bbox.upper[0], lines_per_col)
             )
-            coord_geo[..., 2] = elevation + EARTH_RADIUS
+            coord_geo[..., 2] = height + EARTH_RADIUS
 
             total_count = 0
             for model in models:
@@ -190,7 +156,7 @@ class RetrieveFieldLines(WPSProcess):
 
                 options = {}
                 if "f107" in model.model.parameters:
-                    options["f107"] = get_f107_value(mean_time)
+                    options["f107"] = get_f107_value(mjd2000)
 
                 self.logger.debug(
                     "%s=%s model options: %s",
@@ -204,7 +170,7 @@ class RetrieveFieldLines(WPSProcess):
                         self.logger
                     ) as etl:
                         line_coords, line_field = trace_field_line(
-                            model.model, mean_time, point,
+                            model.model, mjd2000, point,
                             GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN,
                             trace_options=TRACE_OPTIONS, model_options=options,
                         )
@@ -228,61 +194,40 @@ class RetrieveFieldLines(WPSProcess):
             )
 
         # data colouring
-        norm = LogNorm if log_scale else Normalize
-        color_scale = ScalarMappable(norm(range_min, range_max), color_map)
         field_lines = generate_field_lines()
         info = {
             'time': time.isoformat('T') + "Z",
             'models': {model.name: model.full_expression for model in models},
             'bbox': bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
-            'height': elevation*1e3,
+            'height': height*1e3,
             'rows': lines_per_col,
             'cols': lines_per_row,
         }
 
-        if output['mime_type'] in ("text/csv", "text/plain"):
-            return self._write_csv(field_lines, color_scale, output)
-        elif output['mime_type'] == "application/json":
-            return self._write_json(field_lines, color_scale, info, output)
+        if output['mime_type'] == "application/json":
+            return self._write_json(field_lines, info, output)
         elif output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
-            return self._write_msgpack(field_lines, color_scale, info, output)
+            return self._write_msgpack(field_lines, info, output)
         else:
             raise InvalidOutputDefError(
                 'output',
                 "Unexpected output format %r requested!" % output['mime_type']
             )
 
-    @staticmethod
-    def _write_csv(field_lines, color_scale, output):
-        # CSV text output
-        output_fobj = StringIO()
-        output_fobj.write('id,color_r,color_g,color_b,pos_x,pos_y,pos_z\r\n')
-        for idx, (model, _, coords, values) in enumerate(field_lines):
-            format_str = (
-                ("%s-%d" % (model, idx + 1)) + ",%d,%d,%d,%.0f,%.0f,%.0f\r\n"
-            )
-            colors = color_scale.to_rgba(values, bytes=True)
-            for (x__, y__, z__), (red, green, blue, _) in izip(coords, colors):
-                output_fobj.write(
-                    format_str % (red, green, blue, x__, y__, z__)
-                )
-
-        return CDFileWrapper(output_fobj, **output)
-
     @classmethod
-    def _write_json(cls, field_lines, color_scale, info, output):
-        result = cls._serialize(field_lines, color_scale, info)
+    def _write_json(cls, field_lines, info, output):
+        result = cls._serialize(field_lines, info)
         return CDObject(result, format=FormatJSON(), **output)
 
     @classmethod
-    def _write_msgpack(cls, field_lines, color_scale, info, output):
-        result = cls._serialize(field_lines, color_scale, info)
+    def _write_msgpack(cls, field_lines, info, output):
+        result = cls._serialize(field_lines, info)
         output_fobj = StringIO()
         msgpack.pack(result, output_fobj)
         return CDFileWrapper(output_fobj, **output)
 
     @classmethod
-    def _serialize(cls, field_lines, color_scale, info):
+    def _serialize(cls, field_lines, info):
         # NOTE: For a seamless transition, both values and colours are exported.
         # The colours will be removed eventually.
         fieldlines = defaultdict(list)
@@ -297,7 +242,6 @@ class RetrieveFieldLines(WPSProcess):
                 'apex_height': apex_height,
                 'coordinates': coords.tolist(),
                 'values': values.tolist(),
-                'colors': color_scale.to_rgba(values, bytes=True).tolist(),
             })
         return {
             'info': info,
