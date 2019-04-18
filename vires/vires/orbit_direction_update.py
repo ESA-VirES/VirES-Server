@@ -30,7 +30,7 @@
 
 from __future__ import print_function
 from os import remove, rename
-from os.path import exists, basename
+from os.path import exists, basename, splitext
 from logging import getLogger
 from itertools import chain, izip_longest
 from collections import namedtuple
@@ -310,7 +310,7 @@ class OrbitDirectionTable(object):
 
     @staticmethod
     def _get_product_id(filename):
-        return basename(filename).rpartition('.')[0]
+        return splitext(basename(filename))[0]
 
     def _merge_data(self, data, start_time, end_time, margin):
         start_trim_time = start_time - margin
