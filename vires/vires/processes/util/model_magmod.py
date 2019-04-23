@@ -356,9 +356,11 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
             inputs.update(self.parameters)
 
             result = self.model.eval(**inputs)
-            self.product_set.update(self.extract_sources(
-                inputs['time'][0], inputs['time'][-1]
-            ))
+            times = inputs['time']
+            if times.size > 0:
+                self.product_set.update(
+                    self.extract_sources(times[0], times[-1])
+                )
 
             for variable in variables:
                 filter_, type_, attrib = self._output[variable]
