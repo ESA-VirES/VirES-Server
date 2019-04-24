@@ -30,7 +30,7 @@
 
 from logging import getLogger, LoggerAdapter
 from itertools import chain
-from numpy import stack, inf, zeros
+from numpy import stack, inf, zeros, searchsorted
 from eoxmagmod import vnorm, ComposedGeomagneticModel
 from vires.util import include, unique, cached_property
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
@@ -99,7 +99,30 @@ class MagneticModelResidual(Model):
         }
 
 
-class ComposedMagneticModel(Model):
+class ExtractSourcesMixIn(object):
+    """ Mix-in class defining the extract sources method. """
+
+    def extract_sources(self, start, end):
+        """ Extract set of sources matched my the given time interval. """
+        validity_start, validity_end = self.validity
+        start = max(start, validity_start)
+        end = min(end, validity_end)
+
+        product_set = set()
+
+        if start > end:
+            return product_set # not overlap
+
+        for source_list, ranges in self.sources:
+            if source_list:
+                idx_start = max(0, searchsorted(ranges[:, 1], start, 'left'))
+                idx_stop = searchsorted(ranges[:, 0], end, 'right')
+                product_set.update(source_list[idx_start:idx_stop])
+
+        return product_set
+
+
+class ComposedMagneticModel(Model, ExtractSourcesMixIn):
     """ Combined forward spherical harmonic expansion model. """
     BASE_VARIABLES = ["F", "B_NEC"]
 
@@ -135,7 +158,7 @@ class ComposedMagneticModel(Model):
             name = "'%s'" % name
         return name
 
-    @property
+    @cached_property
     def validity(self):
         """ Get model validity period. """
         if not self.components: # empty composed model
@@ -169,6 +192,13 @@ class ComposedMagneticModel(Model):
             aggregated_model.push(model, scale, **parameters)
 
         return aggregated_model
+
+    @cached_property
+    def sources(self):
+        """ Get model sources and their validity ranges. """
+        return list(chain.from_iterable(
+            model.sources for _, model in self.components
+        ))
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -228,7 +258,7 @@ class ComposedMagneticModel(Model):
         }
 
 
-class SourceMagneticModel(Model):
+class SourceMagneticModel(Model, ExtractSourcesMixIn):
     """ Source forward spherical harmonic expansion model. """
     SOURCE_VARIABLES = {
         "time": ["Timestamp"],
@@ -278,11 +308,12 @@ class SourceMagneticModel(Model):
         def process(self, msg, kwargs):
             return '%s: %s' % (self.extra["model_name"], msg), kwargs
 
-    def __init__(self, model_name, model, parameters=None, logger=None,
-                 varmap=None):
+    def __init__(self, model_name, model, sources=None, parameters=None,
+                 logger=None, varmap=None):
         super(SourceMagneticModel, self).__init__()
         self.short_name = model_name
         self.model = model
+        self.sources = sources or []
         self.parameters = parameters or {}
         varmap = varmap or {}
 
@@ -325,6 +356,11 @@ class SourceMagneticModel(Model):
             inputs.update(self.parameters)
 
             result = self.model.eval(**inputs)
+            times = inputs['time']
+            if times.size > 0:
+                self.product_set.update(
+                    self.extract_sources(times[0], times[-1])
+                )
 
             for variable in variables:
                 filter_, type_, attrib = self._output[variable]

@@ -30,9 +30,7 @@
 import re
 from collections import OrderedDict
 from eoxmagmod import load_model_shc
-from eoxserver.services.ows.wps.exceptions import (
-    MissingRequiredInputError, InvalidInputValueError
-)
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.util import get_color_scale
 from vires.models import ProductCollection
 from vires.parsers.exceptions import ParserError
@@ -43,7 +41,7 @@ from vires.parsers.model_expression_lexer import get_model_expression_lexer
 from .time_series_product import ProductTimeSeries
 from .model_magmod import SourceMagneticModel, ComposedMagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
-from .magnetic_models import get_model
+from .magnetic_models import MODEL_CACHE
 
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
@@ -207,8 +205,9 @@ def _parse_custom_model(input_id, shc_coefficients):
             input_id, "Failed to parse the custom model coefficients."
         )
     return ComposedMagneticModel("Custom_Model", [
+        # NOTE: no source set for the custom model
         (1.0, SourceMagneticModel(
-            "Custom_Model", model, {
+            "Custom_Model", model, [], {
                 "min_degree": model.min_degree, "max_degree": model.degree
             }
         ))
@@ -233,8 +232,8 @@ def _process_model_component(known_models, source_models, model_def, input_id):
         min_degree = max(parameters.get("min_degree", min_degree), min_degree)
         return {"min_degree": min_degree, "max_degree": max_degree}
 
-    def _create_source_model(model_id, model, params):
-        model_obj = SourceMagneticModel(model_id, model, params)
+    def _create_source_model(model_id, model, sources, params):
+        model_obj = SourceMagneticModel(model_id, model, sources, params)
         source_models[model_obj.name] = model_obj
         return model_obj
 
@@ -253,7 +252,7 @@ def _process_model_component(known_models, source_models, model_def, input_id):
 
         if isinstance(model_obj, SourceMagneticModel):
             model_obj = _create_source_model(
-                model_id, model_obj.model, _get_degree_range(
+                model_id, model_obj.model, model_obj.sources, _get_degree_range(
                     parameters, **model_obj.parameters
                 )
             )
@@ -264,14 +263,16 @@ def _process_model_component(known_models, source_models, model_def, input_id):
                     % (parameter, model_id)
                 ))
     else: # new source model
-        model = get_model(model_def.id)
+        model, sources = MODEL_CACHE.get_model_with_sources(model_def.id)
         if model is None:
             raise InvalidInputValueError(
                 input_id, "Invalid model identifier %r!" % model_def.id
             )
-        model_obj = _create_source_model(model_id, model, _get_degree_range(
-            parameters, model.min_degree, model.degree
-        ))
+        model_obj = _create_source_model(
+            model_id, model, sources, _get_degree_range(
+                parameters, model.min_degree, model.degree
+            )
+        )
 
     return scale, model_obj
 
@@ -307,10 +308,9 @@ def parse_filters2(input_id, filter_string):
         variable, component = match.groups()
         if component is None:
             return ScalarRangeFilter(variable, vmin, vmax)
-        else:
-            return VectorComponentRangeFilter(
-                variable, int(component), vmin, vmax
-            )
+        return VectorComponentRangeFilter(
+            variable, int(component), vmin, vmax
+        )
 
     return [
         _get_filter(name, vmin, vmax) for name, (vmin, vmax)
