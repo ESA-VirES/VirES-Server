@@ -291,12 +291,7 @@ class FetchData(WPSProcess):
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.iteritems():
-
-                resolver = VariableResolver(
-                    requested_variables, MANDATORY_VARIABLES
-                )
-
-                resolvers[label] = resolver
+                resolvers[label] = resolver = VariableResolver()
 
                 # master
                 master = product_sources[0]
@@ -332,7 +327,7 @@ class FetchData(WPSProcess):
                 for item in orbit_info.get(spacecraft, []):
                     resolver.add_slave(item, 'Timestamp')
 
-                # prepare spacecraft to spacecraft residuals
+                # prepare spacecraft to spacecraft differences
                 # NOTE: No residual variables required by the filters.
                 residual_variables = get_residual_variables(requested_variables)
                 self.logger.debug("residual variables: %s", ", ".join(
@@ -355,6 +350,13 @@ class FetchData(WPSProcess):
                 # add remaining filters
                 resolver.add_filters(filters)
 
+                # add output variables
+                resolver.add_output_variables(MANDATORY_VARIABLES)
+                resolver.add_output_variables(requested_variables)
+
+                # reduce dependencies
+                resolver.reduce()
+
                 self.logger.debug(
                     "%s: available variables: %s", label,
                     ", ".join(resolver.available)
@@ -365,11 +367,11 @@ class FetchData(WPSProcess):
                 )
                 self.logger.debug(
                     "%s: output variables: %s", label,
-                    ", ".join(resolver.output)
+                    ", ".join(resolver.output_variables)
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    "; ".join(str(f) for f in resolver.resolved_filters)
+                    "; ".join(str(f) for f in resolver.filters)
                 )
                 self.logger.debug(
                     "%s: unresolved filters: %s", label, "; ".join(
@@ -379,7 +381,7 @@ class FetchData(WPSProcess):
 
             # collect the common output variables
             output_variables = tuple(unique(chain.from_iterable(
-                resolver.output for resolver in resolvers.values()
+                resolver.output_variables for resolver in resolvers.values()
             )))
 
         else:
@@ -432,7 +434,6 @@ class FetchData(WPSProcess):
                     times = dataset[resolver.master.time_variable]
                     cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
-                        self.logger.debug(variables)
                         dataset.merge(
                             slave.interpolate(times, variables, {}, cdf_type)
                         )
