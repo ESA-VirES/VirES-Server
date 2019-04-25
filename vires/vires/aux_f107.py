@@ -27,51 +27,47 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import exists
-from numpy import loadtxt, array, nan
+from os.path import basename, splitext
+from numpy import loadtxt
+from .cdf_util import cdf_open
+from .time_util import mjd2000_to_datetime
+from .aux_common import (
+    SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
+)
 
-from .util import full
-from .cdf_util import cdf_open, cdf_time_subset, cdf_time_interp
-from .time_util import datetime_to_mjd2000
 
-FIELD_TIME = "MJD2000"
-FIELD_F107 = "F10.7"
+class F10_2_Reader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
+    """ F10.7 data reader class. """
+    TIME_FIELD = "MJD2000"
+    DATA_FIELDS = ("F10.7",)
+    INTERPOLATION_KIND = "linear"
+
+
+def update_aux_f107_2_(src_file, dst_file):
+    """ Update AUX_F10_2_ index file. """
+
+    def _write_aux_f107_2_(file_in, src_file, dst_file):
+        with cdf_open(dst_file, "w") as cdf:
+            time, f107 = parse_aux_f107_2_(file_in)
+            cdf["MJD2000"], cdf["F10.7"] = time, f107
+            start, end = time.min(), time.max()
+            if src_file:
+                cdf.attrs['SOURCE'] = splitext(basename(src_file))[0]
+            else:
+                cdf.attrs['SOURCE'] = src_file if src_file else render_filename(
+                    "SW_OPER_AUX_F10_2__{start}_{end}_0001",
+                    mjd2000_to_datetime(start), mjd2000_to_datetime(end)
+                )
+            cdf.attrs['VALIDITY'] = [start, end]
+
+    if isinstance(src_file, basestring):
+        with open(src_file, "rb") as file_in:
+            _write_aux_f107_2_(file_in, src_file, dst_file)
+    else:
+        _write_aux_f107_2_(src_file, None, dst_file)
+
 
 def parse_aux_f107_2_(src_file):
     """ Parse AUX_F10_2_ index file. """
     data = loadtxt(src_file)
     return (data[:, 0], data[:, 1])
-
-
-def update_aux_f107_2_(src_file, dst_file):
-    """ Update AUX_F10_2_ index file. """
-    with cdf_open(dst_file, "w") as cdf:
-        cdf[FIELD_TIME], cdf[FIELD_F107] = parse_aux_f107_2_(src_file)
-
-
-def query_aux_f107_2_(filename, start, stop, fields=(FIELD_TIME, FIELD_F107)):
-    """ Query non-interpolated F10.7 index values. """
-    if not exists(filename):
-        return {field: array([]) for field in fields}
-
-    with cdf_open(filename) as cdf:
-        return dict(cdf_time_subset(
-            cdf, datetime_to_mjd2000(start), datetime_to_mjd2000(stop),
-            fields=fields, margin=1, time_field=FIELD_TIME,
-        ))
-
-
-def query_aux_f107_2__int(filename, time, nodata=None, fields=(FIELD_F107,)):
-    """ Query interpolated F10.7 index values. """
-    if exists(filename):
-        with cdf_open(filename) as cdf:
-            return dict(cdf_time_interp(
-                cdf, time, fields, nodata=nodata, kind="linear",
-                time_field=FIELD_TIME,
-            ))
-    else:
-        nodata = nodata or {}
-        return {
-            field: full(time.shape, nodata.get(field, nan))
-            for field in fields
-        }

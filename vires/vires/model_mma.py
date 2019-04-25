@@ -26,18 +26,21 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import basename
-from numpy import concatenate
-from .cdf_util import cdf_open
+import re
+from datetime import timedelta, datetime
+from os.path import basename, splitext
+from numpy import concatenate, array, empty
+from .cdf_util import cdf_open, CDF_EPOCH_TYPE
 
-MMA_SHA_2F_MAX_ALLOWED_TIME_GAP = 7200000 # ms (2 hours)
+
+MMA_SHA_2F_MAX_ALLOWED_TIME_GAP = timedelta(hours=2)
 MMA_SHA_2F_TIME_VARIABLE = "t_qs"
 MMA_SHA_2F_VARIABLES = [
     "t_qs", "qs_geo",
     "t_gh", "gh_geo",
 ]
 
-MMA_SHA_2C_MAX_ALLOWED_TIME_GAP = 7200000 # ms (2 hours)
+MMA_SHA_2C_MAX_ALLOWED_TIME_GAP = timedelta(hours=2)
 MMA_SHA_2C_TIME_VARIABLE = "t_qs_1"
 MMA_SHA_2C_VARIABLES = [
     "t_qs_1", "qs_1",
@@ -46,33 +49,45 @@ MMA_SHA_2C_VARIABLES = [
     "t_gh_2", "gh_2",
 ]
 
+RE_SWARM_MMA_PRODUCT = re.compile(
+    r"^SW_OPER_MMA_(?P<type>[A-Z0-9_]{6,6})"
+    r"_(?P<start>\d{8,8}T\d{6,6})_(?P<end>\d{8,8}T\d{6,6})"
+    r"_(?P<baseline>\d{2,2})(?P<version>\d{2,2})$"
+)
+
+
+def parse_timestamp(datetime_str):
+    """ Parse product timestamp. """
+    return datetime.strptime(datetime_str, '%Y%m%dT%H%M%S')
+
+
 
 def filter_mma_sha_2f(sources):
     """ Filter and sort the input MMA_SHA_2F products. """
-    return filter_and_sort_sources(
-        sources, MMA_SHA_2F_TIME_VARIABLE, MMA_SHA_2F_MAX_ALLOWED_TIME_GAP
-    )
+    return filter_and_sort_sources(sources, MMA_SHA_2F_MAX_ALLOWED_TIME_GAP)
 
 
 def filter_mma_sha_2c(sources):
     """ Filter and sort the input MMA_SHA_2C products. """
-    return filter_and_sort_sources(
-        sources, MMA_SHA_2C_TIME_VARIABLE, MMA_SHA_2C_MAX_ALLOWED_TIME_GAP
-    )
+    return filter_and_sort_sources(sources, MMA_SHA_2C_MAX_ALLOWED_TIME_GAP)
 
 
 def merge_mma_sha_2f(sources, destination):
     """ Merge inputs and update the cached MMA_SHA_2F product. """
     sources = filter_mma_sha_2f(sources)
     models = list(_load_models(sources, MMA_SHA_2F_VARIABLES))
-    create_merged_mma_model(destination, sources, models, _merge_mma_sha_2f)
+    create_merged_mma_model(
+        destination, sources, models, _merge_mma_sha_2f, MMA_SHA_2F_TIME_VARIABLE
+    )
 
 
 def merge_mma_sha_2c(sources, destination):
     """ Merge inputs and update the cached MMA_SHA_2C product. """
     sources = filter_mma_sha_2c(sources)
     models = list(_load_models(sources, MMA_SHA_2C_VARIABLES))
-    create_merged_mma_model(destination, sources, models, _merge_mma_sha_2c)
+    create_merged_mma_model(
+        destination, sources, models, _merge_mma_sha_2c, MMA_SHA_2C_TIME_VARIABLE
+    )
 
 
 def _merge_mma_sha_2f(cdf_dst, cdf_src, models):
@@ -110,43 +125,88 @@ def _merge_mma_sha_2c(cdf_dst, cdf_src, models):
         )
 
 
-def create_merged_mma_model(destination, sources, models, merge_models):
+def create_merged_mma_model(destination, sources, models, merge_models,
+                            time_variable):
     """ Create merged MMA model.
     """
     with cdf_open(destination, "w") as cdf_dst:
+        set_sources(cdf_dst, sources)
+        set_source_time_ranges(cdf_dst, sources, time_variable)
         with cdf_open(sources[-1], "r") as cdf_src:
             merge_models(cdf_dst, cdf_src, models)
-        set_sources(cdf_dst, sources)
 
 
-def filter_and_sort_sources(sources, time_variable, max_gap):
+def filter_and_sort_sources(sources, max_gap):
     """ Sort sources by validity and filter adjacent consecutive products. """
 
-    def _sortable_sources(sources):
-        for source in sources:
-            start, stop = _read_validity(source, time_variable)
-            yield start, stop, source
+    def _match_product(identifier):
+        match = RE_SWARM_MMA_PRODUCT.match(identifier)
+        return None if match is None else match.groupdict()
 
-    def _filter_sources(sources):
-        start_last, stop_last, source = sources.next()
-        yield start_last, stop_last, source
-        for start, stop, source in sources:
-            if stop >= start_last:
+    def _sources_info(sources):
+        for source in sources:
+            product_id = filename2id(source)
+            info = _match_product(filename2id(source))
+            if info:
+                info.update({
+                    'start': parse_timestamp(info['start']),
+                    'end': parse_timestamp(info['end']),
+                    'filename': source,
+                    'identifier': product_id,
+                })
+                yield info
+
+    def _sort_key(item):
+        return (item['end'], item['baseline'], item['version'], item['start'])
+
+    def _filter_sources(items):
+        items = iter(items)
+        item = items.next()
+        previous_start = item['start']
+        yield item
+        for item in items:
+            current_end = item['end']
+            if current_end > previous_start:
                 continue
-            elif start_last - stop <= max_gap:
-                yield start, stop, source
-                start_last, stop_last = start, stop
+            elif previous_start - current_end <= max_gap:
+                yield item
+                previous_start = item['start']
             else:
                 break
 
-    sorted_sources = sorted(_sortable_sources(sources), reverse=True)
+    sorted_sources = sorted(_sources_info(sources), key=_sort_key, reverse=True)
     filtered_sources = list(_filter_sources(iter(sorted_sources)))
-    return [source for _, _, source in reversed(filtered_sources)]
+    return [item['filename'] for item in reversed(filtered_sources)]
 
 
-def set_sources(cdf_dst, sources):
+def filename2id(filename):
+    """ Turn product filename into an identifier. """
+    return splitext(basename(filename))[0]
+
+
+def set_sources(cdf, sources):
     """ Set attribute containing list of source files. """
-    cdf_dst.attrs["SOURCES"] = [basename(source) for source in sources]
+    cdf.attrs["SOURCES"] = [filename2id(source) for source in sources]
+
+
+def set_source_time_ranges(cdf, sources, time_variable):
+    """ Set attribute containing list of source time-ranges. """
+    source_validities = array([
+        _read_validity(source, time_variable) for source in sources
+    ])
+    # Note that because of the linear interpolation between two
+    # consecutive models the 'validities' of two consecutive
+    # models overlap.
+    overlaped_validities = empty(source_validities.shape)
+    overlaped_validities[0, 0] = source_validities[0, 0]
+    overlaped_validities[-1, 1] = source_validities[-1, 1]
+    overlaped_validities[1:, 0] = source_validities[:-1, 1]
+    overlaped_validities[:-1, 1] = source_validities[1:, 0]
+
+    cdf.attrs.new("SOURCE_TIME_RANGES")
+    attr = cdf.attrs["SOURCE_TIME_RANGES"]
+    for item in overlaped_validities:
+        attr.new(data=item, type=CDF_EPOCH_TYPE)
 
 
 def _read_validity(source, time_variable):

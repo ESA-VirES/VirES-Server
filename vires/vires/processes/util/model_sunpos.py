@@ -66,6 +66,7 @@ class SunPosition(Model):
             return 'SunPosition: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
+        super(SunPosition, self).__init__()
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
@@ -149,6 +150,7 @@ class SubSolarPoint(Model):
             return 'SubSolarPoint: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
+        super(SubSolarPoint, self).__init__()
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES

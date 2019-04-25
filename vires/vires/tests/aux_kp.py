@@ -26,7 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,invalid-name
 
 from unittest import TestCase, main
 from os import remove
@@ -35,7 +35,7 @@ from StringIO import StringIO
 from numpy import array, linspace
 from numpy.testing import assert_equal
 from scipy.interpolate import interp1d
-from vires.aux_kp import update_kp, query_kp, query_kp_int
+from vires.aux_kp import update_kp, KpReader
 from vires.time_util import mjd2000_to_datetime
 
 
@@ -80,15 +80,15 @@ class TestIndexKp(TestCase):
             remove(self.FILE)
 
     def _test_query_kp(self, start, stop, idx_start, idx_stop):
-        data = query_kp(
-            self.FILE, mjd2000_to_datetime(start), mjd2000_to_datetime(stop)
+        data = KpReader(self.FILE).subset(
+            mjd2000_to_datetime(start), mjd2000_to_datetime(stop)
         )
         assert_equal(data['time'], DATA_KP['time'][idx_start:idx_stop])
         assert_equal(data['kp'], DATA_KP['kp'][idx_start:idx_stop])
 
     def _test_query_kp_int(self, start, stop, count):
         times = linspace(start, stop, count)
-        data = query_kp_int(self.FILE, times)
+        data = KpReader(self.FILE).interpolate(times)
         expected_values = interp1d(
             DATA_KP['time'], DATA_KP['kp'], bounds_error=False, kind="nearest"
         )(times)

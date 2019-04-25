@@ -40,7 +40,7 @@ from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, AllowedRange,
     FormatText, FormatJSON, FormatBinaryRaw,
-    CDFile,
+    CDFile, CDTextBuffer,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
@@ -65,6 +65,7 @@ from vires.processes.util import (
     Sat2SatResidual, group_residual_variables, get_residual_variables,
     MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
     IonosphericCurrentModel, AssociatedMagneticModel,
+    extract_product_names,
 )
 
 # TODO: Make the limits configurable.
@@ -169,11 +170,16 @@ class FetchFilteredData(WPSProcess):
                 FormatBinaryRaw("application/x-cdf"),
             )
         )),
+        ("source_products", ComplexData(
+            'source_products', title="List of source products.", formats=(
+                FormatText('text/plain'),
+            )
+        )),
     ]
 
     def execute(self, collection_ids, begin_time, end_time, filters,
                 sampling_step, requested_variables, model_ids, shc,
-                csv_time_format, output, **kwarg):
+                csv_time_format, output, source_products, **kwarg):
         """ Execute process """
         workspace_dir = SystemConfigReader().path_temp
         # parse inputs
@@ -278,12 +284,7 @@ class FetchFilteredData(WPSProcess):
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.iteritems():
-
-                resolver = VariableResolver(
-                    requested_variables, MANDATORY_VARIABLES
-                )
-
-                resolvers[label] = resolver
+                resolvers[label] = resolver = VariableResolver()
 
                 # master
                 master = product_sources[0]
@@ -320,7 +321,7 @@ class FetchFilteredData(WPSProcess):
                 for item in orbit_info.get(spacecraft, []):
                     resolver.add_slave(item, 'Timestamp')
 
-                # prepare spacecraft to spacecraft residuals
+                # prepare spacecraft to spacecraft differences
                 residual_variables = get_residual_variables(unique(chain(
                     requested_variables, chain.from_iterable(
                         filter_.required_variables for filter_ in filters
@@ -347,6 +348,13 @@ class FetchFilteredData(WPSProcess):
                 # add remaining filters
                 resolver.add_filters(filters)
 
+                # add output variables
+                resolver.add_output_variables(MANDATORY_VARIABLES)
+                resolver.add_output_variables(requested_variables)
+
+                # reduce dependencies
+                resolver.reduce()
+
                 self.logger.debug(
                     "%s: available variables: %s", label,
                     ", ".join(resolver.available)
@@ -357,11 +365,11 @@ class FetchFilteredData(WPSProcess):
                 )
                 self.logger.debug(
                     "%s: output variables: %s", label,
-                    ", ".join(resolver.output)
+                    ", ".join(resolver.output_variables)
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    "; ".join(str(f) for f in resolver.resolved_filters)
+                    "; ".join(str(f) for f in resolver.filters)
                 )
                 self.logger.debug(
                     "%s: unresolved filters: %s", label, "; ".join(
@@ -371,7 +379,7 @@ class FetchFilteredData(WPSProcess):
 
             # collect the common output variables
             output_variables = tuple(unique(chain.from_iterable(
-                resolver.output for resolver in resolvers.values()
+                resolver.output_variables for resolver in resolvers.values()
             )))
 
         else:
@@ -504,6 +512,7 @@ class FetchFilteredData(WPSProcess):
                         )
                         output_fobj.write("\r\n")
 
+            product_names = extract_product_names(resolvers.values())
 
         elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
             # TODO: proper no-data value configuration
@@ -551,6 +560,8 @@ class FetchFilteredData(WPSProcess):
 
                         record_count += dataset.length
 
+                product_names = extract_product_names(resolvers.values())
+
                 # add the global attributes
                 cdf.attrs.update({
                     "TITLE": result_filename,
@@ -563,9 +574,7 @@ class FetchFilteredData(WPSProcess):
                         for model in requested_models
                     ],
                     "SOURCES": sources.keys(),
-                    "ORIGINAL_PRODUCT_NAMES": sum(
-                        (s.products for l in sources.values() for s in l), []
-                    )
+                    "ORIGINAL_PRODUCT_NAMES": product_names,
                 })
 
         else:
@@ -574,4 +583,10 @@ class FetchFilteredData(WPSProcess):
                 "Unexpected output format %r requested!" % output['mime_type']
             )
 
-        return CDFile(temp_filename, filename=result_filename, **output)
+        return {
+            'output': CDFile(temp_filename, filename=result_filename, **output),
+            'source_products': CDTextBuffer(
+                "\r\n".join(product_names + [""]),
+                filename=(result_basename + "_sources.txt"), **source_products
+            ),
+        }

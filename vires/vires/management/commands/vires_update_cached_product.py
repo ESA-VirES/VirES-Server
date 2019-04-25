@@ -84,16 +84,23 @@ CACHED_PRODUCTS = {
 }
 
 configure_cached_product(
-    "MMA_SHA_2F",
-    updater=merge_mma_sha_2f,
-    filter=filter_mma_sha_2f,
+    "MMA_CHAOS6",
+    updater=merge_mma_sha_2c,
+    filter=filter_mma_sha_2c,
     tmp_extension=".tmp.cdf"
 )
 
 configure_cached_product(
-    "MMA_CHAOS6",
+    "MMA_SHA_2C",
     updater=merge_mma_sha_2c,
     filter=filter_mma_sha_2c,
+    tmp_extension=".tmp.cdf"
+)
+
+configure_cached_product(
+    "MMA_SHA_2F",
+    updater=merge_mma_sha_2f,
+    filter=filter_mma_sha_2f,
     tmp_extension=".tmp.cdf"
 )
 
@@ -111,23 +118,23 @@ for spacecraft in getattr(settings, "VIRES_SPACECRAFTS", []):
         tmp_extension=".tmp.cdf"
     )
 
-    configure_cached_product(
-        "AUX%sODBGEO" % spacecraft,
-        label=(
-            "Swarm %s orbit directions in geographic coordinates"
-            % spacecraft
-        ),
-        tmp_extension=".tmp.cdf"
-    )
+    #configure_cached_product(
+    #    "AUX%sODBGEO" % spacecraft,
+    #    label=(
+    #        "Swarm %s orbit directions in geographic coordinates"
+    #        % spacecraft
+    #    ),
+    #    tmp_extension=".tmp.cdf"
+    #)
 
-    configure_cached_product(
-        "AUX%sODBMAG" % spacecraft,
-        label=(
-            "Swarm %s orbit directions in magnetic (QD) coordinates"
-            % spacecraft
-        ),
-        tmp_extension=".tmp.cdf"
-    )
+    #configure_cached_product(
+    #    "AUX%sODBMAG" % spacecraft,
+    #    label=(
+    #        "Swarm %s orbit directions in magnetic (QD) coordinates"
+    #        % spacecraft
+    #    ),
+    #    tmp_extension=".tmp.cdf"
+    #)
 
 
 CACHED_PRODUCTS.update({

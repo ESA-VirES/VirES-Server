@@ -66,6 +66,7 @@ from vires.processes.util import (
     Sat2SatResidual, group_residual_variables, get_residual_variables,
     MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
     IonosphericCurrentModel, AssociatedMagneticModel,
+    extract_product_names,
 )
 
 # TODO: Make the limits configurable.
@@ -176,6 +177,11 @@ class FetchFilteredDataAsync(WPSProcess):
                 FormatBinaryRaw("application/x-cdf"),
             )
         )),
+        ("source_products", ComplexData(
+            'source_products', title="List of source products.", formats=(
+                FormatText('text/plain'),
+            )
+        )),
     ]
 
 
@@ -245,7 +251,7 @@ class FetchFilteredDataAsync(WPSProcess):
     @with_cache_session
     def execute(self, collection_ids, begin_time, end_time, filters,
                 sampling_step, requested_variables, model_ids, shc,
-                csv_time_format, output, context, **kwarg):
+                csv_time_format, output, source_products, context, **kwarg):
         """ Execute process """
         #workspace_dir = ""
 
@@ -330,7 +336,6 @@ class FetchFilteredDataAsync(WPSProcess):
             model_amps_cur = IonosphericCurrentModel()
             model_amps_mag = AssociatedMagneticModel()
 
-            model_amps_cur, model_amps_mag,
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
             for model in source_models:
@@ -352,12 +357,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.iteritems():
-
-                resolver = VariableResolver(
-                    requested_variables, MANDATORY_VARIABLES
-                )
-
-                resolvers[label] = resolver
+                resolvers[label] = resolver = VariableResolver()
 
                 # master
                 master = product_sources[0]
@@ -394,7 +394,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 for item in orbit_info.get(spacecraft, []):
                     resolver.add_slave(item, 'Timestamp')
 
-                # prepare spacecraft to spacecraft residuals
+                # prepare spacecraft to spacecraft differences
                 residual_variables = get_residual_variables(unique(chain(
                     requested_variables, chain.from_iterable(
                         filter_.required_variables for filter_ in filters
@@ -421,6 +421,13 @@ class FetchFilteredDataAsync(WPSProcess):
                 # add remaining filters
                 resolver.add_filters(filters)
 
+                # add output variables
+                resolver.add_output_variables(MANDATORY_VARIABLES)
+                resolver.add_output_variables(requested_variables)
+
+                # reduce dependencies
+                resolver.reduce()
+
                 self.logger.debug(
                     "%s: available variables: %s", label,
                     ", ".join(resolver.available)
@@ -431,11 +438,11 @@ class FetchFilteredDataAsync(WPSProcess):
                 )
                 self.logger.debug(
                     "%s: output variables: %s", label,
-                    ", ".join(resolver.output)
+                    ", ".join(resolver.output_variables)
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    "; ".join(str(f) for f in resolver.resolved_filters)
+                    "; ".join(str(f) for f in resolver.filters)
                 )
                 self.logger.debug(
                     "%s: unresolved filters: %s", label, "; ".join(
@@ -445,7 +452,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
             # collect the common output variables
             output_variables = tuple(unique(chain.from_iterable(
-                resolver.output for resolver in resolvers.values()
+                resolver.output_variables for resolver in resolvers.values()
             )))
 
         else:
@@ -597,6 +604,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         )
                         output_fobj.write("\r\n")
 
+            product_names = extract_product_names(resolvers.values())
 
         elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
             # TODO: proper no-data value configuration
@@ -644,6 +652,8 @@ class FetchFilteredDataAsync(WPSProcess):
 
                         record_count += dataset.length
 
+                product_names = extract_product_names(resolvers.values())
+
                 # add the global attributes
                 cdf.attrs.update({
                     "TITLE": result_filename,
@@ -656,9 +666,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         for model in requested_models
                     ],
                     "SOURCES": sources.keys(),
-                    "ORIGINAL_PRODUCT_NAMES": sum(
-                        (s.products for l in sources.values() for s in l), []
-                    )
+                    "ORIGINAL_PRODUCT_NAMES": product_names,
                 })
 
         else:
@@ -667,4 +675,15 @@ class FetchFilteredDataAsync(WPSProcess):
                 "Unexpected output format %r requested!" % output['mime_type']
             )
 
-        return Reference(*context.publish(temp_filename), **output)
+        source_products_filename = temp_basename + "_sources.txt"
+        with open(source_products_filename, "wb") as output_fobj:
+            for product_name in product_names:
+                output_fobj.write(product_name)
+                output_fobj.write("\r\n")
+
+        return {
+            'output': Reference(*context.publish(temp_filename), **output),
+            'source_products': Reference(
+                *context.publish(source_products_filename), **source_products
+            ),
+        }

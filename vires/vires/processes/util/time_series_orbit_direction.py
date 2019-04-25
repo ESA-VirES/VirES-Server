@@ -28,9 +28,7 @@
 #-------------------------------------------------------------------------------
 
 from vires.cdf_util import CDF_INT1_TYPE, CDF_EPOCH_TYPE
-from vires.orbit_direction import (
-    fetch_orbit_direction_data, interpolate_orbit_direction_data,
-)
+from vires.orbit_direction import OrbitDirectionReader
 from .time_series_aux import AuxiliaryDataTimeSeries
 
 
@@ -74,8 +72,7 @@ class OrbitDirection(AuxiliaryDataTimeSeries):
 
     def __init__(self, name, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
-            self, name, filename, fetch_orbit_direction_data,
-            interpolate_orbit_direction_data, {
+            self, name, filename, OrbitDirectionReader, {
                 'OrbitDirection': 'OrbitDirection',
                 'BoundaryType': 'OrbitDirectionBoundaryType',
             }, logger
@@ -121,8 +118,7 @@ class QDOrbitDirection(AuxiliaryDataTimeSeries):
 
     def __init__(self, name, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
-            self, name, filename, fetch_orbit_direction_data,
-            interpolate_orbit_direction_data, {
+            self, name, filename, OrbitDirectionReader, {
                 'OrbitDirection': 'QDOrbitDirection',
                 'BoundaryType': 'QDOrbitDirectionBoundaryType',
             }, logger

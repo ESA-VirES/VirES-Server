@@ -35,10 +35,7 @@ from StringIO import StringIO
 from numpy import array, linspace, nan, isnan, logical_not
 from scipy.interpolate import interp1d
 
-from vires.orbit_counter import (
-    update_orbit_counter_file, fetch_orbit_counter_data,
-    interpolate_orbit_counter_data,
-)
+from vires.orbit_counter import update_orbit_counter_file, OrbitCounterReader
 from vires.time_util import mjd2000_to_datetime
 from vires.tests import ArrayMixIn
 
@@ -245,8 +242,8 @@ class TestOrbitCounter(ArrayMixIn, unittest.TestCase):
             remove(self.FILE)
 
     def _fetch(self, start, stop, idx_start, idx_stop):
-        data = fetch_orbit_counter_data(
-            self.FILE, mjd2000_to_datetime(start), mjd2000_to_datetime(stop)
+        data = OrbitCounterReader(self.FILE).subset(
+            mjd2000_to_datetime(start), mjd2000_to_datetime(stop)
         )
 
         for field, reference in DATA_ORBCNT.items():
@@ -256,7 +253,7 @@ class TestOrbitCounter(ArrayMixIn, unittest.TestCase):
 
     def _interpolate(self, start, stop, count):
         times = linspace(start, stop, count)
-        data = interpolate_orbit_counter_data(self.FILE, times)
+        data = OrbitCounterReader(self.FILE).interpolate(times)
         reference = dict(
             (
                 field,
@@ -273,7 +270,7 @@ class TestOrbitCounter(ArrayMixIn, unittest.TestCase):
 
         for field, conf in INT_CONF_ORBCNT.items():
             _data = data[field]
-            _ref  = reference[field]
+            _ref = reference[field]
             _data_nodata = conf['is_nodata'](_data)
             _ref_nodata = conf['is_nodata'](_ref)
 
@@ -309,7 +306,7 @@ class TestOrbitCounter(ArrayMixIn, unittest.TestCase):
         # no overlap - upper
         self._fetch(5081.06, 5085.00, 0, 0)
         self._fetch(5081.05999842241, 5085.00, 0, 0)
-    
+
     def test_interpolate(self):
         # full overlap
         self._interpolate(5073.00, 5083.00, 10)

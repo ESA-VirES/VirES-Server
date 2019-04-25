@@ -27,15 +27,14 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
+# pylint: disable=too-many-instance-attributes
 
 from logging import LoggerAdapter, getLogger
 from itertools import chain
 from numpy import searchsorted, zeros
 from django.conf import settings
 from vires.models import ProductCollection
-from vires.orbit_counter import (
-    fetch_orbit_counter_data, interpolate_orbit_counter_data,
-)
+from vires.orbit_counter import OrbitCounterReader
 from vires.cdf_util import (
     CDF_DOUBLE_TYPE, CDF_EPOCH_TYPE,
     cdf_rawtime_to_datetime, seconds_to_cdf_rawtime, cdf_rawtime_to_seconds,
@@ -114,6 +113,7 @@ class Sat2SatResidual(Model):
 
     def __init__(self, master_spacecraft, slave_spacecraft,
                  grouped_collections, logger=None):
+        super(Sat2SatResidual, self).__init__()
 
         if master_spacecraft not in settings.VIRES_ORBIT_COUNTER_FILE:
             raise ValueError("Invalid master spacecraft %s!" % master_spacecraft)
@@ -124,6 +124,16 @@ class Sat2SatResidual(Model):
         self._master_spacecraft = master_spacecraft
         self._slave_spacecraft = slave_spacecraft
         self._collections = grouped_collections
+
+        self._master_orbit_counter = OrbitCounterReader(
+            settings.VIRES_ORBIT_COUNTER_FILE[self._master_spacecraft],
+            self.product_set
+        )
+
+        self._slave_orbit_counter = OrbitCounterReader(
+            settings.VIRES_ORBIT_COUNTER_FILE[self._slave_spacecraft],
+            self.product_set
+        )
 
         self._attr_label = "%s - %s difference of" % (
             master_spacecraft, slave_spacecraft,
@@ -223,8 +233,7 @@ class Sat2SatResidual(Model):
 
         start_time = cdf_rawtime_to_datetime(time_master.min(), time_cdf_type)
         stop_time = cdf_rawtime_to_datetime(time_master.max(), time_cdf_type)
-        orbcnt_master = fetch_orbit_counter_data(
-            filename=settings.VIRES_ORBIT_COUNTER_FILE[self._master_spacecraft],
+        orbcnt_master = self._master_orbit_counter.subset(
             start=start_time, stop=stop_time,
             fields=("orbit", "MJD2000", "phi_AN")
         )
@@ -242,8 +251,7 @@ class Sat2SatResidual(Model):
             )
 
         # get slave ANX times and longitudes
-        orbcnt_slave = interpolate_orbit_counter_data(
-            filename=settings.VIRES_ORBIT_COUNTER_FILE[self._slave_spacecraft],
+        orbcnt_slave = self._slave_orbit_counter.interpolate(
             time=orbcnt_master["MJD2000"],
             fields=("MJD2000", "phi_AN"),
             kind="nearest",
@@ -284,6 +292,7 @@ class Sat2SatResidual(Model):
             slave_ds = slave_source.interpolate(
                 slave_times, slave_vars, cdf_type=time_cdf_type
             )
+            self.product_set.update(slave_source.product_set)
 
             for output_var, source_var in var_pairs:
                 cdf_type = dataset.cdf_type[source_var]

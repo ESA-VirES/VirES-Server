@@ -35,12 +35,10 @@ from numpy.testing import assert_equal
 from scipy.interpolate import interp1d
 from vires.cdf_util import cdf_open, datetime_to_cdf_rawtime, CDF_EPOCH_TYPE
 from vires.tests.data import TEST_ORBIT_DIRECTION_CDF
-from vires.orbit_direction import (
-    fetch_orbit_direction_data,
-    interpolate_orbit_direction_data,
-    FIELDS_ALL, FIELD_TIME
-)
+from vires.orbit_direction import OrbitDirectionReader
 
+FIELD_TIME = OrbitDirectionReader.TIME_FIELD
+FIELDS_ALL = (FIELD_TIME,) + OrbitDirectionReader.DATA_FIELDS
 
 INT_CONF_ORBIT_DIRECTION = {
     "OrbitDirection": {
@@ -69,7 +67,7 @@ class TestOrbitDirection(TestCase):
 
     def _test_fetch(self, start, stop, slice_):
         reference_dataset = self._get_reference_data()
-        tested_dataset = fetch_orbit_direction_data(self.FILE, start, stop)
+        tested_dataset = OrbitDirectionReader(self.FILE).subset(start, stop)
         for field, reference in reference_dataset.items():
             data = tested_dataset[field]
             assert_equal(data, reference[slice_])
@@ -81,7 +79,7 @@ class TestOrbitDirection(TestCase):
             count,
         ))
         reference_dataset = self._get_reference_data()
-        tested_dataset = interpolate_orbit_direction_data(self.FILE, times)
+        tested_dataset = OrbitDirectionReader(self.FILE).interpolate(times)
 
         for field, conf in INT_CONF_ORBIT_DIRECTION.items():
             data = tested_dataset[field]

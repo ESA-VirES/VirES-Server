@@ -73,6 +73,7 @@ class QuasiDipoleCoordinates(Model):
             return 'QDLatLon: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
+        super(QuasiDipoleCoordinates, self).__init__()
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
@@ -148,6 +149,7 @@ class MagneticLocalTime(Model):
             return 'MLT: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
+        super(MagneticLocalTime, self).__init__()
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
