@@ -31,7 +31,7 @@ import re
 from collections import OrderedDict
 from eoxmagmod import load_model_shc
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
-from vires.util import get_color_scale
+from vires.colormaps import get_colormap
 from vires.models import ProductCollection
 from vires.parsers.exceptions import ParserError
 from vires.parsers.model_list_parser import get_model_list_parser
@@ -53,7 +53,7 @@ def parse_style(input_id, style):
     if style is None:
         return None
     try:
-        return get_color_scale(style)
+        return get_colormap(style)
     except ValueError:
         raise InvalidInputValueError(
             input_id, "Invalid style identifier %r!" % style
