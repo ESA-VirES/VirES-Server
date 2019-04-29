@@ -35,7 +35,7 @@ from eoxserver.resources.coverages.admin import (
     CoverageAdmin, CollectionAdmin, EOObjectInline, CollectionInline,
     DataItemInline
 )
-from vires.models import Product, ProductCollection, ForwardModel, Job
+from vires.models import Product, ProductCollection, Job
 
 
 class JobAdmin(admin.ModelAdmin):
@@ -75,10 +75,8 @@ class ProductAdmin(CoverageAdmin):
         ('Metadata', {
             'fields': (
                 'range_type',
-                ('size_x', 'size_y'),
                 ('begin_time', 'end_time'),
                 'footprint',
-                'ground_path',
             ),
             'description': 'Geospatial metadata'
         }),
@@ -94,15 +92,9 @@ class ProductCollectionAdmin(CollectionAdmin):
             'fields': ('identifier',)
         }),
         ('Metadata', {
-            'fields': (('begin_time', 'end_time'), 'footprint', "ground_path")
+            'fields': (('begin_time', 'end_time'), 'footprint')
         }),
     )
     inlines = (EOObjectInline, CollectionInline)
 
 admin.site.register(ProductCollection, ProductCollectionAdmin)
-
-
-class ForwardModelAdmin(CoverageAdmin):
-    inlines = (DataItemInline,)
-
-admin.site.register(ForwardModel, ForwardModelAdmin)
