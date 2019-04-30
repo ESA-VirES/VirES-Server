@@ -377,6 +377,8 @@ class OrbitDirectionTable(object):
         def _read_time_ranges(attr):
             attr._raw = True
             data = asarray([CdfTypeEpoch.decode(item) for item in attr])
+            if data.size == 0:
+                return empty(0, 'float64'), empty(0, 'float64')
             return data[:, 0], data[:, 1]
 
         times = CdfTypeEpoch.decode(cdf.raw_var("Timestamp")[...])
