@@ -39,6 +39,7 @@ import scipy
 from scipy.interpolate import interp1d
 import spacepy
 from spacepy import pycdf
+from spacepy.pycdf import CDFError
 from . import FULL_PACKAGE_NAME
 from .util import full
 from .time_util import (

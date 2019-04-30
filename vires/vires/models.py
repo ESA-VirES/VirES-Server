@@ -33,7 +33,8 @@
 
 from django.core.exceptions import ValidationError
 from django.db.models import (
-    Model, ForeignKey, CharField, DateTimeField,
+    Model, ForeignKey, CharField, DateTimeField, IntegerField, BigIntegerField,
+    TextField,
 )
 from django.contrib.gis import geos
 from django.contrib.gis.db.models import GeoManager
@@ -78,6 +79,45 @@ class Job(Model):
 
     def __unicode__(self):
         return "%s:%s:%s" % (self.process_id, self.identifier, self.status)
+
+
+class UploadedFile(Model):
+    """ Model describing user uploaded file. """
+    created = DateTimeField(auto_now_add=True)
+    identifier = CharField(max_length=64, null=False, blank=False, unique=True)
+    filename = CharField(max_length=255, null=False, blank=False)
+    location = CharField(max_length=4096, null=False, blank=False)
+    size = BigIntegerField(null=False, blank=False)
+    content_type = CharField(max_length=64, null=False, blank=False)
+    checksum = CharField(max_length=64, null=False, blank=False)
+    info = TextField(null=True, blank=True) # optional additional info in JSON
+
+    class Meta:
+        abstract = True
+
+
+class CustomDataset(UploadedFile):
+    """ Model describing user uploaded custom dataset. """
+    owner = ForeignKey(User, null=True, blank=True)
+    start = DateTimeField(null=False, blank=False)
+    end = DateTimeField(null=False, blank=False)
+
+
+class CustomModel(UploadedFile):
+    """ Model describing user uploaded custom model. """
+    owner = ForeignKey(User, null=True, blank=True)
+    start = DateTimeField(null=False, blank=False)
+    end = DateTimeField(null=False, blank=False)
+
+
+class ClientState(Model):
+    """ Model describing saved client state. """
+    owner = ForeignKey(User, related_name='client_states', null=True, blank=True)
+    created = DateTimeField(auto_now_add=True)
+    identifier = CharField(max_length=64, null=False, blank=False, unique=True)
+    name = CharField(max_length=256, null=False, blank=False)
+    description = TextField(null=True, blank=True)
+    state = TextField(null=False, blank=False) # stored JSON
 
 
 class Product(Coverage):
