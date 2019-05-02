@@ -33,7 +33,7 @@ from functools import wraps
 from django.http import HttpResponse
 from django.conf import settings
 from ..util import format_exception
-from .exceptions import HttpError
+from .exceptions import HttpError, HttpError400, HttpError405, HttpError413
 
 
 def set_extra_kwargs(**extra_kwargs):
@@ -78,33 +78,32 @@ def handle_error(view):
     return _handle_error_
 
 
-def allow_methods(allowed_methods, allowed_headers=None, handle_options=True):
+def allow_methods(allowed_methods, allowed_headers=None, handle_options=True,
+                  max_age=86400):
     """ Reject non-supported HTTP methods.
     By default the OPTIONS method is handled responding with
     the list of the supported methods and headers.
     """
+
     allowed_methods = set(allowed_methods)
     allowed_headers = list(allowed_headers or ["Content-Type"])
     if handle_options:
         allowed_methods.add('OPTIONS')
+
+    allowed_methods_str = ", ".join(allowed_methods)
+    allowed_headers_str = ", ".join(allowed_headers)
+    max_age_str = "%d" % max_age
 
     def _allow_methods_decorator_(view):
         @wraps(view)
         def _allow_methods_(request, *args, **kwargs):
             if handle_options and request.method == "OPTIONS":
                 response = HttpResponse(status=204)
-                response['Access-Control-Allow-Methods'] = ", ".join(
-                    allowed_methods
-                )
-                response['Access-Control-Allow-Headers'] = ", ".join(
-                    allowed_headers
-                )
-
+                response['Access-Control-Allow-Methods'] = allowed_methods_str
+                response['Access-Control-Allow-Headers'] = allowed_headers_str
+                response['Access-Control-Max-Age'] = max_age_str
             elif request.method not in allowed_methods:
-                raise HttpError(
-                    405, "Method not allowed",
-                    headers=[('Allow', ', '.join(allowed_methods))]
-                )
+                raise HttpError405(headers=[('Allow', allowed_methods_str)])
             else:
                 response = view(request, *args, **kwargs)
             return response
@@ -112,7 +111,7 @@ def allow_methods(allowed_methods, allowed_headers=None, handle_options=True):
     return _allow_methods_decorator_
 
 
-def allow_content_types(content_types, methods=('POST', 'PUT')):
+def allow_content_types(content_types, methods=('POST', 'PUT', 'PATCH')):
     """ Reject non-supported request content type.
     The content type is requested to be one of the listed.
     """
@@ -126,19 +125,17 @@ def allow_content_types(content_types, methods=('POST', 'PUT')):
                 content_type = request.META.get("CONTENT_TYPE")
                 if content_type not in content_types:
                     if content_type is None:
-                        raise HttpError(
-                            400, "Missing mandatory payload content type!"
+                        raise HttpError400(
+                            "Missing mandatory payload content type!"
                         )
                     else:
-                        raise HttpError(
-                            400, "Invalid payload content type!"
-                        )
+                        raise HttpError400("Invalid payload content type!")
             return view(request, *args, **kwargs)
         return _allow_content_types_
     return _allow_content_types_decorator_
 
 
-def allow_content_length(max_content_length, methods=('POST', 'PUT')):
+def allow_content_length(max_content_length, methods=('POST', 'PUT', 'PATCH')):
     """ Reject requests exceeding the allowed content length. """
     methods = set(methods)
     def _allow_content_length_decorator_(view):
@@ -147,9 +144,9 @@ def allow_content_length(max_content_length, methods=('POST', 'PUT')):
             content_length = int(request.META.get("CONTENT_LENGTH", 0))
             if request.method in methods:
                 if content_length > max_content_length:
-                    raise HttpError(413, "Payload too large!")
+                    raise HttpError413
             elif content_length > 0:
-                raise HttpError(400, "Payload not allowed!")
+                raise HttpError400("Payload not allowed!")
             return view(request, *args, **kwargs)
         return _allow_content_length_
     return _allow_content_length_decorator_
@@ -161,6 +158,6 @@ def reject_content(view):
     def _no_content_(request, *args, **kwargs):
         content_length = int(request.META.get("CONTENT_LENGTH", 0))
         if content_length > 0:
-            raise HttpError(400, "Payload not allowed!")
+            raise HttpError400("Payload not allowed!")
         return view(request, *args, **kwargs)
     return _no_content_

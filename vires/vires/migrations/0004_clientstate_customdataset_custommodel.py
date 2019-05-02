@@ -18,6 +18,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
+                ('updated', models.DateTimeField(auto_now=True)),
                 ('identifier', models.CharField(unique=True, max_length=64)),
                 ('name', models.CharField(max_length=256)),
                 ('description', models.TextField(null=True, blank=True)),

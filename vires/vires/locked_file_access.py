@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# view exceptions
+# locked file access
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -27,42 +27,48 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-class InvalidFileFormat(Exception):
-    """ Invalid data format error. """
+from fcntl import flock, LOCK_EX, LOCK_NB
+from errno import EAGAIN
+from time import sleep
+
+class FileIsLocked(Exception):
+    """ Locked file exception. """
     pass
 
 
-class HttpError(Exception):
-    """ Simple HTTP error exception """
-    def __init__(self, status, message, headers=None):
-        Exception.__init__(self, message)
-        self.status = status
-        self.message = self.message
-        self.headers = headers or []
+def open_locked(filename, mode="r", **kwargs):
+    """ Open file with locking using flock(2). """
 
-    def __str__(self):
-        return self.message
-
-
-class HttpError400(HttpError):
-    """ 400 Bad Request exception. """
-    def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 400, message or "Bad request!", headers)
-
-
-class HttpError404(HttpError):
-    """ 404 Not Found exception. """
-    def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 404, message or "Not found!", headers)
+    fobj = open(filename, mode, **kwargs)
+    try:
+        # Acquire an exclusive lock for the open file.
+        flock(fobj, LOCK_EX|LOCK_NB)
+    except IOError as exc:
+        fobj.close()
+        if exc.errno == EAGAIN:
+            raise FileIsLocked("%s is locked!" % filename)
+        raise
+    except:
+        fobj.close()
+        raise
+    return fobj
 
 
-class HttpError405(HttpError):
-    """ 405 Method Not Allowed exception. """
-    def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 405, message or "Method not allowed!", headers)
+def log_append(filename, line, n_atempts=10, sleep_time=0.001):
+    """ Append line of text to a log file with an exclusive log. """
+    line = "%s\n" % line
 
+    def _append():
+        with open_locked(filename, "a") as file_:
+            file_.write(line)
 
-class HttpError413(HttpError):
-    """ 413 Payload Too Large exception. """
-    def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 413, message or "Payload too large!", headers)
+    for atempt in xrange(n_atempts):
+        try:
+            _append()
+        except FileIsLocked:
+            if atempt < n_atempts:
+                sleep(sleep_time)
+                continue
+            raise
+        else:
+            break

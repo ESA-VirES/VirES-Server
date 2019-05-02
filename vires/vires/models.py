@@ -114,6 +114,7 @@ class ClientState(Model):
     """ Model describing saved client state. """
     owner = ForeignKey(User, related_name='client_states', null=True, blank=True)
     created = DateTimeField(auto_now_add=True)
+    updated = DateTimeField(auto_now=True)
     identifier = CharField(max_length=64, null=False, blank=False, unique=True)
     name = CharField(max_length=256, null=False, blank=False)
     description = TextField(null=True, blank=True)

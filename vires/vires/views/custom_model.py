@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# data upload view
+# model upload view
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -35,12 +35,13 @@ from os.path import join, isdir
 from logging import getLogger
 from shutil import rmtree
 from uuid import uuid4
-from numpy import argmax, argmin
 from django.conf import settings
 from django.http import HttpResponse
-from ..time_util import datetime, naive_to_utc, format_datetime
-from ..cdf_util import cdf_open, CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDFError
-from ..models import CustomDataset
+from eoxmagmod import load_model_shc, decimal_year_to_mjd2000
+from ..time_util import (
+    datetime, naive_to_utc, mjd2000_to_datetime, format_datetime,
+)
+from ..models import CustomModel
 from ..locked_file_access import log_append
 from .exceptions import (
     InvalidFileFormat, HttpError400, HttpError404, HttpError405, HttpError413,
@@ -50,8 +51,11 @@ from .decorators import (
     allow_content_length, reject_content,
 )
 
+MIN_MJD2000 = decimal_year_to_mjd2000(1.0)
+MAX_MJD2000 = decimal_year_to_mjd2000(4000.0)
+
 RE_FILENAME = re.compile(r"^\w[\w.-]{0,254}$")
-MAX_FILE_SIZE = 256 * 1024 * 1024 # 256 MiB size limit
+MAX_FILE_SIZE = 16 * 1024 * 1024 # 16 MiB size limit
 MAX_PAYLOAD_SIZE = MAX_FILE_SIZE + 64 * 1024
 EXTRA_KWASGS = {
     "logger": getLogger(__name__),
@@ -61,7 +65,7 @@ LOG_FILENAME = "change.log"
 
 def get_upload_dir():
     """ Get upload directory. """
-    return join(settings.VIRES_UPLOAD_DIR, "custom_data")
+    return join(settings.VIRES_UPLOAD_DIR, "custom_model")
 
 
 def log_change(change, identifier, timestamp=None):
@@ -78,16 +82,16 @@ def log_change(change, identifier, timestamp=None):
 
 @set_extra_kwargs(**EXTRA_KWASGS)
 @handle_error
-def custom_data(request, identifier=None, **kwargs):
-    """ Custom data view. """
+def custom_model(request, identifier=None, **kwargs):
+    """ Custom model view. """
     if identifier:
-        return custom_data_item(request, identifier, **kwargs)
-    return custom_data_collection(request, **kwargs)
+        return custom_model_item(request, identifier, **kwargs)
+    return custom_model_collection(request, **kwargs)
 
 
 @allow_methods(["GET", "POST"])
-def custom_data_collection(request, **kwargs):
-    """ Custom data collection view. """
+def custom_model_collection(request, **kwargs):
+    """ Custom model collection view. """
     if request.method == "GET":
         return list_collection(request, **kwargs)
     elif request.method == "POST":
@@ -96,8 +100,8 @@ def custom_data_collection(request, **kwargs):
 
 
 @allow_methods(["GET", "DELETE"])
-def custom_data_item(request, identifier, **kwargs):
-    """ Custom data item view. """
+def custom_model_item(request, identifier, **kwargs):
+    """ Custom model item view. """
     if request.method == "GET":
         return get_item(request, identifier, **kwargs)
     elif request.method == "DELETE":
@@ -123,75 +127,49 @@ def model_to_infodict(obj):
 
 def check_input_file(path):
     """ File format check. """
-    mandatory_fields = [
-        ("Timestamp", CDF_EPOCH_TYPE, 1),
-        ("Latitude", CDF_DOUBLE_TYPE, 1),
-        ("Longitude", CDF_DOUBLE_TYPE, 1),
-    ]
+    def _mjd2000_to_utc(mjd2000):
+        return naive_to_utc(mjd2000_to_datetime(
+            max(MIN_MJD2000, min(MAX_MJD2000, mjd2000))
+        ))
 
     try:
-        with cdf_open(path) as cdf:
-            fields = {
-                field: {
-                    "shape": cdf[field].shape,
-                    "cdf_type": int(cdf[field].type()),
-                }
-                for field in cdf
-            }
-    except CDFError as error:
-        raise InvalidFileFormat(str(error))
+        with open(path) as file_:
+            shc_model = load_model_shc(file_)
+    except Exception as error:
+        raise InvalidFileFormat('Not a valid SHC file!')
 
-    for name, type_, ndim in mandatory_fields:
-        field = fields.get(name)
-        if not field:
-            raise InvalidFileFormat("Missing mandatory %s field!" % name)
+    parameters = {
+        "min_degree": shc_model.min_degree,
+        "max_degree": shc_model.degree,
+    }
 
-        if field["cdf_type"] != int(type_):
-            raise InvalidFileFormat("Invalid type of %s field!" % name)
+    start, end = (_mjd2000_to_utc(mjd2000) for mjd2000 in shc_model.validity)
 
-        if len(field["shape"]) != ndim:
-            raise InvalidFileFormat("Invalid dimension of %s field!" % name)
-
-    size = fields["Timestamp"]["shape"][0]
-
-    if size == 0:
-        raise InvalidFileFormat("Empty dataset!")
-
-    for name, field in fields.items():
-        shape = field["shape"]
-        if len(shape) < 1 or shape[0] != size:
-            raise InvalidFileFormat("Invalid dimension of %s field!" % name)
-
-    with cdf_open(path) as cdf:
-        times = cdf.raw_var("Timestamp")[...]
-        start = naive_to_utc(cdf["Timestamp"][argmin(times)])
-        end = naive_to_utc(cdf["Timestamp"][argmax(times)])
-
-    return "application/x-cdf", start, end, fields
+    return "text/x-shc", start, end, parameters
 
 
 @reject_content
 def list_collection(request, **kwargs):
-    """ List custom data collection. """
+    """ List custom model collection. """
     owner = request.user if request.user.is_authenticated() else None
     data = json.dumps([
-        model_to_infodict(dataset) for dataset in _get_models(owner)
+        model_to_infodict(model) for model in _get_models(owner)
     ])
     return HttpResponse(data, "application/json")
 
 
 @reject_content
 def get_item(request, identifier, **kwargs):
-    """ Get info about the custom data."""
+    """ Get info about the custom model."""
     owner = request.user if request.user.is_authenticated() else None
-    dataset = _get_model(owner, identifier)
-    data = json.dumps(model_to_infodict(dataset))
+    model = _get_model(owner, identifier)
+    data = json.dumps(model_to_infodict(model))
     return HttpResponse(data, "application/json")
 
 
 @allow_content_length(MAX_PAYLOAD_SIZE)
 def post_item(request, **kwargs):
-    """ Post custom data. """
+    """ Post custom model. """
     # parse request
     uploaded_file = request.FILES.get("file")
     if uploaded_file is None:
@@ -223,37 +201,37 @@ def post_item(request, **kwargs):
 
         # check the input data
         try:
-            content_type, start, end, fields = check_input_file(filename)
+            content_type, start, end, parameters = check_input_file(filename)
         except InvalidFileFormat as error:
             raise HttpError400(str(error))
 
-        dataset = CustomDataset()
-        dataset.owner = owner
-        dataset.created = timestamp
-        dataset.start = start
-        dataset.end = end
-        dataset.identifier = identifier
-        dataset.filename = basename
-        dataset.location = filename
-        dataset.size = size
-        dataset.content_type = content_type
-        dataset.checksum = md5.hexdigest()
-        dataset.info = json.dumps(fields)
+        model = CustomModel()
+        model.owner = owner
+        model.created = timestamp
+        model.start = start
+        model.end = end
+        model.identifier = identifier
+        model.filename = basename
+        model.location = filename
+        model.size = size
+        model.content_type = content_type
+        model.checksum = md5.hexdigest()
+        model.info = json.dumps(parameters)
 
-        data = json.dumps(model_to_infodict(dataset))
+        data = json.dumps(model_to_infodict(model))
 
         with open(join(upload_dir, "info.json"), "wb") as file_:
             file_.write(data)
 
         log_change("CREATED", identifier, timestamp)
 
-        dataset.save()
+        model.save()
 
     except:
         rmtree(upload_dir, ignore_errors=True)
         raise
 
-    _log_change(kwargs["logger"], "uploaded", owner, dataset)
+    _log_change(kwargs["logger"], "uploaded", owner, model)
 
     _delete_items(owner, kwargs["logger"], number_of_preserved=1)
 
@@ -262,48 +240,49 @@ def post_item(request, **kwargs):
 
 @reject_content
 def delete_item(request, identifier, **kwargs):
-    """ Delete custom data."""
+    """ Delete custom model."""
     owner = request.user if request.user.is_authenticated() else None
-    dataset = _get_model(owner, identifier)
-    _delete_item(owner, dataset, kwargs["logger"])
+    model = _get_model(owner, identifier)
+
+    _delete_item(owner, model, kwargs["logger"])
 
     return HttpResponse(status=204)
 
 
 def _delete_items(owner, logger, number_of_preserved=0):
-    """ Batch dataset removal. """
-    for dataset in _get_models(owner)[number_of_preserved:]:
-        _delete_item(owner, dataset, logger)
+    """ Batch model removal. """
+    for model in _get_models(owner)[number_of_preserved:]:
+        _delete_item(owner, model, logger)
 
 
-def _delete_item(owner, dataset, logger):
+def _delete_item(owner, model, logger):
     """ Low level item removal. """
-    dataset.delete()
+    model.delete()
 
-    upload_dir = join(get_upload_dir(), dataset.identifier)
+    upload_dir = join(get_upload_dir(), model.identifier)
     if isdir(upload_dir):
         rmtree(upload_dir, ignore_errors=True)
 
-    log_change("REMOVED", dataset.identifier)
+    log_change("REMOVED", model.identifier)
 
-    _log_change(logger, "removed", owner, dataset)
+    _log_change(logger, "removed", owner, model)
 
 
 def _get_models(owner):
-    return CustomDataset.objects.filter(owner=owner).order_by("-created")
+    return CustomModel.objects.filter(owner=owner).order_by("-created")
 
 
 def _get_model(owner, identifier):
     try:
-        return CustomDataset.objects.get(owner=owner, identifier=identifier)
-    except CustomDataset.DoesNotExist:
+        return CustomModel.objects.get(owner=owner, identifier=identifier)
+    except CustomModel.DoesNotExist:
         raise HttpError404
 
 
-def _log_change(logger, action, owner, dataset):
+def _log_change(logger, action, owner, model):
     logger.info(
-        "%s: custom file %s[%dB, %s] %s by %s",
-        dataset.identifier, dataset.filename, dataset.size,
-        dataset.content_type, action,
+        "%s: custom model %s[%dB, %s] %s by %s",
+        model.identifier, model.filename, model.size,
+        model.content_type, action,
         owner.username if owner else "<anonymous-user>",
     )
