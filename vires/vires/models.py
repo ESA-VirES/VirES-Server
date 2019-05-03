@@ -31,21 +31,17 @@
 #pylint: disable=missing-docstring,fixme,unused-argument
 #pylint: disable=old-style-class,no-init,too-few-public-methods
 
-from datetime import timedelta
 from django.core.exceptions import ValidationError
 from django.db.models import (
     Model, ForeignKey, CharField, DateTimeField,
 )
 from django.contrib.gis import geos
-from django.contrib.gis.db.models import (
-    GeoManager, MultiLineStringField,
-)
+from django.contrib.gis.db.models import GeoManager
 from django.contrib.auth.models import User
 
 from eoxserver.resources.coverages.models import (
     collect_eo_metadata, Collection, Coverage, EO_OBJECT_TYPE_REGISTRY
 )
-from vires.util import get_total_seconds
 
 
 class Job(Model):
@@ -86,23 +82,6 @@ class Job(Model):
 
 class Product(Coverage):
     objects = GeoManager()
-    ground_path = MultiLineStringField(null=True, blank=True)
-
-    # TODO: Get rid of the incorrect resolution time
-    @property
-    def resolution_time(self):
-        return (self.end_time - self.begin_time) / self.size_x
-
-    @property
-    def sampling_period(self):
-        if self.size_x > 1:
-            return (self.end_time - self.begin_time) / (self.size_x - 1)
-        else:
-            return timedelta(0)
-
-    @property
-    def duration(self):
-        return self.end_time - self.begin_time
 
 EO_OBJECT_TYPE_REGISTRY[201] = Product
 
@@ -123,20 +102,6 @@ class ProductCollection(Product, Collection):
 
         product = eo_object.cast()
 
-        if len(self):
-            # TODO: needs to be reviewed
-            #if self.resolution_time != product.resolution_time:
-            #    raise ValidationError(
-            #        "%s has a different temporal resolution as %s" % (
-            #            self, product
-            #        )
-            #    )
-            sampling_period = self.sampling_period
-            #ground_path = self.ground_path.union(product.ground_path)
-        else:
-            sampling_period = product.sampling_period
-            #ground_path = product.ground_path
-
         if self.begin_time and self.end_time and self.footprint:
             self.begin_time = min(self.begin_time, product.begin_time)
             self.end_time = max(self.end_time, product.end_time)
@@ -148,17 +113,6 @@ class ProductCollection(Product, Collection):
             self.begin_time, self.end_time, self.footprint = collect_eo_metadata(
                 self.eo_objects.all(), insert=[eo_object], bbox=True
             )
-        self.size_x = 1 + int(round(
-            get_total_seconds(self.duration) /
-            get_total_seconds(sampling_period)
-        ))
-        #self.ground_path = ground_path
         self.save()
 
 EO_OBJECT_TYPE_REGISTRY[210] = ProductCollection
-
-
-class ForwardModel(Coverage):
-    objects = GeoManager()
-
-EO_OBJECT_TYPE_REGISTRY[250] = ForwardModel
