@@ -26,18 +26,51 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from django.db import models
+import os
+import base64
+
+from django.db.models import (
+    Model, OneToOneField, ForeignKey, CharField, DateTimeField,
+    BooleanField,
+)
 from django.contrib.auth.models import User
 from django_countries.fields import CountryField
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User)
-    title = models.CharField(max_length=100, blank=True)
-    institution = models.CharField(max_length=100, blank=True)
+
+class UserProfile(Model):
+    user = OneToOneField(User)
+    title = CharField(max_length=100, blank=True)
+    institution = CharField(max_length=100, blank=True)
     country = CountryField(blank=True, blank_label='(select country)')
-    study_area = models.CharField(max_length=200, blank=True)
+    study_area = CharField(max_length=200, blank=True)
     # TODO: Change executive_summary type to TextField.
-    executive_summary = models.CharField(max_length=3000, blank=True)
+    executive_summary = CharField(max_length=3000, blank=True)
 
     def __str__(self):
         return "<UserProfile: %s>" % self.user
+
+
+def get_random_token(lenght):
+    return base64.urlsafe_b64encode(os.urandom(lenght))
+
+def get_default_identifier():
+    return get_random_token(12)
+
+def get_default_token():
+    return get_random_token(24)
+
+
+class AuthenticationToken(Model):
+    owner = ForeignKey(User, related_name='tokens', null=False, blank=False)
+    token = CharField(
+        max_length=32, blank=True, null=True,
+        default=get_default_token, unique=True
+    )
+    identifier = CharField(
+        max_length=16, blank=True, null=True,
+        default=get_default_identifier, unique=True,
+    )
+    is_new = BooleanField(default=False, null=False)
+    created = DateTimeField(auto_now_add=True)
+    expires = DateTimeField(null=True, default=None)
+    purpose = CharField(max_length=128, blank=True, null=True)
