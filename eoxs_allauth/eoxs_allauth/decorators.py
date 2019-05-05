@@ -28,9 +28,12 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+import re
 from functools import wraps
 from logging import getLogger, NOTSET
+from django.utils.timezone import now
 from django.core.exceptions import PermissionDenied
+from .models import AuthenticationToken
 
 LOGGER = getLogger("eoxs_allauth.access")
 
@@ -57,4 +60,42 @@ def authenticated_only(view_func):
             return view_func(request, *args, **kwargs)
         else:
             raise PermissionDenied
+    return _wrapper_
+
+
+def token_authentication(view_func):
+    """ Perform access token authentication. """
+    # NOTE: Make sure the HTTP server is configured so that the Authorization
+    #       header is passed to the WSGI interface (WSGIPassAuthorization On).
+    re_bearer = re.compile(r"^Bearer (?P<token>[a-zA-Z0-9_-]{32,32})$")
+
+    def _extract_token(request):
+        match = re_bearer.match(request.META.get("HTTP_AUTHORIZATION", ""))
+        return match.groupdict()['token'] if match else None
+
+    def _get_user(token):
+        if not token:
+            return None
+        try:
+            model = (
+                AuthenticationToken.objects
+                .select_related('owner')
+                .get(token=token)
+            )
+        except AuthenticationToken.DoesNotExist:
+            return None
+
+        if model.expires and model.expires <= now(): # check for expired token
+            model.delete()
+            return None
+
+        return model.owner
+
+    @wraps(view_func)
+    def _wrapper_(request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            user = _get_user(_extract_token(request))
+            if user:
+                request.user = user
+        return view_func(request, *args, **kwargs)
     return _wrapper_

@@ -27,22 +27,29 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods, too-many-ancestors
 
+from time import sleep
 from logging import INFO, WARNING
+from datetime import datetime
 from django.conf import settings
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import View
 from django.views.generic.edit import UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.forms.models import modelform_factory
+from django.utils.timezone import now, is_aware, utc
+from django.utils.dateparse import parse_datetime
 from django_countries.widgets import CountrySelectWidget
 from allauth.account.forms import LoginForm, SignupForm
 from eoxserver.services.views import ows
-from .models import UserProfile
-from .decorators import log_access, authenticated_only
+from .models import UserProfile, AuthenticationToken
+from .decorators import log_access, authenticated_only, token_authentication
 
 
+@token_authentication
 @log_access(INFO, WARNING)
 @authenticated_only
 @csrf_exempt
@@ -71,7 +78,7 @@ def workspace(request):
     del login_form.fields["login"].widget.attrs["autofocus"]
     return render(
         request, getattr(
-            settings, 'WORKSPACE_TEMPLATE', "eoxs_allauth/workspace.html"
+            settings, "WORKSPACE_TEMPLATE", "eoxs_allauth/workspace.html"
         ), {
             "login_form": login_form,
             "signup_form": SignupForm(),
@@ -83,24 +90,24 @@ class ProfileUpdate(SuccessMessageMixin, UpdateView):
     """ Custom profile update view. """
     model = UserProfile
     fields = [
-        'title', 'institution', 'country', 'study_area', 'executive_summary',
+        "title", "institution", "country", "study_area", "executive_summary",
     ]
     widgets = {
-        'country': CountrySelectWidget(),
+        "country": CountrySelectWidget(),
     }
 
     success_url = getattr(
-        settings, 'PROFILE_UPDATE_SUCCESS_URL', '/accounts/profile/'
+        settings, "PROFILE_UPDATE_SUCCESS_URL", "/accounts/profile/"
     )
 
     success_message = getattr(
-        settings, 'PROFILE_UPDATE_SUCCESS_MESSAGE',
-        'Profile was updated successfully.'
+        settings, "PROFILE_UPDATE_SUCCESS_MESSAGE",
+        "Profile was updated successfully."
     )
 
     template_name = getattr(
-        settings, 'PROFILE_UPDATE_TEMPLATE',
-        'account/userprofile_update_form.html'
+        settings, "PROFILE_UPDATE_TEMPLATE",
+        "account/userprofile_update_form.html"
     )
 
     def get_form_class(self):
@@ -116,8 +123,123 @@ class ProfileUpdate(SuccessMessageMixin, UpdateView):
     @classmethod
     def as_view(cls, *args, **kwargs):
         """ Return the actual Djnago view. """
-        return log_access(INFO, WARNING)(
-            login_required(
-                super(ProfileUpdate, cls).as_view(*args, **kwargs)
-            )
-        )
+        view = super(ProfileUpdate, cls).as_view(*args, **kwargs)
+        view = login_required(view)
+        view = log_access(INFO, WARNING)(view)
+        return view
+
+
+class AccessTokenManagerView(View):
+    """ Access token manager view. """
+
+    template_name = getattr(
+        settings, "TEMPLATE_MANAGER",
+        "account/access_token_manager.html"
+    )
+
+    @classmethod
+    def as_view(cls, *args, **kwargs):
+        """ Return the actual Djnago view. """
+        view = super(AccessTokenManagerView, cls).as_view(*args, **kwargs)
+        view = login_required(view)
+        view = log_access(INFO, WARNING)(view)
+        return view
+
+    def get(self, request):
+        tokens = self._get_all_valid(request.user)
+
+        # only a new not yet shown token can be displayed
+        identifier = request.GET.get('show') or None
+        new_token = self._get_new(request.user, identifier)
+        if identifier and not new_token:
+            # attempt to display already shown token
+            return HttpResponseRedirect(request.path)
+
+        return render(request, self.template_name, {
+            "tokens": tokens,
+            "new_token": new_token,
+            "user": request.user,
+            "isoformat": self._isoformat,
+        })
+
+    def post(self, request):
+        new_token = None
+        action = request.POST.get("action", "").lower()
+        next_url = request.path
+
+        if action == "create":
+            try:
+                new_token = self._create_new(
+                    request.user, purpose=request.POST.get("purpose"),
+                    expires=self._parse_datetime(request.POST.get("expires")),
+                )
+            except ValueError:
+                pass # no change in case of an error
+            else:
+                # GET request that will display the token
+                next_url = "%s?show=%s" % (next_url, new_token.identifier)
+
+        elif action == "remove":
+            self._delete(request.user, request.POST.get("identifier"))
+
+        elif action == "remove-all":
+            self._delete_all(request.user)
+
+        return HttpResponseRedirect(next_url)
+
+    @staticmethod
+    def _parse_datetime(value):
+        if not value:
+            return None
+        if not isinstance(value, datetime):
+            try:
+                parse_datetime(value)
+            except (ValueError, KeyError, TypeError):
+                raise ValueError
+        if not is_aware(value):
+            value = value.astimezone(utc)
+        return value
+
+    @staticmethod
+    def _create_new(user, purpose=None, expires=None):
+        token = AuthenticationToken()
+        token.owner = user
+        token.expires = expires or None
+        token.purpose = purpose or None
+        token.is_new = True  # token has not been displayed yet
+        token.save()
+        return token
+
+    @staticmethod
+    def _get_new(user, identifier):
+        try:
+            token = user.tokens.get(identifier=identifier)
+        except AuthenticationToken.DoesNotExist:
+            sleep(2)
+            return None
+        if token.is_new:
+            token.is_new = False  # token will not be displayed again
+            token.save()
+            return token
+        return None
+
+    @classmethod
+    def _get_all_valid(cls, user):
+        cls._delete_expired(user)
+        return user.tokens.all().order_by("-created")
+
+    @staticmethod
+    def _delete_expired(user):
+        return user.tokens.filter(expires__lte=now()).delete()
+
+    @staticmethod
+    def _delete_all(user):
+        return user.tokens.all().delete()
+
+    @classmethod
+    def _delete(cls, user, identifier):
+        user.tokens.filter(identifier=identifier).delete()
+
+    @staticmethod
+    def _isoformat(value):
+        return value.isoformat("T")

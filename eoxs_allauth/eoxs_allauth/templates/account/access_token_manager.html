@@ -1,0 +1,79 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% block head_title %}{% trans "Access Tokens" %}{% endblock %}
+{% block content %}
+{% if new_token %}
+  <p>This is your new access token:</p>
+  <pre class="well well-lg text-center" style="font-weight: bold">{{ new_token.token }}</pre>
+  <p>Please copy the displayed character string. I will not be shown again.</p>
+  <p>Keep the access token private!</p>
+  <p class="text-center">
+    <a class="btn btn-primary" href="{% url 'account_manage_access_tokens' %}">Return to Access Token Manager</a>
+  </p>
+  <hr>
+  <h4>How to use the token</h4>
+  <p>The token is meant to be used for user authentication of a client
+  accessing the machine-to-machine interface.
+  The token shall be present in HTTP requests as the <i>bearer</i> header:
+  </p>
+  <pre class="well well">Authorization: Bearer &lt;token&gt;</pre>
+{% else %}
+  <h3>New Access Token</h3>
+  <form class="form-horizontal inputwide" method="POST" action="{% url 'account_manage_access_tokens' %}">
+    {% csrf_token %}
+    <fieldset>
+    <input type="hidden" name="action" value="create">
+    <div class="control-group">
+      <label class="form-check-label" for="token-purpose">Purpose (optional)</label>
+      <input type="text" id="token-purpose" name="purpose" placeholder="optional label indicating purpose of the new token">
+    </div>
+    <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
+      <button type="submit" class="btn btn-primary">Create New Access Token</button>
+    </div>
+    </fieldset>
+  </form>
+  <h3>Active Access Tokens</h3>
+  <table class="table table-sm table-striped">
+  {% if tokens.count == 0 %}
+  <p>There is currently no valid access token assigned to your account.</p>
+  {% else %}
+  {% load tz %}
+  <thead>
+    <tr>
+      <th scope="col">Created</th>
+      <!--th scope="col">Expires</th-->
+      <th scope="col">Purpose</th>
+      <th>
+        <form method="POST" action="{% url 'account_manage_access_tokens' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="remove-all">
+          <button type="submit" class="btn btn-sm btn-danger btn-block">Remove All</button>
+        </form>
+      </th>
+    </tr>
+  </thead>
+    {% for token in tokens %}
+    <tr>
+      <td>{{ token.created|utc|date:"Y-m-d H:i:s" }}Z</td>
+      <!--td>{% if token.expires %}{{ token.expires|utc|date:"Y-m-d H:i:s" }}Z{% endif %}</td-->
+      <td>{% if token.purpose %}{{ token.purpose }}{% else %}n/a{% endif %}</td>
+      <td>
+        <form method="POST" action="{% url 'account_manage_access_tokens' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="remove">
+          <input type="hidden" name="identifier" value="{{ token.identifier }}">
+          <button type="submit" class="btn btn-sm btn-danger btn-block">Remove</button>
+        </form>
+      </td>
+    </div>
+    </fieldset>
+  </form>
+      </td>
+    </tr>
+    {% endfor %}
+  <tbody>
+  </tbody>
+  </table>
+  {% endif %}
+{% endif %}
+{% endblock %}
