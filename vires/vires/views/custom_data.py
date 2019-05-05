@@ -123,6 +123,7 @@ def model_to_infodict(obj):
 
 def check_input_file(path):
     """ File format check. """
+    excluded_fields = {'Spacecraft'}
     mandatory_fields = [
         ("Timestamp", CDF_EPOCH_TYPE, 1),
         ("Latitude", CDF_DOUBLE_TYPE, 1),
@@ -159,8 +160,11 @@ def check_input_file(path):
 
     for name, field in fields.items():
         shape = field["shape"]
-        if len(shape) < 1 or shape[0] != size:
-            raise InvalidFileFormat("Invalid dimension of %s field!" % name)
+        if name in excluded_fields:
+            del fields[name]
+        elif len(shape) < 1 or shape[0] != size:
+            del fields[name] # ignore fields with wrong dimension
+            #raise InvalidFileFormat("Invalid dimension of %s field!" % name)
 
     with cdf_open(path) as cdf:
         times = cdf.raw_var("Timestamp")[...]
