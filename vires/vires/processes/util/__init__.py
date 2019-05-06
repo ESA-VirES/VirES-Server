@@ -38,6 +38,7 @@ from .filters_subsampling import (
 )
 from .time_series import TimeSeries
 from .time_series_product import ProductTimeSeries
+from .time_series_custom_data import CustomDatasetTimeSeries
 from .time_series_aux import (
     IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
 )
