@@ -213,7 +213,7 @@ class FetchFilteredData(WPSProcess):
             "models: (%s), filters: {%s}",
             begin_time.isoformat("T"), end_time.isoformat("T"),
             ", ".join(
-                s.collection.identifier for l in sources.values() for s in l
+                s.collection_identifier for l in sources.values() for s in l
             ),
             ", ".join(
                 "%s = %s" % (model.name, model.full_expression)
@@ -296,13 +296,13 @@ class FetchFilteredData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                     # optional extra sampling for selected collections
-                    if sampler and slave.collection.identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
+                    if sampler and slave.collection_identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
                         resolver.add_filter(ExtraSampler(
-                            'Timestamp', slave.collection.identifier, slave
+                            'Timestamp', slave.collection_identifier, slave
                         ))
 
                 # optional sample grouping
-                if grouping_sampler and master.collection.identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
+                if grouping_sampler and master.collection_identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
@@ -311,7 +311,7 @@ class FetchFilteredData(WPSProcess):
 
                 # satellite specific slaves
                 spacecraft = (
-                    settings.VIRES_COL2SAT.get(master.collection.identifier)
+                    settings.VIRES_COL2SAT.get(master.collection_identifier)
                 )
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
 
@@ -465,7 +465,7 @@ class FetchFilteredData(WPSProcess):
         temp_basename = join(workspace_dir, "vires_" + uuid4().hex)
         result_basename = "%s_%s_%s_Filtered" % (
             "_".join(
-                s.collection.identifier for l in sources.values() for s in l
+                s.collection_identifier for l in sources.values() for s in l
             ),
             begin_time.strftime("%Y%m%dT%H%M%S"),
             (end_time - timedelta(seconds=1)).strftime("%Y%m%dT%H%M%S"),

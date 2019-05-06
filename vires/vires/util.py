@@ -28,6 +28,8 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods, too-many-arguments
 
+from sys import exc_info
+from traceback import extract_tb
 from math import ceil, floor
 from itertools import ifilter, ifilterfalse
 
@@ -41,6 +43,17 @@ except ImportError:
         arr = empty(shape, dtype, order)
         arr.fill(value)
         return arr
+
+
+def format_exception():
+    """ Custom exception formatting. """
+    type_, exception, traceback_ = exc_info()
+    filename, lineno, _, _ = extract_tb(traceback_)[-1]
+    message = str(exception)
+    return "%s:%s:%s%s" % (
+        filename, lineno, type_.__name__,
+        ": %s" % message if message else ""
+    )
 
 
 def unique(iterable):

@@ -39,6 +39,7 @@ from vires.parsers.model_list_lexer import get_model_list_lexer
 from vires.parsers.model_expression_parser import get_model_expression_parser
 from vires.parsers.model_expression_lexer import get_model_expression_lexer
 from .time_series_product import ProductTimeSeries
+from .time_series_custom_data import CustomDatasetTimeSeries
 from .model_magmod import SourceMagneticModel, ComposedMagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
 from .magnetic_models import MODEL_CACHE
@@ -60,7 +61,7 @@ def parse_style(input_id, style):
         )
 
 
-def parse_collections(input_id, source):
+def parse_collections(input_id, source, custom_dataset=None, user=None):
     """ Parse input collections definitions. """
     result = {}
     if not isinstance(source, dict):
@@ -79,19 +80,26 @@ def parse_collections(input_id, source):
                 identifier__in=collection_ids
             )
         )
-        try:
-            result[label] = [
-                available_collections[id_] for id_ in collection_ids
-            ]
-        except KeyError as exc:
-            raise InvalidInputValueError(
-                input_id, "Invalid collection identifier %r! (label: %r)" %
-                (exc.args[0], label)
-            )
+        if custom_dataset and custom_dataset in collection_ids:
+            result[label] = custom_dataset
+        else:
+            try:
+                result[label] = [
+                    available_collections[id_] if id_ != custom_dataset else id_
+                    for id_ in collection_ids
+                ]
+            except KeyError as exc:
+                raise InvalidInputValueError(
+                    input_id, "Invalid collection identifier %r! (label: %r)" %
+                    (exc.args[0], label)
+                )
 
     range_types = []
     master_rtype = None
     for label, collections in result.items():
+        if collections == custom_dataset:
+            continue
+
         # master (first collection) must be always defined
         if len(collections) < 1:
             raise InvalidInputValueError(
@@ -131,8 +139,11 @@ def parse_collections(input_id, source):
 
     # convert collections to product time-series
     return dict(
-        (label, [ProductTimeSeries(collection) for collection in collections])
-        for label, collections in result.iteritems()
+        (
+            label,
+            [CustomDatasetTimeSeries(user)] if collections == custom_dataset else
+            [ProductTimeSeries(collection) for collection in collections]
+        ) for label, collections in result.iteritems()
     )
 
 

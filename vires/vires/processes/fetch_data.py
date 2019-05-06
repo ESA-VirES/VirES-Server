@@ -35,13 +35,8 @@ from cStringIO import StringIO
 import msgpack
 from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData,
-    BoundingBoxData,
-    ComplexData,
-    FormatText, FormatJSON,
-    CDFileWrapper,
-    FormatBinaryRaw,
-    CDObject,
+    LiteralData, BoundingBoxData, ComplexData, FormatText, FormatJSON,
+    CDFileWrapper, FormatBinaryRaw, CDObject, RequestParameter,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
@@ -65,9 +60,9 @@ from vires.processes.util import (
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
     MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
-    extract_product_names,
+    extract_product_names, get_username, get_user,
+    CustomDatasetTimeSeries,
 )
-
 
 # TODO: Make following parameters configurable.
 # Limit response size (equivalent to 1/2 daily SWARM MAG LR product).
@@ -106,6 +101,7 @@ class FetchData(WPSProcess):
     profiles = ["vires"]
 
     inputs = [
+        ("username", RequestParameter(get_username)),
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -168,12 +164,16 @@ class FetchData(WPSProcess):
         )),
     ]
 
-    def execute(self, collection_ids, begin_time, end_time, bbox,
+    def execute(self, username, collection_ids, begin_time, end_time, bbox,
                 requested_variables, model_ids, shc,
                 csv_time_format, output, **kwarg):
         """ Execute process """
         # parse inputs
-        sources = parse_collections('collection_ids', collection_ids.data)
+        sources = parse_collections(
+            'collection_ids', collection_ids.data,
+            custom_dataset=CustomDatasetTimeSeries.COLLECTION_IDENTIFIER,
+            user=get_user(username)
+        )
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
         )
@@ -204,7 +204,7 @@ class FetchData(WPSProcess):
             begin_time.isoformat("T"), end_time.isoformat("T"),
             bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
             ", ".join(
-                s.collection.identifier for l in sources.values() for s in l
+                s.collection_identifier for l in sources.values() for s in l
             ),
             ", ".join(
                 "%s = %s" % (model.name, model.full_expression)
@@ -305,13 +305,13 @@ class FetchData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                     # extra sampling for selected collections
-                    if slave.collection.identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
+                    if slave.collection_identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
                         resolver.add_filter(ExtraSampler(
-                            'Timestamp', slave.collection.identifier, slave
+                            'Timestamp', slave.collection_identifier, slave
                         ))
 
                 # optional sample grouping
-                if master.collection.identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
+                if master.collection_identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
@@ -320,24 +320,25 @@ class FetchData(WPSProcess):
 
                 # satellite specific slaves
                 spacecraft = settings.VIRES_COL2SAT.get(
-                    master.collection.identifier
+                    master.collection_identifier
                 )
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
 
-                for item in orbit_info.get(spacecraft, []):
-                    resolver.add_slave(item, 'Timestamp')
+                if spacecraft and spacecraft != "U":
+                    for item in orbit_info.get(spacecraft, []):
+                        resolver.add_slave(item, 'Timestamp')
 
-                # prepare spacecraft to spacecraft differences
-                # NOTE: No residual variables required by the filters.
-                residual_variables = get_residual_variables(requested_variables)
-                self.logger.debug("residual variables: %s", ", ".join(
-                    var for var, _ in residual_variables
-                ))
-                grouped_res_vars = group_residual_variables(
-                    product_sources, residual_variables
-                )
-                for (msc, ssc), cols in grouped_res_vars.items():
-                    resolver.add_model(Sat2SatResidual(msc, ssc, cols))
+                    # prepare spacecraft to spacecraft differences
+                    # NOTE: No residual variables required by the filters.
+                    residual_variables = get_residual_variables(requested_variables)
+                    self.logger.debug("residual variables: %s", ", ".join(
+                        var for var, _ in residual_variables
+                    ))
+                    grouped_res_vars = group_residual_variables(
+                        product_sources, residual_variables
+                    )
+                    for (msc, ssc), cols in grouped_res_vars.items():
+                        resolver.add_model(Sat2SatResidual(msc, ssc, cols))
 
                 # models
                 aux_models = chain((

@@ -90,81 +90,32 @@ PRODUCT_TYPE_PARAMETERS = {
 }
 
 
-class ProductTimeSeries(TimeSeries):
-    """ Product time-series class. """
+class BaseProductTimeSeries(TimeSeries):
+    """ Base product time-series """
 
-    class _LoggerAdapter(LoggerAdapter):
-        def process(self, msg, kwargs):
-            return '%s: %s' % (self.extra["collection_id"], msg), kwargs
+    def __init__(self, logger=None, **kwargs):
+        super(BaseProductTimeSeries, self).__init__()
+        self.logger = logger or getLogger(__name__)
+        self.time_variable = kwargs.get("time_variable")
+        self.time_tolerance = kwargs.get("time_tolerance")
+        self.time_overlap = kwargs.get("time_overlap")
+        self.time_gap_threshold = kwargs.get("time_gap_threshold")
+        self.segment_neighbourhood = kwargs.get("segment_neighbourhood")
+        self.interpolation_kinds = kwargs.get("interpolation_kinds")
 
-    def __init__(self, collection, logger=None):
-        super(ProductTimeSeries, self).__init__()
+    def _subset_qs(self, start, stop):
+        """ Subset Django query set. """
+        raise NotImplementedError
 
-        if isinstance(collection, basestring):
-            collection = self._get_collection(collection)
+    def _subset(self, start, stop, variables):
+        """ Get subset of the time series overlapping the given time range.
+        """
+        raise NotImplementedError
 
-        params = PRODUCT_TYPE_PARAMETERS.get(
-            collection.range_type.name, DEFAULT_PRODUCT_TYPE_PARAMETERS
-        )
-
-        self.collection = collection
-        self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
-            "collection_id": collection.identifier,
-        })
-        self.translate_fw = dict(params.VARIABLE_TRANSLATES)
-        self.translate_bw = dict((v, k) for k, v in self.translate_fw.iteritems())
-
-        self.time_variable = params.TIME_VARIABLE
-        self.time_tolerance = params.TIME_TOLERANCE
-        self.time_overlap = params.TIME_OVERLAP
-        self.time_gap_threshold = params.TIME_GAP_THRESHOLD
-        self.segment_neighbourhood = params.TIME_SEGMENT_NEIGHBOURHOOD
-        self.interpolation_kinds = params.VARIABLE_INTERPOLATION_KINDS
-
-    @property
-    def variables(self):
-        return [
-            self.translate_bw.get(band.identifier, band.identifier)
-            for band in self.collection.range_type
-        ]
-
-    def _extract_dataset(self, cdf, extracted_variables, idx_low, idx_high):
-        """ Extract dataset from a product. """
-        dataset = Dataset()
-        for variable in extracted_variables:
-            cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
-            if cdf_var.shape: # regular array variable
-                data = cdf_var[idx_low:idx_high]
-            else: # NRV scalar variable
-                data = empty(max(0, idx_high - idx_low), dtype=cdf_var.dtype)
-                data.fill(cdf_var[...])
-            dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
-        return dataset
-
-    def _get_empty_dataset(self, variables):
-        """ Get empty dataset. """
-        self.logger.debug("empty dataset")
-        self.logger.debug("extracted variables %s", variables)
-
-        try:
-            # we need at least one product from the collection
-            # to initialize correctly the empty variables
-            product = Product.objects.filter(
-                collections=self.collection
-            ).order_by('begin_time')[0]
-        except IndexError:
-            self.logger.error(
-                "Empty collection! The variables and their types cannot be "
-                "reliably determined!"
-            )
-            raise RuntimeError(
-                "Empty product collection %s!" % self.collection.identifier
-            )
-        else:
-            # generate an empty dataset from the sample product
-            self.logger.debug("template product: %s ", product.identifier)
-            with cdf_open(connect(product.data_items.all()[0])) as cdf:
-                return self._extract_dataset(cdf, variables, 0, 0)
+    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+        """ Get subset of the time series overlapping the give array time array.
+        """
+        raise NotImplementedError
 
     def subset_count(self, start, stop):
         """ Count matched number of products. """
@@ -175,7 +126,7 @@ class ProductTimeSeries(TimeSeries):
         return iter(self._subset(start, stop, variables))
 
     def subset_times(self, times, variables=None, cdf_type=CDF_EPOCH_TYPE):
-        """ Get subset of the time series overlapping the give array time array.
+        """ Get subset of the time series overlapping the given time array.
         """
         variables = self.get_extracted_variables(variables)
         self.logger.debug("requested variables %s", variables)
@@ -225,8 +176,91 @@ class ProductTimeSeries(TimeSeries):
             )
         )
 
+
+class ProductTimeSeries(BaseProductTimeSeries):
+    """ Product time-series class. """
+
+    class _LoggerAdapter(LoggerAdapter):
+        def process(self, msg, kwargs):
+            return '%s: %s' % (self.extra["collection_id"], msg), kwargs
+
+    def __init__(self, collection, logger=None):
+        if isinstance(collection, basestring):
+            collection = self._get_collection(collection)
+
+        params = PRODUCT_TYPE_PARAMETERS.get(
+            collection.range_type.name, DEFAULT_PRODUCT_TYPE_PARAMETERS
+        )
+
+        super(ProductTimeSeries, self).__init__(
+            logger=self._LoggerAdapter(logger or getLogger(__name__), {
+                "collection_id": collection.identifier,
+            }),
+            time_variable=params.TIME_VARIABLE,
+            time_tolerance=params.TIME_TOLERANCE,
+            time_overlap=params.TIME_OVERLAP,
+            time_gap_threshold=params.TIME_GAP_THRESHOLD,
+            segment_neighbourhood=params.TIME_SEGMENT_NEIGHBOURHOOD,
+            interpolation_kinds=params.VARIABLE_INTERPOLATION_KINDS,
+        )
+
+        self.collection = collection
+        self.translate_fw = dict(params.VARIABLE_TRANSLATES)
+        self.translate_bw = dict((v, k) for k, v in self.translate_fw.iteritems())
+
+    @property
+    def collection_identifier(self):
+        """ Get collection identifier. """
+        return self.collection.identifier
+
+    @property
+    def variables(self):
+        return [
+            self.translate_bw.get(band.identifier, band.identifier)
+            for band in self.collection.range_type
+        ]
+
+    def _extract_dataset(self, cdf, extracted_variables, idx_low, idx_high):
+        """ Extract dataset from a product. """
+        dataset = Dataset()
+        for variable in extracted_variables:
+            cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
+            if cdf_var.shape: # regular array variable
+                data = cdf_var[idx_low:idx_high]
+            else: # NRV scalar variable
+                data = empty(max(0, idx_high - idx_low), dtype=cdf_var.dtype)
+                data.fill(cdf_var[...])
+            dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
+        return dataset
+
+    def _get_empty_dataset(self, variables):
+        """ Get empty dataset. """
+        self.logger.debug("empty dataset")
+        self.logger.debug("extracted variables %s", variables)
+
+        try:
+            # we need at least one product from the collection
+            # to initialize correctly the empty variables
+            product = Product.objects.filter(
+                collections=self.collection
+            ).order_by('begin_time')[0]
+        except IndexError:
+            self.logger.error(
+                "Empty collection! The variables and their types cannot be "
+                "reliably determined!"
+            )
+            raise RuntimeError(
+                "Empty product collection %s!" % self.collection.identifier
+            )
+        else:
+            # generate an empty dataset from the sample product
+            self.logger.debug("template product: %s ", product.identifier)
+            with cdf_open(connect(product.data_items.all()[0])) as cdf:
+                return self._extract_dataset(cdf, variables, 0, 0)
+
+
     def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
-        """ Get subset of the time series overlapping the give array time array.
+        """ Get subset of the time series overlapping the given time array.
         """
         times, cdf_type = self._convert_time(times, cdf_type)
 
@@ -268,6 +302,8 @@ class ProductTimeSeries(TimeSeries):
         return dataset
 
     def _subset(self, start, stop, variables):
+        """ Get subset of the time series overlapping the given time range.
+        """
         self.logger.debug("subset: %s %s", start, stop)
         self.logger.debug("extracted variables %s", variables)
 
