@@ -324,7 +324,7 @@ class FetchData(WPSProcess):
                 )
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
 
-                if spacecraft:
+                if spacecraft and spacecraft != "U":
                     for item in orbit_info.get(spacecraft, []):
                         resolver.add_slave(item, 'Timestamp')
 
