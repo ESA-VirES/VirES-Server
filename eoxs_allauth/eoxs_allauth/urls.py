@@ -2,6 +2,7 @@
 #
 # Project: EOxServer - django-allauth integration.
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
+#          Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
@@ -28,9 +29,9 @@
 
 from logging import INFO, WARNING
 from django.conf.urls import url
-from allauth.urls import urlpatterns as allauth_urlpatterns
-from .views import ProfileUpdate
 from django.views.generic import TemplateView
+from allauth.urls import urlpatterns as allauth_urlpatterns
+from .views import ProfileUpdate, AccessTokenManagerView
 from .url_tools import decorate
 from .decorators import log_access
 
@@ -53,6 +54,7 @@ urlpatterns = decorate(
 
 # additional patterns
 urlpatterns += [
+    url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
     url(r'^profile/$', ProfileUpdate.as_view(), name='account_change_profile'),
     url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
 ]
