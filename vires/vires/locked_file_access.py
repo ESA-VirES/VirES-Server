@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 #
-# Forward Model Provider interface
+# locked file access
 #
 # Project: VirES
-# Authors: Fabian Schindler <fabian.schindler@eox.at>
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,16 +27,48 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-class ForwardModelProviderInterface(object):
-    """ Interface for forward model calculators.
-    """
+from fcntl import flock, LOCK_EX, LOCK_NB
+from errno import EAGAIN
+from time import sleep
 
-    @property
-    def identifier(self):
-        """ Returns the identifier for the used model.
-        """
+class FileIsLocked(Exception):
+    """ Locked file exception. """
+    pass
 
-    def evaluate(self, coefficients, parameters):
-        """ Evaluate the forward model with the given parameters. This method
-            shall return a numpy array of the correct proportions
-        """
+
+def open_locked(filename, mode="r", **kwargs):
+    """ Open file with locking using flock(2). """
+
+    fobj = open(filename, mode, **kwargs)
+    try:
+        # Acquire an exclusive lock for the open file.
+        flock(fobj, LOCK_EX|LOCK_NB)
+    except IOError as exc:
+        fobj.close()
+        if exc.errno == EAGAIN:
+            raise FileIsLocked("%s is locked!" % filename)
+        raise
+    except:
+        fobj.close()
+        raise
+    return fobj
+
+
+def log_append(filename, line, n_atempts=10, sleep_time=0.001):
+    """ Append line of text to a log file with an exclusive log. """
+    line = "%s\n" % line
+
+    def _append():
+        with open_locked(filename, "a") as file_:
+            file_.write(line)
+
+    for atempt in xrange(n_atempts):
+        try:
+            _append()
+        except FileIsLocked:
+            if atempt < n_atempts:
+                sleep(sleep_time)
+                continue
+            raise
+        else:
+            break

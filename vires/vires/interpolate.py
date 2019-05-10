@@ -59,7 +59,7 @@ class Interp1D(object):
         }
         if scipy.__version__ >= '0.14':
             self.prm['assume_sorted'] = True
-        self._data_nearest = None
+        self._indices_nearest = None
         self._data_zero = None
         self.logger = logger or getLogger(__name__)
         self._supported_kinds = {
@@ -83,19 +83,27 @@ class Interp1D(object):
 
         return handler(y_src)
 
+    @property
+    def indices_nearest(self):
+        """ Get indices of the nearest neighbour  interpolation. """
+        if not self._indices_nearest:
+            self._init_nearest()
+        return self._indices_nearest
+
+    @property
+    def data_zero(self):
+        """ Get indices of the zero-order interpolation. """
+        if not self._data_zero:
+            self._init_zero()
+        return self._data_zero
+
     def _nearest(self, y_src):
         """ Nearest neighbour interpolation. """
-        if not self._data_nearest:
-            self._init_nearest()
-        idx_nan, idx_valid, idx_source = self._data_nearest
-        return self._select_values(y_src, idx_nan, idx_valid, idx_source)
+        return self._select_values(y_src, *self.indices_nearest)
 
     def _zero(self, y_src):
         """ Zero-kind interpolation. """
-        if not self._data_zero:
-            self._init_zero()
-        idx_nan, idx_valid, idx_source = self._data_zero
-        return self._select_values(y_src, idx_nan, idx_valid, idx_source)
+        return self._select_values(y_src, *self.data_zero)
 
     def _select_values(self, y_src, idx_nan, idx_valid, idx_source):
         """ Select the interpolated values. """
@@ -104,13 +112,13 @@ class Interp1D(object):
             y_dst[idx_nan] = nan
             # NOTE: workaround for the empty multi-dimensional slicing bug
             #       in NumPy v1.7.1
-            if len(idx_valid) > 0:
+            if idx_valid.size > 0:
                 y_dst[idx_valid] = y_src[idx_source]
         return y_dst
 
     def _init_nearest(self):
         """ Initialize the nearest neighbour interpolation. """
-        self._data_nearest = self._get_value_indices(
+        self._indices_nearest = self._get_value_indices(
             "nearest", self.segment_neighbourhood, self.segment_neighbourhood
         )
 

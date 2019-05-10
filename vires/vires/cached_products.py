@@ -27,7 +27,7 @@
 
 from sys import stdin
 from os import rename, remove
-from os.path import exists
+from os.path import exists, basename, splitext
 from shutil import copyfileobj
 from contextlib import closing
 from urllib2 import urlopen
@@ -82,18 +82,24 @@ def simple_cached_product_updater(updater):
             raise InvalidSourcesError(
                 "Too many sources! Only one source file expected."
             )
-        with open_source(sources[0]) as fin:
-            updater(fin, destination)
+        updater(sources[0], destination)
     return _simple_cached_product_updater_
 
 
 @simple_cached_product_updater
-def copy_file(file_in, destination):
-    """ Read content from the input file object and copy it to the destination
+def copy_file(source, destination):
+    """ Read content from the source file and copy it to the destination
     path without modification.
     """
-    with file(destination, "wb") as file_out:
-        copyfileobj(file_in, file_out, 1024*1024)
+    source_info_file = splitext(destination)[0] + '.source'
+    source_id = splitext(basename(source))[0]
+
+    with open(source, "rb") as file_in:
+        with open(destination, "wb") as file_out:
+            copyfileobj(file_in, file_out, 1024*1024)
+
+    with open(source_info_file, "wb") as file_out:
+        file_out.write(source_id)
 
 
 def open_source(source):
@@ -104,8 +110,7 @@ def open_source(source):
         return closing(urlopen(source, timeout=URL_TIMEOUT))
     elif source == '-':
         return stdin
-    else:
-        return open(source, "rb")
+    return open(source, "rb")
 
 
 def remove_if_exists(filename):

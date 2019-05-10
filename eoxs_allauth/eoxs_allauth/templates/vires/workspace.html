@@ -94,6 +94,7 @@
             <h4 class="modal-title" id="accountSettingsLabel">Settings ({% user_display user %})</h4>
           </div>
           <div class="modal-body">
+            <a href="{% url 'account_manage_access_tokens' %}">{% trans "Manage access tokens" %}</a><br/>
             <a href="{% url 'account_change_password' %}">{% trans "Change password" %}</a><br/>
             <a href="{% url 'account_email' %}">{% trans "Change e-mail" %}</a><br/>
             <a href="{% url 'socialaccount_connections' %}">{% trans "Connect social accounts" %}</a><br/>
@@ -248,8 +249,8 @@
       </div>
 
         <p class="lead current-version text-center">
-          <strong>Version 2.3.0</strong> (<a href="/accounts/changelog">Changelog</a>)<br>
-          <em>March 2019</em>
+          <strong>Version 3.0.0</strong> (<a href="/accounts/changelog">Changelog</a>)<br>
+          <em>May 2019</em>
         </p>
 
         <p class="lead text-center">

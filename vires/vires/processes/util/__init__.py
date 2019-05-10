@@ -31,10 +31,14 @@ from .cache import with_cache_session
 from .filters import (
     Filter, ScalarRangeFilter, VectorComponentRangeFilter,
     BoundingBoxFilter,
+    merge_indices,
 )
-from .filters_subsampling import MinStepSampler, GroupingSampler
+from .filters_subsampling import (
+    MinStepSampler, GroupingSampler, ExtraSampler,
+)
 from .time_series import TimeSeries
 from .time_series_product import ProductTimeSeries
+from .time_series_custom_data import CustomDatasetTimeSeries
 from .time_series_aux import (
     IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
 )
@@ -56,7 +60,7 @@ from .input_parsers import (
 )
 from .png_output import data_to_png, array_to_png
 from .auth import get_username, get_user
-from .resolver import VariableResolver
+from .resolver import VariableResolver, extract_product_names
 from .residuals import group_residual_variables, Sat2SatResidual
 from .f107 import get_f107_value
 from .model_renderer import render_model, ALLOWED_VARIABLES

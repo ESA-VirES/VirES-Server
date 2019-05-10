@@ -27,6 +27,7 @@
 #-------------------------------------------------------------------------------
 
 from cStringIO import StringIO
+from itertools import chain
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, FormatJSON, CDFileWrapper, CDObject,
 )
@@ -102,14 +103,18 @@ class GetModelInfo(WPSProcess):
     @classmethod
     def _csv_output(cls, models, output):
         output_fobj = StringIO()
-        output_fobj.write("modelId,validityStart,validityStop,modelExpression\r\n")
-        for model in models:
+        output_fobj.write(
+            "modelId,validityStart,validityStop,modelExpression,"
+            "sources\r\n"
+        )
+        for model in sorted(models, key=lambda model: model.name):
             validity_start, validity_stop = model.validity
-            output_fobj.write("%s,%s,%s,\"%s\"\r\n" % (
-                name.name,
+            output_fobj.write("%s,%s,%s,\"%s\",\"%s\"\r\n" % (
+                model.name,
                 cls._format_time(validity_start),
                 cls._format_time(validity_stop),
                 model.full_expression,
+                " ".join(cls._get_sources(model)),
             ))
         return CDFileWrapper(output_fobj, **output)
 
@@ -125,11 +130,18 @@ class GetModelInfo(WPSProcess):
                     'start': cls._format_time(validity_start),
                     'end': cls._format_time(validity_stop),
                 },
+                'sources': cls._get_sources(model),
             }
 
         return CDObject([
             _get_model_info(model) for model in models
         ], format=FormatJSON(), **output)
+
+    @staticmethod
+    def _get_sources(model):
+        return sorted(set(chain.from_iterable(
+            sources for sources, _ in model.sources
+        )))
 
     @staticmethod
     def _format_time(time):

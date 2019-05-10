@@ -39,7 +39,7 @@ from vires.cdf_util import (
 from vires.dataset import Dataset
 from vires.time_util import mjd2000_to_datetime
 from .model import Model
-from .magnetic_models import get_model, DIPOLE_MODEL
+from .magnetic_models import MODEL_CACHE, DIPOLE_MODEL
 
 RAD2DEG = 180.0/pi
 
@@ -80,9 +80,10 @@ class MagneticDipole(Model):
             return 'MageticDipole: %s' % msg, kwargs
 
     def __init__(self, model=DIPOLE_MODEL, logger=None, varmap=None):
+        super(MagneticDipole, self).__init__()
         if isinstance(model, basestring):
             self.model_name = model
-            self.model = get_model(model)
+            self.model = MODEL_CACHE.get_model(model)
         else:
             self.model_name = model.name
             self.model = model.model
@@ -194,6 +195,7 @@ class DipoleTiltAngle(Model):
             return 'DipoleTiltAngle: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
+        super(DipoleTiltAngle, self).__init__()
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES

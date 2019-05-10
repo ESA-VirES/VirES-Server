@@ -196,7 +196,7 @@ class Command(CommandOutputMixIn, BaseCommand):
         range_type = models.RangeType.objects.get(name=range_type_name)
 
         metadata_keys = set((
-            "identifier", "extent", "size", "ground_path",
+            "identifier", "extent", "size",
             "footprint", "begin_time", "end_time",
         ))
 
@@ -466,22 +466,6 @@ class VirESMetadataReader(object):
         return coords
 
     @classmethod
-    def get_ground_path(cls, coords, threshold=0.1):
-        # split line segments
-        segments = []
-        idx_wrap = (np.abs(coords[1:, 0] - coords[:-1, 0]) > 180.0).nonzero()[0]
-        idx_last = 0
-        for idx in idx_wrap + 1:
-            segments.append(
-                geos.LineString(coords[idx_last:idx, :]).simplify(threshold)
-            )
-            idx_last = idx
-        segments.append(
-            geos.LineString(coords[idx_last:, :]).simplify(threshold)
-        )
-        return geos.MultiLineString(segments)
-
-    @classmethod
     def coords_to_bounding_box(cls, coords):
         lon_min, lat_min = np.floor(np.amin(coords, 0))
         lon_max, lat_max = np.ceil(np.amax(coords, 0))
@@ -503,7 +487,6 @@ class VirESMetadataReader(object):
         begin_time, end_time, n_times = cls.get_time_range_and_size(data)
         coords = cls.get_coords(data)
         bbox = cls.coords_to_bounding_box(coords)
-        ground_path = geos.MultiLineString([])
         footprint = cls.bounding_box_to_geometry(bbox)
 
         return {
@@ -511,7 +494,6 @@ class VirESMetadataReader(object):
             "size": (n_times, 0),
             "extent": bbox,
             "footprint": footprint,
-            "ground_path": ground_path,
             "begin_time": begin_time,
             "end_time": end_time,
         }

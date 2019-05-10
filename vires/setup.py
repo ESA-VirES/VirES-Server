@@ -40,12 +40,13 @@ setup(
     package_data={
         'vires': [
             'data/*.json',
+            'colormaps/*.cm',
             'tests/data/*.cdf',
         ]
     },
     scripts=[],
     install_requires=[
-        'EOxServer', 'eoxmagmod>=0.9.0',
+        'EOxServer', 'eoxmagmod>=0.9.4',
     ],
     zip_safe=False,
 
