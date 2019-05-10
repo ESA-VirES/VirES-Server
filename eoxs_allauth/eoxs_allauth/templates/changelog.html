@@ -41,6 +41,65 @@
           <h1>Changelog</h1>
           <hr>
           <h3>
+              Release of Service v3.0.0 (10.5.2019)
+          </h3>
+          <p>
+              Features:
+          </p>
+          <ul>
+              <li>
+                <b>Full source products/models traceability</b><br>
+                Information about the source products/models and their versions
+                is now available for both the downloaded data and data displayed
+                in the client.
+              </li>
+              <li>
+                <b>Improved composed model GUI</b><br>
+                The client-side handling of the composed models has been
+                thoroughly reviewed. The client GUI now shows information
+                about the source models and the composed model expressions
+                are now consistently shown throughout different parts
+                of the web client.
+              </li>
+              <li>
+                <b>Enhanced field-lines</b><br>
+                The displayed field-lines can be now selected by clicking.
+                Information about the apex and ground intersections
+                is displayed for a selected field-line.
+              </li>
+              <li>
+                <b>New cyclic color-maps</b><br>
+                Two new cyclic color-maps (<a href="https://matplotlib.org/tutorials/colors/colormaps.html#cyclic" target="_blank">twilight and twilight-shifted</a>)
+                have been added to be used with cyclic variables such as
+                latitude or MLT.
+              </li>
+              <li>
+                <b>User data upload</b><br>
+                A possibility to upload own data in the CDF file and compare
+                them with the Swarm products has been added.
+                The supported file format is identical the format of the
+                downloaded data and most of the Swarm products (e.g., MAGx_LR).
+              </li>
+              <li>
+                <b>Machine-to-machine (M2M) interface</b><br>
+                The <a href="/ows" target="_blank">VirES server M2M interface</a> has been
+                opened for registered VirES users. This interface has been so
+                far accessible only indirectly trough web client.
+                Now it can used either directly via the low-level API
+                (based on the OGC WPS protocol) or via an alternative VirES
+                client (e.g. <a href="https://viresclient.readthedocs.io/en/latest/" target="_blank">VirES Python Client</a>.
+              </li>
+              <li>
+                <b>Token-based authentication for the M2M interface</b><br>
+                The access to the <a href="/ows" target="_blank">VirES server M2M interface</a>
+                is granted only for authenticated requests.
+                A new option to use the token-based authentication has been
+                added to VirES. The access tokens can be generated and revoked
+                by the users themselves via the user settings of the web client.
+              </li>
+          </ul>
+          <hr>
+          <h3>
               Release of Service v2.3.0 (22.3.2019)
           </h3>
           <p>
@@ -53,7 +112,7 @@
                 enhancements of the Analytic Viewer:<br>
                 <ul>
                   <li>
-                    Multiple plots can be stacked vertically sharing the X-axis. 
+                    Multiple plots can be stacked vertically sharing the X-axis.
                     Each plot can displays a different set of parameters.
                   </li>
                   <li>
