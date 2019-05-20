@@ -305,7 +305,7 @@ class FetchData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                     # extra sampling for selected collections
-                    if slave.collection_identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
+                    if slave.collection_identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
                         resolver.add_filter(ExtraSampler(
                             'Timestamp', slave.collection_identifier, slave
                         ))
