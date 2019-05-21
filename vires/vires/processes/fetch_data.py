@@ -515,7 +515,11 @@ class FetchData(WPSProcess):
 
             # additional metadata
             output_dict['__info__'] = {
-                'sources': extract_product_names(resolvers.values())
+                'sources': extract_product_names(resolvers.values()),
+                'variables': {
+                    label: resolver.output_variables
+                    for label, resolver in resolvers.items()
+                },
             }
             # encode as messagepack
             encoded = StringIO(msgpack.dumps(output_dict))
