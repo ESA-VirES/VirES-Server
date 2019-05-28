@@ -164,7 +164,6 @@ def check_input_file(path):
             del fields[name]
         elif len(shape) < 1 or shape[0] != size:
             del fields[name] # ignore fields with wrong dimension
-            #raise InvalidFileFormat("Invalid dimension of %s field!" % name)
 
     with cdf_open(path) as cdf:
         times = cdf.raw_var("Timestamp")[...]
