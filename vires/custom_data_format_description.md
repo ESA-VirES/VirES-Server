@@ -37,8 +37,8 @@ The CDF variables are described in the following table.
 Field | Mandatory | Description | Units | Dim | Data Type
 :-----|:---------:|:------------|:-----:|:---:|:---:
  **Timestamp** | yes | Time of observation | UTC | 1 | `CDF_EPOCH` 
- **Latitude** | yes | Position in ITRF – Geocentric latitude | UTC | 1 | `CDF_DOUBLE` 
- **Longitude** | yes | Position in ITRF – Geocentric longitude | UTC | 1 | `CDF_DOUBLE` 
+ **Latitude** | yes | Position in ITRF – Geocentric latitude | deg | 1 | `CDF_DOUBLE` 
+ **Longitude** | yes | Position in ITRF – Geocentric longitude | deg | 1 | `CDF_DOUBLE` 
  **Radius** | no | Position in ITRF – Radius (required to calculate QD-coordinates, MLT, and magnetic models) | m | 1 | `CDF_DOUBLE`
  **F** | no |  Magnetic field intensity (required to calculate model residuals) | nT | 1 | `CDF_DOUBLE`
  **B_NEC** | no | Magnetic field vector, NEC frame (required to calculate model residuals) | nT | 3 | `CDF_DOUBLE`
