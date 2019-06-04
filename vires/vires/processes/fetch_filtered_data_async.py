@@ -254,7 +254,6 @@ class FetchFilteredDataAsync(WPSProcess):
         try:
             job = Job.objects.get(identifier=context.identifier)
         except Job.DoesNotExist:
-            raise
             pass
         else:
             job.delete()
