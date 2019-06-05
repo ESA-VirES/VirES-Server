@@ -37,6 +37,7 @@ from vires.models import Job
 
 STATUS_TO_STRING = dict(Job.STATUS_CHOICES)
 
+
 class ListJobs(Component):
     """ This utility process lists all asynchronous WPS jobs owned by
     the current user.
