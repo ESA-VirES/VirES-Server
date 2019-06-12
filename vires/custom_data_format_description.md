@@ -47,28 +47,43 @@ Field | Mandatory | Description | Units | Dim | Data Type
 
 ### CSV File Format Description
 
-The [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) file sctructure is similar to the CSV data downloaded from VirES  (https://vires.services) and these downloaded data can be uploaded back without modifiction.
+The [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) file structure
+is similar to the CSV data downloaded from VirES (https://vires.services) and
+these downloaded data can be uploaded back without modification.
 
-The CSV file uses comma as a delimiter and it is required to have a header (first line) defining the names of the records' fields. Each record is is required to have the same number of values as the header.
+The CSV file uses comma as a delimiter and it is required to have a header
+(first line) defining the names of the records' fields. Each record is is
+required to have the same number of values as the header.
 
 #### Time-stamps
 
 Each records is required to have a time-stamp defined as
-- either [RFC-3339](https://tools.ietf.org/html/rfc3339) profile of [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) datetime  (`Timestamp` variable), e.g., `2019-06-12T09:35:27.123Z`,
-- or Modified Julian Date 2000 (`MJD2000` variable) defined as a decimal number of days since `2000-01-01T00:00:00Z`.
+- either [RFC-3339](https://tools.ietf.org/html/rfc3339) profile of
+  [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) date-time
+  (`Timestamp` variable), e.g., `2019-06-12T09:35:27.123Z`,
+- or Modified Julian Date 2000 (`MJD2000` variable) defined as a decimal number
+  of days since `2000-01-01T00:00:00Z`.
 
-The Time-stamps' UTC offsets are accepted and interpreted (internally converted to UTC). Time-stamps without a UTC offset are interpreted as UTC times, e.g., `2019-06-12T09:35:27.123` and `2019-06-12T09:35:27.123Z` are therefore the same times.
+The Time-stamps' UTC offsets are accepted and interpreted (internally converted
+to UTC). Time-stamps without a UTC offset are interpreted as UTC times, e.g.,
+`2019-06-12T09:35:27.123` and `2019-06-12T09:35:27.123Z` are therefore the same
+times.
 
-If both `Timestamp` and `MJD200` are present, the `Timestamp` is used as the record time-stamp.
+If both `Timestamp` and `MJD200` are present, the `Timestamp` is used as
+the record time-stamp.
 
 #### Vector Fields
 
-Vector fields are ancoded as semicolon `;` separated list of values enclosed by curly brackets `{}`, e.g.
+Vector fields are encoded as semicolon `;` separated list of values enclosed
+by curly brackets `{}`, e.g.
 ```
 {-2162.84267;-10248.5614;-45579.4719}
 ```
 
-In the special case of the `B_NEC` vector variable, the `B_NEC` vector is automatically composed from the `B_N`, `B_E`, `B_C` scalar component if `B_NEC` is missing and all three `B_N`, `B_E`, `B_C` variables are present in the CSV input data.
+In the special case of the `B_NEC` vector variable, the `B_NEC` vector
+is automatically composed from the `B_N`, `B_E`, `B_C` scalar component
+if `B_NEC` is missing and all three `B_N`, `B_E`, `B_C` variables are present
+in the CSV input data.
 
 #### CDF Variables
 Field | Mandatory | Description | Units | Dim | Data Type
@@ -85,7 +100,8 @@ Field | Mandatory | Description | Units | Dim | Data Type
  **B_C** | no | Magnetic field vector's radial component (center oriented) | nT | 1 | float
  *any* | no | arbitrary custom variable | *any* | *any* | integer or float
 
-The *float* means a decimal representation of the double-precistion floating-point number, e.g., `-8.5`, `1e-5`, `nan`, or `-inf`.
+The *float* means a decimal representation of the double-precision
+floating-point number, e.g., `-8.5`, `1e-5`, `nan`, or `-inf`.
 
 
 
