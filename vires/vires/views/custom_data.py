@@ -28,18 +28,20 @@
 #-------------------------------------------------------------------------------
 
 import re
+import csv
 import json
 import hashlib
-from os import makedirs
-from os.path import join, isdir
+from os import makedirs, remove
+from os.path import join, isdir, basename
 from logging import getLogger
 from shutil import rmtree
 from uuid import uuid4
-from numpy import argmax, argmin
+from numpy import argmax, argmin, datetime64, array, stack
 from django.conf import settings
 from django.http import HttpResponse
-from ..time_util import datetime, naive_to_utc, format_datetime
+from ..time_util import datetime, naive_to_utc, format_datetime, Timer
 from ..cdf_util import cdf_open, CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDFError
+from ..cdf_write_util import cdf_add_variable
 from ..models import CustomDataset
 from ..locked_file_access import log_append
 from .exceptions import (
@@ -50,30 +52,16 @@ from .decorators import (
     allow_content_length, reject_content,
 )
 
+DAYS2MS = 1000 * 60 * 60 * 24
+DATETIME64_MS_2000 = datetime64("2000-01-01", "ms")
+
 RE_FILENAME = re.compile(r"^\w[\w.-]{0,254}$")
 MAX_FILE_SIZE = 256 * 1024 * 1024 # 256 MiB size limit
 MAX_PAYLOAD_SIZE = MAX_FILE_SIZE + 64 * 1024
 EXTRA_KWASGS = {
     "logger": getLogger(__name__),
 }
-LOG_FILENAME = "change.log"
-
-
-def get_upload_dir():
-    """ Get upload directory. """
-    return join(settings.VIRES_UPLOAD_DIR, "custom_data")
-
-
-def log_change(change, identifier, timestamp=None):
-    """ Log change to a change log. """
-    filename = join(get_upload_dir(), LOG_FILENAME)
-
-    if timestamp is None:
-        timestamp = naive_to_utc(datetime.utcnow())
-
-    log_append(filename, "%s %s %s" % (
-        format_datetime(timestamp), identifier, change
-    ))
+CHANGE_LOG_FILENAME = "change.log"
 
 
 @set_extra_kwargs(**EXTRA_KWASGS)
@@ -114,63 +102,12 @@ def model_to_infodict(obj):
         "start": format_datetime(obj.start),
         "end": format_datetime(obj.end),
         "filename": obj.filename,
+        "data_file": basename(obj.location),
         "size": obj.size,
         "content_type": obj.content_type,
         "checksum": obj.checksum,
         "info": json.loads(obj.info) if obj.info else None,
     }
-
-
-def check_input_file(path):
-    """ File format check. """
-    excluded_fields = {'Spacecraft'}
-    mandatory_fields = [
-        ("Timestamp", CDF_EPOCH_TYPE, 1),
-        ("Latitude", CDF_DOUBLE_TYPE, 1),
-        ("Longitude", CDF_DOUBLE_TYPE, 1),
-    ]
-
-    try:
-        with cdf_open(path) as cdf:
-            fields = {
-                field: {
-                    "shape": cdf[field].shape,
-                    "cdf_type": int(cdf[field].type()),
-                }
-                for field in cdf
-            }
-    except CDFError as error:
-        raise InvalidFileFormat(str(error))
-
-    for name, type_, ndim in mandatory_fields:
-        field = fields.get(name)
-        if not field:
-            raise InvalidFileFormat("Missing mandatory %s field!" % name)
-
-        if field["cdf_type"] != int(type_):
-            raise InvalidFileFormat("Invalid type of %s field!" % name)
-
-        if len(field["shape"]) != ndim:
-            raise InvalidFileFormat("Invalid dimension of %s field!" % name)
-
-    size = fields["Timestamp"]["shape"][0]
-
-    if size == 0:
-        raise InvalidFileFormat("Empty dataset!")
-
-    for name, field in fields.items():
-        shape = field["shape"]
-        if name in excluded_fields:
-            del fields[name]
-        elif len(shape) < 1 or shape[0] != size:
-            del fields[name] # ignore fields with wrong dimension
-
-    with cdf_open(path) as cdf:
-        times = cdf.raw_var("Timestamp")[...]
-        start = naive_to_utc(cdf["Timestamp"][argmin(times)])
-        end = naive_to_utc(cdf["Timestamp"][argmax(times)])
-
-    return "application/x-cdf", start, end, fields
 
 
 @reject_content
@@ -218,17 +155,26 @@ def post_item(request, **kwargs):
     filename = join(upload_dir, basename)
     makedirs(upload_dir)
     try:
+        timer = Timer()
+
         with open(filename, "wb") as file_:
             md5 = hashlib.md5()
             for chunk in uploaded_file.chunks():
                 file_.write(chunk)
                 md5.update(chunk)
 
-        # check the input data
+        # process input data and extract information
         try:
-            content_type, start, end, fields = check_input_file(filename)
+            (
+                content_type, start, end, fields, datafile,
+            ) = process_input_file(filename)
         except InvalidFileFormat as error:
             raise HttpError400(str(error))
+
+        kwargs["logger"].info(
+            "%s: %s[%dB, %s] processed in %.3gs",
+            identifier, basename, size, content_type, timer()
+        )
 
         dataset = CustomDataset()
         dataset.owner = owner
@@ -237,7 +183,7 @@ def post_item(request, **kwargs):
         dataset.end = end
         dataset.identifier = identifier
         dataset.filename = basename
-        dataset.location = filename
+        dataset.location = datafile
         dataset.size = size
         dataset.content_type = content_type
         dataset.checksum = md5.hexdigest()
@@ -248,7 +194,7 @@ def post_item(request, **kwargs):
         with open(join(upload_dir, "info.json"), "wb") as file_:
             file_.write(data)
 
-        log_change("CREATED", identifier, timestamp)
+        update_change_log("CREATED", identifier, timestamp)
 
         dataset.save()
 
@@ -256,7 +202,7 @@ def post_item(request, **kwargs):
         rmtree(upload_dir, ignore_errors=True)
         raise
 
-    _log_change(kwargs["logger"], "uploaded", owner, dataset)
+    _log_action(kwargs["logger"], "uploaded", owner, dataset)
 
     _delete_items(owner, kwargs["logger"], number_of_preserved=1)
 
@@ -287,9 +233,9 @@ def _delete_item(owner, dataset, logger):
     if isdir(upload_dir):
         rmtree(upload_dir, ignore_errors=True)
 
-    log_change("REMOVED", dataset.identifier)
+    update_change_log("REMOVED", dataset.identifier)
 
-    _log_change(logger, "removed", owner, dataset)
+    _log_action(logger, "removed", owner, dataset)
 
 
 def _get_models(owner):
@@ -303,10 +249,252 @@ def _get_model(owner, identifier):
         raise HttpError404
 
 
-def _log_change(logger, action, owner, dataset):
+def _log_action(logger, action, owner, dataset):
     logger.info(
-        "%s: custom file %s[%dB, %s] %s by %s",
+        "%s: %s[%dB, %s] %s by %s",
         dataset.identifier, dataset.filename, dataset.size,
         dataset.content_type, action,
         owner.username if owner else "<anonymous-user>",
     )
+
+
+def get_upload_dir():
+    """ Get upload directory. """
+    return join(settings.VIRES_UPLOAD_DIR, "custom_data")
+
+
+def update_change_log(change, identifier, timestamp=None):
+    """ Log change to a change log. """
+    filename = join(get_upload_dir(), CHANGE_LOG_FILENAME)
+
+    if timestamp is None:
+        timestamp = naive_to_utc(datetime.utcnow())
+
+    log_append(filename, "%s %s %s" % (
+        format_datetime(timestamp), identifier, change
+    ))
+
+
+def process_input_file(path):
+    """ Process input file and extract information. """
+
+    for format_handler in [_convert_input_cdf, _convert_input_csv]:
+        try:
+            mime_type, cdf_file = format_handler(path)
+        except InvalidFileFormat:
+            continue
+        break
+    else:
+        raise InvalidFileFormat("Invalid file format!")
+
+    start, end, fields = process_input_cdf(cdf_file)
+
+    return mime_type, start, end, fields, cdf_file
+
+
+def process_input_cdf(path):
+    """ Process input CDF file and extract metadata. """
+    excluded_fields = {'Spacecraft'}
+    mandatory_fields = [
+        ("Timestamp", CDF_EPOCH_TYPE, 1),
+        ("Latitude", CDF_DOUBLE_TYPE, 1),
+        ("Longitude", CDF_DOUBLE_TYPE, 1),
+    ]
+
+    try:
+        with cdf_open(path) as cdf:
+            fields = {
+                field: {
+                    "shape": cdf[field].shape,
+                    "cdf_type": int(cdf[field].type()),
+                }
+                for field in cdf
+            }
+    except CDFError as error:
+        raise InvalidFileFormat(str(error))
+
+    for name, type_, ndim in mandatory_fields:
+        field = fields.get(name)
+        if not field:
+            raise InvalidFileFormat("Missing mandatory %s field!" % name)
+
+        if field["cdf_type"] != int(type_):
+            raise InvalidFileFormat("Invalid type of %s field!" % name)
+
+        if len(field["shape"]) != ndim:
+            raise InvalidFileFormat("Invalid dimension of %s field!" % name)
+
+    size = fields["Timestamp"]["shape"][0]
+
+    if size == 0:
+        raise InvalidFileFormat("Empty dataset!")
+
+    for name, field in fields.items():
+        shape = field["shape"]
+        if name in excluded_fields:
+            del fields[name]
+        elif len(shape) < 1 or shape[0] != size:
+            del fields[name] # ignore fields with wrong dimension
+
+    with cdf_open(path) as cdf:
+        times = cdf.raw_var("Timestamp")[...]
+        start = naive_to_utc(cdf["Timestamp"][argmin(times)])
+        end = naive_to_utc(cdf["Timestamp"][argmax(times)])
+
+    return start, end, fields
+
+
+def _convert_input_cdf(filename):
+    """ Make sure the input is in the CDF format. """
+    try:
+        with cdf_open(filename):
+            pass
+    except CDFError as error:
+        raise InvalidFileFormat(str(error))
+    return "application/x-cdf", filename
+
+
+def _convert_input_csv(path):
+    """ Convert input CSV file to CDF format. """
+    data_types = [int, float, lambda v: datetime64(v, 'ms'), _parse_csv_array]
+
+    def _guess_data_type(value):
+        for type_ in data_types:
+            try:
+                type_(value)
+            except (ValueError, TypeError):
+                pass
+            else:
+                return type_
+        return str
+
+    def _read_csv_file(filename):
+        records = csv.reader(filename)
+        header = next(records)
+        yield header
+        for line_no, record in enumerate(records, 2):
+            if len(record) != len(header):
+                raise csv.Error("Line %d: record length mismatch! %d != %d" % (
+                    line_no, len(record), len(header),
+                ))
+            yield record
+
+    def _parse_csv_values(records):
+        header = next(records)
+        yield header
+        record = next(records)
+        types = [_guess_data_type(value) for value in record]
+        try:
+            line_no = 2
+            yield [
+                type_(value)
+                for idx, (type_, value) in enumerate(zip(types, record))
+            ]
+            for line_no, record in enumerate(records, 3):
+                yield [
+                    type_(value)
+                    for idx, (type_, value) in enumerate(zip(types, record))
+                ]
+        except ValueError:
+            raise csv.Error(
+                "Line %d: failed to parse value of %s!" % (line_no, header[idx])
+            )
+
+    def _records_to_arrays(records):
+        header = next(records)
+        data = [[] for _ in header]
+        for record in records:
+            for value, list_ in zip(record, data):
+                list_.append(value)
+        return {
+            field: array(list_) for field, list_ in zip(header, data)
+        }
+
+    cdf_file = path + ".cdf"
+    try:
+        with open(path) as file_:
+            data = _records_to_arrays(_parse_csv_values(_read_csv_file(file_)))
+    except csv.Error as error:
+        raise InvalidFileFormat(str(error))
+
+    data = _sanitize_csv_data(data)
+
+    try:
+        _save_dataset_to_cdf(cdf_file, data)
+    except CDFError as error:
+        raise InvalidFileFormat(str(error))
+
+    remove(path)
+
+    return "text/csv", cdf_file
+
+
+def _save_dataset_to_cdf(filename, dataset):
+    """ Save dataset to a CDF file. """
+    with cdf_open(filename, "w") as cdf:
+        for variable, data in dataset.items():
+            cdf_add_variable(cdf, variable, data)
+
+
+def _sanitize_csv_data(data):
+    """ Sanitize input CSV data. """
+    # translate field names to their proper forms
+    special_fields = {field.lower(): field for field in [
+        "Timestamp", "MJD2000", "Latitude", "Longitude", "Radius",
+        "F", "B_NEC", "B_N", "B_E", "B_C",
+    ]}
+
+    data = {
+        special_fields.get(field, field): values
+        for field, values in data.items()
+    }
+
+    # calculate time-stamp from MJD2000
+    if "Timestamp" not in data and "MJD2000" in data:
+        data["Timestamp"] = DATETIME64_MS_2000 + array(
+            DAYS2MS * data["MJD2000"], "timedelta64[ms]"
+        )
+
+    # join B_NEC components
+    if "B_NEC" not in data and "B_N" in data and "B_E" in data and "B_C" in data:
+        data["B_NEC"] = stack((data["B_N"], data["B_E"], data["B_C"]), axis=1)
+
+    return data
+
+
+def _parse_csv_array(value):
+    """ Parse CSV array. """
+
+    def _parse_array(string):
+        data = []
+        while True:
+            idx = string.find(";")
+            if idx == -1:
+                idx = string.find("}")
+                if idx == -1:
+                    raise ValueError("Missing closing brace!")
+                tmp = string[:idx]
+                if tmp:
+                    data.append(float(tmp))
+                break
+            elif idx > 1 and string[idx-1] == "}":
+                tmp = string[:idx-1]
+                if tmp:
+                    data.append(float(tmp))
+                break
+            if string[0] == "{":
+                string, tmp = _parse_array(string[1:])
+                data.append(tmp)
+            else:
+                data.append(float(string[:idx]))
+                string = string[idx+1:]
+        return string[idx+1:], data
+
+    # remove white-spaces
+    value = "".join(value.split())
+
+    if not value or value[0] != "{":
+        raise ValueError("Missing opening brace!")
+
+    _, data = _parse_array(value[1:])
+    return data
