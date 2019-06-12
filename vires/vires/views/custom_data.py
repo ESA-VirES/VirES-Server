@@ -31,15 +31,15 @@ import re
 import csv
 import json
 import hashlib
-from os import makedirs
-from os.path import join, isdir
+from os import makedirs, remove
+from os.path import join, isdir, basename
 from logging import getLogger
 from shutil import rmtree
 from uuid import uuid4
 from numpy import argmax, argmin, datetime64, array, stack
 from django.conf import settings
 from django.http import HttpResponse
-from ..time_util import datetime, naive_to_utc, format_datetime
+from ..time_util import datetime, naive_to_utc, format_datetime, Timer
 from ..cdf_util import cdf_open, CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDFError
 from ..cdf_write_util import cdf_add_variable
 from ..models import CustomDataset
@@ -61,7 +61,7 @@ MAX_PAYLOAD_SIZE = MAX_FILE_SIZE + 64 * 1024
 EXTRA_KWASGS = {
     "logger": getLogger(__name__),
 }
-LOG_FILENAME = "change.log"
+CHANGE_LOG_FILENAME = "change.log"
 
 
 @set_extra_kwargs(**EXTRA_KWASGS)
@@ -102,6 +102,7 @@ def model_to_infodict(obj):
         "start": format_datetime(obj.start),
         "end": format_datetime(obj.end),
         "filename": obj.filename,
+        "data_file": basename(obj.location),
         "size": obj.size,
         "content_type": obj.content_type,
         "checksum": obj.checksum,
@@ -154,6 +155,8 @@ def post_item(request, **kwargs):
     filename = join(upload_dir, basename)
     makedirs(upload_dir)
     try:
+        timer = Timer()
+
         with open(filename, "wb") as file_:
             md5 = hashlib.md5()
             for chunk in uploaded_file.chunks():
@@ -167,6 +170,11 @@ def post_item(request, **kwargs):
             ) = process_input_file(filename)
         except InvalidFileFormat as error:
             raise HttpError400(str(error))
+
+        kwargs["logger"].info(
+            "%s: %s[%dB, %s] processed in %.3gs",
+            identifier, basename, size, content_type, timer()
+        )
 
         dataset = CustomDataset()
         dataset.owner = owner
@@ -243,7 +251,7 @@ def _get_model(owner, identifier):
 
 def _log_action(logger, action, owner, dataset):
     logger.info(
-        "%s: custom file %s[%dB, %s] %s by %s",
+        "%s: %s[%dB, %s] %s by %s",
         dataset.identifier, dataset.filename, dataset.size,
         dataset.content_type, action,
         owner.username if owner else "<anonymous-user>",
@@ -257,7 +265,7 @@ def get_upload_dir():
 
 def update_change_log(change, identifier, timestamp=None):
     """ Log change to a change log. """
-    filename = join(get_upload_dir(), LOG_FILENAME)
+    filename = join(get_upload_dir(), CHANGE_LOG_FILENAME)
 
     if timestamp is None:
         timestamp = naive_to_utc(datetime.utcnow())
@@ -270,7 +278,7 @@ def update_change_log(change, identifier, timestamp=None):
 def process_input_file(path):
     """ Process input file and extract information. """
 
-    for format_handler in [convert_input_cdf, convert_input_csv]:
+    for format_handler in [_convert_input_cdf, _convert_input_csv]:
         try:
             mime_type, cdf_file = format_handler(path)
         except InvalidFileFormat:
@@ -336,25 +344,25 @@ def process_input_cdf(path):
     return start, end, fields
 
 
-def convert_input_cdf(filename):
+def _convert_input_cdf(filename):
     """ Make sure the input is in the CDF format. """
     try:
-        with cdf_open(filename) as cdf:
+        with cdf_open(filename):
             pass
     except CDFError as error:
         raise InvalidFileFormat(str(error))
     return "application/x-cdf", filename
 
 
-def convert_input_csv(path):
+def _convert_input_csv(path):
     """ Convert input CSV file to CDF format. """
-    data_types = [int, float, lambda v: datetime64(v, 'ms')]
+    data_types = [int, float, lambda v: datetime64(v, 'ms'), _parse_csv_array]
 
     def _guess_data_type(value):
         for type_ in data_types:
             try:
                 type_(value)
-            except:
+            except (ValueError, TypeError):
                 pass
             else:
                 return type_
@@ -409,24 +417,26 @@ def convert_input_csv(path):
     except csv.Error as error:
         raise InvalidFileFormat(str(error))
 
-    data = sanitize_csv_data(data)
+    data = _sanitize_csv_data(data)
 
     try:
-        save_dataset_to_cdf(cdf_file, data)
+        _save_dataset_to_cdf(cdf_file, data)
     except CDFError as error:
         raise InvalidFileFormat(str(error))
+
+    remove(path)
 
     return "text/csv", cdf_file
 
 
-def save_dataset_to_cdf(filename, dataset):
+def _save_dataset_to_cdf(filename, dataset):
     """ Save dataset to a CDF file. """
     with cdf_open(filename, "w") as cdf:
         for variable, data in dataset.items():
             cdf_add_variable(cdf, variable, data)
 
 
-def sanitize_csv_data(data):
+def _sanitize_csv_data(data):
     """ Sanitize input CSV data. """
     # translate field names to their proper forms
     special_fields = {field.lower(): field for field in [
@@ -449,4 +459,42 @@ def sanitize_csv_data(data):
     if "B_NEC" not in data and "B_N" in data and "B_E" in data and "B_C" in data:
         data["B_NEC"] = stack((data["B_N"], data["B_E"], data["B_C"]), axis=1)
 
+    return data
+
+
+def _parse_csv_array(value):
+    """ Parse CSV array. """
+
+    def _parse_array(string):
+        data = []
+        while True:
+            idx = string.find(";")
+            if idx == -1:
+                idx = string.find("}")
+                if idx == -1:
+                    raise ValueError("Missing closing brace!")
+                tmp = string[:idx]
+                if tmp:
+                    data.append(float(tmp))
+                break
+            elif idx > 1 and string[idx-1] == "}":
+                tmp = string[:idx-1]
+                if tmp:
+                    data.append(float(tmp))
+                break
+            if string[0] == "{":
+                string, tmp = _parse_array(string[1:])
+                data.append(tmp)
+            else:
+                data.append(float(string[:idx]))
+                string = string[idx+1:]
+        return string[idx+1:], data
+
+    # remove white-spaces
+    value = "".join(value.split())
+
+    if not value or value[0] != "{":
+        raise ValueError("Missing opening brace!")
+
+    _, data = _parse_array(value[1:])
     return data
