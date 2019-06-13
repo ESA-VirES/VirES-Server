@@ -26,29 +26,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=unused-import, missing-docstring
+# pylint: disable=missing-docstring
 
 from __future__ import print_function
 from os import remove, rename
 from os.path import exists, basename, splitext
 from logging import getLogger
-from itertools import chain, izip_longest
+from itertools import chain
 from collections import namedtuple
 from bisect import bisect_left, bisect_right
 from numpy import (
-    asarray, datetime64, timedelta64, concatenate, searchsorted, full, dtype,
+    asarray, datetime64, timedelta64, concatenate, searchsorted, full,
     empty, int8,
 )
 from eoxmagmod import mjd2000_to_decimal_year, eval_qdlatlon
 from .util import full
-from .cdf_util import (
-    cdf_open, cdf_time_subset, cdf_time_interp, datetime_to_cdf_rawtime,
-    CDF_EPOCH_TYPE,
-    CDF_INT1_TYPE,
-    GZIP_COMPRESSION,
-    GZIP_COMPRESSION_LEVEL1,
-    CDF_CREATOR,
-)
+from .cdf_util import cdf_open, CDF_EPOCH_TYPE
+from .cdf_write_util import cdf_add_variable, CdfTypeEpoch
 
 SAMPLING = timedelta64(1000, 'ms') # sampling step
 INPUT_MARGIN = 5 # number of samples needed from the surrounding products
@@ -399,16 +393,6 @@ class OrbitDirectionTable(object):
     def _save_table(self, cdf):
         """ Save orbit direction table to a CDF file. """
 
-        def _set_variable(cdf, variable, data, attrs):
-            cdf_type, data_convertor = _TYPE_MAP[data.dtype]
-            cdf.new(
-                variable, data_convertor.encode(data),
-                cdf_type, dims=data.shape[1:],
-                #compress=GZIP_COMPRESSION,
-                #compress_param=GZIP_COMPRESSION_LEVEL1,
-            )
-            cdf[variable].attrs.update(attrs)
-
         def _write_time_ranges(attr, start_times, end_times):
             for item in zip(start_times, end_times):
                 attr.new(data=CdfTypeEpoch.encode(item), type=CDF_EPOCH_TYPE)
@@ -425,12 +409,12 @@ class OrbitDirectionTable(object):
         cdf.attrs['NEIGHBOUR_DISTANCE'] = 1000.
         cdf.attrs['NEIGHBOUR_OVERLAP'] = 3000.
 
-        _set_variable(cdf, "Timestamp", self._data.times, {
+        cdf_add_variable(cdf, "Timestamp", self._data.times, {
             "DESCRIPTION": "Time stamp",
             "UNITS": "-",
         })
 
-        _set_variable(cdf, "BoundaryType", self._data.flags, {
+        cdf_add_variable(cdf, "BoundaryType", self._data.flags, {
             "DESCRIPTION": (
                 "Boundary type (regular %s, block start %s, block end %s)" % (
                     FLAG_MIDDLE, FLAG_START, FLAG_END
@@ -439,7 +423,7 @@ class OrbitDirectionTable(object):
             "UNITS": "-",
         })
 
-        _set_variable(cdf, "OrbitDirection", self._data.odirs, {
+        cdf_add_variable(cdf, "OrbitDirection", self._data.odirs, {
             "UNITS": "-",
             "DESCRIPTION": (
                 "Orbit direction after this point. "
@@ -630,41 +614,3 @@ def sorted_range(data, start, end, left_closed=True, right_closed=True,
             idx_end += margin
 
     return slice(idx_start, idx_end)
-
-
-class CdfTypeDummy(object):
-    """ CDF dummy type conversions. """
-
-    @staticmethod
-    def decode(values):
-        """ Pass trough and do nothing. """
-        return values
-
-    @staticmethod
-    def encode(values):
-        """ Pass trough and do nothing. """
-        return values
-
-
-class CdfTypeEpoch(object):
-    """ CDF Epoch Time type conversions. """
-    CDF_EPOCH_1970 = 62167219200000.0
-
-    @classmethod
-    def decode(cls, cdf_raw_time):
-        """ Convert CDF raw time to datetime64[ms]. """
-        return asarray(
-            cdf_raw_time - cls.CDF_EPOCH_1970
-        ).astype('datetime64[ms]')
-
-    @classmethod
-    def encode(cls, time):
-        """ Convert datetime64[ms] to CDF raw time. """
-        time = asarray(time, 'datetime64[ms]').astype('int64')
-        return time + cls.CDF_EPOCH_1970
-
-
-_TYPE_MAP = {
-    dtype("int8"): (CDF_INT1_TYPE, CdfTypeDummy),
-    dtype("datetime64[ms]"): (CDF_EPOCH_TYPE, CdfTypeEpoch),
-}

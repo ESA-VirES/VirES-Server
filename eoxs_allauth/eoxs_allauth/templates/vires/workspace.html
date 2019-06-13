@@ -4,16 +4,27 @@
   <title>VirES for Swarm</title>
 {% endblock %}
 
-
 {% block content %}
+
+{% if client_state %}
+  <script type="text/javascript">
+    (function (config) {
+      var key;
+      localStorage.clear();
+      for (key in config) {
+        localStorage.setItem(key, JSON.stringify(config[key]));
+      }
+    })(JSON.parse("{{ client_state|escapejs }}"));
+  </script>
+{% endif %}
 
 {% if user.is_authenticated %}
 
   {% load staticfiles %}
   {% load account %}
 
-  <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
+  <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
 
   <script type="text/javascript">
     var _paq = _paq || [];
