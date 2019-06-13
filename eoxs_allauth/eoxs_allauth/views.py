@@ -68,27 +68,6 @@ def open_ows(request):
     return ows(request)
 
 
-def parse_client_state(data):
-    allowed_keys = [
-        "serviceVersion",
-        "timeSelection", "timeDomain", "areaSelection", "viewSelection",
-        "productsConfiguration", "activeOverlays", "activeBaselayer",
-        "cameraPosition", "xAxisSelection", "plotConfiguration",
-        "parameterConfiguration", "filterSelection", "filtersMinimized",
-    ]
-
-    data = json.loads(data)
-
-    if not isinstance(data, dict):
-        raise ValueError
-
-    return {
-        key0: value for key0, value in (
-            (key1, data.get(key1)) for key1 in allowed_keys
-        ) if value is not None
-    }
-
-
 def workspace(parse_client_state=None):
     """ EOxServer/allauth workspace.
     Note that the work space is used as the actual landing page.
