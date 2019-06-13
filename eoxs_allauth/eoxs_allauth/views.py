@@ -97,7 +97,7 @@ def workspace(parse_client_state=None):
                 settings, "WORKSPACE_TEMPLATE", "eoxs_allauth/workspace.html"
             ), {
                 "client_state": (
-                    json.dumps(client_state) if client_state else None
+                    None if client_state is None else json.dumps(client_state)
                 ),
                 "login_form": login_form,
                 "signup_form": SignupForm(),
