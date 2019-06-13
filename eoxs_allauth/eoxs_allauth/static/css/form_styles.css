@@ -37,7 +37,7 @@
   font-weight: 500;
 }
 /* Overwrite default navbar collapse size */
-@media (max-width: 1100px) {
+@media (max-width: 1250px) {
   .navbar-header {
     float: none;
   }
