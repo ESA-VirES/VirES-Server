@@ -27,14 +27,15 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods, too-many-ancestors
 
+import json
 from time import sleep
 from logging import INFO, WARNING
 from datetime import datetime
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import View
 from django.views.generic.edit import UpdateView
@@ -48,7 +49,6 @@ from eoxserver.services.views import ows
 from .models import UserProfile, AuthenticationToken
 from .decorators import log_access, authenticated_only, token_authentication
 
-
 @token_authentication
 @log_access(INFO, WARNING)
 @authenticated_only
@@ -57,6 +57,7 @@ def wrapped_ows(request):
     """The EOxServer's OWS end-point view wrapped with the necessary decorators.
     """
     return ows(request)
+
 
 @log_access(INFO, WARNING)
 @csrf_exempt
@@ -67,23 +68,64 @@ def open_ows(request):
     return ows(request)
 
 
-@require_GET
-def workspace(request):
+def parse_client_state(data):
+    allowed_keys = [
+        "serviceVersion",
+        "timeSelection", "timeDomain", "areaSelection", "viewSelection",
+        "productsConfiguration", "activeOverlays", "activeBaselayer",
+        "cameraPosition", "xAxisSelection", "plotConfiguration",
+        "parameterConfiguration", "filterSelection", "filtersMinimized",
+    ]
+
+    data = json.loads(data)
+
+    if not isinstance(data, dict):
+        raise ValueError
+
+    return {
+        key0: value for key0, value in (
+            (key1, data.get(key1)) for key1 in allowed_keys
+        ) if value is not None
+    }
+
+
+def workspace(parse_client_state=None):
     """ EOxServer/allauth workspace.
     Note that the work space is used as the actual landing page.
     """
-    # TODO: check if request.method is set to "POST"
-    # if yes then login or signup user then do redirect or whatever
-    login_form = LoginForm()
-    del login_form.fields["login"].widget.attrs["autofocus"]
-    return render(
-        request, getattr(
-            settings, "WORKSPACE_TEMPLATE", "eoxs_allauth/workspace.html"
-        ), {
-            "login_form": login_form,
-            "signup_form": SignupForm(),
-        }
-    )
+
+    allowed_methods = ["GET", "POST"] if parse_client_state else ["GET"]
+
+    @log_access(INFO, INFO)
+    @require_http_methods(allowed_methods)
+    @csrf_exempt
+    def _workspace_view(request):
+        if request.method == "POST" and parse_client_state:
+            try:
+                client_state = parse_client_state(
+                    request.POST.get("client_state", "")
+                )
+            except ValueError:
+                # TODO: implement a nicer error response
+                return HttpResponse("Bad Request", "text/plain", 400)
+        else:
+            client_state = None
+
+        login_form = LoginForm()
+        del login_form.fields["login"].widget.attrs["autofocus"]
+        return render(
+            request, getattr(
+                settings, "WORKSPACE_TEMPLATE", "eoxs_allauth/workspace.html"
+            ), {
+                "client_state": (
+                    json.dumps(client_state) if client_state else None
+                ),
+                "login_form": login_form,
+                "signup_form": SignupForm(),
+            }
+        )
+
+    return _workspace_view
 
 
 class ProfileUpdate(SuccessMessageMixin, UpdateView):
