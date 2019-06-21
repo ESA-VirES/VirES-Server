@@ -1,0 +1,4 @@
+eoxs_oauth/MANIFEST.in
+include README.md
+recursive-include vires_oauth/templates *
+recursive-include vires_oauth/static *
