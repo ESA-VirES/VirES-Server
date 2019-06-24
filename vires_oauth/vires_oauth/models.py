@@ -26,14 +26,10 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-#from os import urandom
-#from base64 import urlsafe_b64encode
-
 from django.db.models import (
     CASCADE, Model, OneToOneField, CharField,
-    #ForeignKey, DateTimeField, BooleanField,
 )
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django_countries.fields import CountryField
 
 
@@ -49,27 +45,11 @@ class UserProfile(Model):
         return "<UserProfile: %s>" % self.user
 
 
-#def get_random_token(lenght):
-#    return urlsafe_b64encode(urandom(lenght))
-#
-#def get_default_identifier():
-#    return get_random_token(12)
-#
-#def get_default_token():
-#    return get_random_token(24)
-#
-#
-#class AuthenticationToken(Model):
-#    owner = ForeignKey(User, related_name='tokens', null=False, blank=False)
-#    token = CharField(
-#        max_length=32, blank=True, null=True,
-#        default=get_default_token, unique=True
-#    )
-#    identifier = CharField(
-#        max_length=16, blank=True, null=True,
-#        default=get_default_identifier, unique=True,
-#    )
-#    is_new = BooleanField(default=False, null=False)
-#    created = DateTimeField(auto_now_add=True)
-#    expires = DateTimeField(null=True, default=None)
-#    purpose = CharField(max_length=128, blank=True, null=True)
+class GroupInfo(Model):
+    """ Model holding human readable information about a group. """
+    group = OneToOneField(Group, on_delete=CASCADE)
+    title = CharField(max_length=200, null=True, blank=True)
+    description = CharField(max_length=3000, null=True, blank=True)
+
+    def __str__(self):
+        return "<GroupInfo: %s>" % self.group
