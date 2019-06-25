@@ -6,13 +6,13 @@
   <h2>Log in</h2>
   {% get_providers as socialaccount_providers %}
   {% if socialaccount_providers %}
-  <p style="text-align: center;">Log in using your preferred social network account</p>
+  <p style="text-align: center;">Log in using your preferred social network account:</p>
   <ul class="socialaccount_providers">
     {% include "socialaccount/snippets/provider_list.html" with process="login" %}
   </ul>
-  <p style="text-align: center;">or with your account credentials</p>
+  <p style="text-align: center;">or with your account credentials:</p>
   {% else %}
-  <p style="text-align: center;">Login with your account credentials</p>
+  <p style="text-align: center;">Login with your account credentials:</p>
   {% endif %}
   <form class="form-horizontal inputwide" method="POST" action="{% url 'account_login' %}">
     {% csrf_token %}
@@ -46,6 +46,7 @@
      {% if redirect_field_value %}
          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
      {% endif %}
+     <p class="help-inline" style="text-align: right;"><a href="{% url 'account_reset_password' %}">Forgot your password?</a></p>
      <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
          <button type="submit" class="btn btn-primary">{% trans "Log in" %}</button>
      </div>
