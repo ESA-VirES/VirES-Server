@@ -35,14 +35,6 @@ from django_countries.fields import LazyTypedChoiceField
 from django_countries.widgets import CountrySelectWidget
 from .models import UserProfile
 
-# FIXME: Is this still relevant? If not remove it!
-# When account is created via social, fire django-allauth signal to populate
-# Django User record.
-#from django.dispatch import receiver
-#from django.contrib.auth.models import User
-#from allauth.account.signals import user_signed_up
-
-
 # Regular expression matching invalid user-name characters.
 RE_USER_NAME_INVALID_CHARACTERS = re.compile('[^a-zA-Z0-9_.]+')
 
@@ -136,64 +128,30 @@ class SignupForm(Form):
 
     def __init__(self, *args, **kwargs):
         super(SignupForm, self).__init__(*args, **kwargs)
-        if hasattr(self, 'sociallogin'):
-            provider = self.sociallogin.account.provider
-            extra_data = self.sociallogin.account.extra_data
-            getLogger(__name__).debug("%s: %s", provider, extra_data)
-            if provider == 'linkedin_oauth2':
-                initial = self.extract_linkedin(extra_data)
-            elif provider == 'facebook':
-                initial = self.extract_facebook(extra_data)
-            elif provider == 'google':
-                initial = self.extract_google(extra_data)
-            elif provider == 'twitter':
-                initial = self.extract_twitter(extra_data)
-            else:
-                initial = {}
-            self.initial.update(initial)
+        if not hasattr(self, 'sociallogin'):
+            return
+        provider = self.sociallogin.account.provider
+        extra_data = self.sociallogin.account.extra_data
+        logger = getLogger(__name__)
+        logger.debug("initial: %s: %s", provider, self.initial)
+        logger.debug("extra: %s: %s", provider, extra_data)
+        self.initial.update(
+            DATA_EXTRACTOR.get(provider, lambda _: {})(extra_data)
+        )
+        self.extract_username(self.initial)
+        logger.debug("final,: %s: %s", provider, self.initial)
 
-    @classmethod
-    def email_to_username(cls, email):
+    @staticmethod
+    def extract_username(initial):
         """ Extract user-name from an e-mail address. """
-        return RE_USER_NAME_INVALID_CHARACTERS.sub('', email.partition("@")[0])
+        if initial.get('email') and not initial.get('username'):
+            initial['username'] = email_to_username(initial['email'])
 
-    @classmethod
-    def extract_linkedin(cls, extra_data):
-        """ Extract user info form the LinkedIn social login. """
-        data = {}
-        if 'location' in extra_data:
-            data['country'] = extra_data['location']['country']['code'].upper()
-        if 'emailAddress' in extra_data:
-            data['username'] = cls.email_to_username(extra_data['emailAddress'])
-        if 'positions' in extra_data and 'values' in extra_data['positions']:
-            for position in extra_data['positions']['values']:
-                if 'isCurrent' in position and position['isCurrent']:
-                    if 'company' in position:
-                        data['institution'] = position['company']['name']
-                    if 'title' in position:
-                        data['title'] = position['title']
-                    if 'summary' in position:
-                        data['study_area'] = position['summary']
-                    break
-        return data
 
-    @classmethod
-    def extract_google(cls, extra_data):
-        """ Extract user info form the Google social login. """
-        data = {}
-        if 'email' in extra_data:
-            data['username'] = cls.email_to_username(extra_data['email'])
-        return data
+# add a provider-specific extraction function - if necessary
+DATA_EXTRACTOR = {}
 
-    @classmethod
-    def extract_facebook(cls, extra_data):
-        """ Extract user info form the LinkedIn social login. """
-        data = {}
-        if 'email' in extra_data:
-            data['username'] = cls.email_to_username(extra_data['email'])
-        return data
 
-    @classmethod
-    def extract_twitter(cls, extra_data):
-        """ Extract user info form the Twitter social login. """
-        return {}
+def email_to_username(email):
+    """ Extract user-name from an e-mail address. """
+    return RE_USER_NAME_INVALID_CHARACTERS.sub('', email.partition("@")[0])
