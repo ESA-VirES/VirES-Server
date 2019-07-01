@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Various utilities
+#  Package data
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +26,8 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+from os.path import join, dirname
 
-def decorate(decorators, function):
-    """ Decorate `function` with one or more decorators. `decorators` can be
-    a single decorator or an iterable of decorators.
-    """
-    if hasattr(decorators, '__iter__'):
-        decorators = reversed(decorators)
-    else:
-        decorators = [decorators]
-    for decorator in decorators:
-        function = decorator(function)
-    return function
+_DIRNAME = dirname(__file__)
+
+DEFAULT_GROUPS = join(_DIRNAME, "default_groups.json")

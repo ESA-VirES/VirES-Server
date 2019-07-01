@@ -30,8 +30,9 @@ from functools import wraps
 from logging import getLogger, NOTSET
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from .settings import ACCESS_LOGGER_NAME
 
-LOGGER = getLogger("vires_oauth.access")
+LOGGER = getLogger(ACCESS_LOGGER_NAME)
 
 
 def log_access(level_authenticated=NOTSET, level_unauthenticated=NOTSET):
@@ -48,12 +49,26 @@ def log_access(level_authenticated=NOTSET, level_unauthenticated=NOTSET):
     return _decorator_
 
 
+def vires_admin_only(view_func):
+    """ Allow only admin to access. """
+    @wraps(view_func)
+    def _wrapper_(request, *args, **kwargs):
+        if not request.user.is_vires_admin:
+            return HttpResponse(
+                'Not authorized!', content_type="text/plain", status=403
+            )
+        return view_func(request, *args, **kwargs)
+    return _wrapper_
+
+
 def reject_unauthenticated(view_func):
     """ Allow only authenticated users or deny access. """
     @wraps(view_func)
     def _wrapper_(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return HttpResponse('Authentication required!', status=401)
+            return HttpResponse(
+                'Authentication required!', content_type="text/plain", status=401
+            )
         return view_func(request, *args, **kwargs)
     return _wrapper_
 

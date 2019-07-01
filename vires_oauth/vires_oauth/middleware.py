@@ -30,7 +30,19 @@
 
 from logging import getLogger, INFO, WARNING, ERROR
 from django.contrib.auth import logout
-from .settings import ACCESS_LOGGER_NAME
+from .settings import ACCESS_LOGGER_NAME, ADMIN_PERMISSION
+
+
+def access_vires_admin_middleware(get_response):
+
+    def middleware(request):
+        request.user.is_vires_admin = (
+            hasattr(request.user, 'has_perm') and
+            request.user.has_perm(ADMIN_PERMISSION)
+        )
+        return get_response(request)
+
+    return middleware
 
 
 def access_logging_middleware(get_response):

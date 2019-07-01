@@ -1,8 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Common command utilities.
+# VirES OAuth2 authorization server - app configuration
 #
 # Authors: Martin Paces <martin.paces@eox.at>
+#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -24,20 +25,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-few-public-methods
+# pylint: disable=missing-docstring, invalid-name
 
-import sys
+from django.apps import AppConfig
+from .settings import PACKAGE_NAME
 
 
-class CommandMixIn():
-    @staticmethod
-    def info(message, *args):
-        print("INFO: %s" % (message % args), file=sys.stderr)
+class ViresOauthConfig(AppConfig):
+    name = PACKAGE_NAME
+    verbose_name = "VirES OAuth2.0 server"
 
-    @staticmethod
-    def warning(message, *args):
-        print("WARNING: %s" % (message % args), file=sys.stderr)
-
-    @staticmethod
-    def error(message, *args):
-        print("ERROR: %s" % (message % args), file=sys.stderr)
+    def ready(self):
+        from . import signals # initializes app signal handlers - do not remove!

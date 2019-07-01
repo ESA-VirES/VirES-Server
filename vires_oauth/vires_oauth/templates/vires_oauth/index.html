@@ -4,6 +4,21 @@
   <form class="form-horizontal inputwide" method="POST" action="{% url 'account_update_profile' %}">
     {% csrf_token %}
     <fieldset>
+      <div class="control-group">
+        <label class="control-label">Username</label>
+        <p class="form-control-static"><strong>{{ request.user.username }}</strong></p>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Granted permissions</label>
+        <div class="well well-sm">
+          <div style="line-height: 180%; font-size: 120%;">
+          {% for code, label in permissions %}
+          <span class="label {% if code == "admin" %}label-danger{% else %}label-primary{% endif %}">{{ label }}</span>
+          {% endfor %}
+          </div>
+          {% if not permissions %} No permission granted. {% endif %}
+        </div>
+      </div>
       {% for field in form %}
         {% if field.errors %}
           <div class="control-group error">

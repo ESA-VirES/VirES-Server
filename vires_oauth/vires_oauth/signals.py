@@ -1,8 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Common command utilities.
+# VirES OAuth2  signal handlers
 #
 # Authors: Martin Paces <martin.paces@eox.at>
+#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -24,20 +25,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-few-public-methods
+# pylint: disable=missing-docstring, invalid-name
 
-import sys
+from logging import getLogger
+from django.conf import settings
+from django.dispatch import receiver
+from django.contrib.auth.models import Group
+from allauth.account.signals import user_signed_up
 
 
-class CommandMixIn():
-    @staticmethod
-    def info(message, *args):
-        print("INFO: %s" % (message % args), file=sys.stderr)
-
-    @staticmethod
-    def warning(message, *args):
-        print("WARNING: %s" % (message % args), file=sys.stderr)
-
-    @staticmethod
-    def error(message, *args):
-        print("ERROR: %s" % (message % args), file=sys.stderr)
+@receiver(user_signed_up)
+def set_default_group(sender, request, user, **kwargs):
+    """ Set default groups for newly signed-up users. """
+    logger = getLogger(__name__)
+    default_group = getattr(settings, "VIRES_OAUTH_DEFAULT_GROUP", None)
+    if not default_group:
+        return
+    try:
+        group = Group.objects.get(name=default_group)
+    except Group.DoesNotExist:
+        logger.warning("Default group %s does not exist!", default_group)
+        return
+    user.groups.add(group)
+    logger.debug("User %s added to group %s.", user.username, group.name)

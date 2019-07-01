@@ -116,18 +116,30 @@
                 <i class="fa fa-fw fa-user"></i> {% user_display user %}
               </a>
               <ul class="dropdown-menu" role="menu">
+                <li><a href="{% url 'account_update_profile' %}">{% trans "Edit profile information" %}</a></li>
                 <li><a href="{% url 'account_change_password' %}">{% trans "Change password" %}</a></li>
                 <li><a href="{% url 'account_email' %}">{% trans "Change e-mail" %}</a></li>
                 <li><a href="{% url 'socialaccount_connections' %}">{% trans "Connect social accounts" %}</a></li>
-                <li><a href="{% url 'account_update_profile' %}">{% trans "Edit profile information" %}</a></li>
               </ul>
             </li>
+            {% if user.is_vires_admin %}
+            <li class="dropdown">
+              <a class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="false">
+                <i class="fa fa-fw fa-wrench"></i> OAuth2
+              </a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="{% url 'oauth2_provider:list' %}">{% trans "Manage registered applications" %}</a></li>
+                <li><a href="{% url 'oauth2_provider:authorized-token-list' %}">{% trans "Manage authorized tokens" %}</a></li>
+              </ul>
+            </li>
+            {% endif %}
             <li>
               <a class="tab-header" href="{% url 'account_logout' %}">
                 <i class="fa fa-fw fa-sign-out"></i> Log out
               </a>
             </li>
           {% endif %}
+
       {% endblock navbar_items %}
       </ul>
     </div>
@@ -138,62 +150,6 @@
     <div class="col-md-4 col-md-offset-4" id="formcontainer">
     {% block content %}
     {% endblock content %}
-    <!--
-    <div>
-      {% load socialaccount %}
-      {% get_providers as socialaccount_providers %}
-      {% if socialaccount_providers %}
-      <p style="text-align: center;">Log in using your preferred social network account:</p>
-      <ul class="socialaccount_providers">
-        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
-      </ul>
-      <p style="text-align: center;">or with your account credentials:</p>
-      {% else %}
-      <p style="text-align: center;">Login with your account credentials:</p>
-      {% endif %}
-      <form class="form-horizontal inputwide" method="POST" action="{% url 'account_login' %}">
-          {% csrf_token %}
-          <fieldset>
-           {% if form.errors %}
-             <p class="help-inline error">
-               Incorrect user credentials or password.<br>
-               Please try again.<br>
-               Note that both fields are case sensitive.
-             </p>
-           {% endif %}
-           {% for field in login_form %}
-             {% if field.errors %}
-               <div class="control-group error">
-                 <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                 {{ field }}
-                 <span class="help-inline error">
-                   {% for error in field.errors %}{{ error }}{% endfor %}
-                 </span>
-               </div>
-             {% else %}
-               <div class="control-group">
-                 <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                 {{ field }}
-                 {% if field.help_text %}
-                     <p class="help-inline"><small>{{ field.help_text }}</small></p>
-                 {% endif %}
-               </div>
-             {% endif %}
-           {% endfor %}
-           {% if redirect_field_value %}
-               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-           {% endif %}
-           <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-               <button style="border: none;" type="submit" class="linkbutton">{% trans "Log in" %}</button>
-           </div>
-          </fieldset>
-        </form>
-        <div class="divider"></div>
-        <p style="text-align: center;">
-          Feedback and ideas are very welcome, feel free to contact us under <a href="mailto:feedback@vires.services">feedback@vires.services</a>.
-        </p>
-     </div>
-    -->
     </div>
   </div>
 </div>

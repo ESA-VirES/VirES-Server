@@ -26,4 +26,15 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-ACCESS_LOGGER_NAME = "vires_oauth.access"
+PACKAGE_NAME = "vires_oauth"
+
+ACCESS_LOGGER_NAME = PACKAGE_NAME + ".access"
+
+ADMIN_PERMISSION = PACKAGE_NAME + ".admin"
+
+PERMISSIONS = {
+    "admin": "VirES administration",
+    "swarm": "Access to VirES for Swarm",
+    "swarm_vre": "Access to Swarm VRE",
+    "swarm_disc": "Access to Swarm DISC",
+}

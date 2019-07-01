@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Common command utilities.
+#  Various utilities
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,20 +24,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-few-public-methods
+# pylint: disable=missing-docstring
 
-import sys
+import re
+from .settings import PERMISSIONS, PACKAGE_NAME
+
+RE_PERMISSION_PREFIX = re.compile(r"^%s\." % PACKAGE_NAME)
 
 
-class CommandMixIn():
-    @staticmethod
-    def info(message, *args):
-        print("INFO: %s" % (message % args), file=sys.stderr)
+def get_user_permissions(user):
+    return [
+        code for code in (
+            RE_PERMISSION_PREFIX.sub("", code)
+            for code in user.get_all_permissions()
+        ) if code in PERMISSIONS
+    ]
 
-    @staticmethod
-    def warning(message, *args):
-        print("WARNING: %s" % (message % args), file=sys.stderr)
 
-    @staticmethod
-    def error(message, *args):
-        print("ERROR: %s" % (message % args), file=sys.stderr)
+def decorate(decorators, function):
+    """ Decorate `function` with one or more decorators. `decorators` can be
+    a single decorator or an iterable of decorators.
+    """
+    if hasattr(decorators, '__iter__'):
+        decorators = reversed(decorators)
+    else:
+        decorators = [decorators]
+    for decorator in decorators:
+        function = decorator(function)
+    return function

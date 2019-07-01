@@ -28,4 +28,5 @@
 # pylint: disable=missing-docstring, invalid-name
 
 __version__ = "0.1.0"
-#default_app_config = 'eoxs_oauth.apps.OAuthConfig'
+
+default_app_config = 'vires_oauth.apps.ViresOauthConfig'

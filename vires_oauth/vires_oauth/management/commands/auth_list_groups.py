@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Load the social providers configuration
+# Dump user groups.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,39 +28,63 @@
 
 import sys
 import json
-from django.db import transaction
 from django.core.management.base import BaseCommand
-from django.conf import settings
-from django.contrib.sites.models import Site
-from allauth.socialaccount.models import SocialApp
+from django.contrib.auth.models import Group
+from ...models import GroupInfo, filter_permissions
 from ._common import CommandMixIn
+
+JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
 
 
 class Command(CommandMixIn, BaseCommand):
-    help = "Load social network providers configuration in JSON format."
+    help = (
+        "Dump groups in JSON format. The groups can be selected by "
+        "the provided group names."
+    )
 
     def add_arguments(self, parser):
+        parser.add_argument("groups", nargs="*", help="Selected groups.")
         parser.add_argument(
-            "-f", "--file", dest="filename", default="-",
-            help="Input filename."
+            "-f", "--file-name", dest="filename", default="-", help=(
+                "Optional output file-name. "
+                "By default it is written to the standard output."
+            )
         )
 
-    def handle(self, filename, **kwargs):
+    def handle(self, groups, filename, **kwargs):
+        # select user profile
+        query = Group.objects.select_related('groupinfo')
+        if not groups:
+            query = query.all()
+        else:
+            query = query.filter(name__in=groups)
+        data = [
+            extract_group(group) for group in query
+        ]
 
-        with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
-            data = json.load(file_)
+        with sys.stdout if filename == "-" else open(filename, "w") as file_:
+            json.dump(data, file_, **JSON_OPTS)
 
-        sites = list(Site.objects.filter(id=settings.SITE_ID))
-        with transaction.atomic():
-            for item in data:
-                try:
-                    app = SocialApp.objects.get(provider=item.get('provider'))
-                except SocialApp.DoesNotExist:
-                    app = SocialApp()
-                app.name = item.get('name')
-                app.provider = item.get('provider')
-                app.client_id = item.get('client_id')
-                app.secret = item.get('secret')
-                app.key = item.get('key') or ""
-                app.save()
-                app.sites.set(sites)
+
+def extract_group(group):
+    """ Extract group data from a model. """
+
+    data = {
+        "name": group.name,
+        "permissions": [
+            permission.codename for permission
+            in filter_permissions(group.permissions)
+        ],
+    }
+    try:
+        group_info = group.groupinfo
+        data.update({
+            "title": group_info.title,
+            "description": group_info.description,
+        })
+    except GroupInfo.DoesNotExist:
+        pass
+
+    return {
+        key: value for key, value in data.items() if value not in (None, "")
+    }

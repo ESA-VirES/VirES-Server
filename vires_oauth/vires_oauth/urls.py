@@ -26,11 +26,90 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring,invalid-name
 
-from django.urls import path, include
+from django.urls import path, include, re_path
+from oauth2_provider.views import (
+    AuthorizationView,
+    TokenView,
+    RevokeTokenView,
+    IntrospectTokenView,
+    ApplicationList,
+    ApplicationRegistration,
+    ApplicationDetail,
+    ApplicationDelete,
+    ApplicationUpdate,
+    AuthorizedTokensListView,
+    AuthorizedTokenDeleteView,
+)
 from .views import update_user_profile_view
+from .decorators import vires_admin_only
+
+
+oauth2_provider_urlpatterns = [
+
+    # Base views
+    path(
+        "authorize/",
+        AuthorizationView.as_view(),
+        name="authorize"
+    ),
+    path(
+        "token/",
+        TokenView.as_view(),
+        name="token"
+    ),
+    path(
+        "revoke_token/",
+        RevokeTokenView.as_view(),
+        name="revoke-token"
+    ),
+    path(
+        "introspect/",
+        IntrospectTokenView.as_view(),
+        name="introspect"
+    ),
+
+    # Application management views
+    path(
+        "applications/",
+        vires_admin_only(ApplicationList.as_view()),
+        name="list"
+    ),
+    path(
+        "applications/register/",
+        vires_admin_only(ApplicationRegistration.as_view()),
+        name="register"
+    ),
+    re_path(
+        r"^applications/(?P<pk>[\w-]+)/$",
+        vires_admin_only(ApplicationDetail.as_view()),
+        name="detail"
+    ),
+    re_path(
+        r"^applications/(?P<pk>[\w-]+)/delete/$",
+        vires_admin_only(ApplicationDelete.as_view()),
+        name="delete"
+    ),
+    re_path(
+        r"^applications/(?P<pk>[\w-]+)/update/$",
+        vires_admin_only(ApplicationUpdate.as_view()),
+        name="update"
+    ),
+
+    # Token management views
+    path(
+        "authorized_tokens/",
+        vires_admin_only(AuthorizedTokensListView.as_view()),
+        name="authorized-token-list"
+    ),
+    re_path(
+        r"^authorized_tokens/(?P<pk>[\w-]+)/delete/$",
+        vires_admin_only(AuthorizedTokenDeleteView.as_view()),
+        name="authorized-token-delete"
+    ),
+]
 
 urlpatterns = [
     path('', update_user_profile_view, name='account_update_profile'),
-    path('', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('accounts/', include('allauth.urls')),
+    path('', include((oauth2_provider_urlpatterns, "oauth2_provider")))
 ]

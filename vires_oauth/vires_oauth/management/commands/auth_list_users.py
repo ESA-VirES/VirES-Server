@@ -31,6 +31,7 @@ import json
 from collections import OrderedDict
 from django.core.management.base import BaseCommand
 from ...models import UserProfile
+from ...utils import get_user_permissions
 from ._common import CommandMixIn
 
 JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
@@ -38,9 +39,8 @@ JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
 
 class Command(CommandMixIn, BaseCommand):
     help = (
-        "Print information about the users. The users are selected "
-        "either by the provided user names (no user name - no output) or "
-        "by the '--all' option. "
+        "Print information about the users. The users can be selected "
+        "by the provided user names. By default, all users are printed."
         "By default, only the user names are listed. A brief summary for each "
         "user can be obtained by '--info' option. The '--json' option produces "
         "full user profile dump in JSON format."
@@ -48,10 +48,6 @@ class Command(CommandMixIn, BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("users", nargs="*", help="Selected users.")
-        parser.add_argument(
-            "-a", "--all", dest="all_users", action="store_true", default=False,
-            help="Select all users."
-        )
         parser.add_argument(
             "--info", dest="info_dump", action="store_true", default=False,
             help="Verbose text output."
@@ -70,14 +66,9 @@ class Command(CommandMixIn, BaseCommand):
     def handle(self, users, **kwargs):
         # select user profile
         qset = UserProfile.objects.select_related('user')
-        if kwargs["all_users"]:
+        if not users:
             qset = qset.all()
         else:
-            if not users:
-                self.warning(
-                    "No user name has been provided! Use '--help' to get more "
-                    "information of the command usage."
-                )
             qset = qset.filter(user__username__in=users)
         # select output class
         if kwargs["json_dump"]:
@@ -150,6 +141,11 @@ class VerboseOutput():
         if profile.user.email and profile.user.email not in primary_emails:
             primary_emails = [profile.user.email] + primary_emails
 
+        yield ("groups", ", ".join(
+            group.name for group in profile.user.groups.all()
+        ))
+
+        yield ("permissions", ", ".join(get_user_permissions(profile.user)))
         yield ("is active", profile.user.is_active)
         yield ("first name", profile.user.first_name)
         yield ("last name", profile.user.last_name)
@@ -195,6 +191,8 @@ class JSONOutput():
         yield ("username", user.username)
         if user.password:
             yield ("password", user.password)
+
+        yield ("groups", [group.name for group in user.groups.all()])
         yield ("is_active", user.is_active)
         yield ("date_joined", datetime_to_string(user.date_joined))
         yield ("last_login", datetime_to_string(user.last_login))

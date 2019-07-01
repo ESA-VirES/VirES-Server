@@ -32,6 +32,8 @@ from django.shortcuts import render, redirect
 from django.contrib.messages import INFO, ERROR, add_message
 from .decorators import redirect_unauthenticated
 from .forms import UserProfileForm
+from .utils import get_user_permissions
+from .settings import PERMISSIONS
 
 USER_PROFILE_TEMPLATE = 'vires_oauth/index.html'
 
@@ -52,6 +54,11 @@ def update_user_profile_view(request):
             form.save_profile(request.user)
             add_message(request, INFO, "Profile updated.")
             return redirect('account_update_profile')
-        else:
-            add_message(request, INFO, "Profile update failed.")
-    return render(request, USER_PROFILE_TEMPLATE, {'form': form})
+        add_message(request, ERROR, "Profile update failed.")
+    return render(request, USER_PROFILE_TEMPLATE, {
+        'permissions': [
+            (code, PERMISSIONS.get(code, code))
+            for code in get_user_permissions(request.user)
+        ],
+        'form': form,
+    })

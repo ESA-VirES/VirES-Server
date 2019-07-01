@@ -29,8 +29,34 @@
 from django.db.models import (
     CASCADE, Model, OneToOneField, CharField,
 )
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django_countries.fields import CountryField
+from .settings import PERMISSIONS, PACKAGE_NAME
+
+
+class Permissions(Model):
+    """ Dummy model holding app specific permissions. """
+    class Meta:
+        managed = False
+        permissions = [item for item in PERMISSIONS.items()]
+
+
+def get_permissions():
+    """ Get a dictionary mapping permission codes to permissions model
+    instances.
+    """
+    return {
+        permission.codename: permission
+        for permission in filter_permissions(Permission.objects)
+    }
+
+
+def filter_permissions(query_set):
+    return query_set.filter(
+        content_type__app_label=PACKAGE_NAME,
+        content_type__model='permissions',
+        codename__in=list(PERMISSIONS),
+    )
 
 
 class UserProfile(Model):
