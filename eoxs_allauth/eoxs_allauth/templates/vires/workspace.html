@@ -22,6 +22,7 @@
 
   {% load staticfiles %}
   {% load account %}
+  {% load vires_oauth %}
 
   <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
   <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
@@ -83,12 +84,28 @@
       this.NAVBARITEMS = [{
         "name": "{% user_display user %}",
         "icon": "fa-user",
-        "eventToRaise": "modal:accountSettingsModal",
+        "subitems": [{
+            "name": "Manage access tokens",
+            "url": "{% url 'account_manage_access_tokens' %}"
+        }, {
+            "name": "Change profile information",
+            "url": "{% vires_oauth_url 'account_update_profile' %}"
+        }, {
+            "name": "Connect social accounts",
+            "url": "{% vires_oauth_url 'socialaccount_connections' %}"
+        }, {
+            "name": "Change password",
+            "url": "{% vires_oauth_url 'account_change_password' %}"
+        }, {
+            "name": "Change e-mail",
+            "url": "{% vires_oauth_url 'account_email' %}"
+        }]
       },{
         "name": "Log out",
         "icon": "fa-sign-out",
-        "url": "{% url 'account_logout' %}",
+        "eventToRaise": "modal:accountLogout",
       }];
+      console.log(this.NAVBARITEMS)
       var CONFIG_URL = "{% static 'workspace/scripts/config.json'%}";
       CESIUM_BASE_URL = "{% static 'workspace/bower_components/cesium/Build/Cesium/'%}";
       // you can register settings like this before require.js is loaded
@@ -97,31 +114,30 @@
       };
     </script>
     <!-- Modal forms -->
-    <div class="modal fade" id="accountSettingsModal" tabindex="-1" role="dialog" aria-labelledby="accountSettingsLabel">
+    <div class="modal fade" id="accountLogout" tabindex="-1" role="dialog" aria-labelledby="accountLogout">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="accountSettingsLabel">Settings ({% user_display user %})</h4>
+            <h4 class="modal-title" id="accountSettingsLabel">Logout</h4>
           </div>
           <div class="modal-body">
-            <a href="{% url 'account_manage_access_tokens' %}">{% trans "Manage access tokens" %}</a><br/>
-            <a href="{% url 'account_change_password' %}">{% trans "Change password" %}</a><br/>
-            <a href="{% url 'account_email' %}">{% trans "Change e-mail" %}</a><br/>
-            <a href="{% url 'socialaccount_connections' %}">{% trans "Connect social accounts" %}</a><br/>
-            <a href="{% url 'account_change_profile' %}">{% trans "Change profile information" %}</a>
+            <p>Are you sure you want to log out?</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <form method="post" action="{% url 'account_logout' %}">
+              {% csrf_token %}
+              {% if redirect_field_value %}
+              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+              {% endif %}
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary"><i class="fa fa-sign-out"></i>&nbsp;Log out</button>
+            </form>
           </div>
         </div>
       </div>
     </div>
     <script data-main="{% static 'workspace/scripts/init.js' %}" src="{% static 'workspace/bower_components/requirejs/require.js' %}"></script>
-
-
-
-
 
   {% else %}
 
@@ -223,10 +239,7 @@
            <div class="image-attribution">&copy; ESA/EOX/AOES Medialab</div>
         </div>
 
-
-
     </header>
-
 
     <!-- Fixed navbar -->
     <div class="navbar navbar-custom navbar-inverse navbar-static-top" id="nav">
@@ -243,7 +256,7 @@
               <li><a href="#Features">Features</a></li>
               <li><a href="#Data">Data</a></li>
               <li><a href="#Signup">Sign-up</a></li>
-              <li><a href="#Login">Log in</a></li>
+              <li><a href="{% url 'vires_login' %}?process=login">Log in</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div><!--/.container -->
@@ -440,106 +453,48 @@
     </section>
 
     <div class="divider" id="Signup"></div>
-
-
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3 larger">
           <h1>Sign up</h1>
-
           <hr>
-
           <p>
             To access Swarm data you simply sign up (register) as a user by providing user profile information
             such as username, email and optionally title, country, institution and an executive
-            description of the the project in which your Swarm data is being used.
+            description of the project in which your Swarm data is being used.
           </p>
-
-          <hr>
-
           <div style="text-align: center">
-            <p style="text-align: center;">Sign up directly:</p>
             <div style="margin-top: 2em;">
-              <a class="linkbutton" href="{% url 'account_signup' %}">Sign-up</a>
+              <a class="linkbutton" href="{% url 'vires_login' %}?process=signup">Sign up</a>
             </div>
-            <p style="text-align: center; margin-top: 2em;">or sign up using your preferred social provider:</p>
-            <ul class="socialaccount_providers">
-              {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
-            </ul>
-            <div class="divider"></div>
-            <p style="text-align: center;">The service will work on most modern browsers, but using the service on Google Chrome has been found to give the best results. We therefore recommend the use of Chrome.</p>
           </div>
-
-        </div><!--/col-->
-    </div><!--/container-->
-    <div class="row form-group">
-        <div class="col-xs-10">
-
         </div>
     </div>
 
-
     <div class="divider" id="Login"></div>
-
     <div class="row">
-
-      <hr>
-
-      <div class="col-sm-6 col-sm-offset-3 larger">
-
-        <div class="row form-group">
+        <div class="col-sm-6 col-sm-offset-3 larger">
           <h1>Log in</h1>
+          <hr>
+          <p>
+            Log in using your preferred social provider or directly with your account credentials.
+          </p>
+          <div style="text-align: center">
+            <div style="margin-top: 2em;">
+              <a class="linkbutton" href="{% url 'vires_login' %}?process=login">Log in</a>
+            </div>
+          </div>
         </div>
+    </div>
 
-      </div><!--/row-->
-
-     <div class="col-sm-4 col-sm-offset-4 larger">
-      <p style="text-align: center;">Log in using your preferred social provider:</p>
-      <ul class="socialaccount_providers">
-        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
-      </ul>
-      <p style="text-align: center;">or directly with your account credentials here:</p>
-      <form class="form-horizontal inputwide" method="POST" action="{% url 'account_login' %}">
-          {% csrf_token %}
-          <fieldset>
-           {% if form.errors %}
-             <p class="help-inline error">
-               Incorrect user credentials or password.<br>
-               Please try again.<br>
-               Note that both fields are case sensitive.
-             </p>
-           {% endif %}
-           {% for field in login_form %}
-             {% if field.errors %}
-               <div class="control-group error">
-                 <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                 {{ field }}
-                 <span class="help-inline error">
-                   {% for error in  field.errors %}{{ error }}{% endfor %}
-                 </span>
-               </div>
-             {% else %}
-               <div class="control-group">
-                 <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                 {{ field }}
-                 {% if field.help_text %}
-                     <p class="help-inline"><small>{{ field.help_text }}</small></p>
-                 {% endif %}
-               </div>
-             {% endif %}
-           {% endfor %}
-           {% if redirect_field_value %}
-               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-           {% endif %}
-           <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-               <button style="border: none;" type="submit" class="linkbutton">{% trans "Log in" %}</button>
-           </div>
-          </fieldset>
-        </form>
-        <div class="divider"></div>
-        <p style="text-align: center;">
+    <div class="divider"></div>
+    <div class="divider"></div>
+    <div class="row">
+      <div class="col-sm-6 col-sm-offset-3">
+        <p >
           Feedback and ideas are very welcome, feel free to contact us under <a href="mailto:feedback@vires.services">feedback@vires.services</a>.
         </p>
-     </div>
+      </div>
+    </div>
 
     <div class="container">
         <div class="col-sm-8 col-sm-offset-2 text-center">
@@ -583,7 +538,6 @@
     <ul class="nav pull-right scroll-top">
       <li><a href="#" title="Scroll to top"><i class="glyphicon glyphicon-chevron-up"></i></a></li>
     </ul>
-
 
     <!-- script references -->
     {% load staticfiles %}
