@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Common settings
+#  Scopes
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,23 +26,18 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-PACKAGE_NAME = "vires_oauth"
+from oauth2_provider.scopes import BaseScopes
+from .settings import SCOPES, DEFAULT_SCOPES
+from .utils import get_user_permissions
 
-ACCESS_LOGGER_NAME = PACKAGE_NAME + ".access"
 
-ADMIN_PERMISSION = PACKAGE_NAME + ".admin"
+class ViresScopes(BaseScopes):
 
-# User permissions
-PERMISSIONS = {
-    "admin": "VirES administration",
-    "swarm": "Access to VirES for Swarm",
-    "swarm_vre": "Access to Swarm VRE",
-    "swarm_disc": "Access to Swarm DISC",
-}
+    def get_all_scopes(self):
+        return SCOPES
 
-# Application scopes
-DEFAULT_SCOPES = ["read_id"]
-SCOPES = {
-    "read_id": "Read user identity",
-    "read_permissions": "Read user permissions",
-}
+    def get_available_scopes(self, application=None, request=None, *args, **kwargs):
+        return list(SCOPES)
+
+    def get_default_scopes(self, application=None, request=None, *args, **kwargs):
+        return list(DEFAULT_SCOPES)
