@@ -33,14 +33,21 @@ from oauth2_provider.views import (
     RevokeTokenView,
     IntrospectTokenView,
     ApplicationList,
-    ApplicationRegistration,
+    #ApplicationRegistration,
     ApplicationDetail,
     ApplicationDelete,
-    ApplicationUpdate,
-    AuthorizedTokensListView,
-    AuthorizedTokenDeleteView,
+    #ApplicationUpdate,
+    #AuthorizedTokensListView,
+    #AuthorizedTokenDeleteView,
 )
-from .views import update_user_profile_view
+from .views import (
+    AdminApplicationRegistration,
+    AdminApplicationUpdate,
+    FilteredAuthorizedTokensListView,
+    FixedAuthorizedTokenDeleteView,
+    update_user_profile_view,
+    api_user_view,
+)
 from .decorators import vires_admin_only
 
 
@@ -76,7 +83,7 @@ oauth2_provider_urlpatterns = [
     ),
     path(
         "applications/register/",
-        vires_admin_only(ApplicationRegistration.as_view()),
+        vires_admin_only(AdminApplicationRegistration.as_view()),
         name="register"
     ),
     re_path(
@@ -91,25 +98,26 @@ oauth2_provider_urlpatterns = [
     ),
     re_path(
         r"^applications/(?P<pk>[\w-]+)/update/$",
-        vires_admin_only(ApplicationUpdate.as_view()),
+        vires_admin_only(AdminApplicationUpdate.as_view()),
         name="update"
     ),
 
     # Token management views
     path(
         "authorized_tokens/",
-        vires_admin_only(AuthorizedTokensListView.as_view()),
+        FilteredAuthorizedTokensListView.as_view(),
         name="authorized-token-list"
     ),
     re_path(
         r"^authorized_tokens/(?P<pk>[\w-]+)/delete/$",
-        vires_admin_only(AuthorizedTokenDeleteView.as_view()),
+        FixedAuthorizedTokenDeleteView.as_view(),
         name="authorized-token-delete"
     ),
 ]
 
 urlpatterns = [
     path('', update_user_profile_view, name='account_update_profile'),
+    path('', include((oauth2_provider_urlpatterns, "oauth2_provider"))),
+    path('user/', api_user_view),
     path('accounts/', include('allauth.urls')),
-    path('', include((oauth2_provider_urlpatterns, "oauth2_provider")))
 ]

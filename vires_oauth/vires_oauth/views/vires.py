@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# views
+# VirES specific views
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #
@@ -27,13 +27,16 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+import json
+from logging import getLogger
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.messages import INFO, ERROR, add_message
-from .decorators import redirect_unauthenticated
-from .forms import UserProfileForm
-from .utils import get_user_permissions
-from .settings import PERMISSIONS
+from django.views.decorators.http import require_GET
+from ..decorators import redirect_unauthenticated, oauth2_protected
+from ..forms import UserProfileForm
+from ..utils import get_user_permissions
+from ..settings import PERMISSIONS
 
 USER_PROFILE_TEMPLATE = 'vires_oauth/index.html'
 
@@ -44,6 +47,22 @@ def test_view(request):
         "\n".join("%s: %s" % (key, value) for key, value in request.headers.items()),
     ])
     return HttpResponse(response, 'text/plain', 200)
+
+
+@require_GET
+@oauth2_protected("read_id")
+def api_user_view(request, *args, **kwargs):
+    #scopes = request.access_token.scopes
+    user = request.user
+    data = {
+        "username": user.username,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+    }
+    getLogger(__name__).debug("%s", data)
+    #if "read_permissions" in scopes:
+    #    data["permissions"] = get_user_permissions(user)
+    return HttpResponse(json.dumps(data), content_type="application/json")
 
 
 @redirect_unauthenticated

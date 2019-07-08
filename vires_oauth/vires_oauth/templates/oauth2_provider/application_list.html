@@ -1,0 +1,19 @@
+{% extends "oauth2_provider/base.html" %}
+{% block title %}<title>VirES OAuth2 - applications</title>{% endblock %}
+{% block content %}
+<h2 class="block-center-heading">Registered Applications</h2>
+{% if applications %}
+  <table class="table table-striped">
+  {% for application in applications %}
+  <tr><td><a href="{{ application.get_absolute_url }}">{% if application.name %}{{ application.name }}{% else %}<span style="font-style: italic;">nameless</span>{% endif %}</a></td></tr>
+    </tr>
+  {% endfor %}
+  </table>
+{% else %}
+  <p>No registered application.</p>
+{% endif %}
+</ul>
+<p style="text-align: center">
+<a class="btn btn-primary" role="button" href="{% url "oauth2_provider:register" %}">Register New Application</a>
+</p>
+{% endblock content %}

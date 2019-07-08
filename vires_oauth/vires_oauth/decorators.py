@@ -30,9 +30,36 @@ from functools import wraps
 from logging import getLogger, NOTSET
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from oauth2_provider.settings import oauth2_settings
 from .settings import ACCESS_LOGGER_NAME
 
 LOGGER = getLogger(ACCESS_LOGGER_NAME)
+
+
+def oauth2_protected(*required_scopes):
+    """ View decorator performing OAuth2 authentication and scope
+    authorization.
+    """
+    server_class = oauth2_settings.OAUTH2_SERVER_CLASS
+    validator_class = oauth2_settings.OAUTH2_VALIDATOR_CLASS
+    oauthlib_backend_class = oauth2_settings.OAUTH2_BACKEND_CLASS
+    def _decorator_(view_func):
+        @wraps(view_func)
+        def _wrapper_(request, *args, **kwargs):
+            core = oauthlib_backend_class(server_class(validator_class()))
+            is_valid, oauthlib_req = core.verify_request(
+                request, scopes=required_scopes
+            )
+            if not is_valid or not oauthlib_req.user.is_active:
+                return HttpResponse(
+                    'Not authorized!', content_type="text/plain", status=403
+                )
+            request.user = oauthlib_req.user
+            request.access_token = oauthlib_req.access_token
+            request.client = oauthlib_req.client
+            return view_func(request, *args, **kwargs)
+        return _wrapper_
+    return _decorator_
 
 
 def log_access(level_authenticated=NOTSET, level_unauthenticated=NOTSET):
@@ -40,12 +67,9 @@ def log_access(level_authenticated=NOTSET, level_unauthenticated=NOTSET):
     middleware.
     """
     def _decorator_(view_func):
-        @wraps(view_func)
-        def _wrapper_(request, *args, **kwargs):
-            return view_func(request, *args, **kwargs)
-        _wrapper_.log_level_authenticated = level_authenticated
-        _wrapper_.log_level_unauthenticated = level_unauthenticated
-        return _wrapper_
+        view_func.log_level_authenticated = level_authenticated
+        view_func.log_level_unauthenticated = level_unauthenticated
+        return view_func
     return _decorator_
 
 

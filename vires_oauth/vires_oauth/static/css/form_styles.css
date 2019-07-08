@@ -7,6 +7,11 @@
 }
 .inputwide textarea {
   width: 100%;
+  height: 5em;
+  resize: vertical;
+}
+.inputwide select{
+    width: 100%;
 }
 #formcontainer {
   padding: 25px;
