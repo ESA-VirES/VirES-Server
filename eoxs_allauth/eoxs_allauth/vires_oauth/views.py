@@ -54,12 +54,10 @@ class ViresOAuth2Adapter(OAuth2Adapter):
 
     # URL used for server-to-server connection (must be absolute URI)
     direct_server_url = settings.get('DIRECT_SERVER_URL', public_server_url).rstrip('/')
-    #api_url = '{0}/api/v3'.format(web_url)
 
     access_token_url = '{0}/token/'.format(direct_server_url)
     authorize_url = '{0}/authorize/'.format(public_server_url)
     profile_url = '{0}/user/'.format(direct_server_url)
-    #emails_url = '{0}/user/emails'.format(api_url)
 
     def complete_login(self, request, app, token, **kwargs):
         params = {'access_token': token.token}
@@ -69,21 +67,6 @@ class ViresOAuth2Adapter(OAuth2Adapter):
 
     def get_email(self, token):
         raise NotImplementedError
-        #email = None
-        #params = {'access_token': token.token}
-        #resp = requests.get(self.emails_url, params=params)
-        #emails = resp.json()
-        #if resp.status_code == 200 and emails:
-        #    email = emails[0]
-        #    primary_emails = [
-        #        e for e in emails
-        #        if not isinstance(e, dict) or e.get('primary')
-        #    ]
-        #    if primary_emails:
-        #        email = primary_emails[0]
-        #    if isinstance(email, dict):
-        #        email = email.get('email', '')
-        #return email
 
 
 oauth2_login = OAuth2LoginView.adapter_view(ViresOAuth2Adapter)
