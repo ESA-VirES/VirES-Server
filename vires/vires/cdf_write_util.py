@@ -28,7 +28,8 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=unused-import, missing-docstring
 
-from numpy import asarray, dtype
+from numpy import asarray, dtype, iinfo
+
 from .cdf_util import (
     CDF_EPOCH_1970,
     CDF_EPOCH_TYPE,
@@ -44,7 +45,6 @@ from .cdf_util import (
     CDF_FLOAT_TYPE,
 )
 
-
 _TYPE_MAP = {
     dtype("int8"): CDF_INT1_TYPE,
     dtype("int16"): CDF_INT2_TYPE,
@@ -59,6 +59,39 @@ _TYPE_MAP = {
     dtype("datetime64[ms]"): CDF_EPOCH_TYPE,
     dtype("datetime64[us]"): CDF_EPOCH_TYPE,
 }
+
+_INT_TYPES = set([
+    dtype("int8"), dtype("int16"), dtype("int32"), dtype("int64"),
+    dtype("uint8"), dtype("uint16"), dtype("uint32"), dtype("uint64"),
+])
+
+
+def reduce_int_type(data, force_signed=False, force_unsigned=False):
+    """ Reduce integer type to a maximum necessary bit-depth. """
+
+    def _is_within(type_, vmin, vmax):
+        info = iinfo(type_)
+        return vmin >= info.min and vmax <= info.max
+
+    if data.dtype in _INT_TYPES:
+        vmin, vmax = data.min(), data.max()
+
+        if (vmin >= 0 or force_unsigned) and not force_signed: # unsigned
+            types = [dtype("int8"), dtype("int16"), dtype("int32")]
+        else: # signed
+            types = [dtype("uint8"), dtype("uint16"), dtype("uint32")]
+
+        for type_ in types:
+            if _is_within(type_, vmin, vmax):
+                return data.astype(type_)
+
+    return data
+
+
+def cdf_assert_backward_compatible_dtype(data):
+    """ Assert backward compatible data type. """
+    if data.dtype in (dtype("int64"), dtype("uint64")):
+        raise TypeError("64bit integer types not supported!")
 
 
 def cdf_add_variable(cdf, variable, data, attrs=None, **options):
