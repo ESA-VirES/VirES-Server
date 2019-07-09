@@ -28,9 +28,54 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, no-self-use, unused-argument
 
+import time
 from logging import getLogger, INFO, WARNING, ERROR
+from django.conf import settings
 from django.contrib.auth import logout
-from .settings import ACCESS_LOGGER_NAME, ADMIN_PERMISSION
+from django.contrib import messages
+from .settings import (
+    ACCESS_LOGGER_NAME, ADMIN_PERMISSION, DEFAULT_SESSION_IDLE_TIMEOUT,
+)
+
+from logging import getLogger
+
+
+def session_idle_timeout(get_response):
+
+    def middleware(request):
+        logger = getLogger(__name__)
+        logger.debug("-> last_activity: %s", request.session.get(timestamp_tag))
+        logger.debug("timeout: %s", timeout)
+        if request.session.get(timestamp_tag):
+            logger.debug("elapsed: %s", _now() - request.session.get(timestamp_tag))
+        _logout_inactive(request)
+        response = get_response(request)
+        _update_timestamp(request)
+        logger.debug("<- last_activity: %s", request.session.get(timestamp_tag))
+        return response
+
+    def _logout_inactive(request):
+        if request.user.is_authenticated:
+            try:
+                last_activity = int(request.session[timestamp_tag])
+            except (ValueError, TypeError, KeyError):
+                last_activity = None
+            if last_activity is None or (_now() - last_activity) > timeout:
+                logout(request)
+                messages.error(request, "Session timed out.")
+
+    def _update_timestamp(request):
+        request.session[timestamp_tag] = _now()
+
+    def _now():
+        return int(time.time())
+
+    timestamp_tag = 'timestamp'
+    timeout = getattr(
+        settings, 'SESSIONS_IDLE_TIMEOUT', DEFAULT_SESSION_IDLE_TIMEOUT
+    )
+
+    return middleware
 
 
 def access_vires_admin_middleware(get_response):

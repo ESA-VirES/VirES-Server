@@ -32,6 +32,8 @@ ACCESS_LOGGER_NAME = PACKAGE_NAME + ".access"
 
 ADMIN_PERMISSION = PACKAGE_NAME + ".admin"
 
+DEFAULT_SESSION_IDLE_TIMEOUT = 600 # seconds
+
 # User permissions
 PERMISSIONS = {
     "admin": "VirES administration",
