@@ -37,21 +37,13 @@ from .settings import (
     ACCESS_LOGGER_NAME, ADMIN_PERMISSION, DEFAULT_SESSION_IDLE_TIMEOUT,
 )
 
-from logging import getLogger
-
 
 def session_idle_timeout(get_response):
 
     def middleware(request):
-        logger = getLogger(__name__)
-        logger.debug("-> last_activity: %s", request.session.get(timestamp_tag))
-        logger.debug("timeout: %s", timeout)
-        if request.session.get(timestamp_tag):
-            logger.debug("elapsed: %s", _now() - request.session.get(timestamp_tag))
         _logout_inactive(request)
         response = get_response(request)
         _update_timestamp(request)
-        logger.debug("<- last_activity: %s", request.session.get(timestamp_tag))
         return response
 
     def _logout_inactive(request):
