@@ -41,7 +41,9 @@ from django.conf import settings
 from django.http import HttpResponse
 from ..time_util import datetime, naive_to_utc, format_datetime, Timer
 from ..cdf_util import cdf_open, CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDFError
-from ..cdf_write_util import cdf_add_variable
+from ..cdf_write_util import (
+    cdf_add_variable, cdf_assert_backward_compatible_dtype, reduce_int_type,
+)
 from ..models import CustomDataset
 from ..locked_file_access import log_append
 from .exceptions import (
@@ -146,13 +148,13 @@ def post_item(request, **kwargs):
     # metadata
     timestamp = naive_to_utc(datetime.utcnow())
     identifier = str(uuid4()) # create a new random identifier
-    basename = uploaded_file.name
+    base_name = uploaded_file.name
     size = uploaded_file.size
 
     # create upload directory and save the uploaded file
     owner = request.user if request.user.is_authenticated() else None
     upload_dir = join(get_upload_dir(), identifier)
-    filename = join(upload_dir, basename)
+    filename = join(upload_dir, base_name)
     makedirs(upload_dir)
     try:
         timer = Timer()
@@ -173,7 +175,7 @@ def post_item(request, **kwargs):
 
         kwargs["logger"].info(
             "%s: %s[%dB, %s] processed in %.3gs",
-            identifier, basename, size, content_type, timer()
+            identifier, base_name, size, content_type, timer()
         )
 
         dataset = CustomDataset()
@@ -182,7 +184,7 @@ def post_item(request, **kwargs):
         dataset.start = start
         dataset.end = end
         dataset.identifier = identifier
-        dataset.filename = basename
+        dataset.filename = base_name
         dataset.location = datafile
         dataset.size = size
         dataset.content_type = content_type
@@ -277,15 +279,17 @@ def update_change_log(change, identifier, timestamp=None):
 
 def process_input_file(path):
     """ Process input file and extract information. """
+    errors = []
 
     for format_handler in [_convert_input_cdf, _convert_input_csv]:
         try:
             mime_type, cdf_file = format_handler(path)
-        except InvalidFileFormat:
+        except InvalidFileFormat as error:
+            errors.append(str(error))
             continue
         break
     else:
-        raise InvalidFileFormat("Invalid file format!")
+        raise InvalidFileFormat("Invalid file format! %s" % " ".join(errors))
 
     start, end, fields = process_input_cdf(cdf_file)
 
@@ -421,7 +425,7 @@ def _convert_input_csv(path):
 
     try:
         _save_dataset_to_cdf(cdf_file, data)
-    except CDFError as error:
+    except (CDFError, TypeError, ValueError) as error:
         raise InvalidFileFormat(str(error))
 
     remove(path)
@@ -433,6 +437,8 @@ def _save_dataset_to_cdf(filename, dataset):
     """ Save dataset to a CDF file. """
     with cdf_open(filename, "w") as cdf:
         for variable, data in dataset.items():
+            data = reduce_int_type(data)
+            cdf_assert_backward_compatible_dtype(data)
             cdf_add_variable(cdf, variable, data)
 
 
