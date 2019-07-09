@@ -42,7 +42,7 @@ from eoxserver.services.ows.wps.parameters import (
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
 )
-from vires.util import unique, exclude, include
+from vires.util import unique, exclude
 from vires.time_util import (
     naive_to_utc,
     timedelta_to_iso_duration,
@@ -502,23 +502,34 @@ class FetchData(WPSProcess):
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
             output_dict = {}
+            output_shape = {}
             data_lenght = 0
             for label, dataset in _generate_data_():
-                available = tuple(include(output_variables, dataset))
-                for variable in available:
+                for variable in output_variables:
                     data_item = dataset.get(variable)
-                    cdf_type = dataset.cdf_type.get(variable)
-                    if cdf_type == CDF_EPOCH_TYPE:
-                        data_item = time_convertor(data_item, cdf_type)
-
                     output_data = output_dict.get(variable)
-                    if output_data is None:
-                        output_dict[variable] = output_data = (
-                            [] if data_lenght == 0 else full(
-                                (data_lenght,) + data_item.shape[1:], nan
-                            ).tolist()
-                        )
-                    output_data.extend(data_item.tolist())
+
+                    if data_item is None:
+                        if output_data is not None:
+                            output_data.extend(
+                                [] if dataset.length == 0 else full(
+                                    (dataset.length,) + output_shape[variable], nan
+                                ).tolist()
+                            )
+                    else:
+                        cdf_type = dataset.cdf_type.get(variable)
+                        if cdf_type == CDF_EPOCH_TYPE:
+                            data_item = time_convertor(data_item, cdf_type)
+
+                        if output_data is None:
+                            output_shape[variable] = data_item.shape[1:]
+                            output_dict[variable] = output_data = (
+                                [] if data_lenght == 0 else full(
+                                    (data_lenght,) + data_item.shape[1:], nan
+                                ).tolist()
+                            )
+                        output_data.extend(data_item.tolist())
+
                 data_lenght += dataset.length
 
             # additional metadata
