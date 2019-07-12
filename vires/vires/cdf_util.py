@@ -100,6 +100,15 @@ def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
     return _get_formater(data.shape, data.dtype, cdf_type)
 
 
+def is_cdf_file(filename):
+    """ Test if file is supported CDF file. """
+    try:
+        with cdf_open(filename):
+            return True
+    except CDFError:
+        return False
+
+
 def cdf_open(filename, mode="r"):
     """ Open a new or existing  CDF file.
     Allowed modes are 'r' (read-only) and 'w' (read-write).

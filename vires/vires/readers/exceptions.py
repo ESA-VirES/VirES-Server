@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# view exceptions
+# Format reader exceptions.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -27,37 +25,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-class HttpError(Exception):
-    """ Simple HTTP error exception """
-    def __init__(self, status, message, headers=None):
-        Exception.__init__(self, message)
-        self.status = status
-        self.message = self.message
-        self.headers = headers or []
+class InvalidFileFormat(Exception):
+    """ Invalid data format error. """
+    pass
 
-    def __str__(self):
-        return self.message
-
-
-class HttpError400(HttpError):
-    """ 400 Bad Request exception. """
-    def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 400, message or "Bad request!", headers)
-
-
-class HttpError404(HttpError):
-    """ 404 Not Found exception. """
-    def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 404, message or "Not found!", headers)
-
-
-class HttpError405(HttpError):
-    """ 405 Method Not Allowed exception. """
-    def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 405, message or "Method not allowed!", headers)
-
-
-class HttpError413(HttpError):
-    """ 413 Payload Too Large exception. """
-    def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 413, message or "Payload too large!", headers)

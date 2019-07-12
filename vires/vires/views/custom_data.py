@@ -28,7 +28,6 @@
 #-------------------------------------------------------------------------------
 
 import re
-import csv
 import json
 import hashlib
 from os import makedirs, remove
@@ -36,19 +35,22 @@ from os.path import join, isdir, basename
 from logging import getLogger
 from shutil import rmtree
 from uuid import uuid4
-from numpy import argmax, argmin, datetime64, array, stack
+from numpy import argmax, argmin, datetime64
 from django.conf import settings
 from django.http import HttpResponse
 from ..time_util import datetime, naive_to_utc, format_datetime, Timer
-from ..cdf_util import cdf_open, CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDFError
+from ..cdf_util import (
+    is_cdf_file, cdf_open, CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDFError,
+)
 from ..cdf_write_util import (
-    cdf_add_variable, cdf_assert_backward_compatible_dtype, reduce_int_type,
+    cdf_add_variable, cdf_assert_backward_compatible_dtype
 )
 from ..models import CustomDataset
 from ..locked_file_access import log_append
-from .exceptions import (
-    InvalidFileFormat, HttpError400, HttpError404, HttpError405, HttpError413,
+from ..readers import (
+    InvalidFileFormat, read_csv_data, reduce_int_type, sanitize_custom_data,
 )
+from .exceptions import HttpError400, HttpError404, HttpError405, HttpError413
 from .decorators import (
     set_extra_kwargs, handle_error, allow_methods,
     allow_content_length, reject_content,
@@ -279,17 +281,15 @@ def update_change_log(change, identifier, timestamp=None):
 
 def process_input_file(path):
     """ Process input file and extract information. """
-    errors = []
-
-    for format_handler in [_convert_input_cdf, _convert_input_csv]:
-        try:
-            mime_type, cdf_file = format_handler(path)
-        except InvalidFileFormat as error:
-            errors.append(str(error))
-            continue
-        break
-    else:
-        raise InvalidFileFormat("Invalid file format! %s" % " ".join(errors))
+    try:
+        if is_cdf_file(path):
+            format_ = "CDF"
+            mime_type, cdf_file = _convert_input_cdf(path)
+        else:
+            format_ = "CSV"
+            mime_type, cdf_file = _convert_input_csv(path)
+    except InvalidFileFormat as error:
+        raise InvalidFileFormat("Invalid %s file! %s" % (format_, error))
 
     start, end, fields = process_input_cdf(cdf_file)
 
@@ -360,68 +360,13 @@ def _convert_input_cdf(filename):
 
 def _convert_input_csv(path):
     """ Convert input CSV file to CDF format. """
-    data_types = [int, float, lambda v: datetime64(v, 'ms'), _parse_csv_array]
 
-    def _guess_data_type(value):
-        for type_ in data_types:
-            try:
-                type_(value)
-            except (ValueError, TypeError):
-                pass
-            else:
-                return type_
-        return str
-
-    def _read_csv_file(filename):
-        records = csv.reader(filename)
-        header = next(records)
-        yield header
-        for line_no, record in enumerate(records, 2):
-            if len(record) != len(header):
-                raise csv.Error("Line %d: record length mismatch! %d != %d" % (
-                    line_no, len(record), len(header),
-                ))
-            yield record
-
-    def _parse_csv_values(records):
-        header = next(records)
-        yield header
-        record = next(records)
-        types = [_guess_data_type(value) for value in record]
-        try:
-            line_no = 2
-            yield [
-                type_(value)
-                for idx, (type_, value) in enumerate(zip(types, record))
-            ]
-            for line_no, record in enumerate(records, 3):
-                yield [
-                    type_(value)
-                    for idx, (type_, value) in enumerate(zip(types, record))
-                ]
-        except ValueError:
-            raise csv.Error(
-                "Line %d: failed to parse value of %s!" % (line_no, header[idx])
-            )
-
-    def _records_to_arrays(records):
-        header = next(records)
-        data = [[] for _ in header]
-        for record in records:
-            for value, list_ in zip(record, data):
-                list_.append(value)
-        return {
-            field: array(list_) for field, list_ in zip(header, data)
-        }
+    data = sanitize_custom_data({
+        variable: reduce_int_type(values)
+        for variable, values in read_csv_data(path).items()
+    })
 
     cdf_file = path + ".cdf"
-    try:
-        with open(path) as file_:
-            data = _records_to_arrays(_parse_csv_values(_read_csv_file(file_)))
-    except csv.Error as error:
-        raise InvalidFileFormat(str(error))
-
-    data = _sanitize_csv_data(data)
 
     try:
         _save_dataset_to_cdf(cdf_file, data)
@@ -437,70 +382,5 @@ def _save_dataset_to_cdf(filename, dataset):
     """ Save dataset to a CDF file. """
     with cdf_open(filename, "w") as cdf:
         for variable, data in dataset.items():
-            data = reduce_int_type(data)
             cdf_assert_backward_compatible_dtype(data)
             cdf_add_variable(cdf, variable, data)
-
-
-def _sanitize_csv_data(data):
-    """ Sanitize input CSV data. """
-    # translate field names to their proper forms
-    special_fields = {field.lower(): field for field in [
-        "Timestamp", "MJD2000", "Latitude", "Longitude", "Radius",
-        "F", "B_NEC", "B_N", "B_E", "B_C",
-    ]}
-
-    data = {
-        special_fields.get(field, field): values
-        for field, values in data.items()
-    }
-
-    # calculate time-stamp from MJD2000
-    if "Timestamp" not in data and "MJD2000" in data:
-        data["Timestamp"] = DATETIME64_MS_2000 + array(
-            DAYS2MS * data["MJD2000"], "timedelta64[ms]"
-        )
-
-    # join B_NEC components
-    if "B_NEC" not in data and "B_N" in data and "B_E" in data and "B_C" in data:
-        data["B_NEC"] = stack((data["B_N"], data["B_E"], data["B_C"]), axis=1)
-
-    return data
-
-
-def _parse_csv_array(value):
-    """ Parse CSV array. """
-
-    def _parse_array(string):
-        data = []
-        while True:
-            idx = string.find(";")
-            if idx == -1:
-                idx = string.find("}")
-                if idx == -1:
-                    raise ValueError("Missing closing brace!")
-                tmp = string[:idx]
-                if tmp:
-                    data.append(float(tmp))
-                break
-            elif idx > 1 and string[idx-1] == "}":
-                tmp = string[:idx-1]
-                if tmp:
-                    data.append(float(tmp))
-                break
-            if string[0] == "{":
-                string, tmp = _parse_array(string[1:])
-                data.append(tmp)
-            else:
-                data.append(float(string[:idx]))
-                string = string[idx+1:]
-        return string[idx+1:], data
-
-    # remove white-spaces
-    value = "".join(value.split())
-
-    if not value or value[0] != "{":
-        raise ValueError("Missing opening brace!")
-
-    _, data = _parse_array(value[1:])
-    return data
