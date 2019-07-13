@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Load the social providers configuration
+# Export social providers configuration in JSON format.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,39 +28,45 @@
 
 import sys
 import json
-from django.db import transaction
 from django.core.management.base import BaseCommand
-from django.conf import settings
-from django.contrib.sites.models import Site
 from allauth.socialaccount.models import SocialApp
-from ._common import CommandMixIn
+from ._common import ConsoleOutput
+
+JSON_OPTS = {
+    'sort_keys': False,
+    'indent': 2,
+    'separators': (',', ': '),
+}
 
 
-class Command(CommandMixIn, BaseCommand):
-    help = "Load social network providers configuration in JSON format."
+class Command(ConsoleOutput, BaseCommand):
+    help = "Export social network providers configuration in JSON format."
 
     def add_arguments(self, parser):
+        parser.add_argument("providers", nargs="*", help="Selected users.")
         parser.add_argument(
             "-f", "--file", dest="filename", default="-",
-            help="Input filename."
+            help="Output filename."
         )
 
-    def handle(self, filename, **kwargs):
+    def handle(self, providers, filename, **kwargs):
+        query = SocialApp.objects
+        if not providers:
+            query = query.all()
+        else:
+            query = query.filter(provider__in=providers)
 
-        with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
-            data = json.load(file_)
+        data = [extract_social_provider(app) for app in query]
 
-        sites = list(Site.objects.filter(id=settings.SITE_ID))
-        with transaction.atomic():
-            for item in data:
-                try:
-                    app = SocialApp.objects.get(provider=item.get('provider'))
-                except SocialApp.DoesNotExist:
-                    app = SocialApp()
-                app.name = item.get('name')
-                app.provider = item.get('provider')
-                app.client_id = item.get('client_id')
-                app.secret = item.get('secret')
-                app.key = item.get('key') or ""
-                app.save()
-                app.sites.set(sites)
+        with sys.stdout if filename == "-" else open(filename, "w") as file_:
+            json.dump(data, file_, **JSON_OPTS)
+
+
+def extract_social_provider(app):
+    return {
+        "provider": app.provider,
+        "name": app.name,
+        "client_id": app.client_id,
+        "secret": app.secret,
+        "key": app.key,
+    }

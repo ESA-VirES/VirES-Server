@@ -28,10 +28,10 @@
 
 from django.core.management.base import BaseCommand
 from ...models import UserProfile
-from ._common import CommandMixIn
+from ._common import ConsoleOutput
 
 
-class Command(CommandMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
     help = (
         "Deactivate active users. The users are selected either by the "
         "provided user names (no user name - no output) or by the '--all' "

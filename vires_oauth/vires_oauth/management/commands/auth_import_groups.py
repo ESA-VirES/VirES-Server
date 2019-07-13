@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Load user groups.
+# Import user groups from a JSON file
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,17 +28,18 @@
 
 import sys
 import json
+from traceback import print_exc
 from contextlib import suppress
 from django.db import transaction
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 from ...models import GroupInfo, get_permissions
 from ...data import DEFAULT_GROUPS
-from ._common import CommandMixIn
+from ._common import ConsoleOutput
 
 
-class Command(CommandMixIn, BaseCommand):
-    help = "Load groups from a JSON file."
+class Command(ConsoleOutput, BaseCommand):
+    help = "Import groups from a JSON file."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -69,6 +70,8 @@ class Command(CommandMixIn, BaseCommand):
                 name, is_updated = save_group(item)
             except Exception as error:
                 failed_count += 1
+                if kwargs.get('traceback'):
+                    print_exc(file=sys.stderr)
                 self.error("Failed to create or update a group! %s", error)
             else:
                 updated_count += is_updated

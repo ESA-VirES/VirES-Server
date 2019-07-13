@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Dump the social providers configuration
+# Export user groups in JSON format.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -29,41 +29,61 @@
 import sys
 import json
 from django.core.management.base import BaseCommand
-from allauth.socialaccount.models import SocialApp
-from ._common import CommandMixIn
+from django.contrib.auth.models import Group
+from ...models import GroupInfo, filter_permissions
+from ._common import ConsoleOutput
 
-JSON_OPTS = {
-    'sort_keys': False,
-    'indent': 2,
-    'separators': (',', ': '),
-}
+JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
 
 
-class Command(CommandMixIn, BaseCommand):
-    help = "Dump social network providers configuration in JSON format."
+class Command(ConsoleOutput, BaseCommand):
+    help = (
+        "Export user groups in JSON format. The exported groups can be "
+        "selected by the provided group names."
+    )
 
     def add_arguments(self, parser):
-        parser.add_argument("providers", nargs="*", help="Selected users.")
+        parser.add_argument("groups", nargs="*", help="Selected groups.")
         parser.add_argument(
-            "-f", "--file", dest="filename", default="-",
-            help="Output filename."
+            "-f", "--file-name", dest="filename", default="-", help=(
+                "Optional output file-name. "
+                "By default it is written to the standard output."
+            )
         )
 
-    def handle(self, providers, filename, **kwargs):
-        # select user profile
-        query = SocialApp.objects
-        if not providers:
+    def handle(self, groups, filename, **kwargs):
+        query = Group.objects.select_related('groupinfo')
+
+        if not groups:
             query = query.all()
         else:
-            query = query.filter(provider__in=providers)
+            query = query.filter(name__in=groups)
 
-        data = [{
-            "provider": app.provider,
-            "name": app.name,
-            "client_id": app.client_id,
-            "secret": app.secret,
-            "key": app.key,
-        } for app in query]
+        data = [extract_group(group) for group in query]
 
         with sys.stdout if filename == "-" else open(filename, "w") as file_:
             json.dump(data, file_, **JSON_OPTS)
+
+
+def extract_group(group):
+    """ Extract group data from a model. """
+
+    data = {
+        "name": group.name,
+        "permissions": [
+            permission.codename for permission
+            in filter_permissions(group.permissions)
+        ],
+    }
+    try:
+        group_info = group.groupinfo
+        data.update({
+            "title": group_info.title,
+            "description": group_info.description,
+        })
+    except GroupInfo.DoesNotExist:
+        pass
+
+    return {
+        key: value for key, value in data.items() if value not in (None, "")
+    }

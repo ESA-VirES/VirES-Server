@@ -29,10 +29,10 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.contrib.sites.models import Site
-from ._common import CommandMixIn
+from ._common import ConsoleOutput
 
 
-class Command(CommandMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
     help = "Print current site configuration."
 
     def handle(self, **kwargs):

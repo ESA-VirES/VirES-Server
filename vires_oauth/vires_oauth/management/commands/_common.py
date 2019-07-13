@@ -29,15 +29,19 @@
 import sys
 
 
-class CommandMixIn():
-    @staticmethod
-    def info(message, *args):
-        print("INFO: %s" % (message % args), file=sys.stderr)
+class ConsoleOutput():
+    @classmethod
+    def info(cls, message, *args):
+        cls.print_message("INFO", message, *args)
 
-    @staticmethod
-    def warning(message, *args):
-        print("WARNING: %s" % (message % args), file=sys.stderr)
+    @classmethod
+    def warning(cls, message, *args):
+        cls.print_message("WARNING", message, *args)
 
-    @staticmethod
-    def error(message, *args):
-        print("ERROR: %s" % (message % args), file=sys.stderr)
+    @classmethod
+    def error(cls, message, *args):
+        cls.print_message("ERROR", message, *args)
+
+    @classmethod
+    def print_message(cls, label, message, *args):
+        print("%s: %s" % (label, message % args), file=sys.stderr)

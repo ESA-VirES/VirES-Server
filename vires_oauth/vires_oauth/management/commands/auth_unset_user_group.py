@@ -30,10 +30,10 @@ from django.db import transaction
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
 from ...models import UserProfile
-from ._common import CommandMixIn
+from ._common import ConsoleOutput
 
 
-class Command(CommandMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
     help = (
         "Remove selected users from a group. The users are selected either by the "
         "provided user names (no user name - no output) or by the '--all' "

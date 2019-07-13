@@ -32,12 +32,12 @@ from collections import OrderedDict
 from django.core.management.base import BaseCommand
 from ...models import UserProfile
 from ...utils import get_user_permissions
-from ._common import CommandMixIn
+from ._common import ConsoleOutput
 
 JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
 
 
-class Command(CommandMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
     help = (
         "Print information about the users. The users can be selected "
         "by the provided user names. By default, all users are printed."
