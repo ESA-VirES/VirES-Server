@@ -107,7 +107,7 @@ def save_social_provider(data, sites):
         is_updated = True
 
     for field in ['name', 'client_id', 'secret', 'key']:
-        value = data.get('field')
+        value = data.get(field)
         if value is not None:
             setattr(app, field, value)
 
