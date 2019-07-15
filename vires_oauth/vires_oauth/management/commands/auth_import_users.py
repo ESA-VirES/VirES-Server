@@ -231,7 +231,7 @@ def get_social_account(user, provider):
     try:
         return user.socialaccount_set.get(provider=provider)
     except SocialAccount.DoesNotExist:
-        return SocialAccount(provider=provider)
+        return SocialAccount(user=user, provider=provider)
 
 #-------------------------------------------------------------------------------
 
