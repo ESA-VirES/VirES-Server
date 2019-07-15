@@ -1,5 +1,7 @@
 #-------------------------------------------------------------------------------
 #
+# OAuth server models
+#
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
 #          Martin Paces <martin.paces@eox.at>
 #
@@ -27,36 +29,28 @@
 # pylint: disable=missing-docstring
 
 from django.db.models import (
-    CASCADE, Model, OneToOneField, CharField,
+    CASCADE, Model, ManyToManyField, OneToOneField, CharField, Subquery,
 )
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import User, Group
 from django_countries.fields import CountryField
-from .settings import PERMISSIONS, PACKAGE_NAME
+from .settings import PACKAGE_NAME
 
 
-class Permissions(Model):
-    """ Dummy model holding app specific permissions. """
-    class Meta:
-        managed = False
-        permissions = [item for item in PERMISSIONS.items()]
-
-
-def get_permissions():
-    """ Get a dictionary mapping permission codes to permissions model
-    instances.
-    """
-    return {
-        permission.codename: permission
-        for permission in filter_permissions(Permission.objects)
-    }
-
-
-def filter_permissions(query_set):
-    return query_set.filter(
-        content_type__app_label=PACKAGE_NAME,
-        content_type__model='permissions',
-        codename__in=list(PERMISSIONS),
+class Permission(Model):
+    groups = ManyToManyField(
+        Group,
+        related_name='oauth_user_permissions',
+        related_query_name='oauth_user_permission',
     )
+    name = CharField(max_length=100, null=False, blank=False, unique=True)
+    description = CharField(max_length=256, null=False, blank=False)
+
+    @classmethod
+    def get_user_permissions(cls, user):
+        query = cls.objects.distinct().filter(
+            groups__id__in=Subquery(user.groups.all().values('id'))
+        ).values_list('name', 'description')
+        return {name: description for name, description in query}
 
 
 class UserProfile(Model):

@@ -33,10 +33,11 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.messages import INFO, ERROR, add_message
 from django.views.decorators.http import require_GET
-from ..decorators import redirect_unauthenticated, oauth2_protected
+from ..decorators import (
+    redirect_unauthenticated, oauth2_protected, log_exception,
+)
 from ..forms import UserProfileForm
-from ..utils import get_user_permissions
-from ..settings import PERMISSIONS
+from ..models import Permission
 
 USER_PROFILE_TEMPLATE = 'vires_oauth/index.html'
 
@@ -51,8 +52,9 @@ def test_view(request):
 
 @require_GET
 @oauth2_protected("read_id")
+@log_exception(getLogger(__name__))
 def api_user_view(request, *args, **kwargs):
-    #scopes = request.access_token.scopes
+    scopes = request.access_token.scopes
     user = request.user
     data = {
         "username": user.username,
@@ -60,8 +62,10 @@ def api_user_view(request, *args, **kwargs):
         "last_name": user.last_name,
     }
     getLogger(__name__).debug("%s", data)
-    #if "read_permissions" in scopes:
-    #    data["permissions"] = get_user_permissions(user)
+    if "read_email" in scopes:
+        data["email"] = user.emial
+    if "read_permissions" in scopes:
+        data["permissions"] = list(Permission.get_user_permissions(user).items())
     return HttpResponse(json.dumps(data), content_type="application/json")
 
 
@@ -75,9 +79,6 @@ def update_user_profile_view(request):
             return redirect('account_update_profile')
         add_message(request, ERROR, "Profile update failed.")
     return render(request, USER_PROFILE_TEMPLATE, {
-        'permissions': [
-            (code, PERMISSIONS.get(code, code))
-            for code in get_user_permissions(request.user)
-        ],
+        'permissions': list(request.user.oauth_user_permissions.items()),
         'form': form,
     })

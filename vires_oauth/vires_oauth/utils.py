@@ -26,20 +26,6 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-import re
-from .settings import PERMISSIONS, PACKAGE_NAME
-
-RE_PERMISSION_PREFIX = re.compile(r"^%s\." % PACKAGE_NAME)
-
-
-def get_user_permissions(user):
-    return [
-        code for code in (
-            RE_PERMISSION_PREFIX.sub("", code)
-            for code in user.get_all_permissions()
-        ) if code in PERMISSIONS
-    ]
-
 
 def decorate(decorators, function):
     """ Decorate `function` with one or more decorators. `decorators` can be

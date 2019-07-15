@@ -48,7 +48,10 @@ from .views import (
     update_user_profile_view,
     api_user_view,
 )
-from .decorators import vires_admin_only
+from .decorators import has_permission
+
+
+vires_admin_only = has_permission('admin')
 
 
 oauth2_provider_urlpatterns = [

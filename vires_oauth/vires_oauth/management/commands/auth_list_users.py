@@ -30,8 +30,7 @@ import sys
 import json
 from collections import OrderedDict
 from django.core.management.base import BaseCommand
-from ...models import UserProfile
-from ...utils import get_user_permissions
+from ...models import UserProfile, Permission
 from ._common import ConsoleOutput
 
 JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
@@ -145,7 +144,9 @@ class VerboseOutput():
             group.name for group in profile.user.groups.all()
         ))
 
-        yield ("permissions", ", ".join(get_user_permissions(profile.user)))
+        yield ("permissions", ", ".join(
+            list(Permission.get_user_permissions(profile.user))
+        ))
         yield ("is active", profile.user.is_active)
         yield ("first name", profile.user.first_name)
         yield ("last name", profile.user.last_name)
@@ -193,6 +194,7 @@ class JSONOutput():
             yield ("password", user.password)
 
         yield ("groups", [group.name for group in user.groups.all()])
+        yield ("permissions", list(Permission.get_user_permissions(user)))
         yield ("is_active", user.is_active)
         yield ("date_joined", datetime_to_string(user.date_joined))
         yield ("last_login", datetime_to_string(user.last_login))

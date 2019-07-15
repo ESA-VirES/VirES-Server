@@ -31,3 +31,4 @@ from os.path import join, dirname
 _DIRNAME = dirname(__file__)
 
 DEFAULT_GROUPS = join(_DIRNAME, "default_groups.json")
+DEFAULT_PERMISSIONS = join(_DIRNAME, "default_permissions.json")

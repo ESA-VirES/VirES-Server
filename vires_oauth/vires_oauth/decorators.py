@@ -73,16 +73,22 @@ def log_access(level_authenticated=NOTSET, level_unauthenticated=NOTSET):
     return _decorator_
 
 
-def vires_admin_only(view_func):
-    """ Allow only admin to access. """
-    @wraps(view_func)
-    def _wrapper_(request, *args, **kwargs):
-        if not request.user.is_vires_admin:
-            return HttpResponse(
-                'Not authorized!', content_type="text/plain", status=403
-            )
-        return view_func(request, *args, **kwargs)
-    return _wrapper_
+def has_permission(*permissions):
+    """ Authorize if the user has one of the required permissions. """
+    def _has_oauth_user_permission_(view_func):
+        @wraps(view_func)
+        def _wrapper_(request, *args, **kwargs):
+            user_permissions = request.user.oauth_user_permissions
+            for permission in permissions:
+                if permission in user_permissions:
+                    break
+            else:
+                return HttpResponse(
+                    'Not authorized!', content_type="text/plain", status=403
+                )
+            return view_func(request, *args, **kwargs)
+        return _wrapper_
+    return _has_oauth_user_permission_
 
 
 def reject_unauthenticated(view_func):
@@ -107,3 +113,17 @@ def redirect_unauthenticated(view_func):
             return response
         return view_func(request, *args, **kwargs)
     return _wrapper_
+
+
+def log_exception(logger):
+    """ Log any exception raised from the wrapped view. """
+    def _decorator_(view_func):
+        @wraps(view_func)
+        def _wrapper_(*args, **kwargs):
+            try:
+                return view_func(*args, **kwargs)
+            except Exception as error:
+                logger.error("%s: %s", view_func.__name__, error)
+                raise
+        return _wrapper_
+    return _decorator_

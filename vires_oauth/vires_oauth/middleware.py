@@ -33,8 +33,9 @@ from logging import getLogger, INFO, WARNING, ERROR
 from django.conf import settings
 from django.contrib.auth import logout
 from django.contrib import messages
+from .models import Permission
 from .settings import (
-    ACCESS_LOGGER_NAME, ADMIN_PERMISSION, DEFAULT_SESSION_IDLE_TIMEOUT,
+    ACCESS_LOGGER_NAME, DEFAULT_SESSION_IDLE_TIMEOUT,
 )
 
 
@@ -70,12 +71,12 @@ def session_idle_timeout(get_response):
     return middleware
 
 
-def access_vires_admin_middleware(get_response):
+def oauth_user_permissions_middleware(get_response):
 
     def middleware(request):
-        request.user.is_vires_admin = (
-            hasattr(request.user, 'has_perm') and
-            request.user.has_perm(ADMIN_PERMISSION)
+        request.user.oauth_user_permissions = (
+            Permission.get_user_permissions(request.user)
+            if request.user.is_authenticated else {}
         )
         return get_response(request)
 

@@ -32,8 +32,7 @@ from functools import partial
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from ._common import ConsoleOutput
-from ...models import UserProfile
-from ...utils import get_user_permissions
+from ...models import UserProfile, Permission
 
 JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
 
@@ -101,7 +100,7 @@ def serialize_user(object_):
         "last_name": object_.last_name,
         "email": object_.email, # copy of the primary e-mail
         "groups": get_groups(object_),
-        "permissions": get_user_permissions(object_),
+        "permissions": list(Permission.get_user_permissions(object_)),
         "user_profile": (
             serialize_user_profile(user_profile) if user_profile else None
         ),

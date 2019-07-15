@@ -30,21 +30,12 @@ PACKAGE_NAME = "vires_oauth"
 
 ACCESS_LOGGER_NAME = PACKAGE_NAME + ".access"
 
-ADMIN_PERMISSION = PACKAGE_NAME + ".admin"
-
 DEFAULT_SESSION_IDLE_TIMEOUT = 600 # seconds
-
-# User permissions
-PERMISSIONS = {
-    "admin": "VirES administration",
-    "swarm": "Access to VirES for Swarm",
-    "swarm_vre": "Access to Swarm VRE",
-    "swarm_disc": "Access to Swarm DISC",
-}
 
 # Application scopes
 DEFAULT_SCOPES = ["read_id"]
 SCOPES = {
     "read_id": "Read user identity",
+    "read_email": "Read user e-mail address",
     "read_permissions": "Read user permissions",
 }

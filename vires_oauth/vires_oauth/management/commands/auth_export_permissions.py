@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Scopes
+# Export user permissions in JSON format.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,19 +24,48 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-few-public-methods
 
-from oauth2_provider.scopes import BaseScopes
-from .settings import SCOPES, DEFAULT_SCOPES
+import sys
+import json
+from django.core.management.base import BaseCommand
+from ...models import Permission
+from ._common import ConsoleOutput
+
+JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
 
 
-class ViresScopes(BaseScopes):
+class Command(ConsoleOutput, BaseCommand):
+    help = (
+        "Export user permissions in JSON format. The exported permissions "
+        "can be selected by names."
+    )
 
-    def get_all_scopes(self):
-        return SCOPES
+    def add_arguments(self, parser):
+        parser.add_argument("permissions", nargs="*", help="Selected permissions.")
+        parser.add_argument(
+            "-f", "--file-name", dest="filename", default="-", help=(
+                "Optional output file-name. "
+                "By default it is written to the standard output."
+            )
+        )
 
-    def get_available_scopes(self, application=None, request=None, *args, **kwargs):
-        return list(SCOPES)
+    def handle(self, permissions, filename, **kwargs):
+        query = Permission.objects
 
-    def get_default_scopes(self, application=None, request=None, *args, **kwargs):
-        return list(DEFAULT_SCOPES)
+        if not permissions:
+            query = query.all()
+        else:
+            query = query.filter(name__in=permissions)
+
+        data = [extract_permission(item) for item in query]
+
+        with sys.stdout if filename == "-" else open(filename, "w") as file_:
+            json.dump(data, file_, **JSON_OPTS)
+
+
+def extract_permission(permission):
+    return {
+        "name": permission.name,
+        "description": permission.description,
+    }

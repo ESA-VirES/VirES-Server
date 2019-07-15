@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Import user groups from a JSON file
+# Import user permissions from a JSON file
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -29,39 +29,35 @@
 import sys
 import json
 from traceback import print_exc
-from contextlib import suppress
 from django.db import transaction
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import Group
-from ...models import GroupInfo, Permission
-from ...data import DEFAULT_GROUPS
+from ...models import Permission
+from ...data import DEFAULT_PERMISSIONS
 from ._common import ConsoleOutput
 
 
 class Command(ConsoleOutput, BaseCommand):
-    help = "Import groups from a JSON file."
+    help = "Import user permissions from a JSON file."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "-f", "--file", dest="filename", default="-", help=(
                 "Optional input file-name. "
-                "By default it is read from the standard input."
+                "The standard input is used by default."
             )
         )
         parser.add_argument(
             "-d", "--default", dest="load_defaults", action="store_true",
-            default=False, help="Re-load default set of groups."
+            default=False, help="Re-load default set of permissions."
         )
 
     def handle(self, filename, load_defaults, **kwargs):
 
         if load_defaults:
-            filename = DEFAULT_GROUPS
+            filename = DEFAULT_PERMISSIONS
 
         with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
             data = json.load(file_)
-
-        permissions = get_permissions()
 
         failed_count = 0
         created_count = 0
@@ -69,69 +65,49 @@ class Command(ConsoleOutput, BaseCommand):
         for item in data:
             name = item['name']
             try:
-                is_updated = save_group(item, permissions)
+                is_updated = save_permission(item)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
-                self.error("Failed to create or update a group! %s", error)
+                self.error("Failed to write permission %s! %s", name, error)
             else:
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info((
-                    "Existing user group %s updated." if is_updated else
-                    "New user group %s created."
+                    "Existing permission %s updated." if is_updated else
+                    "New permission %s created."
                 ), name)
 
         if created_count:
             self.info(
-                "%d of %d user group%s updated.", created_count, len(data),
+                "%d of %d permission%s updated.", created_count, len(data),
                 "s" if created_count > 1 else ""
             )
 
         if updated_count:
             self.info(
-                "%d of %d user group%s updated.", updated_count, len(data),
+                "%d of %d permission%s updated.", updated_count, len(data),
                 "s" if updated_count > 1 else ""
             )
 
         if failed_count:
             self.info(
-                "%d of %d user group%s failed ", failed_count, len(data),
+                "%d of %d permission%s failed ", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
 
 @transaction.atomic
-def save_group(item, permissions):
+def save_permission(item):
     name = item['name']
     try:
-        group = Group.objects.get(name=name)
+        permission = Permission.objects.get(name=name)
         is_updated = True
-    except Group.DoesNotExist:
-        group = Group(name=name)
+    except Permission.DoesNotExist:
+        permission = Permission(name=name)
         is_updated = False
 
-    group.save()
-
-    group.permissions.clear()
-    for permission_name in item.get('permissions') or []:
-        with suppress(KeyError):
-            group.oauth_user_permissions.add(permissions[permission_name])
-
-    if 'title' in item:
-        try:
-            group_info = group.groupinfo
-        except GroupInfo.DoesNotExist:
-            group_info = GroupInfo()
-            group_info.group = group
-
-        group_info.title = item['title']
-        group_info.save()
+    permission.description = item['description']
+    permission.save()
 
     return is_updated
-
-def get_permissions():
-    return {
-        permission.name: permission
-        for permission in Permission.objects.all()
-    }
