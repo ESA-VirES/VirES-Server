@@ -1,11 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
+#  Common settings
 #
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +24,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, invalid-name
+# pylint: disable=missing-docstring
 
-#from logging import INFO, WARNING
-from django.conf.urls import url, include
-from django.views.generic import TemplateView
-from allauth.account.views import logout as account_logout
-from .views import AccessTokenManagerView
-#from .url_tools import decorate
-#from .decorators import log_access
+PACKAGE_NAME = "vires_oauth"
 
-urlpatterns = [
-    url(r'^', include('allauth.socialaccount.urls')),
-    url(r'^', include('eoxs_allauth.vires_oauth.urls')),
-    url(r"^logout/$", account_logout, name="account_logout"),
-    url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
-    url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
-]
+ACCESS_LOGGER_NAME = PACKAGE_NAME + ".access"
+
+DEFAULT_SESSION_IDLE_TIMEOUT = 600 # seconds
+
+# Application scopes
+DEFAULT_SCOPES = ["read_id"]
+SCOPES = {
+    "read_id": "Read user identity",
+    "read_email": "Read user e-mail address",
+    "read_permissions": "Read user permissions",
+}

@@ -1,11 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
+# Set current site.
 #
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +24,42 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, invalid-name
+# pylint: disable=missing-docstring, too-few-public-methods
 
-#from logging import INFO, WARNING
-from django.conf.urls import url, include
-from django.views.generic import TemplateView
-from allauth.account.views import logout as account_logout
-from .views import AccessTokenManagerView
-#from .url_tools import decorate
-#from .decorators import log_access
+from django.core.management.base import BaseCommand, CommandError
+from django.conf import settings
+from django.contrib.sites.models import Site
+from ._common import ConsoleOutput
 
-urlpatterns = [
-    url(r'^', include('allauth.socialaccount.urls')),
-    url(r'^', include('eoxs_allauth.vires_oauth.urls')),
-    url(r"^logout/$", account_logout, name="account_logout"),
-    url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
-    url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
-]
+
+class Command(ConsoleOutput, BaseCommand):
+    help = "Print current site configuration."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "-n", "--name", dest="name", default=None, help="Site name."
+        )
+        parser.add_argument(
+            "-d", "--domain", dest="domain", default=None, help="Site domain."
+        )
+
+    def handle(self, name, domain, **kwargs):
+
+        try:
+            site = Site.objects.get(id=settings.SITE_ID)
+        except Site.DoesNotExist:
+            site = Site()
+            site.id = settings.SITE_ID
+            if not name or not domain:
+                raise CommandError(
+                    "Both name and domain must be specified for a new site!"
+                )
+
+        if name:
+            site.name = name
+
+        if domain:
+            site.domain = domain
+
+        if name or domain:
+            site.save()

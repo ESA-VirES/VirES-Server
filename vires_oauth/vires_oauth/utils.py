@@ -1,9 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
+#  Various utilities
 #
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -25,20 +24,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, invalid-name
+# pylint: disable=missing-docstring
 
-#from logging import INFO, WARNING
-from django.conf.urls import url, include
-from django.views.generic import TemplateView
-from allauth.account.views import logout as account_logout
-from .views import AccessTokenManagerView
-#from .url_tools import decorate
-#from .decorators import log_access
 
-urlpatterns = [
-    url(r'^', include('allauth.socialaccount.urls')),
-    url(r'^', include('eoxs_allauth.vires_oauth.urls')),
-    url(r"^logout/$", account_logout, name="account_logout"),
-    url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
-    url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
-]
+def decorate(decorators, function):
+    """ Decorate `function` with one or more decorators. `decorators` can be
+    a single decorator or an iterable of decorators.
+    """
+    if hasattr(decorators, '__iter__'):
+        decorators = reversed(decorators)
+    else:
+        decorators = [decorators]
+    for decorator in decorators:
+        function = decorator(function)
+    return function

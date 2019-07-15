@@ -1,11 +1,11 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
+# VirES OAuth2  signal handlers
+#
+# Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,18 +27,24 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, invalid-name
 
-#from logging import INFO, WARNING
-from django.conf.urls import url, include
-from django.views.generic import TemplateView
-from allauth.account.views import logout as account_logout
-from .views import AccessTokenManagerView
-#from .url_tools import decorate
-#from .decorators import log_access
+from logging import getLogger
+from django.conf import settings
+from django.dispatch import receiver
+from django.contrib.auth.models import Group
+from allauth.account.signals import user_signed_up
 
-urlpatterns = [
-    url(r'^', include('allauth.socialaccount.urls')),
-    url(r'^', include('eoxs_allauth.vires_oauth.urls')),
-    url(r"^logout/$", account_logout, name="account_logout"),
-    url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
-    url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
-]
+
+@receiver(user_signed_up)
+def set_default_group(sender, request, user, **kwargs):
+    """ Set default groups for newly signed-up users. """
+    logger = getLogger(__name__)
+    default_group = getattr(settings, "VIRES_OAUTH_DEFAULT_GROUP", None)
+    if not default_group:
+        return
+    try:
+        group = Group.objects.get(name=default_group)
+    except Group.DoesNotExist:
+        logger.warning("Default group %s does not exist!", default_group)
+        return
+    user.groups.add(group)
+    logger.debug("User %s added to group %s.", user.username, group.name)

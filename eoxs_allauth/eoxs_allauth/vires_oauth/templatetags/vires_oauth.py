@@ -1,11 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer - django-allauth integration.
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
+# Custom Django template tags and filters
 #
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +24,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, invalid-name
+# pylint: disable=missing-docstring
 
-#from logging import INFO, WARNING
-from django.conf.urls import url, include
-from django.views.generic import TemplateView
-from allauth.account.views import logout as account_logout
-from .views import AccessTokenManagerView
-#from .url_tools import decorate
-#from .decorators import log_access
+from django.template import Library
+from allauth.socialaccount import app_settings
+from ..provider import ViresProvider
 
-urlpatterns = [
-    url(r'^', include('allauth.socialaccount.urls')),
-    url(r'^', include('eoxs_allauth.vires_oauth.urls')),
-    url(r"^logout/$", account_logout, name="account_logout"),
-    url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
-    url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
-]
+register = Library()
+
+
+VIRES_OAUTH_URL_PATHS = {
+    'account_update_profile': '/',
+    'account_change_password': '/accounts/password/change/',
+    'account_email': '/accounts/email/',
+    'socialaccount_connections': '/accounts/social/connections/',
+}
+
+
+@register.simple_tag
+def vires_oauth_url(name):
+    """ Resolve VirES OAuth server URL. """
+    settings = app_settings.PROVIDERS.get(ViresProvider.id, {})
+    public_server_url = settings['SERVER_URL'].rstrip('/')
+    try:
+        return '{0}{1}'.format(public_server_url, VIRES_OAUTH_URL_PATHS[name])
+    except KeyError:
+        raise ValueError("Unknown URL name '%s'!" % name)
