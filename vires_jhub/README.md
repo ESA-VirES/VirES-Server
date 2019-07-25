@@ -29,13 +29,13 @@ jupyterhub ... --JupyterHub.authenticator_class='vires_jhub.authenticator.LocalV
 
 ## Configuration
 
-The authenticator is configured via the following environment variables
+The authenticator can be configured via the following environment variables or class configuration options (`c.ViresOAuthenticator.*`)
 
-| Name | Default | Mandatory | Description |
-|:-----|:-------:|:---------:|:------------|
-|`VIRES_OAUTH_SERVER_URL`|*none*|yes| client-side base OAuth2 server URL (absolute path accepted, .e.g. `/auth/`)|
-|`VIRES_OAUTH_DIRECT_SERVER_URL`|`$VIRES_OAUTH_SERVER_URL`|no| server-side base OAuth2 server URL (full URL including protocol and host-name, can be an internal network URL)|
-|`VIRES_CLIENT_ID`|*none*|yes| OAuth2 client id|
-|`VIRES_CLIENT_SECRET`|*none*|yes| OAuth2 client secret|
-|`VIRES_USER_PERMISSION`|`user`|no|Name of the required bacis user permission.|
-|`VIRES_ADMIN_PERMISSION`|`admin`|no|Name of the optional admin permission.|
+| Environment Variable | Class Configuration | Default | Description |
+|:-----|:-------|:---------:|:------------|
+|`VIRES_OAUTH_SERVER_URL`|`server_url`|*blank*| client-side base OAuth2 server URL (absolute path accepted, .e.g. `/auth/`)|
+|`VIRES_OAUTH_DIRECT_SERVER_URL`|`direct_server_url`|defaults to `server_url`| optional server-side base OAuth2 server URL (full URL including protocol and host-name, can be an internal network URL)|
+|`VIRES_CLIENT_ID`|`client_is`|*none*| OAuth2 client identifier|
+|`VIRES_CLIENT_SECRET`|`client_secret`|*none*| OAuth2 client secret|
+|`VIRES_USER_PERMISSION`|`user_permission`|`user`| Name of the required basic user permission.|
+|`VIRES_ADMIN_PERMISSION`|`admin_permission`|`admin`| Name of the optional administrator permission.|
