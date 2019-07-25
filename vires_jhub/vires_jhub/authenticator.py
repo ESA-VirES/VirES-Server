@@ -29,47 +29,59 @@
 import os
 import json
 import urllib
+from traitlets import Unicode
 from tornado.auth import OAuth2Mixin
 from tornado.httpclient import HTTPRequest, AsyncHTTPClient, HTTPError
 from jupyterhub.auth import LocalAuthenticator
 from oauthenticator.oauth2 import OAuthLoginHandler, OAuthenticator
 
-
-SCOPE = ["read_id", "read_permissions"]
-SERVICE_NAME = "VirES"
-ADMIN_PERMISSION_ENV = "VIRES_ADMIN_PERMISSION"
-USER_PERMISSION_ENV = "VIRES_USER_PERMISSION"
-CLIENT_SECRET_ENV = "VIRES_CLIENT_SECRET"
-CLIENT_ID_ENV = "VIRES_CLIENT_ID"
-CLIENT_SECRET_ENV = "VIRES_CLIENT_SECRET"
-SERVER_URL_ENV = "VIRES_OAUTH_SERVER_URL"
-DIRECT_SERVER_URL_ENV = "VIRES_OAUTH_DIRECT_SERVER_URL"
+AUTHORIZE_PATH = "/authorize/"
+ACCESS_TOKEN_PATH = "/token/"
+USER_PROFILE_PATH = "/user/"
 
 
-USER_PERMISSION = os.environ.get(USER_PERMISSION_ENV, "user")
-ADMIN_PERMISSION = os.environ.get(ADMIN_PERMISSION_ENV, "admin")
-
-SERVER_URL = os.environ[SERVER_URL_ENV].rstrip("/")
-DIRECT_SERVER_URL = os.environ.get(DIRECT_SERVER_URL_ENV, SERVER_URL).rstrip("/")
-
-AUTHORIZE_URL = "{0}/authorize/".format(SERVER_URL)
-ACCESS_TOKEN_URL = "{0}/token/".format(DIRECT_SERVER_URL)
-USER_PROFILE_URL = "{0}/user/".format(DIRECT_SERVER_URL)
+def _join_url(base, path):
+    return base.rstrip("/") + path
 
 
 class ViresLoginHandler(OAuthLoginHandler, OAuth2Mixin):
-    _OAUTH_AUTHORIZE_URL = AUTHORIZE_URL
-    _OAUTH_ACCESS_TOKEN_URL = ACCESS_TOKEN_URL
+    # The server URL is configurable via the ViresOAuthenticator class.
+
+    @property
+    def _OAUTH_AUTHORIZE_URL(self):
+        return _join_url(self.authenticator.server_url, AUTHORIZE_PATH)
 
 
 class ViresOAuthenticator(OAuthenticator):
-    login_service = SERVICE_NAME
-    scope = SCOPE
-    client_id_env = CLIENT_ID_ENV
-    client_secret_env = CLIENT_SECRET_ENV
+    login_service = "VirES"
+    scope = ["read_id", "read_permissions"]
+    client_id_env = "VIRES_CLIENT_ID"
+    client_secret_env = "VIRES_CLIENT_SECRET"
     login_handler = ViresLoginHandler
-    admin_permission = ADMIN_PERMISSION
-    user_permission = USER_PERMISSION
+
+    server_url = Unicode(
+        os.environ.get("VIRES_OAUTH_SERVER_URL", ""),
+        config=True,
+        help="VirES OAuth2 server URL. "
+    )
+
+    direct_server_url = Unicode(
+        os.environ.get("VIRES_OAUTH_DIRECT_SERVER_URL", ""),
+        config=True,
+        help="Optional server-side direct VirES OAuth2 server URL."
+    )
+
+    user_permission = Unicode(
+        os.environ.get("VIRES_USER_PERMISSION", "user"),
+        config=True,
+        help="User permission required to grant access to JupyterHub."
+    )
+
+    admin_permission = Unicode(
+        os.environ.get("VIRES_ADMIN_PERMISSION", "admin"),
+        config=True,
+        help="User permission required to grant JupyterHub administration right."
+    )
 
     async def authenticate(self, handler, data=None):
         http_client = AsyncHTTPClient()
@@ -98,7 +110,7 @@ class ViresOAuthenticator(OAuthenticator):
 
     async def _retrieve_user_profile(self, http_client, access_token):
         request = HTTPRequest(
-            USER_PROFILE_URL,
+            _join_url(self.direct_server_url or self.server_url, USER_PROFILE_PATH),
             method="GET",
             headers={
                 "Accept": "application/json",
@@ -116,7 +128,7 @@ class ViresOAuthenticator(OAuthenticator):
             "code": handler.get_argument("code"),
         }
         request = HTTPRequest(
-            ACCESS_TOKEN_URL,
+            _join_url(self.direct_server_url or self.server_url, ACCESS_TOKEN_PATH),
             method="POST",
             headers={"Accept": "application/json"},
             body=urllib.parse.urlencode(parameters),
