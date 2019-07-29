@@ -1747,8 +1747,8 @@
             "data_type": "UInt32",
             "definition": "",
             "description": "0: equator, 1: mid-latitudes; 2: auroral oval; 3: polar cap.",
-            "identifier": "Ionopshere_region_flag",
-            "name": "Ionopshere_region_flag",
+            "identifier": "Ionosphere_region_flag",
+            "name": "Ionosphere_region_flag",
             "nil_values": [],
             "uom": ""
         },
