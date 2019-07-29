@@ -1586,8 +1586,8 @@
             "data_type": "Float32",
             "definition": "",
             "description": "The electron density gradient in a running window calculated via linear regression over 27 data points for the 2 Hz electron density data.",
-            "identifier": "Grad_Ne@100km",
-            "name": "Grad_Ne@100km",
+            "identifier": "Grad_Ne_at_100km",
+            "name": "Grad_Ne_at_100km",
             "nil_values": [],
             "uom": "cm-3/m"
         },
@@ -1596,8 +1596,8 @@
             "data_type": "Float32",
             "definition": "",
             "description": "The electron density gradient in a running window calculated via linear regression over 13 data points for the 2 Hz electron density data.",
-            "identifier": "Grad_Ne@50km",
-            "name": "Grad_Ne@50km",
+            "identifier": "Grad_Ne_at_50km",
+            "name": "Grad_Ne_at_50km",
             "nil_values": [],
             "uom": "cm-3/m"
         },
@@ -1606,8 +1606,8 @@
             "data_type": "Float32",
             "definition": "",
             "description": "The electron density gradient in a running window calculated via linear regression over 5 data points for the 2 Hz electron density data.",
-            "identifier": "Grad_Ne@20km",
-            "name": "Grad_Ne@20km",
+            "identifier": "Grad_Ne_at_20km",
+            "name": "Grad_Ne_at_20km",
             "nil_values": [],
             "uom": "cm-3/m"
         },
@@ -1616,8 +1616,8 @@
             "data_type": "Float32",
             "definition": "",
             "description": "The linear electron density gradient calculated over the edges of a patch. This variable is non-zero only at the edges of polar cap patches.",
-            "identifier": "Grad_Ne@PCP_edge",
-            "name": "Grad_Ne@PCP_edge",
+            "identifier": "Grad_Ne_at_PCP_edge",
+            "name": "Grad_Ne_at_PCP_edge",
             "nil_values": [],
             "uom": "cm-3/m"
         },
