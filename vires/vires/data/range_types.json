@@ -1546,8 +1546,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "Background density, as calculated from Ne using a percentile filter of 551 datapoints (2 Hz raw data) and 35 as the percentile.",
-            "identifier": "background Ne",
-            "name": "background Ne",
+            "identifier": "Background_Ne",
+            "name": "Background_Ne",
             "nil_values": [],
             "uom": "cm-3"
         },
@@ -1556,8 +1556,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "Foreground density, as calculated from ndens using a percentile filter of 7 datapoints (2 Hz raw data) and 50 as the percentile.",
-            "identifier": "foreground Ne",
-            "name": "foreground Ne",
+            "identifier": "Foreground_Ne",
+            "name": "Foreground_Ne",
             "nil_values": [],
             "uom": "cm-3"
         },
@@ -1747,8 +1747,8 @@
             "data_type": "UInt32",
             "definition": "",
             "description": "0: equator, 1: mid-latitudes; 2: auroral oval; 3: polar cap.",
-            "identifier": "Ionpshere_region_flag",
-            "name": "Ionpshere_region_flag",
+            "identifier": "Ionopshere_region_flag",
+            "name": "Ionopshere_region_flag",
             "nil_values": [],
             "uom": ""
         },
