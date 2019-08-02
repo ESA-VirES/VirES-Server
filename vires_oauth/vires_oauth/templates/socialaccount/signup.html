@@ -1,0 +1,86 @@
+{% extends "socialaccount/base.html" %}
+{% load i18n %}
+{% block head_title %}{% trans "Sign up" %}{% endblock %}
+{% block content %}
+{% load staticfiles %}
+  <h2>{% trans "Sign Up" %}</h2>
+  <p>{% blocktrans with provider_name=account.get_provider.name site_name=site.name %}
+    You are about to use your {{provider_name}} account to log in to
+    {{site_name}}. As a final step, please complete the following form:{% endblocktrans %}
+  </p>
+  <p class="help-inline" style="font-size: 1em;">(*) Required fields; Please help us getting to know you by filling out non required fields.</p>
+  <form class="form-horizontal inputwide" method="POST" action="{% url 'socialaccount_signup' %}">
+    {% csrf_token %}
+    <fieldset>
+        {% if form.errors %}
+            <p class="help-inline error">
+                There were some errors in the form.
+            </p>
+        {% endif %}
+        {% for field in form.visible_fields %}
+            {% if field.errors %}
+                <div class="control-group error">
+                    <label class="control-label{% if field.field.required %} required{% endif %}" for="{{ field.id_for_label }}">
+                      {{ field.label }}{% if field.field.required %} *{% endif %}
+                    </label>
+                    {{ field }}
+                    <span class="help-inline error">
+                        {% for error in  field.errors %}{{ error }}{% endfor %}
+                    </span>
+                </div>
+            {% else %}
+                <div class="control-group">
+                    <label class="control-label{% if field.field.required %} required{% endif %}" for="{{ field.id_for_label }}">
+                      {{ field.label }}{% if field.field.required %} *{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="help-inline"><small>{{ field.help_text }}</small></p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+        {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+        <div class="checkbox">
+            <label style="font-weight: bold;">
+                <input id="tosagree" style="width: auto;" type="checkbox" value="">
+                I read and accept the 
+                  <a style="display:inline;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a>
+                  <!--and the 
+                  <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a>
+                  -->
+                  *
+            </label>
+        </div>
+        <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
+            <button id="formsubmit" type="submit" class="btn btn-primary" disabled="true">{% trans "Sign up" %} &raquo;</button>
+        </div>
+    </fieldset>
+  </form>
+
+  <script type="text/javascript">
+    window.onload = function () {
+        $('#id_password2').parent().prependTo("fieldset");
+        $('#id_password1').parent().prependTo("fieldset");
+        $('#id_email2').parent().prependTo("fieldset");
+        $('#id_email').parent().prependTo("fieldset");
+        $('#id_username').parent().prependTo("fieldset");
+        $('#id_username').focus();
+
+        $('#tosagree').change(function () {
+            if ($('#tosagree')[0].checked) {
+                $('#formsubmit').prop('disabled', false);
+            } else {
+                $('#formsubmit').prop('disabled', true);
+            }
+        });
+        $('#tosagree').keypress(function(e){
+            if((e.keyCode ? e.keyCode : e.which) == 13){
+                $(this).trigger('click');
+            }
+        });
+    }
+  </script>
+{% endblock %}

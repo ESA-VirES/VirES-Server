@@ -26,7 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=unused-import, missing-docstring
+# pylint: disable=missing-docstring
 
 from numpy import asarray, dtype
 from .cdf_util import (
@@ -44,7 +44,6 @@ from .cdf_util import (
     CDF_FLOAT_TYPE,
 )
 
-
 _TYPE_MAP = {
     dtype("int8"): CDF_INT1_TYPE,
     dtype("int16"): CDF_INT2_TYPE,
@@ -59,6 +58,12 @@ _TYPE_MAP = {
     dtype("datetime64[ms]"): CDF_EPOCH_TYPE,
     dtype("datetime64[us]"): CDF_EPOCH_TYPE,
 }
+
+
+def cdf_assert_backward_compatible_dtype(data):
+    """ Assert backward compatible data type. """
+    if data.dtype in (dtype("int64"), dtype("uint64")):
+        raise TypeError("64bit integer types not supported!")
 
 
 def cdf_add_variable(cdf, variable, data, attrs=None, **options):

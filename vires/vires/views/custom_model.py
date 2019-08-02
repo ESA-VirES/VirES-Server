@@ -43,9 +43,8 @@ from ..time_util import (
 )
 from ..models import CustomModel
 from ..locked_file_access import log_append
-from .exceptions import (
-    InvalidFileFormat, HttpError400, HttpError404, HttpError405, HttpError413,
-)
+from ..readers import InvalidFileFormat
+from .exceptions import HttpError400, HttpError404, HttpError405, HttpError413
 from .decorators import (
     set_extra_kwargs, handle_error, allow_methods,
     allow_content_length, reject_content,

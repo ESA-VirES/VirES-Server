@@ -1,0 +1,82 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+{% block title %}<title>VirES for Swarm - Login</title>{% endblock %}
+{% block content %}
+  <h2>Log in</h2>
+  {% get_providers as socialaccount_providers %}
+  {% if socialaccount_providers %}
+  <p style="text-align: center;">Log in using your preferred social network account:</p>
+  <ul class="socialaccount_providers">
+    {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+  </ul>
+  <p style="text-align: center;">or with your account credentials:</p>
+  {% else %}
+  <p style="text-align: center;">Login with your account credentials:</p>
+  {% endif %}
+  <form class="form-horizontal inputwide" method="POST" action="{% url 'account_login' %}">
+    {% csrf_token %}
+    <fieldset>
+     {% if form.errors %}
+       <p class="help-inline error">
+         Incorrect user credentials or password.<br>
+         Please try again.<br>
+         Note that both fields are case sensitive.
+       </p>
+     {% endif %}
+     {% for field in form %}
+       {% if field.errors %}
+         <div class="control-group error">
+           <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+           {{ field }}
+           <span class="help-inline error">
+             {% for error in field.errors %}{{ error }}{% endfor %}
+           </span>
+         </div>
+       {% else %}
+         <div class="control-group">
+           <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+           {{ field }}
+           {% if field.help_text %}
+               <p class="help-inline"><small>{{ field.help_text }}</small></p>
+           {% endif %}
+         </div>
+       {% endif %}
+     {% endfor %}
+     {% if redirect_field_value %}
+         <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+     {% endif %}
+     <p class="help-inline" style="text-align: right;"><a href="{% url 'account_reset_password' %}">Forgot your password?</a></p>
+     <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
+         <button type="submit" class="btn btn-primary">{% trans "Log in" %}</button>
+     </div>
+    </fieldset>
+  </form>
+  <h2>Sign up</h2>
+  {% if socialaccount_providers %}
+  <p style="text-align: center;">
+    If you have not created an account yet, then please sign up directly:
+  </p>
+  <div style="margin-top: 2em; text-align: center; margin:15px 0 20px 0;">
+    <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign-up</a>
+  </div>
+  <p style="text-align: center; margin-top: 2em;">
+     or sign up using your preferred social network account:
+  </p>
+  <ul class="socialaccount_providers">
+    {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
+  </ul>
+  {% else %}
+  <p style="text-align: center;">
+    If you have not created an account yet, then please sign up:
+  </p>
+  <div style="margin-top: 2em; text-align: center; margin:15px 0 20px 0;">
+    <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign-up</a>
+  </div>
+  {% endif %}
+  <hr>
+  <p style="text-align: center;">
+    Feedback and ideas are very welcome, feel free to contact us on
+    <a href="mailto:feedback@vires.services">feedback@vires.services</a>.
+  </p>
+{% endblock %}

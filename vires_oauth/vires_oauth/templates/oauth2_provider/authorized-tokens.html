@@ -1,0 +1,41 @@
+{% extends "oauth2_provider/base.html" %}
+{% block title %}<title>VirES OAuth2 - authorized tokens</title>{% endblock %}
+{% block content %}
+<h2>Authorized tokens</h2>
+{% if authorized_tokens %}
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Application</th>
+        <th>Permissions</th>
+        <th>Created</th>
+        <th>Expires</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for token in authorized_tokens %}
+        <tr>
+          <td>{{token.application}}</td>
+          <td>
+            {% for scope_name, scope_description in token.scopes.items %}
+              <div>{{ scope_name }}: {{ scope_description }}</div>
+            {% endfor %}
+          </td>
+          <td>{{ token.created|date:"Y-m-d H:m:s" }}Z</td>
+          <td>
+            {% if token.is_expired %}
+            EXPIRED
+            <a class="btn btn-primary btn-xs" role="button" href="{% url 'oauth2_provider:authorized-token-delete' token.pk %}">Delete</a>
+            {% else %}
+            {{ token.expires|date:"Y-m-d H:m:s" }}Z
+            <a class="btn btn-primary btn-xs" role="button" href="{% url 'oauth2_provider:authorized-token-delete' token.pk %}">Revoke</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>There are no authorized tokens yet.<p>
+{% endif %}
+{% endblock %}

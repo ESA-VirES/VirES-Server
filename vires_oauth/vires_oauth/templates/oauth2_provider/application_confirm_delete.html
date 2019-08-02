@@ -1,0 +1,16 @@
+{% extends "oauth2_provider/base.html" %}
+{% block title %}<title>VirES OAuth2 - delete registered application</title>{% endblock %}
+{% block content %}
+<div class="block-center">
+  <h3 class="block-center-heading">Are you sure to delete the {% if application.name %} {{ application.name }}{% else %} nameless{% endif %} application?</h3>
+  <form method="post" action="{% url 'oauth2_provider:delete' application.pk %}">
+    {% csrf_token %}
+    <div class="control-group">
+      <div class="controls" style="text-align: right">
+        <a class="btn btn-large btn-default" href="{% url "oauth2_provider:list" %}">Cancel</a>
+        <input type="submit" class="btn btn-large btn-danger" name="allow" value="Delete"/>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock content %}

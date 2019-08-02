@@ -7,6 +7,7 @@
 
 {% load url from future %}
 {% load staticfiles %}
+{% load vires_oauth %}
 
     {% block additional_headers %}
       <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
@@ -22,9 +23,7 @@
           padding: 0;
         }
       </style>
-
     {% endblock %}
-
 
   {% block accounts_content %}
   <div class="navbar navbar-inverse navbar-fixed-top not-selectable" style="position:relative; margin-bottom: 0px">
@@ -48,19 +47,26 @@
           {% block navbaritems %}
             {% if user.is_authenticated %}
               {% load account %}
-              <li>
-                <a class="tab-header" data-toggle="modal" data-target="#accountSettingsModal">
+              <li class="dropdown">
+                <a class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="false">
                   <i class="fa fa-fw fa-user"></i> {% user_display user %}
                 </a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="{% url 'account_manage_access_tokens' %}">{% trans "Manage access tokens" %}</a></li>
+                  <li><a href="{% vires_oauth_url 'account_update_profile' %}">{% trans "Change profile information" %}</a></li>
+                  <li><a href="{% vires_oauth_url 'socialaccount_connections' %}">{% trans "Connect social accounts" %}</a></li>
+                  <li><a href="{% vires_oauth_url 'account_change_password' %}">{% trans "Change password" %}</a></li>
+                  <li><a href="{% vires_oauth_url 'account_email' %}">{% trans "Change e-mail" %}</a></li>
+                </ul>
               </li>
               <li>
-                <a class="tab-header" href="{% url 'account_logout' %}">
+                <a class="tab-header" data-toggle="modal" data-target="#accountLogout">
                   <i class="fa fa-fw fa-sign-out"></i> Log out
                 </a>
               </li>
             {% else %}
               <li>
-                <a class="tab-header" href="{% url 'account_login' %}">
+                <a class="tab-header" href="{% url 'vires_login' %}">
                   <i class="fa fa-fw fa-sign-in"></i> Log in
                 </a>
               </li>
@@ -80,21 +86,25 @@
   </div>
   {% if user.is_authenticated %}
     <!-- Modal forms -->
-    <div class="modal fade" id="accountSettingsModal" tabindex="-1" role="dialog" aria-labelledby="accountSettingsLabel">
+    <div class="modal fade" id="accountLogout" tabindex="-1" role="dialog" aria-labelledby="accountLogout">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="accountSettingsLabel">Settings ({% user_display user %})</h4>
+            <h4 class="modal-title" id="accountLogoutLabel">Logout</h4>
           </div>
           <div class="modal-body">
-            <a href="{% url 'account_change_password' %}">{% trans "Change password" %}</a><br/>
-            <a href="{% url 'account_email' %}">{% trans "Change e-mail" %}</a><br/>
-            <a href="{% url 'socialaccount_connections' %}">{% trans "Connect social accounts" %}</a><br/>
-            <a href="{% url 'account_change_profile' %}">{% trans "Change profile information" %}</a>
+            <p>Are you sure you want to log out?</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <form method="post" action="{% url 'account_logout' %}">
+              {% csrf_token %}
+              {% if redirect_field_value %}
+              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+              {% endif %}
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary"><i class="fa fa-sign-out"></i>&nbsp;Log out</button>
+            </form>
           </div>
         </div>
       </div>

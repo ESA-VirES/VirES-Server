@@ -1,0 +1,210 @@
+{% load i18n %}
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="apple-touch-icon" sizes="57x57" href="{% static "other/favicon/apple-touch-icon-57x57.png" %}">
+  <link rel="apple-touch-icon" sizes="60x60" href="{% static "other/favicon/apple-touch-icon-60x60.png" %}">
+  <link rel="apple-touch-icon" sizes="72x72" href="{% static "other/favicon/apple-touch-icon-72x72.png" %}">
+  <link rel="apple-touch-icon" sizes="76x76" href="{% static "other/favicon/apple-touch-icon-76x76.png" %}">
+  <link rel="apple-touch-icon" sizes="114x114" href="{% static "other/favicon/apple-touch-icon-114x114.png" %}">
+  <link rel="apple-touch-icon" sizes="120x120" href="{% static "other/favicon/apple-touch-icon-120x120.png" %}">
+  <link rel="apple-touch-icon" sizes="144x144" href="{% static "other/favicon/apple-touch-icon-144x144.png" %}">
+  <link rel="apple-touch-icon" sizes="152x152" href="{% static "other/favicon/apple-touch-icon-152x152.png" %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static "other/favicon/apple-touch-icon-180x180.png" %}">
+  <link rel="icon" type="image/png" href="{% static "other/favicon/favicon-32x32.png" %}" sizes="32x32">
+  <link rel="icon" type="image/png" href="{% static "other/favicon/android-chrome-192x192.png" %}" sizes="192x192">
+  <link rel="icon" type="image/png" href="{% static "other/favicon/favicon-96x96.png" %}" sizes="96x96">
+  <link rel="icon" type="image/png" href="{% static "other/favicon/favicon-16x16.png" %}" sizes="16x16">
+  <link rel="manifest" href="{% static "other/favicon/manifest.json" %}">
+  <link rel="mask-icon" href="{% static "other/favicon/safari-pinned-tab.svg" %}" color="#5bbad5">
+  <link rel="shortcut icon" href="{% static "other/favicon/favicon.ico" %}">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="msapplication-TileImage" content="{% static "other/favicon/mstile-144x144.png" %}">
+  <meta name="msapplication-config" content="{% static "other/favicon/browserconfig.xml" %}">
+  <meta name="theme-color" content="#ffffff">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="VirES for Swarm Service">
+  <meta name="twitter:description" content="Highly interactive data analysis and retrieval web interface for the ESA Swarm products">
+  <meta name="twitter:image" content="https://vires.services"{% static "images/VirES_Swarm_twitter.jpg" %}"">
+  <meta name="twitter:image:alt" content="VirES for Swarm service image">
+  {% block title %}
+  <title>VirES for Swarm</title>
+  {% endblock %}
+  {% block additional_headers %}
+  <link rel="stylesheet" type="text/css" href="/eoxs_static/workspace/styles/main.css" />
+  <script type="text/javascript" src="/eoxs_static/workspace/bower_components/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="/eoxs_static/workspace/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
+  <link href="{% static 'css/social_providers.css' %}" rel="stylesheet">
+  <style type="text/css">
+    body {
+      background-color: #fff!important;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  {% endblock %}
+  <style type="text/css">
+    /*Styling for messages div to be on top and
+     floating over all elements */
+    #messagescontainer{
+      position: absolute;
+      z-index: 2;
+      left: 0;
+      right: 0;
+      top: 66px;
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/social_providers.css' %}" />
+</head>
+<body>
+{% block messages %}
+{% if messages %}
+<div class="container" id="messagescontainer" style="z-index: 5001;width:40%;">
+  <div class="row">
+    <div class="col-xs-12">
+      <div>
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags %}{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}{% else %}success{% endif %} fade in djangoalert"><!-- alert-warning alert-danger -->
+          <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">&times;</a>
+          {{ message|capfirst }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+  setTimeout(function(){
+    if ($('.djangoalert').length > 0) {
+    $('.djangoalert').remove();
+    }
+  }, 5000)
+</script>
+{% endif %}
+{% endblock messages %}
+{% block accounts_content %}
+<div class="navbar navbar-inverse navbar-fixed-top not-selectable" style="position:relative; margin-bottom: 0px">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+        <a class="navbar-brand" href="/" style="font-size:30px">
+        <img src="{% static 'images/vires_for_swarm_light.svg' %}" width="40" height="40" style="margin-top:-25px; margin-bottom:-15px">&nbsp;&nbsp;VirES for Swarm
+        </a>
+    </div>
+    <div class="navbar-collapse collapse">
+      <ul class="nav navbar-nav" id="tab-headers-main">
+        <li class="divider-vertical"></li>
+        <li>
+          <a class="tab-header" href="/">
+            <i class="fa fa-fw fa-desktop"></i>Application
+          </a>
+        </li>
+        {% block navbar_items %}
+          {% if user.is_authenticated %}
+            <li class="dropdown">
+              <a class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="false">
+                <i class="fa fa-fw fa-wrench"></i> OAuth2
+              </a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="{% url 'oauth2_provider:authorized-token-list' %}">{% trans "Manage authorized tokens" %}</a></li>
+                {% if 'admin' in user.oauth_user_permissions %}
+                <li><a href="{% url 'oauth2_provider:list' %}">{% trans "Manage registered applications" %}</a></li>
+                {% endif %}
+              </ul>
+            </li>
+            {% load account %}
+            <li class="dropdown">
+              <a class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="false">
+                <i class="fa fa-fw fa-user"></i> {% user_display user %}
+              </a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="{% url 'account_update_profile' %}">{% trans "Edit profile information" %}</a></li>
+                <li><a href="{% url 'account_change_password' %}">{% trans "Change password" %}</a></li>
+                <li><a href="{% url 'account_email' %}">{% trans "Change e-mail" %}</a></li>
+                <li><a href="{% url 'socialaccount_connections' %}">{% trans "Connect social accounts" %}</a></li>
+              </ul>
+            </li>
+            <li>
+              <a class="tab-header" data-toggle="modal" data-target="#accountLogout">
+                <i class="fa fa-fw fa-sign-out"></i> Log out
+              </a>
+            </li>
+          {% endif %}
+
+      {% endblock navbar_items %}
+      </ul>
+    </div>
+  </div>
+</div>
+<div style="position: relative; height: 95%; height: calc(100% - 50px);; overflow-y: scroll; overflow-x: hidden;">
+  <div class="row">
+    <div class="col-md-4 col-md-offset-4" id="formcontainer">
+    {% block content %}
+    {% endblock content %}
+    </div>
+  </div>
+</div>
+{% block modals %}
+  {% if user.is_authenticated %}
+     <div class="modal fade" id="accountLogout" tabindex="-1" role="dialog" aria-labelledby="accountLogout">
+       <div class="modal-dialog" role="document">
+         <div class="modal-content">
+           <div class="modal-header">
+             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+             <h4 class="modal-title" id="accountLogoutLabel">Logout</h4>
+           </div>
+           <div class="modal-body">
+             <p>Are you sure you want to log out?</p>
+           </div>
+           <div class="modal-footer">
+             <form method="post" action="{% url 'account_logout' %}">
+               {% csrf_token %}
+               {% if redirect_field_value %}
+               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+               {% endif %}
+               <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+               <button type="submit" class="btn btn-primary"><i class="fa fa-sign-out"></i>&nbsp;Log out</button>
+             </form>
+           </div>
+         </div>
+       </div>
+     </div>
+  {% endif %}
+{% endblock modals %}
+{% endblock accounts_content %}
+<script type="text/javascript">
+var _paq = _paq || [];
+// Check if the title was set already somewhere else
+var documentTitleSet = false;
+for (var i = _paq.length - 1; i >= 0; i--) {
+	if (_paq[i][0]=="setDocumentTitle"){
+		documentTitleSet = true;
+	}
+}
+// only if it is not set set it here with the default
+if(!documentTitleSet){
+	_paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+}
+_paq.push(["setDoNotTrack", true]);
+_paq.push(['trackPageView']);
+_paq.push(['enableLinkTracking']);
+(function() {
+  var u="//nix.eox.at/piwik/";
+  _paq.push(['setTrackerUrl', u+'piwik.php']);
+  _paq.push(['setSiteId', 4]);
+  var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+  g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+})();
+</script>
+<noscript><p><img src="//nix.eox.at/piwik/piwik.php?idsite=4" style="border:0;" alt="" /></p></noscript>
+</body>
+</html>

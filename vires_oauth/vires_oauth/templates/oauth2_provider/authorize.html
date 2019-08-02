@@ -1,0 +1,50 @@
+{% extends "oauth2_provider/base.html" %}
+{% block title %}<title>VirES OAuth2 - authorize application</title>{% endblock %}
+{% block content %}
+<h2>Authorize application</h2>
+{% if not error %}
+  <div class="panel panel-default">
+    {% if application.name %}
+    <div class="panel-heading">
+      <h3 class="panel-title">{{ application.name }}</h3>
+    </div>
+    {% endif %}
+    <div class="panel-body">
+      {% if scopes_descriptions %}
+        <p>The application requires following permissions:</p>
+        <ul>
+          {% for scope in scopes_descriptions %}
+            <li>{{ scope }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>The application requires no permissions.</p>
+      {% endif %}
+    </div>
+  </div>
+  <form id="authorizationForm" method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      {% if field.is_hidden %}{{ field }}{% endif %}
+    {% endfor %}
+    {{ form.errors }}
+    {{ form.non_field_errors }}
+    <div class="control-group" style="text-align: right">
+      <div class="controls">
+        <input type="submit" class="btn btn-large btn-default" value="Cancel"/>
+        <input type="submit" class="btn btn-large btn-primary" name="allow" value="Authorize"/>
+      </div>
+    </div>
+  </form>
+{% else %}
+  <div class="panel panel-danger">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{ error.error }}</h3>
+    </div>
+    <div class="panel-body">
+      <p>{{ error.description }}</p>
+    </div>
+  </div>
+{% endif %}
+</div>
+{% endblock %}
