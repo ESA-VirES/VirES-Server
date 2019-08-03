@@ -11,6 +11,12 @@ of observations (records). Each of the records shall have a time-stamp and
 geo-location (ITRF latitude, longitude and radius) and any number
 of additional named variables.
 
+The ITRF latitude and longitude are mandatory.
+**The radius is optional, but when not provided, the
+geomagnetic models and magnetic coordinates requiring exact position
+cannot be evaluated.** It is, therefore recommended to always provide
+the complete set of coordinates, including the radius.
+
 The additional variables can be of a scalar or vector numerical type.
 
 The vector variables will be decomposed to its scalar components.
