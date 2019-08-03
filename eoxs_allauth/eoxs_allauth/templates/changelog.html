@@ -4,6 +4,50 @@
 <h1>Changelog</h1>
 <hr>
 <h3>
+    Release of Service v3.1.0 (7.8.2019)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li>
+      <b>Workspace export/import</b><br>
+      It it now possible to save the state of the VirES application
+      and save it to a JSON file. This file can be later loaded
+      recalling the saved application state.
+    </li>
+    <li>
+      <b>Workspace initial state invocation</b><br>
+      The VirES application can be invoked with a predefined state.
+    </li>
+    <li>
+      <b>Improved user data upload and support for CSV data format.</b><br>
+      The custom user data upload has been improved based on the feedback
+      to the initial implementation released in v3.0.0.
+      Support for arbitrary custom variables and CSV data format has been added.
+      For more details, see the
+      <a href="/accounts/custom_data_format_description/" target="_blank">data format specification</a>.
+    </li>
+    <li>
+      <b>Revised user management</b><br>
+      In order to allow access to multiple related services using
+      one VirES user identity (single sign-on) the VirES user management has
+      been revised. From now on, the users' identities are held by a separate
+      OAuth2-based Identity Server.
+      <br>Apart from a minor change of the user interface, this change is
+      transparent to the VirES users. The existing accounts are preserved,
+      including social account authentication, and no action is required
+      from the users.
+    </li>
+    <li>
+      <b>Authentication using GitHub accounts</b><br>
+      The GitHub has been added to the list of the "social network"
+      identity providers and it now possible to use GitHub account
+      to log into VirES.
+    </li>
+</ul>
+<hr>
+<h3>
     Release of Service v3.0.0 (10.5.2019)
 </h3>
 <p>
