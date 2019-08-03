@@ -88,22 +88,12 @@
             "name": "Manage access tokens",
             "url": "{% url 'account_manage_access_tokens' %}"
         }, {
-            "name": "Change profile information",
+            "name": "Change account settings",
             "url": "{% vires_oauth_url 'account_update_profile' %}"
         }, {
-            "name": "Connect social accounts",
-            "url": "{% vires_oauth_url 'socialaccount_connections' %}"
-        }, {
-            "name": "Change password",
-            "url": "{% vires_oauth_url 'account_change_password' %}"
-        }, {
-            "name": "Change e-mail",
-            "url": "{% vires_oauth_url 'account_email' %}"
+            "name": "Leave application",
+            "eventToRaise": "modal:accountLogout"
         }]
-      },{
-        "name": "Log out",
-        "icon": "fa-sign-out",
-        "eventToRaise": "modal:accountLogout",
       }];
       console.log(this.NAVBARITEMS)
       var CONFIG_URL = "{% static 'workspace/scripts/config.json'%}";
@@ -119,10 +109,10 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="accountSettingsLabel">Logout</h4>
+            <h4 class="modal-title" id="accountSettingsLabel">Leave the VirES for Swarm application</h4>
           </div>
           <div class="modal-body">
-            <p>Are you sure you want to log out?</p>
+            <p>Are you sure you want to leave the VirES for Swarm application?</p>
           </div>
           <div class="modal-footer">
             <form method="post" action="{% url 'account_logout' %}">
@@ -131,7 +121,7 @@
               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
               {% endif %}
               <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-primary"><i class="fa fa-sign-out"></i>&nbsp;Log out</button>
+              <button type="submit" class="btn btn-primary"><i class="fa fa-sign-out"></i>&nbsp;Leave</button>
             </form>
           </div>
         </div>
