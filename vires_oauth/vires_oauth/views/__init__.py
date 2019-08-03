@@ -29,8 +29,11 @@
 
 from .vires import test_view, api_user_view, update_user_profile_view
 from .oauth2 import (
-    AdminApplicationRegistration,
+    AdminApplicationList,
+    AdminApplicationDetail,
+    AdminApplicationDelete,
     AdminApplicationUpdate,
+    AdminApplicationRegistration,
     FilteredAuthorizedTokensListView,
     FixedAuthorizedTokenDeleteView,
 )
