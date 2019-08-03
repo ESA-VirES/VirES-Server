@@ -1,0 +1,214 @@
+{% extends "static_base.html" %}
+{% block static_title %}VirES for Swarm - Custom File Format{% endblock %}
+{% block static_content %}
+<!--
+.! markdown ../../vires/custom_data_format_description.md
+<table class="table table-striped table-bordered">
+hr below h2
+-->
+<h2 id="vires-for-swarm-custom-file-format">VirES for Swarm - Custom File Format</h2>
+<hr>
+<p>This document describes format of the custom data files which can uploaded<br>to the VirES for Swarm service and visualized together with the Swarm,<br>models and auxiliary data offered by the service.</p>
+<h3 id="generic-data-description">Generic Data Description</h3>
+<p>The uploaded data file is expected to contain a multi-variate time series<br>of observations (records). Each of the records shall have a time-stamp and<br>geo-location (ITRF latitude, longitude and radius) and any number<br>of additional named variables.</p>
+<p>The ITRF latitude and longitude are mandatory.<br><strong>The radius is optional, but when not provided, the<br>geomagnetic models and magnetic coordinates requiring exact position<br>cannot be evaluated.</strong> It is, therefore recommended to always provide<br>the complete set of coordinates, including the radius.</p>
+<p>The additional variables can be of a scalar or vector numerical type.</p>
+<p>The vector variables will be decomposed to its scalar components.</p>
+<p>While any input variable is allowed, there are special variables which<br>are interpreted similarly as the equivalent Swarm product variables, e.g.,<br>magnetic model residuals can be calculated for <code>F</code> and <code>B_NEC</code> variables.</p>
+<p>The time-stamps do not need to be ordered.</p>
+<p>The data can be uploaded in the <a href="https://cdf.gsfc.nasa.gov/">CDF</a> and <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> data formats. Details of the data formats are described in the following sections.</p>
+<h3 id="cdf-file-format-description">CDF File Format Description</h3>
+<p>The <a href="https://cdf.gsfc.nasa.gov/">CDF</a> file structure is expected to be similar to the format of the Swarm satellite<br>products (e.g., <a href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#Mag-L_Data_Set_Record.2C_MDR_MAG_LR">MAGx_LR_1B</a>)<br>or data downloaded via the VirES Web Client (<a href="https://vires.services">https://vires.services</a>)</p>
+<p>Each separate CDF file variable is expected to have the same amount of records<br>as the time-stamp. If not, the variable is ignored.</p>
+<p>The CDF variables are described in the following table.</p>
+<h4 id="cdf-variables">CDF Variables</h4>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th style="text-align:left">Field</th>
+<th style="text-align:center">Mandatory</th>
+<th style="text-align:left">Description</th>
+<th style="text-align:center">Units</th>
+<th style="text-align:center">Dim</th>
+<th style="text-align:center">Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"> <strong>Timestamp</strong></td>
+<td style="text-align:center">yes</td>
+<td style="text-align:left">Time of observation</td>
+<td style="text-align:center">UTC</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center"><code>CDF_EPOCH</code> </td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>Latitude</strong></td>
+<td style="text-align:center">yes</td>
+<td style="text-align:left">Position in ITRF – Geocentric latitude</td>
+<td style="text-align:center">deg</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center"><code>CDF_DOUBLE</code> </td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>Longitude</strong></td>
+<td style="text-align:center">yes</td>
+<td style="text-align:left">Position in ITRF – Geocentric longitude</td>
+<td style="text-align:center">deg</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center"><code>CDF_DOUBLE</code> </td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>Radius</strong></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">Position in ITRF – Radius (required to calculate QD-coordinates, MLT, and magnetic models)</td>
+<td style="text-align:center">m</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center"><code>CDF_DOUBLE</code></td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>F</strong></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">Magnetic field intensity (required to calculate model residuals)</td>
+<td style="text-align:center">nT</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center"><code>CDF_DOUBLE</code></td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>B_NEC</strong></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">Magnetic field vector, NEC frame (required to calculate model residuals)</td>
+<td style="text-align:center">nT</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center"><code>CDF_DOUBLE</code></td>
+</tr>
+<tr>
+<td style="text-align:left"> <em>any</em></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">arbitrary custom variable</td>
+<td style="text-align:center"><em>any</em></td>
+<td style="text-align:center"><em>any</em></td>
+<td style="text-align:center"><em>any CDF number data type</em></td>
+</tr>
+</tbody>
+</table>
+<h3 id="csv-file-format-description">CSV File Format Description</h3>
+<p>The <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> file structure<br>is similar to the CSV data downloaded from VirES (<a href="https://vires.services">https://vires.services</a>) and<br>these downloaded data can be uploaded back without modification.</p>
+<p>The CSV file uses comma as a delimiter and it is required to have a header<br>(first line) defining the names of the records&#39; fields. Each record is is<br>required to have the same number of values as the header.</p>
+<h4 id="time-stamps">Time-stamps</h4>
+<p>Each records is required to have a time-stamp defined as</p>
+<ul>
+<li>either <a href="https://tools.ietf.org/html/rfc3339">RFC-3339</a> profile of<br><a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a> date-time<br>(<code>Timestamp</code> variable), e.g., <code>2019-06-12T09:35:27.123Z</code>,</li>
+<li>or Modified Julian Date 2000 (<code>MJD2000</code> variable) defined as a decimal number<br>of days since <code>2000-01-01T00:00:00Z</code>.</li>
+</ul>
+<p>The Time-stamps&#39; UTC offsets are accepted and interpreted (internally converted<br>to UTC). Time-stamps without a UTC offset are interpreted as UTC times, e.g.,<br><code>2019-06-12T09:35:27.123</code> and <code>2019-06-12T09:35:27.123Z</code> are therefore the same<br>times.</p>
+<p>If both <code>Timestamp</code> and <code>MJD200</code> are present, the <code>Timestamp</code> is used as<br>the record time-stamp.</p>
+<h4 id="vector-fields">Vector Fields</h4>
+<p>Vector fields are encoded as semicolon <code>;</code> separated list of values enclosed<br>by curly brackets <code>{}</code>, e.g.</p>
+<pre><code>{-2162.84267;-10248.5614;-45579.4719}
+</code></pre><p>In the special case of the <code>B_NEC</code> vector variable, the <code>B_NEC</code> vector<br>is automatically composed from the <code>B_N</code>, <code>B_E</code>, <code>B_C</code> scalar component<br>if <code>B_NEC</code> is missing and all three <code>B_N</code>, <code>B_E</code>, <code>B_C</code> variables are present<br>in the CSV input data.</p>
+<h4 id="cdf-variables">CDF Variables</h4>
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th style="text-align:left">Field</th>
+<th style="text-align:center">Mandatory</th>
+<th style="text-align:left">Description</th>
+<th style="text-align:center">Units</th>
+<th style="text-align:center">Dim</th>
+<th style="text-align:center">Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"> <strong>Timestamp</strong></td>
+<td style="text-align:center">yes if <code>MJD2000</code> not present</td>
+<td style="text-align:left">Time of observation</td>
+<td style="text-align:center">UTC</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">RFC-3339</td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>MJD2000</strong></td>
+<td style="text-align:center">yes if <code>Timestamp</code> not present</td>
+<td style="text-align:left">Time of observation</td>
+<td style="text-align:center">MJD2000</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">float</td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>Latitude</strong></td>
+<td style="text-align:center">yes</td>
+<td style="text-align:left">Position in ITRF – Geocentric latitude</td>
+<td style="text-align:center">deg</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">float</td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>Longitude</strong></td>
+<td style="text-align:center">yes</td>
+<td style="text-align:left">Position in ITRF – Geocentric longitude</td>
+<td style="text-align:center">deg</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">float</td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>Radius</strong></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">Position in ITRF – Radius (required to calculate QD-coordinates, MLT, and magnetic models)</td>
+<td style="text-align:center">m</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">float</td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>F</strong></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">Magnetic field intensity (required to calculate model residuals)</td>
+<td style="text-align:center">nT</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">float</td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>B_NEC</strong></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">Magnetic field vector, NEC frame (required to calculate model residuals), automatically composed from <code>B_N</code>, <code>B_E</code>, <code>B_C</code> when present</td>
+<td style="text-align:center">nT</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">float</td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>B_N</strong></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">Magnetic field vector&#39;s northing component</td>
+<td style="text-align:center">nT</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">float</td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>B_E</strong></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">Magnetic field vector&#39;s easting component</td>
+<td style="text-align:center">nT</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">float</td>
+</tr>
+<tr>
+<td style="text-align:left"> <strong>B_C</strong></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">Magnetic field vector&#39;s radial component (center oriented)</td>
+<td style="text-align:center">nT</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">float</td>
+</tr>
+<tr>
+<td style="text-align:left"> <em>any</em></td>
+<td style="text-align:center">no</td>
+<td style="text-align:left">arbitrary custom variable</td>
+<td style="text-align:center"><em>any</em></td>
+<td style="text-align:center"><em>any</em></td>
+<td style="text-align:center">integer or float</td>
+</tr>
+</tbody>
+</table>
+<p>The <em>float</em> means a decimal representation of the double-precision<br>floating-point number, e.g., <code>-8.5</code>, <code>1e-5</code>, <code>nan</code>, or <code>-inf</code>.</p>
+{% endblock %}
