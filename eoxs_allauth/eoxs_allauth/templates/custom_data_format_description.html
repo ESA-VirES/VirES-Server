@@ -12,7 +12,7 @@ remove pointless line breaks added by the conversion tool.
 <p>This document describes format of the custom data files which can uploaded to the VirES for Swarm service and visualized together with the Swarm, models and auxiliary data offered by the service.</p>
 <h3 id="generic-data-description">Generic Data Description</h3>
 <p>The uploaded data file is expected to contain a multi-variate time series of observations (records). Each of the records shall have a time-stamp and geo-location (ITRF latitude, longitude and radius) and any number of additional named variables.</p>
-<p>The ITRF latitude and longitude are mandatory. <strong>The radius is optional, but when not provided, the geomagnetic models and magnetic coordinates requiring exact position cannot be evaluated.</strong> It is, therefore recommended to always provide the complete set of coordinates, including the radius.</p>
+<p>The ITRF latitude and longitude are mandatory. <strong>The radius is optional, but when not provided, the geomagnetic models and magnetic coordinates requiring exact position cannot be evaluated.</strong> It is, therefore, recommended to always provide the complete set of coordinates, including the radius.</p>
 <p>The additional variables can be of a scalar or vector numerical type.</p>
 <p>The vector variables will be decomposed to its scalar components.</p>
 <p>While any input variable is allowed, there are special variables which are interpreted similarly as the equivalent Swarm product variables, e.g., magnetic model residuals can be calculated for <code>F</code> and <code>B_NEC</code> variables.</p>

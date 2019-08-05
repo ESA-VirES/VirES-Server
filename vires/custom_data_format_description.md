@@ -14,7 +14,7 @@ of additional named variables.
 The ITRF latitude and longitude are mandatory.
 **The radius is optional, but when not provided, the
 geomagnetic models and magnetic coordinates requiring exact position
-cannot be evaluated.** It is, therefore recommended to always provide
+cannot be evaluated.** It is, therefore, recommended to always provide
 the complete set of coordinates, including the radius.
 
 The additional variables can be of a scalar or vector numerical type.
