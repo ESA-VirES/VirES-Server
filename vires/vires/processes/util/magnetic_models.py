@@ -30,7 +30,7 @@
 from os.path import basename
 from logging import getLogger
 from numpy import inf
-from eoxmagmod.data import CHAOS6_STATIC, IGRF12, SIFM
+from eoxmagmod.data import CHAOS6_STATIC, IGRF12
 from eoxmagmod import (
     load_model_shc,
     load_model_shc_combined,
@@ -57,7 +57,6 @@ from .magnetic_model_file import (
 
 DIPOLE_MODEL = "IGRF12"
 IGRF12_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20191231T235959_0102"
-SIFM_SOURCE = basename(SIFM)
 CHAOS6_STATIC_SOURCE = basename(CHAOS6_STATIC)
 
 
@@ -157,27 +156,11 @@ MODEL_FACTORIES = {
         lambda file_: load_model_shc(file_, interpolate_in_decimal_years=True),
         [ModelFileWithLiteralSource(IGRF12, IGRF12_SOURCE, shc_validity_reader)]
     ),
-    "SIFM": ModelFactory(
-        load_model_shc,
-        [ModelFileWithLiteralSource(SIFM, SIFM_SOURCE, shc_validity_reader)]
-    ),
     "CHAOS-6-Static": ModelFactory(
         load_model_shc,
         [ModelFileWithLiteralSource(
             CHAOS6_STATIC, CHAOS6_STATIC_SOURCE, shc_validity_reader
         )]
-    ),
-    "CHAOS-6-Combined": ModelFactory(
-        lambda static, core: load_model_shc_combined(
-            static, core, to_mjd2000=decimal_year_to_mjd2000_simple
-        ),
-        [
-            ModelFileWithLiteralSource(
-                CHAOS6_STATIC, CHAOS6_STATIC_SOURCE,
-                shc_validity_reader_mjd2000_simple
-            ),
-            CachedModelFileWithSourceFile("MCO_CHAOS6", shc_validity_reader),
-        ]
     ),
     "CHAOS-6-Core": ModelFactory(
         lambda filename: load_model_shc(
@@ -194,10 +177,6 @@ MODEL_FACTORIES = {
     "MCO_SHA_2D": ModelFactory(
         load_model_shc,
         [CachedModelFileWithSourceFile("MCO_SHA_2D", shc_validity_reader)]
-    ),
-    "MCO_SHA_2F": ModelFactory(
-        load_model_shc,
-        [CachedModelFileWithSourceFile("MCO_SHA_2F", shc_validity_reader)]
     ),
     "MLI_SHA_2C": ModelFactory(
         load_model_shc,
