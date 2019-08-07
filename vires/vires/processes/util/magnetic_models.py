@@ -30,7 +30,7 @@
 from os.path import basename
 from logging import getLogger
 from numpy import inf
-from eoxmagmod.data import CHAOS6_STATIC, IGRF12
+from eoxmagmod.data import CHAOS6_STATIC, IGRF12, LCS1, MF7
 from eoxmagmod import (
     load_model_shc,
     load_model_shc_combined,
@@ -58,6 +58,8 @@ from .magnetic_model_file import (
 DIPOLE_MODEL = "IGRF12"
 IGRF12_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20191231T235959_0102"
 CHAOS6_STATIC_SOURCE = basename(CHAOS6_STATIC)
+LCS1_SOURCE = basename(LCS1)
+MF7_SOURCE = basename(MF7)
 
 
 class ModelFactory(object):
@@ -169,6 +171,14 @@ MODEL_FACTORIES = {
         [CachedModelFileWithSourceFile(
             "MCO_CHAOS6", shc_validity_reader_mjd2000_simple
         )]
+    ),
+    "LCS-1": ModelFactory(
+        load_model_shc,
+        [ModelFileWithLiteralSource(LCS1, LCS1_SOURCE, shc_validity_reader)]
+    ),
+    "MF7": ModelFactory(
+        load_model_shc,
+        [ModelFileWithLiteralSource(MF7, MF7_SOURCE, shc_validity_reader)]
     ),
     "MCO_SHA_2C": ModelFactory(
         load_model_shc,
