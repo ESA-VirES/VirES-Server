@@ -41,4 +41,5 @@ urlpatterns = [
     url(r"^logout/$", account_logout, name="account_logout"),
     url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
     url(r'^changelog/$', TemplateView.as_view(template_name="changelog.html")),
+    url(r'^custom_data_format_description/$', TemplateView.as_view(template_name="custom_data_format_description.html")),
 ]

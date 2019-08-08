@@ -1,0 +1,89 @@
+{% extends "vires/base.html" %}
+{% load i18n %}
+{% block title %}
+  <title>{% block static_title %}VirES for Swarm{% endblock %}</title>
+{% endblock %}
+
+
+{% block content %}
+
+{% if user.is_authenticated %}
+    {% load staticfiles %}
+    {% load account %}
+
+   <script type="text/javascript">
+      var _paq = _paq || [];
+      _paq.push(['setUserId', '{% user_display user %}']);
+      _paq.push(['trackGoal', 3]);
+      _paq.push(['setDocumentTitle', "Changelog"]);
+    </script>
+
+{% else %}
+
+    {% load staticfiles %}
+
+    <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
+
+    <script type="text/javascript">
+      var _paq = _paq || [];
+      _paq.push(['setDocumentTitle', "Changelog"]);
+    </script>
+
+{% endif %}
+
+    <link href="{% static 'workspace/bower_components/bootstrap/dist/css/bootstrap.min.css'%}" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet">
+    <link href="{% static 'css/landing_page.css' %}" rel="stylesheet">
+    <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
+    <style type="text/css">code {color: #333; background-color: #f5f5f5;}</style>
+
+    <div class="row" style="min-height: 87%;">
+      <div class="col-sm-6 col-sm-offset-3 larger">
+{% block static_content %}{% endblock %}
+      </div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="row">
+
+                <a href="http://eox.at" target="_blank" style="text-decoration: none;">
+                  <img style="height:30px; display:inline;" src="{% static 'images/EOX_Logo_inverted.png' %}">
+                </a>
+
+
+                <p class="text-muted" style="display:inline;">service for</p>
+
+
+                <a href="http://esa.int" target="_blank" style="text-decoration: none;">
+                  <img style="height:50px;  display:inline; margin-left:4px;" src="{% static 'images/esa_logo_white.png' %}">
+                </a>
+
+            </div>
+          </div>
+
+          <div class="col-md-6 text-muted" style="text-align: center; margin-top:15px;">
+            <a style="display:inline; margin-right:5px;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a> |
+            <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a> |
+            <a href="https://earth.esa.int/swarm" target="_blank">Swarm Official Site</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ul class="nav pull-right scroll-top">
+      <li><a href="#" title="Scroll to top"><i class="glyphicon glyphicon-chevron-up"></i></a></li>
+    </ul>
+
+    <!-- script references -->
+    {% load staticfiles %}
+
+    <script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
+    <script src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js'%}"></script>
+    <script src="{% static 'js/landing_page.js' %}"></script>
+
+    <!-- End landing page -->
+
+{% endblock %}

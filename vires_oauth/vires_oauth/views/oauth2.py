@@ -25,13 +25,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,too-many-ancestors
+# pylint: disable=missing-docstring,too-many-ancestors,too-few-public-methods,no-self-use
 
 from django.forms.models import modelform_factory
 from django.utils import timezone
 from oauth2_provider.models import get_application_model
 from oauth2_provider.views import (
+    ApplicationList,
     ApplicationRegistration,
+    ApplicationDetail,
+    ApplicationDelete,
     ApplicationUpdate,
     AuthorizedTokensListView,
     AuthorizedTokenDeleteView,
@@ -58,6 +61,33 @@ APP_FIELD_LABELS = {
     "redirect_uris": "Callback URIs",
 }
 
+
+class AllApplications():
+    """ App list showing all registered apps. """
+    def get_queryset(self):
+        return get_application_model().objects.all()
+
+
+class AdminApplicationList(AllApplications, ApplicationList):
+    """ App list showing all registered apps. """
+
+
+class AdminApplicationDetail(AllApplications, ApplicationDetail):
+    """ App detail not constrained by the owner. """
+
+
+class AdminApplicationDelete(AllApplications, ApplicationDelete):
+    """ App removal not constrained by the owner. """
+
+
+class AdminApplicationUpdate(AllApplications, ApplicationUpdate):
+    """ App update form with extra fields.  """
+    def get_form_class(self):
+        return modelform_factory(
+            get_application_model(), fields=APP_FIELDS, labels=APP_FIELD_LABELS
+        )
+
+
 class AdminApplicationRegistration(ApplicationRegistration):
     """ App registration form with extra fields. """
     def get_form_class(self):
@@ -73,14 +103,6 @@ class AdminApplicationRegistration(ApplicationRegistration):
             "authorization_grant_type": model.GRANT_AUTHORIZATION_CODE,
         })
         return initial_data
-
-
-class AdminApplicationUpdate(ApplicationUpdate):
-    """ App update form with extra fields.  """
-    def get_form_class(self):
-        return modelform_factory(
-            get_application_model(), fields=APP_FIELDS, labels=APP_FIELD_LABELS
-        )
 
 
 class FilteredAuthorizedTokensListView(AuthorizedTokensListView):

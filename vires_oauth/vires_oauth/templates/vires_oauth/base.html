@@ -94,33 +94,33 @@
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>&nbsp;
     </button>
-        <a class="navbar-brand" href="/" style="font-size:30px">
-        <img src="{% static 'images/vires_for_swarm_light.svg' %}" width="40" height="40" style="margin-top:-25px; margin-bottom:-15px">&nbsp;&nbsp;VirES for Swarm
-        </a>
+        <span style="font-size:30px;color:rgb(153,153,153)">
+        <img src="{% static 'images/vires_for_swarm_light.svg' %}" width="40" height="40" style="margin-top:-25px; margin-bottom:-15px">&nbsp;&nbsp;VirES Identity Server&nbsp;&nbsp;
+        </span>
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav" id="tab-headers-main">
         <li class="divider-vertical"></li>
         <li>
           <a class="tab-header" href="/">
-            <i class="fa fa-fw fa-desktop"></i>Application
+            <i class="fa fa-fw fa-desktop"></i>&nbsp;Application
           </a>
         </li>
         {% block navbar_items %}
           {% if user.is_authenticated %}
+            {% if 'admin' in user.oauth_user_permissions %}
             <li class="dropdown">
               <a class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="false">
                 <i class="fa fa-fw fa-wrench"></i> OAuth2
               </a>
               <ul class="dropdown-menu" role="menu">
                 <li><a href="{% url 'oauth2_provider:authorized-token-list' %}">{% trans "Manage authorized tokens" %}</a></li>
-                {% if 'admin' in user.oauth_user_permissions %}
                 <li><a href="{% url 'oauth2_provider:list' %}">{% trans "Manage registered applications" %}</a></li>
-                {% endif %}
               </ul>
             </li>
+            {% endif %}
             {% load account %}
             <li class="dropdown">
               <a class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="false">
@@ -163,7 +163,7 @@
              <h4 class="modal-title" id="accountLogoutLabel">Logout</h4>
            </div>
            <div class="modal-body">
-             <p>Are you sure you want to log out?</p>
+             <p>Are you sure you want to log out from the VirES identity server?</p>
            </div>
            <div class="modal-footer">
              <form method="post" action="{% url 'account_logout' %}">

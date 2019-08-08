@@ -32,17 +32,20 @@ from oauth2_provider.views import (
     TokenView,
     RevokeTokenView,
     IntrospectTokenView,
-    ApplicationList,
+    #ApplicationList,
     #ApplicationRegistration,
-    ApplicationDetail,
-    ApplicationDelete,
+    #ApplicationDetail,
+    #ApplicationDelete,
     #ApplicationUpdate,
     #AuthorizedTokensListView,
     #AuthorizedTokenDeleteView,
 )
 from .views import (
-    AdminApplicationRegistration,
+    AdminApplicationList,
+    AdminApplicationDetail,
+    AdminApplicationDelete,
     AdminApplicationUpdate,
+    AdminApplicationRegistration,
     FilteredAuthorizedTokensListView,
     FixedAuthorizedTokenDeleteView,
     update_user_profile_view,
@@ -81,7 +84,7 @@ oauth2_provider_urlpatterns = [
     # Application management views
     path(
         "applications/",
-        vires_admin_only(ApplicationList.as_view()),
+        vires_admin_only(AdminApplicationList.as_view()),
         name="list"
     ),
     path(
@@ -91,12 +94,12 @@ oauth2_provider_urlpatterns = [
     ),
     re_path(
         r"^applications/(?P<pk>[\w-]+)/$",
-        vires_admin_only(ApplicationDetail.as_view()),
+        vires_admin_only(AdminApplicationDetail.as_view()),
         name="detail"
     ),
     re_path(
         r"^applications/(?P<pk>[\w-]+)/delete/$",
-        vires_admin_only(ApplicationDelete.as_view()),
+        vires_admin_only(AdminApplicationDelete.as_view()),
         name="delete"
     ),
     re_path(
