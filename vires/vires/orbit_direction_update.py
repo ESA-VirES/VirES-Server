@@ -394,8 +394,12 @@ class OrbitDirectionTable(object):
         """ Save orbit direction table to a CDF file. """
 
         def _write_time_ranges(attr, start_times, end_times):
-            for item in zip(start_times, end_times):
-                attr.new(data=CdfTypeEpoch.encode(item), type=CDF_EPOCH_TYPE)
+            for idx, item in enumerate(zip(start_times, end_times)):
+                attr.new(
+                    data=CdfTypeEpoch.encode(item),
+                    type=CDF_EPOCH_TYPE,
+                    number=idx,
+                )
 
         cdf.attrs["TITLE"] = self._get_product_id(self._filename)
         cdf.attrs["PRODUCT_DESCRIPTION"] = self.DESCRIPTION or ""
