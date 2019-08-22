@@ -26,6 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+#pylint: disable=unused-argument,too-many-locals
 
 import re
 import json
@@ -35,12 +36,13 @@ from os.path import join, isdir, basename
 from logging import getLogger
 from shutil import rmtree
 from uuid import uuid4
-from numpy import argmax, argmin, datetime64
+from numpy import argmax, argmin, datetime64, asarray
 from django.conf import settings
 from django.http import HttpResponse
 from ..time_util import datetime, naive_to_utc, format_datetime, Timer
 from ..cdf_util import (
     is_cdf_file, cdf_open, CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDFError,
+    CDF_TYPE_TO_LABEL, LABEL_TO_CDF_TYPE, CDF_TYPE_TO_DTYPE,
 )
 from ..cdf_write_util import (
     cdf_add_variable, cdf_assert_backward_compatible_dtype
@@ -53,7 +55,7 @@ from ..readers import (
 from .exceptions import HttpError400, HttpError404, HttpError405, HttpError413
 from .decorators import (
     set_extra_kwargs, handle_error, allow_methods,
-    allow_content_length, reject_content,
+    allow_content_type, allow_content_length, reject_content,
 )
 
 DAYS2MS = 1000 * 60 * 60 * 24
@@ -61,11 +63,19 @@ DATETIME64_MS_2000 = datetime64("2000-01-01", "ms")
 
 RE_FILENAME = re.compile(r"^\w[\w.-]{0,254}$")
 MAX_FILE_SIZE = 256 * 1024 * 1024 # 256 MiB size limit
-MAX_PAYLOAD_SIZE = MAX_FILE_SIZE + 64 * 1024
+MAX_POST_PAYLOAD_SIZE = MAX_FILE_SIZE + 64 * 1024
+MAX_UPDATE_PAYLOAD_SIZE = 64 * 1024
 EXTRA_KWASGS = {
     "logger": getLogger(__name__),
 }
 CHANGE_LOG_FILENAME = "change.log"
+
+EXCLUDED_FIELDS = {'Spacecraft'}
+MANDATORY_FIELDS = [
+    ("Timestamp", CDF_EPOCH_TYPE, ()),
+    ("Latitude", CDF_DOUBLE_TYPE, ()),
+    ("Longitude", CDF_DOUBLE_TYPE, ()),
+]
 
 
 @set_extra_kwargs(**EXTRA_KWASGS)
@@ -87,11 +97,13 @@ def custom_data_collection(request, **kwargs):
     raise HttpError405
 
 
-@allow_methods(["GET", "DELETE"])
+@allow_methods(["GET", "PUT", "DELETE"])
 def custom_data_item(request, identifier, **kwargs):
     """ Custom data item view. """
     if request.method == "GET":
         return get_item(request, identifier, **kwargs)
+    elif request.method == "PUT":
+        return update_item(request, identifier, **kwargs)
     elif request.method == "DELETE":
         return delete_item(request, identifier, **kwargs)
     raise HttpError405
@@ -99,9 +111,11 @@ def custom_data_item(request, identifier, **kwargs):
 
 def model_to_infodict(obj):
     """ Convert DB object to a info dictionary. """
-    return {
+    info = sanitize_info(json.loads(obj.info)) if obj.info else {}
+    info.update({
         "identifier": obj.identifier,
         "owner": obj.owner.username if obj.owner else None,
+        "is_valid": obj.is_valid,
         "created": format_datetime(obj.created),
         "start": format_datetime(obj.start),
         "end": format_datetime(obj.end),
@@ -110,8 +124,36 @@ def model_to_infodict(obj):
         "size": obj.size,
         "content_type": obj.content_type,
         "checksum": obj.checksum,
-        "info": json.loads(obj.info) if obj.info else None,
-    }
+    })
+    return info
+
+
+def sanitize_info(info):
+    """ Sanitize model info dictionary. """
+    if not isinstance(info, dict):
+        return info
+
+    if "fields" not in info:
+        # old info version
+        info = {
+            "size": info["Timestamp"]["shape"][0],
+            "source_fields": [name for name in info],
+            "fields": {
+                name: {
+                    "shape": field["shape"][1:],
+                    "cdf_type": field["cdf_type"],
+                    "data_type": CDF_TYPE_TO_LABEL[field["cdf_type"]],
+                } for name, field in info.items()
+            }
+        }
+
+    if "missing_fields" not in info:
+        info["missing_fields"] = {}
+
+    if "constant_fields" not in info:
+        info["constant_fields"] = {}
+
+    return info
 
 
 @reject_content
@@ -133,7 +175,8 @@ def get_item(request, identifier, **kwargs):
     return HttpResponse(data, "application/json")
 
 
-@allow_content_length(MAX_PAYLOAD_SIZE)
+@allow_content_type("multipart/form-data")
+@allow_content_length(MAX_POST_PAYLOAD_SIZE)
 def post_item(request, **kwargs):
     """ Post custom data. """
     # parse request
@@ -170,7 +213,7 @@ def post_item(request, **kwargs):
         # process input data and extract information
         try:
             (
-                content_type, start, end, fields, datafile,
+                content_type, start, end, fields_info, datafile,
             ) = process_input_file(filename)
         except InvalidFileFormat as error:
             raise HttpError400(str(error))
@@ -181,6 +224,7 @@ def post_item(request, **kwargs):
         )
 
         dataset = CustomDataset()
+        dataset.is_valid = not fields_info["missing_fields"]
         dataset.owner = owner
         dataset.created = timestamp
         dataset.start = start
@@ -191,7 +235,7 @@ def post_item(request, **kwargs):
         dataset.size = size
         dataset.content_type = content_type
         dataset.checksum = md5.hexdigest()
-        dataset.info = json.dumps(fields)
+        dataset.info = json.dumps(fields_info)
 
         data = json.dumps(model_to_infodict(dataset))
 
@@ -209,6 +253,40 @@ def post_item(request, **kwargs):
     _log_action(kwargs["logger"], "uploaded", owner, dataset)
 
     _delete_items(owner, kwargs["logger"], number_of_preserved=1)
+
+    return HttpResponse(data, "application/json")
+
+
+@allow_content_type("application/json")
+@allow_content_length(MAX_UPDATE_PAYLOAD_SIZE)
+def update_item(request, identifier, **kwargs):
+    """ Update custom dataset. """
+    owner = request.user if request.user.is_authenticated() else None
+    dataset = _get_model(owner, identifier)
+
+    fields_info = json.loads(dataset.info)
+    try:
+        parsed_request = json.loads(request.body)
+        fields_info = update_field_info(fields_info, parsed_request)
+    except (ValueError, InvalidFileFormat):
+        raise HttpError400("Invalid update request!")
+
+    dataset.is_valid = not fields_info["missing_fields"]
+    dataset.info = json.dumps(fields_info)
+
+    data = json.dumps(model_to_infodict(dataset))
+
+    _save_constant_variables(dataset.location, fields_info['constant_fields'])
+
+    upload_dir = join(get_upload_dir(), identifier)
+    with open(join(upload_dir, "info.json"), "wb") as file_:
+        file_.write(data)
+
+    update_change_log("UPDATED", identifier)
+
+    dataset.save()
+
+    _log_action(kwargs["logger"], "updated", owner, dataset)
 
     return HttpResponse(data, "application/json")
 
@@ -279,6 +357,69 @@ def update_change_log(change, identifier, timestamp=None):
     ))
 
 
+def update_field_info(info, update):
+    """ Update field info dictionary. """
+    info = sanitize_info(info)
+
+    # strip extra fields
+    fields = info['fields']
+    fields = {name: fields[name] for name in info['source_fields']}
+
+    # process constant fields
+    constant_fields = {
+        name: _parse_input_constant_field(field)
+        for name, field in update.get('constant_fields', {}).items()
+        if name not in fields
+    }
+
+    for name, field in constant_fields.items():
+        fields[name] = field = dict(field)
+        del field['value']
+
+    info.update({
+        "fields": fields,
+        "missing_fields": _get_missing_fields(fields),
+        "constant_fields": constant_fields,
+    })
+
+    return info
+
+
+def _parse_input_constant_field(field):
+    """ Parse input constant field dictionary. """
+    cdf_type = (
+        field.get('cdf_type') or
+        LABEL_TO_CDF_TYPE.get(field.get('data_type'), "CDF_DOUBLE")
+    )
+    data_type = CDF_TYPE_TO_LABEL.get(cdf_type)
+    if cdf_type is None or data_type is None:
+        raise ValueError("Invalid field data type.")
+
+    source_value = field.get('value')
+    if source_value is None:
+        raise ValueError("Missing field value!")
+
+    try:
+        parsed_value = asarray(source_value, CDF_TYPE_TO_DTYPE[cdf_type])
+    except (ValueError, TypeError):
+        raise ValueError("Invalid field value!")
+
+    try:
+        shape = tuple(field.get('shape', parsed_value.shape))
+    except TypeError:
+        raise ValueError("Invalid field shape!")
+
+    if shape != parsed_value.shape:
+        raise ValueError("Invalid field value shape!")
+
+    return {
+        "value": source_value,
+        "shape": shape,
+        "cdf_type": cdf_type,
+        "data_type": data_type,
+    }
+
+
 def process_input_file(path):
     """ Process input file and extract information. """
     try:
@@ -291,42 +432,26 @@ def process_input_file(path):
     except InvalidFileFormat as error:
         raise InvalidFileFormat("Invalid %s file! %s" % (format_, error))
 
-    start, end, fields = process_input_cdf(cdf_file)
+    start, end, fields_info = process_input_cdf(cdf_file)
 
-    return mime_type, start, end, fields, cdf_file
+    return mime_type, start, end, fields_info, cdf_file
 
 
 def process_input_cdf(path):
     """ Process input CDF file and extract metadata. """
-    excluded_fields = {'Spacecraft'}
-    mandatory_fields = [
-        ("Timestamp", CDF_EPOCH_TYPE, 1),
-        ("Latitude", CDF_DOUBLE_TYPE, 1),
-        ("Longitude", CDF_DOUBLE_TYPE, 1),
-    ]
-
     try:
         with cdf_open(path) as cdf:
             fields = {
                 field: {
                     "shape": cdf[field].shape,
                     "cdf_type": int(cdf[field].type()),
-                }
-                for field in cdf
+                } for field in cdf
             }
     except CDFError as error:
         raise InvalidFileFormat(str(error))
 
-    for name, type_, ndim in mandatory_fields:
-        field = fields.get(name)
-        if not field:
-            raise InvalidFileFormat("Missing mandatory %s field!" % name)
-
-        if field["cdf_type"] != int(type_):
-            raise InvalidFileFormat("Invalid type of %s field!" % name)
-
-        if len(field["shape"]) != ndim:
-            raise InvalidFileFormat("Invalid dimension of %s field!" % name)
+    if "Timestamp" not in fields:
+        raise InvalidFileFormat("Missing mandatory Timestamp field!")
 
     size = fields["Timestamp"]["shape"][0]
 
@@ -335,17 +460,50 @@ def process_input_cdf(path):
 
     for name, field in fields.items():
         shape = field["shape"]
-        if name in excluded_fields:
+        if name in EXCLUDED_FIELDS:
             del fields[name]
         elif len(shape) < 1 or shape[0] != size:
             del fields[name] # ignore fields with wrong dimension
+        else:
+            field["shape"] = shape[1:]
+            field["data_type"] = CDF_TYPE_TO_LABEL[field['cdf_type']]
 
     with cdf_open(path) as cdf:
         times = cdf.raw_var("Timestamp")[...]
         start = naive_to_utc(cdf["Timestamp"][argmin(times)])
         end = naive_to_utc(cdf["Timestamp"][argmax(times)])
 
-    return start, end, fields
+    return start, end, {
+        "size": size,
+        "fields": fields,
+        "source_fields": [name for name in fields],
+        "missing_fields": _get_missing_fields(fields),
+        "constant_fields": {},
+    }
+
+
+def _get_missing_fields(fields):
+    missing_fields = {}
+    for name, type_, shape in MANDATORY_FIELDS:
+        field = fields.get(name)
+        if not field:
+            missing_fields[name] = {
+                "shape": shape,
+                "cdf_type": int(type_),
+                "data_type": CDF_TYPE_TO_LABEL[type_],
+            }
+            continue
+
+        if field["cdf_type"] != int(type_):
+            raise InvalidFileFormat("Invalid type of %s field!" % name)
+
+        if len(field["shape"]) != len(shape):
+            raise InvalidFileFormat("Invalid dimension of %s field!" % name)
+
+        if tuple(field["shape"]) != shape:
+            raise InvalidFileFormat("Invalid shape of %s field!" % name)
+
+    return missing_fields
 
 
 def _convert_input_cdf(filename):
@@ -384,3 +542,16 @@ def _save_dataset_to_cdf(filename, dataset):
         for variable, data in dataset.items():
             cdf_assert_backward_compatible_dtype(data)
             cdf_add_variable(cdf, variable, data)
+
+
+def _save_constant_variables(filename, constant_fields):
+    """ Save constant fields as CDF NRV variables. """
+    with cdf_open(filename, "w") as cdf:
+        for name, field in constant_fields.items():
+            if name in cdf:
+                del cdf[name]
+            cdf_type = field['cdf_type']
+            value = asarray(field['value'], CDF_TYPE_TO_DTYPE[cdf_type])
+            cdf.new(
+                name, recVary=False, type=cdf_type, data=value, dims=value.shape
+            )

@@ -64,6 +64,42 @@ CDF_INT4_TYPE = pycdf.const.CDF_INT4.value
 CDF_INT8_TYPE = pycdf.const.CDF_INT8.value
 CDF_CHAR_TYPE = pycdf.const.CDF_CHAR.value
 
+CDF_TYPE_TO_LABEL = {
+    CDF_EPOCH_TYPE: "CDF_EPOCH",
+    CDF_FLOAT_TYPE: "CDF_FLOAT",
+    CDF_DOUBLE_TYPE: "CDF_DOUBLE",
+    CDF_REAL8_TYPE: "CDF_REAL8",
+    CDF_REAL4_TYPE: "CDF_REAL4",
+    CDF_UINT1_TYPE: "CDF_UINT1",
+    CDF_UINT2_TYPE: "CDF_UINT2",
+    CDF_UINT4_TYPE: "CDF_UINT4",
+    CDF_INT1_TYPE: "CDF_INT1",
+    CDF_INT2_TYPE: "CDF_INT2",
+    CDF_INT4_TYPE: "CDF_INT4",
+    CDF_INT8_TYPE: "CDF_INT8",
+    CDF_CHAR_TYPE: "CDF_CHAR",
+}
+
+LABEL_TO_CDF_TYPE = {
+    label: cdf_type for cdf_type, label in CDF_TYPE_TO_LABEL.items()
+}
+
+CDF_TYPE_TO_DTYPE = {
+    CDF_EPOCH_TYPE: "datetime64[ms]",
+    CDF_FLOAT_TYPE: "float32",
+    CDF_DOUBLE_TYPE: "float64",
+    CDF_REAL8_TYPE: "float32",
+    CDF_REAL4_TYPE: "float64",
+    CDF_UINT1_TYPE: "uint8",
+    CDF_UINT2_TYPE: "uint16",
+    CDF_UINT4_TYPE: "uint32",
+    CDF_INT1_TYPE: "int8",
+    CDF_INT2_TYPE: "int16",
+    CDF_INT4_TYPE: "int32",
+    CDF_INT8_TYPE: "int46",
+    CDF_CHAR_TYPE: "S",
+}
+
 CDF_EPOCH_1970 = 62167219200000.0
 CDF_EPOCH_2000 = 63113904000000.0
 
