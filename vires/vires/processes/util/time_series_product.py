@@ -31,7 +31,7 @@
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
-from numpy import empty, searchsorted
+from numpy import searchsorted, broadcast_to
 from eoxserver.backends.access import connect
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
@@ -225,11 +225,12 @@ class ProductTimeSeries(BaseProductTimeSeries):
         dataset = Dataset()
         for variable in extracted_variables:
             cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
-            if cdf_var.shape: # regular array variable
+            if cdf_var.rv(): # regular record variable
                 data = cdf_var[idx_low:idx_high]
-            else: # NRV scalar variable
-                data = empty(max(0, idx_high - idx_low), dtype=cdf_var.dtype)
-                data.fill(cdf_var[...])
+            else: # NRV variable
+                value = cdf_var[...]
+                size = max(0, idx_high - idx_low)
+                data = broadcast_to(value, (size,) + value.shape[1:])
             dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
         return dataset
 

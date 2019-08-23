@@ -30,7 +30,7 @@
 import json
 from ctypes import c_long
 from logging import getLogger, LoggerAdapter
-from numpy import empty, argsort, searchsorted
+from numpy import empty, argsort, searchsorted, broadcast_to
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_datetime, datetime_to_cdf_rawtime,
     CDF_EPOCH_TYPE,
@@ -197,11 +197,11 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
         dataset = Dataset()
         for variable in extracted_variables:
             cdf_var = cdf.raw_var(variable)
-            if cdf_var.shape: # regular array variable
+            if cdf_var.rv(): # regular record variable
                 data = cdf_var[idx_low:idx_high][idx]
-            else: # NRV scalar variable
-                data = empty(idx.size, dtype=cdf_var.dtype)
-                data.fill(cdf_var[...])
+            else: # NRV variable
+                value = cdf_var[...]
+                data = broadcast_to(value, (idx.size,) + value.shape[1:])
             dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
         return dataset
 
