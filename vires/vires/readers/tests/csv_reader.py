@@ -48,6 +48,9 @@ class CSVReaderTestMixIn(TestCase):
         self.assertEqual(data.shape, (self.N_RECORDS,) + shape)
         self.assertEqual(data.dtype, dtype(dtype_string))
 
+    def assert_not_present(self, variable):
+        self.assertFalse(variable in self.data)
+
 
 class TestCSVReader(CSVReaderTestMixIn, TestCase):
     TEST_CSV_FILE = TEST1_CSV_FILE
@@ -90,9 +93,9 @@ class TestCSVReaderSanitized(CSVReaderTestMixIn, TestCase):
         self.assert_type_and_shape('B_NEC', (3,), 'float')
 
     def test_bnec_scalars(self):
-        self.assert_type_and_shape('B_N', (), 'float')
-        self.assert_type_and_shape('B_E', (), 'float')
-        self.assert_type_and_shape('B_C', (), 'float')
+        self.assert_not_present('B_N')
+        self.assert_not_present('B_E')
+        self.assert_not_present('B_C')
 
     def test_reduced_uint8(self):
         self.assert_type_and_shape('row', (), 'uint8')
