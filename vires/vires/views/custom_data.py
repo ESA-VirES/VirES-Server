@@ -97,12 +97,12 @@ def custom_data_collection(request, **kwargs):
     raise HttpError405
 
 
-@allow_methods(["GET", "PUT", "DELETE"])
+@allow_methods(["GET", "PUT", "PATCH", "DELETE"])
 def custom_data_item(request, identifier, **kwargs):
     """ Custom data item view. """
     if request.method == "GET":
         return get_item(request, identifier, **kwargs)
-    elif request.method == "PUT":
+    elif request.method in ("PUT", "PATCH"):
         return update_item(request, identifier, **kwargs)
     elif request.method == "DELETE":
         return delete_item(request, identifier, **kwargs)
@@ -372,6 +372,11 @@ def update_field_info(info, update):
         if name not in fields
     }
 
+    for name, _, _ in MANDATORY_FIELDS:
+        field = constant_fields.get(name)
+        if field:
+            field['required'] = True
+
     for name, field in constant_fields.items():
         fields[name] = field = dict(field)
         del field['value']
@@ -388,8 +393,8 @@ def update_field_info(info, update):
 def _parse_input_constant_field(field):
     """ Parse input constant field dictionary. """
     cdf_type = (
-        field.get('cdf_type') or
-        LABEL_TO_CDF_TYPE.get(field.get('data_type'), "CDF_DOUBLE")
+        field.get("cdf_type") or
+        LABEL_TO_CDF_TYPE.get(field.get("data_type", "CDF_DOUBLE"))
     )
     data_type = CDF_TYPE_TO_LABEL.get(cdf_type)
     if cdf_type is None or data_type is None:
