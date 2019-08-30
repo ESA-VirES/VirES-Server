@@ -29,7 +29,10 @@
 #pylint: disable=too-many-locals
 
 from logging import getLogger, LoggerAdapter
-from numpy import argmax, abs as np_abs, sqrt, nan, stack
+from numpy import argsort, abs as aabs, sqrt, nan, stack, empty
+from eoxmagmod import (
+    GEOCENTRIC_SPHERICAL, GEODETIC_ABOVE_WGS84, convert, vrotate,
+)
 from pyamps import AMPS, get_B_space
 from vires.util import include, unique
 from vires.cdf_util import (
@@ -41,13 +44,16 @@ from vires.cdf_util import (
 from vires.dataset import Dataset
 from .model import Model
 
+
 class IonosphericCurrentModel(Model):
     """ Ionospheric current System in AMPS model. """
     DEFAULT_MODE = 0
     VECTOR_TRANSFORM_MODE = 1
     FILTER45_MODE = 2
 
-    MODEL_PARAMETERS = ['IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F10_INDEX']
+    MODEL_PARAMETERS = [
+        'IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F10_INDEX'
+    ]
 
     DEFAULT_REQUIRED_VARIABLES = [
         "Timestamp", "QDLat", "MLT", "QDBasis"
@@ -75,7 +81,7 @@ class IonosphericCurrentModel(Model):
             AMPS.get_upward_current,
             CDF_DOUBLE_TYPE, {
                 'DESCRIPTION': 'AMPS - Upward current',
-                'UNITS': u'\xb5A/m^2' # 'mu'A/m^2
+                'UNITS': u'uA/m^2'
             }
         ),
     }
@@ -85,6 +91,7 @@ class IonosphericCurrentModel(Model):
             return 'IonosphericCurrentModel: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
+        super(IonosphericCurrentModel, self).__init__()
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
         varmap = varmap or {}
         self._required_variables = [
@@ -113,18 +120,19 @@ class IonosphericCurrentModel(Model):
             times, qdlats, mlts, f_qd = (dataset[var] for var in req_var[:4])
             if times.size > 0:
                 self.logger.debug("requested dataset length %s", len(times))
-                median_time = times[times.size // 2]
-                idx = argmax(np_abs(times - median_time), axis=0)
+                idx = argsort(times)[times.size // 2] # median time index
                 v_imf, by_imf, bz_imf, tilt, f107 = (
                     dataset[var][idx] for var in self.MODEL_PARAMETERS
                 )
             else:
-                v_imf, by_imf, bz_imf, tilt, f107 = (0,)*5
+                v_imf, by_imf, bz_imf, tilt, f107 = 0., 0., 0., 0., 0.
+
             model = AMPS(
                 v=v_imf, By=by_imf, Bz=bz_imf,
                 tilt=tilt, f107=f107,
                 resolution=0, dr=90,
             )
+
             for var in variables:
                 mode, func, cdf_type, cdf_attr = self.VARIABLES[var]
                 values = func(model, qdlats, mlts)
@@ -138,7 +146,7 @@ class IonosphericCurrentModel(Model):
                     ), axis=-1)
                 elif mode == self.FILTER45_MODE:
                     # Filter away values < 45 deg lat
-                    values[np_abs(qdlats) < 45] = nan
+                    values[aabs(qdlats) < 45] = nan
                 output_ds.set(var, values, cdf_type, cdf_attr)
 
         return output_ds
@@ -161,13 +169,13 @@ class AssociatedMagneticModel(Model):
             return 'AssociatedMagneticModel: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
+        super(AssociatedMagneticModel, self).__init__()
         varmap = varmap or {}
         self.f_variable, self.b_variable = self.DEFAULT_OUTPUT_VARIABLES
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
         ]
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
-
 
     @property
     def variables(self):
@@ -191,30 +199,24 @@ class AssociatedMagneticModel(Model):
 
             if times.size > 0:
                 self.logger.debug("requested dataset length %s", len(times))
-                median_time = times[times.size // 2]
 
                 cdf_type = dataset.cdf_type.get(req_var[0], None)
-                # TODO: support for different CDF time types
                 if cdf_type != CDF_EPOCH_TYPE:
                     raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-                times_dt = cdf_rawtime_to_datetime(times, cdf_type)
-                epoch = float(cdf_rawtime_to_decimal_year(median_time, cdf_type))
-                v_imf, by_imf, bz_imf, tilt, f107 = (dataset[var] for var in self.MODEL_PARAMETERS)
-                b_amps = get_B_space(
-                    glat=lats,
-                    glon=lons,
-                    height=rads * 1e-3 - self.REFRE, # km
-                    time=times_dt,
-                    v=v_imf,
-                    By=by_imf,
-                    Bz=bz_imf,
-                    tilt=tilt,
-                    f107=f107,
-                    epoch=epoch
+
+                v_imf, by_imf, bz_imf, tilt, f107 = (
+                    dataset[var] for var in self.MODEL_PARAMETERS
+                )
+
+                b_amps = self._eval_b_space(
+                    times, lats, lons, rads,
+                    v_imf, by_imf, bz_imf, tilt, f107
                 )
             else:
-                b_amps = ([],)*3
-            b_amps = stack(b_amps, axis=-1)
+                b_amps = empty((0, 3))
+
+            b_amps[..., 2] *= -1.0
+
             if self.b_variable in variables:
                 output_ds.set(
                     self.b_variable, b_amps, CDF_DOUBLE_TYPE, {
@@ -222,6 +224,7 @@ class AssociatedMagneticModel(Model):
                         'UNITS': 'nT'
                     },
                 )
+
             if self.f_variable in variables:
                 output_ds.set(
                     self.f_variable, sqrt((b_amps**2).sum(axis=-1)), CDF_DOUBLE_TYPE, {
@@ -230,3 +233,35 @@ class AssociatedMagneticModel(Model):
                     },
                 )
         return output_ds
+
+    @staticmethod
+    def _eval_b_space(times, lats, lons, rads, v_imf, by_imf, bz_imf, tilt, f107):
+        median_time = times[times.size // 2]
+        epoch = cdf_rawtime_to_decimal_year(median_time, CDF_EPOCH_TYPE)
+        times_dt = cdf_rawtime_to_datetime(times, CDF_EPOCH_TYPE)
+
+        coords_sp = stack((lats, lons, 1e-3*rads), axis=-1)
+        coords_gd = convert(
+            coords_sp, GEOCENTRIC_SPHERICAL, GEODETIC_ABOVE_WGS84
+        )
+
+        b_e, b_n, b_u = get_B_space(
+            glat=coords_gd[..., 0],
+            glon=coords_gd[..., 1],
+            height=coords_gd[..., 2],
+            time=times_dt,
+            v=v_imf,
+            By=by_imf,
+            Bz=bz_imf,
+            tilt=tilt,
+            f107=f107,
+            epoch=epoch
+        )
+
+        b_nec = vrotate(
+            stack((b_n, b_e, b_u), axis=-1), coords_gd, coords_sp,
+            GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL
+        )
+        b_nec[..., 2] *= -1.0
+
+        return b_nec
