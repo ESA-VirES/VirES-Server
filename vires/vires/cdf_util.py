@@ -39,7 +39,7 @@ import scipy
 from scipy.interpolate import interp1d
 import spacepy
 from spacepy import pycdf
-from spacepy.pycdf import CDFError
+from spacepy.pycdf import CDFError, lib
 from . import FULL_PACKAGE_NAME
 from .util import full
 from .time_util import (
@@ -51,6 +51,8 @@ GZIP_COMPRESSION = pycdf.const.GZIP_COMPRESSION
 GZIP_COMPRESSION_LEVEL1 = ctypes.c_long(1)
 
 CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
+CDF_EPOCH16_TYPE = pycdf.const.CDF_EPOCH16.value
+CDF_TIME_TT2000_TYPE = pycdf.const.CDF_TIME_TT2000.value
 CDF_FLOAT_TYPE = pycdf.const.CDF_FLOAT.value
 CDF_DOUBLE_TYPE = pycdf.const.CDF_DOUBLE.value
 CDF_REAL8_TYPE = pycdf.const.CDF_REAL8.value # CDF_DOUBLE != CDF_REAL8
@@ -66,6 +68,8 @@ CDF_CHAR_TYPE = pycdf.const.CDF_CHAR.value
 
 CDF_TYPE_TO_LABEL = {
     CDF_EPOCH_TYPE: "CDF_EPOCH",
+    CDF_EPOCH16_TYPE: "CDF_EPOCH16",
+    CDF_TIME_TT2000_TYPE: "CDF_TIME_TT2000",
     CDF_FLOAT_TYPE: "CDF_FLOAT",
     CDF_DOUBLE_TYPE: "CDF_DOUBLE",
     CDF_REAL8_TYPE: "CDF_REAL8",
@@ -280,6 +284,18 @@ def cdf_rawtime_to_decimal_year(raw_time, cdf_type):
         mjd2000_to_decimal_year, otypes=(dt_float64,)
     )
     return v_mjd2000_to_decimal_year(cdf_rawtime_to_mjd2000(raw_time, cdf_type))
+
+
+def cdf_epoch16_to_epoch(time):
+    """ Convert CDF_EPOCH16 to CDF_EPOCH. """
+    time = asarray(time)
+    _epoch16_to_epoch = lambda a, b: lib.epoch16_to_epoch((a, b))
+    return vectorize(_epoch16_to_epoch)(time[..., 0], time[..., 1])
+
+
+def cdf_tt2000_to_epoch(time):
+    """ Convert CDF_TIME_TT2000 to CDF_EPOCH. """
+    return vectorize(lib.tt2000_to_epoch)(time)
 
 
 def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):

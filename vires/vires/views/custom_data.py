@@ -41,7 +41,8 @@ from django.conf import settings
 from django.http import HttpResponse
 from ..time_util import datetime, naive_to_utc, format_datetime, Timer
 from ..cdf_util import (
-    is_cdf_file, cdf_open, CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDFError,
+    is_cdf_file, cdf_open, cdf_epoch16_to_epoch, cdf_tt2000_to_epoch, CDFError,
+    CDF_EPOCH_TYPE, CDF_EPOCH16_TYPE, CDF_TIME_TT2000_TYPE, CDF_DOUBLE_TYPE,
     CDF_TYPE_TO_LABEL, LABEL_TO_CDF_TYPE, CDF_TYPE_TO_DTYPE,
 )
 from ..cdf_write_util import (
@@ -514,11 +515,34 @@ def _get_missing_fields(fields):
 def _convert_input_cdf(filename):
     """ Make sure the input is in the CDF format. """
     try:
-        with cdf_open(filename):
-            pass
+        with cdf_open(filename, 'w') as cdf:
+            _convert_time_variables_to_cdf_epoch(cdf)
     except CDFError as error:
         raise InvalidFileFormat(str(error))
     return "application/x-cdf", filename
+
+
+def _convert_time_variables_to_cdf_epoch(cdf):
+    """ Convert CDF EPOCH16 and TT2000 variables in CDF EPOCH. """
+    convert = {
+        CDF_EPOCH16_TYPE: cdf_epoch16_to_epoch,
+        CDF_TIME_TT2000_TYPE: cdf_tt2000_to_epoch,
+    }
+
+    for variable in cdf:
+        raw_var = cdf.raw_var(variable)
+        if raw_var.type() not in convert:
+            continue
+        data = convert[raw_var.type()](raw_var[...])
+        attributes = raw_var.attrs
+        compress, compress_param = raw_var.compress()
+        del cdf[variable]
+        cdf.new(
+            variable, data=data, type=CDF_EPOCH_TYPE, dims=data.shape[1:],
+            compress=compress, compress_param=compress_param,
+        )
+        cdf[variable].attrs = attributes
+
 
 
 def _convert_input_csv(path):
