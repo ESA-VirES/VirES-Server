@@ -392,6 +392,171 @@
         },
         {
             "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Synchronization status",
+            "identifier": "SyncStatus",
+            "name": "SyncStatus",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Spacecraft velocity in the ITRF",
+            "identifier": "U_orbit",
+            "name": "U_orbit",
+            "nil_values": [],
+            "uom": "m/s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Plasma density (electron)",
+            "identifier": "Ne",
+            "name": "Ne",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error estimate of plasma density (Ne)",
+            "identifier": "Ne_error",
+            "name": "Ne_error",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Plasma electron temperature",
+            "identifier": "Te",
+            "name": "Te",
+            "nil_values": [],
+            "uom": "K"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error estimate of plasma electron temperature (Te)",
+            "identifier": "Te_error",
+            "name": "Te_error",
+            "nil_values": [],
+            "uom": "K"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Spacecraft potential",
+            "identifier": "Vs",
+            "name": "Vs",
+            "nil_values": [],
+            "uom": "V"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error estimate of spacecraft potential (Vs)",
+            "identifier": "Vs_error",
+            "name": "Vs_error",
+            "nil_values": [],
+            "uom": "V"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags indicating the source/method of LP measurements (Ne, Te, Vs)",
+            "identifier": "Flags_LP",
+            "name": "Flags_LP",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the plasma density measurement",
+            "identifier": "Flags_Ne",
+            "name": "Flags_Ne",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the electron temperature measurement",
+            "identifier": "Flags_Te",
+            "name": "Flags_Te",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the spacecraft potential measurement",
+            "identifier": "Flags_Vs",
+            "name": "Flags_Vs",
+            "nil_values": [],
+            "uom": ""
+        }
+    ],
+    "name": "SWARM_EFI_LP"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "ms"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Latitude ",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Longitude ",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF, Radius ",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
             "description": "Spacecraft velocity, NEC frame",
@@ -1174,11 +1339,31 @@
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "Absolute slant TE",
+            "description": "Absolute slant TEC",
             "identifier": "Absolute_STEC",
             "name": "Absolute_STEC",
             "nil_values": [],
             "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Absolute vertical TEC",
+            "identifier": "Absolute_VTEC",
+            "name": "Absolute_VTEC",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Elevation Angle",
+            "identifier": "Elevation_Angle",
+            "name": "Elevation_Angle",
+            "nil_values": [],
+            "uom": "degree"
         },
         {
             "color_interpretation": "Undefined",
@@ -1300,6 +1485,302 @@
                 }
             ],
             "uom": "10-22.J.s-1.m-2.Hz-1"
+        }
+    ]
+},
+{
+    "name": "SWARM_IPD_IRR",
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time of the measurement.",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Radius",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Plasma density, directly copied from the Langmuir probe files.",
+            "identifier": "Ne",
+            "name": "Ne",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Background density, as calculated from Ne using a percentile filter of 551 datapoints (2 Hz raw data) and 35 as the percentile.",
+            "identifier": "Background_Ne",
+            "name": "Background_Ne",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Foreground density, as calculated from ndens using a percentile filter of 7 datapoints (2 Hz raw data) and 50 as the percentile.",
+            "identifier": "Foreground_Ne",
+            "name": "Foreground_Ne",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Electron temperature, directly copied from the Langmuir probe files.",
+            "identifier": "Te",
+            "name": "Te",
+            "nil_values": [],
+            "uom": "K"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "The polar cap patch flag:  0 if the plasma density measurement occurred OUTSIDE a polar cap patch. 1 if the plasma density measurement occurred at one of the edges of a polar cap patch (no plasma velocity measurements are available). 2 if the plasma density measurement occurred at the LEADING edge of a polar cap patch. 3 if the plasma density measurement occurred at the TRAILING edge of a polar cap patch. 4 if the plasma density measurement occurred INSIDE a polar cap patch proper. When no ion drift data is available, the leading and trailing edges cannot be distinguished. In this case the polar cap patch flag is set to 4 throughout the patch proper and to 1 throughout both edges.",
+            "identifier": "PCP_flag",
+            "name": "PCP_flag",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "The electron density gradient in a running window calculated via linear regression over 27 data points for the 2 Hz electron density data.",
+            "identifier": "Grad_Ne_at_100km",
+            "name": "Grad_Ne_at_100km",
+            "nil_values": [],
+            "uom": "cm-3/m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "The electron density gradient in a running window calculated via linear regression over 13 data points for the 2 Hz electron density data.",
+            "identifier": "Grad_Ne_at_50km",
+            "name": "Grad_Ne_at_50km",
+            "nil_values": [],
+            "uom": "cm-3/m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "The electron density gradient in a running window calculated via linear regression over 5 data points for the 2 Hz electron density data.",
+            "identifier": "Grad_Ne_at_20km",
+            "name": "Grad_Ne_at_20km",
+            "nil_values": [],
+            "uom": "cm-3/m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "The linear electron density gradient calculated over the edges of a patch. This variable is non-zero only at the edges of polar cap patches.",
+            "identifier": "Grad_Ne_at_PCP_edge",
+            "name": "Grad_Ne_at_PCP_edge",
+            "nil_values": [],
+            "uom": "cm-3/m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "Rate Of change of Density",
+            "identifier": "ROD",
+            "name": "ROD",
+            "nil_values": [],
+            "uom": "cm-3/s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "Rate Of change of Density Index (RODI) is the standard deviation of ROD over 10 seconds.",
+            "identifier": "RODI10s",
+            "name": "RODI10s",
+            "nil_values": [],
+            "uom": "cm-3/s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "Rate Of change of Density Index (RODI) is the standard deviation of ROD over 20 seconds.",
+            "identifier": "RODI20s",
+            "name": "RODI20s",
+            "nil_values": [],
+            "uom": "cm-3/s"
+        },
+
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Derived by subtracting Ne by its median filtered value in 10 seconds. As a result, delta_Ne10s indicates the electron density fluctuations smaller than 75 km.",
+            "identifier": "delta_Ne10s",
+            "name": "delta_Ne10s",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Derived by subtracting Ne by its median filtered value in 20 seconds. As a result, delta_Ne20s indicates the electron density fluctuations smaller than 150 km.",
+            "identifier": "delta_Ne20s",
+            "name": "delta_Ne20s",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Derived by subtracting Ne by its median filtered value in 40 seconds. As a result, delta_Ne40s indicates the electron density fluctuations smaller than 300 km.",
+            "identifier": "delta_Ne40s",
+            "name": "delta_Ne40s",
+            "nil_values": [],
+            "uom": "cm-3"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Total number of tracked GPS satellites above 20 degrees.",
+            "identifier": "Num_GPS_satellites",
+            "name": "Num_GPS_satellites",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "Median of VTEC from all available GPS satellites above 30 degrees.",
+            "identifier": "mVTEC",
+            "name": "mVTEC",
+            "nil_values": [],
+            "uom": "TECU"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "Median of Rate Of change of TEC (ROT) from all available GPS satellites above 30 degrees.",
+            "identifier": "mROT",
+            "name": "mROT",
+            "nil_values": [],
+            "uom": "TECU/s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "Median of Rate Of change of TEC Index (ROTI) from all available GPS satellites above 30 degrees. The ROTI of each satellite is the standard deviation of ROT over 10 seconds.",
+            "identifier": "mROTI10s",
+            "name": "mROTI10s",
+            "nil_values": [],
+            "uom": "TECU/s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "Median of Rate Of change of TEC Index (ROTI) from all available GPS satellites above 30 degrees. The ROTI of each satellite is the standard deviation of ROT over 20 seconds.",
+            "identifier": "mROTI20s",
+            "name": "mROTI20s",
+            "nil_values": [],
+            "uom": "TECU/s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Plasma Bubble Index, copied from the level-2 Ionospheric Bubble Index product, IBIxTMS_2F.",
+            "identifier": "IBI_flag",
+            "name": "IBI_flag",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "0: equator, 1: mid-latitudes; 2: auroral oval; 3: polar cap.",
+            "identifier": "Ionosphere_region_flag",
+            "name": "Ionosphere_region_flag",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "The numeric index for plasma fluctuations and irregularities: 0-3 low, 4-5 medium, and > 6 high level of ionospheric plasma irregularities.",
+            "identifier": "IPIR_index",
+            "name": "IPIR_index",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt32",
+            "definition": "",
+            "description": "Quality flag for the Ne data and the derived data from Ne, e.g., background density, foreground density etc.",
+            "identifier": "Ne_quality_flag",
+            "name": "Ne_quality_flag",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float32",
+            "definition": "",
+            "description": "STD of VTEC from all GPS satellites.",
+            "identifier": "TEC_STD",
+            "name": "TEC_STD",
+            "nil_values": [],
+            "uom": "TECU"
         }
     ]
 }]

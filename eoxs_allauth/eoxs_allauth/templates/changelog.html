@@ -1,234 +1,349 @@
-{% extends "vires/base.html" %}
-{% load i18n %}
-{% block title %}
-  <title>VirES for Swarm</title>
-{% endblock %}
+{% extends "static_base.html" %}
+{% block static_title %}VirES for Swarm - Changelog{% endblock %}
+{% block static_content %}
+<h1>Changelog</h1>
+<hr>
+<h3>
+    Release of Service v3.1.0 (7.8.2019)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li>
+      <b>Workspace export/import</b><br>
+      It is now possible to save the state of the VirES application
+      to a JSON file. This file can be then later loaded recalling the saved
+      application state.
+    </li>
+    <li>
+      <b>Workspace initial state invocation</b><br>
+      The VirES application can be invoked with a predefined state.
+    </li>
+    <li>
+      <b>Improved user data upload and support for CSV data format.</b><br>
+      The custom user data upload has been improved based on the feedback
+      to the initial implementation released in v3.0.0.
+      Support for arbitrary custom variables and CSV data format has been added.
+      For more details, see the
+      <a href="/accounts/custom_data_format_description/" target="_blank">data format specification</a>.
+    </li>
+    <li>
+      <b>Revised user management</b><br>
+      In order to allow access to multiple related services using
+      one VirES user identity (single sign-on) the VirES user management has
+      been revised. From now on, the users' identities are held by a separate
+      OAuth2 Identity Server.
+      <br>Apart from a minor change of the user interface, this change is
+      transparent to the VirES users. The existing accounts are preserved,
+      including the social account authentication, and no action is required
+      from the users.
+    </li>
+    <li>
+      <b>Authentication using GitHub accounts</b><br>
+      The GitHub has been added to the list of the supported social network
+      identity providers and it is now possible to use GitHub account
+      to log into VirES.
+    </li>
+</ul>
+<hr>
+<h3>
+    Release of Service v3.0.0 (10.5.2019)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li>
+      <b>Full source products/models traceability</b><br>
+      Information about the source products/models and their versions
+      is now available for both the downloaded data and data displayed
+      in the client.
+    </li>
+    <li>
+      <b>Improved composed model GUI</b><br>
+      The client-side handling of the composed models has been
+      thoroughly reviewed. The client GUI now shows information
+      about the source models and the composed model expressions
+      are now consistently shown throughout different parts
+      of the web client.
+    </li>
+    <li>
+      <b>Enhanced field-lines</b><br>
+      The displayed field-lines can be now selected by clicking.
+      Information about the apex and ground intersections
+      is displayed for a selected field-line.
+    </li>
+    <li>
+      <b>New cyclic color-maps</b><br>
+      Two new cyclic color-maps (<a href="https://matplotlib.org/tutorials/colors/colormaps.html#cyclic" target="_blank">twilight and twilight-shifted</a>)
+      have been added to be used with cyclic variables such as
+      latitude or MLT.
+    </li>
+    <li>
+      <b>User data upload</b><br>
+      A possibility to upload own data in the CDF file and compare
+      them with the Swarm products has been added.
+      The supported file format is identical the format of the
+      downloaded data and most of the Swarm products (e.g., MAGx_LR).
+    </li>
+    <li>
+      <b>Machine-to-machine (M2M) interface</b><br>
+      The <a href="/ows" target="_blank">VirES server M2M interface</a> has been
+      opened for registered VirES users. This interface has been so
+      far accessible only indirectly trough web client.
+      Now it can used either directly via the low-level API
+      (based on the OGC WPS protocol) or via an alternative VirES
+      client (e.g. <a href="https://viresclient.readthedocs.io/en/latest/" target="_blank">VirES Python Client</a>.
+    </li>
+    <li>
+      <b>Token-based authentication for the M2M interface</b><br>
+      The access to the <a href="/ows" target="_blank">VirES server M2M interface</a>
+      is granted only for authenticated requests.
+      A new option to use the token-based authentication has been
+      added to VirES. The access tokens can be generated and revoked
+      by the users themselves via the user settings of the web client.
+    </li>
+</ul>
+<hr>
+<h3>
+    Release of Service v2.3.0 (22.3.2019)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li>
+      <b>Improved data plotting</b><br>
+      The data visualization has been improved by the following
+      enhancements of the Analytic Viewer:<br>
+      <ul>
+        <li>
+          Multiple plots can be stacked vertically sharing the X-axis.
+          Each plot can displays a different set of parameters.
+        </li>
+        <li>
+          The plotted data can be coloured by mapping values of
+          another parameter.
+        </li>
+        <li>
+          New styling options were added such as the selection of font
+          size of the labels, size and symbol of the data points or
+          their optional connection by line.
+        </li>
+        <li>
+          Naturally periodic parameters (longitude, QD-longitude, MLT)
+          are displayed using periodic axes.
+        </li>
+        <li>
+          Special "periodic latitude" and "periodic QD-latitude"
+          axes were added to display data periodically along
+          the polar orbit of the Swarm satellites.
+        </li>
+      </ul>
+    </li>
+    <li>
+      <b>Reworked model selection</b><br>
+      The selection of the geomagnetic models has been thoroughly
+      reworked to allow composition of new derived models from
+      different components such as core, lithosphere,
+      magnetosphere and ionosphere.
+      These new composed models can be visualized or subtracted from
+      the satellite measurements (residuals).<br>
+      The source models can be constrained by a desired range
+      of degrees of the spherical-harmonic coefficients and
+      added to or subtracted from each other.
+    </li>
+</ul>
+<hr>
+<h3>
+    Release of Service v2.2.3 (15.2.2019)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>New model data</b><br>Following new models have been added for visualization, analysis and filtering options:<br>
+      <ul>
+        <li>CHAOS-6-MMA-Primary</li>
+        <li>CHAOS-6-MMA-Secondary</li>
+      </ul>
+    </li>
+    <li><b>Updated TEC support</b><br>The TEC product support has been aligned with the latest baseline and VirES newly allows access to the Elevation Angle and Absolute Vertical TEC parameters.</li>
+    <li>
+      <b>Magnetic models' validity</b></br>
+      Handling of the magnetic model validity has been improved:
+      <ul>
+        <li>The validity period of the magnetic models is now dynamically synchronised with the server.</li>
+        <li>The validity period is now displayed also for the user provided Custom SHC model.</li>
+        <li>The models are not visualized for time selections outside their validity period.</li>
+      </ul>
+    </li>
+</ul>
+<hr>
+<h3>
+    Release of Service v2.2.2 (11.1.2019)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>New plasma products</b></br>Support for the new EFIx_LP_1B has been added to VirES. The new EFIx_LP_1B products replaced the discontinued EFIx_PL_1B products.</li>
+</ul>
+<hr>
+<h3>
+    Release of Service v2.2.1 (4.9.2018)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>New model data</b><br> New models have been added for visualization, analysis and filtering options. When selecting magnetic (MAG) product in combination with models the respective residuals will be calculated which can be used for filtering and plotting parameters. It is also possible to calculate the difference between models by opening the settings panel and selecting another model from the "Difference to" drop-down selection. The newly integrated models are:<br>
+      <ul>
+     <li>MMA_SHA_2F-Primary</li>
+     <li>MMA_SHA_2F-Secondary</li>
+    </ul></li>
+    <li><b>F10.7 index</b><br>The F10.7 index has been added as a new index layer and its source has been changed from the AUX_IMF_2_ to AUX_F10_2_ product.</li>
+</ul>
+<h3>
+    Release of Service v2.2 (4.6.2018)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>Plotting (Analytics viewer) tool reworked and updated</b><br>The performance of the (scatter) plot tool has been increased and multiple new features have been introduced:<ul>
+      <li>The user interface has been rearranged to provide more space for plotting, the download button has been moved to the navigation bar on top</li>
+      <li>By clicking on the parameter label it is possible to set the symbol to be used, as well as color and connection by line</li>
+      <li>By clicking on the axis parameter labels it is now possible to directly select which parameter should be used for which axis as well as the possibility to set the scale to logarithmic</li>
+      <li>The filters panel on the bottom is now scrollable allowing selection of any amount of filters you need to work with</li>
+      <li>The add filter button has been improved to more easily allow searching for a specific parameter (it is possible to filter by name, description and UOM)</li>
+      <li>The visualization of time on the x axis has been reworked to show better tick-marks as well as always showing complete dates for start and end ticks</li>
+    </ul></li>
+    <li><b>New model data</b><br> New models have been added for visualization, analysis and filtering options. When selecting magnetic (MAG) product in combination with models the respective residuals will be calculated which can be used for filtering and plotting parameters. It is also possible to calculate the difference between models by opening the settings panel and selecting another model from the "Difference to" drop-down selection. The newly integrated models are:<br>
+      <ul>
+     <li>MCO_SHA_2C</li>
+     <li>MCO_SHA_2D</li>
+     <li>MCO_SHA_2F</li>
+     <li>MLI_SHA_2C</li>
+     <li>MLI_SHA_2D</li>
+     <li>MMA_SHA_2C-Primary</li>
+     <li>MMA_SHA_2C-Secondary</li>
+     <li>MIO_SHA_2C-Primary</li>
+     <li>MIO_SHA_2C-Secondary</li>
+     <li>MIO_SHA_2D-Primary</li>
+     <li>MIO_SHA_2D-Secondary</li>
+    </ul></li>
+    <li><b>Updated TEC visualization</b><br>The visualization of the TEC product has been updated to show vector lines in direction to the related GPS satellites (instead of the previous visualization of points offset in height for each measurement)</li>
+    <li><b>F10.7 index</b><br>A new parameter "F10.7 index" (taken form the AUX_IMF_2_ product) has been introduced to for additional sorting and plotting options</li>
+
+</ul>
+
+<hr>
+<h3>
+    Release of Service v2.1 (20.10.2017)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>Alpha and Charlie satellite residuals</b><br>The magnetic residual between satellites Alpha and Charlie in the NEC-frame have been added as parameters. The residuals can be accessed together with magnetic data from Swarm Alpha.</li>
+    <li><b>Orbit number</b><br>The orbit number has been added as a parameter counting the number of Equator crossings of the ascending node since the Swarm mission start. </li>
+    <li><b>Spacecraft as product parameter</b><br>A new parameter "Spacecraft" has been introduced to downloaded data to easily identify which satellite downloaded data originates from within a product.</li>
+    <li><b>Solar position</b><br>
+      Several parameters to determine the position of the sun have been added as filters:
+      <ul>
+        <li>SunDeclination, SunRightAscension and SunHourAngle defining Sun position in the Equatorial Coordinate System</li>
+        <li>SunZenithAngle, SunAzimuthAngle defining Sun position in the local Horizontal Coordinate System</li>
+      </ul>
+      See <a href="https://en.wikipedia.org/wiki/Equatorial_coordinate_system">"Equatorial coordinate system"</a> and <a href="https://en.wikipedia.org/wiki/Horizontal_coordinate_system">"Horizontal coordinate system"</a>.
+    </li>
+    <li>All new parameters described above can be downloaded as part of a product by selecting them with the "Custom download parameters" in the Download panel.
+    </li>
+    <li><b>Cursor coordinates on globe</b></br>On hover of the globe in the Globe View, latitude and longitude for that point will be displayed in the top-left corner.</li>
+    <li><b>Extended Download panel functionality</b></br>Parameter filters can be added directly in the Download panel by selecting "Add filter" in the Download panel. A Timestep filter enabling subsampling of the product. Subsampling can be enabled by selecting "Custom time subsampling" and specifying subsample interval in the Download panel. Subsampling will be applied to each daily product independently.</li>
+    <li><b>Product names in Layers</b></br>Several data selections have been renamed:
+        <ul>
+            <li>"Electric Field Data" changed to "Equatorial electric field (EEF)"</li>
+            <li>"Electron data" changed to "Total electron content (TEC)"</li>
+            <li>"Currents data" changed to "Electric current data (FAC)"</li>
+            <li>"Non S/C" changed to "AC" (currently only includes combined S/C FAC data)</li>
+        </ul>
+    </li>
+    <li><b>Model difference</b></br>The difference between two models at any coefficient range can be displayed on the globe. This functionality can be accessed under settings of any of the geomagnetic models available in the Layers panel.</li>
+    <li><b>CHAOS-6</b></br>Geomagnetic field model CHAOS-5 has been replaced by <a href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/">CHAOS-6</a> in the Layers panel.</li>
+    <li><b>Cartographic layer update</b></br>"Blue Marble" layer previously available in the Layers panel has been updated with a "S2 Cloudless" mosaic, which has higher resolution and is based on Sentinel-2 data.</li>
+</ul>
 
 
-{% block content %}
 
-{% if user.is_authenticated %}
-    {% load staticfiles %}
-    {% load account %}
+<hr>
+  <h3>
+    Release of Service v2.0 (20.03.2017)
+  </h3>
 
-   <script type="text/javascript">
-      var _paq = _paq || [];
-      _paq.push(['setUserId', '{% user_display user %}']);
-      _paq.push(['trackGoal', 3]);
-      _paq.push(['setDocumentTitle', "Changelog"]);
-    </script>
-
-{% else %}
-
-    {% load staticfiles %}
-
-    <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
-
-    <script type="text/javascript">
-      var _paq = _paq || [];
-      _paq.push(['setDocumentTitle', "Changelog"]);
-    </script>
-
-{% endif %}
-
-    <link href="{% static 'workspace/bower_components/bootstrap/dist/css/bootstrap.min.css'%}" rel="stylesheet">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet">
-    <link href="{% static 'css/landing_page.css' %}" rel="stylesheet">
-    <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
-
-      <div class="row" style="min-height: 87%;">
-        <div class="col-sm-6 col-sm-offset-3 larger">
-          <h1>Changelog</h1>
-
-          <hr>
-          <h3>
-              Release of Service v2.2 (4.5.2018)
-          </h3>
-          <p>
-              Features:
-          </p>
-          <ul>
-              <li><b>Plotting (Analytics viewer) tool reworked and updated</b><br>The performance of the (scatter) plot tool has been increased and multiple new features have been introduced:<ul>
-                <li>The user interface has been rearranged to provide more space for plotting, the download button has been moved to the navigation bar on top</li>
-                <li>By clicking on the parameter label it is possible to set the symbol to be used, as well as color and connection by line</li>
-                <li>By clicking on the axis parameter labels it is now possible to directly select which parameter should be used for which axis as well as the possibility to set the scale to logarithmic</li>
-                <li>The filters panel on the bottom is now scrollable allowing selection of any amount of filters you need to work with</li>
-                <li>The add filter button has been improved to more easily allow searching for a specific parameter (it is possible to filter by name, description and UOM)</li>
-                <li>The visualization of time on the x axis has been reworked to show better tick-marks as well as always showing complete dates for start and end ticks</li>
-              </ul></li>
-              <li><b>New model data</b><br> New models have been added for visualization, analysis and filtering options. When selecting magnetic (MAG) product in combination with models the respective residuals will be calculated which can be used for filtering and plotting parameters. It is also possible to calculate the difference between models by opening the settings panel and selecting another model from the "Difference to" drop-down selection. The newly integrated models are:<br>
-                <ul>
-               <li>MCO_SHA_2C</li>
-               <li>MCO_SHA_2D</li>
-               <li>MCO_SHA_2F</li>
-               <li>MLI_SHA_2C</li>
-               <li>MLI_SHA_2D</li>
-               <li>MMA_SHA_2C-Primary</li>
-               <li>MMA_SHA_2C-Secondary</li>
-               <li>MIO_SHA_2C-Primary</li>
-               <li>MIO_SHA_2C-Secondary</li>
-               <li>MIO_SHA_2D-Primary</li>
-               <li>MIO_SHA_2D-Secondary</li>
-              </ul></li>
-              <li><b>Updated TEC visualization</b><br>The visualization of the TEC product has been updated to show vector lines in direction to the related GPS satellites (instead of the previous visualization of points offset in height for each measurement)</li>
-              <li><b>F10.7 index</b><br>A new parameter "F10.7 index" (taken form the AUX_IMF_2_ product) has been introduced to for additional sorting and plotting options</li>
-
-          </ul>
-
-          <hr>
-          <h3>
-              Release of Service v2.1 (20.10.2017)
-          </h3>
-          <p>
-              Features:
-          </p>
-          <ul>
-              <li><b>Alpha and Charlie satellite residuals</b><br>The magnetic residual between satellites Alpha and Charlie in the NEC-frame have been added as parameters. The residuals can be accessed together with magnetic data from Swarm Alpha.</li>
-              <li><b>Orbit number</b><br>The orbit number has been added as a parameter counting the number of Equator crossings of the ascending node since the Swarm mission start. </li>
-              <li><b>Spacecraft as product parameter</b><br>A new parameter "Spacecraft" has been introduced to downloaded data to easily identify which satellite downloaded data originates from within a product.</li>
-              <li><b>Solar position</b><br>
-                Several parameters to determine the position of the sun have been added as filters:
-                <ul>
-                  <li>SunDeclination, SunRightAscension and SunHourAngle defining Sun position in the Equatorial Coordinate System</li>
-                  <li>SunZenithAngle, SunAzimuthAngle defining Sun position in the local Horizontal Coordinate System</li>
-                </ul>
-                See <a href="https://en.wikipedia.org/wiki/Equatorial_coordinate_system">"Equatorial coordinate system"</a> and <a href="https://en.wikipedia.org/wiki/Horizontal_coordinate_system">"Horizontal coordinate system"</a>.
-              </li>
-              <li>All new parameters described above can be downloaded as part of a product by selecting them with the "Custom download parameters" in the Download panel.
-              </li>
-              <li><b>Cursor coordinates on globe</b></br>On hover of the globe in the Globe View, latitude and longitude for that point will be displayed in the top-left corner.</li>
-              <li><b>Extended Download panel functionality</b></br>Parameter filters can be added directly in the Download panel by selecting "Add filter" in the Download panel. A Timestep filter enabling subsampling of the product. Subsampling can be enabled by selecting "Custom time subsampling" and specifying subsample interval in the Download panel. Subsampling will be applied to each daily product independently.</li>
-              <li><b>Product names in Layers</b></br>Several data selections have been renamed:
-                  <ul>
-                      <li>"Electric Field Data" changed to "Equatorial electric field (EEF)"</li>
-                      <li>"Electron data" changed to "Total electron content (TEC)"</li>
-                      <li>"Currents data" changed to "Electric current data (FAC)"</li>
-                      <li>"Non S/C" changed to "AC" (currently only includes combined S/C FAC data)</li>
-                  </ul>
-              </li>
-              <li><b>Model difference</b></br>The difference between two models at any coefficient range can be displayed on the globe. This functionality can be accessed under settings of any of the geomagnetic models available in the Layers panel.</li>
-              <li><b>CHAOS-6</b></br>Geomagnetic field model CHAOS-5 has been replaced by <a href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/">CHAOS-6</a> in the Layers panel.</li>
-              <li><b>Cartographic layer update</b></br>"Blue Marble" layer previously available in the Layers panel has been updated with a "S2 Cloudless" mosaic, which has higher resolution and is based on Sentinel-2 data.</li>
-          </ul>
+<p>
+    Features:
+</p>
+<ul>
+       <li><b>Asynchronous processing</b></br>It is now possible to download filtered Swarm data from an arbitrarily large time span to one file. This can be done by defining your filters in the analytics view (in addition to area selection on the globe view) for a smaller time span. Once satisfied with your selection you can click on download. In the Download Manager which then appears you can set the time window of interest, then click on "Process &amp; create link". The processing is then done in the background, the progress can be seen in the download panel. Once finished a download link is provided there for you to get the results. Download limit will be set to the equivalent of 50 Magnetic low rate products.</li>
+      <li><b>Ionospheric total electron content data</b></br>The data from TECxTMS_2F has been added to VirES with the possibility to view the Absolute slant TEC, Relative slant TEC and the root mean square error of relative slant TEC on the globe. A new visualization was created for this product to display the TEC parameter value for each of the paths to nearby GPS satellites simultaneously. The values for a timestamp are shown one above the other, allowing one to quickly see how many satellites were visible and what the values were for each timestamp shown. </li>
+      <li><b>Field aligned current </b></br>The data from FACxTMS_2F (single S/C soluton) and FAC_TMS_2F (combined S/C solution) has been added to VirES with the possibility to view the Field-aligned current (FAC) and Ionospheric radial current (IRC) on the globe and in the Analytics View. The combined S/C solution data can be found by selecting "Non S/C" and "Currents data (FAC)" in the Layers widget.</li>
+      <li><b>Dayside equatorial electric field</b></br>The data from EEFxTMS_2F has been added to VirES with the possibility to view the Estimate of the equatorial electric field (EEF) on the globe and in the Analytics View.</li>
+      <li><b>Local evaluation of custom model</b></br>Providing a more detailed rendering, one can restrict the evaluation of a custom uploaded spherical harmonics model to an area of interest with the Area Selection tool. </li>
+      <li><b>Updated backplane map</b></br>The new version of the backplane map offers the following improvements:<ul>
+      <li>Digital Elevation Model (DEM) data merged from SRTM, ASTER and regional/local data like EU-DEM</li>
+      <li>New shaded relief with better generalization and geotopographical features</li>
+      <li>Improved generalization of coastlines and land polygons</li>
+      <li>Updated OpenStreetMaps data</li>
+      <li>Removed data gap within Antarctica</li></ul>
+</ul>
 
 
+<hr>
+  <h3>
+    Release of Service v1.2 (21.12.2016)
+  </h3>
 
-          <hr>
-            <h3>
-              Release of Service v2.0 (20.03.2017)
-            </h3>
+<p>
+    Features:
+</p>
+<ul>
+      <li><b>Resume session</b></br>Upon termination of your session information about the view, time window, area, data and filter selections and all corresponding settings will be stored for your convenience. Upon restart of the service, your session will be resumed where you left off. The session state information is stored locally with your internet browser, unless VirES is accessed using private browsing.</li>
+      <li><b>Jump to date</b></br>To quickly access data from any part of the Swarm mission, press on the button in the top right corner of the timeslider slider. This will allow you to display data from a date of your choice. The time selection will be on a corresponding time of day as your previous time selection. If the previous time selection passes over midnight, the selection will be clipped to end at midnight</li>
+      <li><b>Set detailed download time filter</b></br>In addition to filtering Swarm products by a wide range of parameters when downloading, you can select "Custom time selection" in the Download Manager. This will make it possible to define a precise start and end time for the downloaded product. Other filters shown in the Download Manager will still apply to the data</li>
+      <li><b>New overlay layers</b></br> Three new overlays are available from the layers panel:
+        <ul>
+          <li>Coastlines and Countries: Black coastlines with light grey country borders</li>
+          <li>Graticules: Grid lines for geographic longitude/latitude</li>
+          <li>Magnetic graticules: Grid lines for magnetic longitude/latitude</li>
+        </ul>
+      </li>
+      <li><b>Additional colour scales</b></br>When selecting Swarm products or models to display on the globe, the colour representation of the data can be set in the respective settings widgets found in the Layers widget. It is now possible to choose between 27 scales including ones such as viridis, plasma and portland. The names of custom1 and custom2 colour scales have been changed to diverging_1 and diverging_2 to better represent the corresponding style.</li>
+</ul>
 
-          <p>
-              Features:
-          </p>
-          <ul>
-                 <li><b>Asynchronous processing</b></br>It is now possible to download filtered Swarm data from an arbitrarily large time span to one file. This can be done by defining your filters in the analytics view (in addition to area selection on the globe view) for a smaller time span. Once satisfied with your selection you can click on download. In the Download Manager which then appears you can set the time window of interest, then click on "Process &amp; create link". The processing is then done in the background, the progress can be seen in the download panel. Once finished a download link is provided there for you to get the results. Download limit will be set to the equivalent of 50 Magnetic low rate products.</li>
-                <li><b>Ionospheric total electron content data</b></br>The data from TECxTMS_2F has been added to VirES with the possibility to view the Absolute slant TEC, Relative slant TEC and the root mean square error of relative slant TEC on the globe. A new visualization was created for this product to display the TEC parameter value for each of the paths to nearby GPS satellites simultaneously. The values for a timestamp are shown one above the other, allowing one to quickly see how many satellites were visible and what the values were for each timestamp shown. </li>
-                <li><b>Field aligned current </b></br>The data from FACxTMS_2F (single S/C soluton) and FAC_TMS_2F (combined S/C solution) has been added to VirES with the possibility to view the Field-aligned current (FAC) and Ionospheric radial current (IRC) on the globe and in the Analytics View. The combined S/C solution data can be found by selecting "Non S/C" and "Currents data (FAC)" in the Layers widget.</li>
-                <li><b>Dayside equatorial electric field</b></br>The data from EEFxTMS_2F has been added to VirES with the possibility to view the Estimate of the equatorial electric field (EEF) on the globe and in the Analytics View.</li>
-                <li><b>Local evaluation of custom model</b></br>Providing a more detailed rendering, one can restrict the evaluation of a custom uploaded spherical harmonics model to an area of interest with the Area Selection tool. </li>
-                <li><b>Updated backplane map</b></br>The new version of the backplane map offers the following improvements:<ul>
-                <li>Digital Elevation Model (DEM) data merged from SRTM, ASTER and regional/local data like EU-DEM</li>
-                <li>New shaded relief with better generalization and geotopographical features</li>
-                <li>Improved generalization of coastlines and land polygons</li>
-                <li>Updated OpenStreetMaps data</li>
-                <li>Removed data gap within Antarctica</li></ul>
-          </ul>
+<hr>
+  <h3>
+    Release of Service v1.1 (26.09.2016)
+  </h3>
 
+<p>
+    Features:
+</p>
+<ul>
+      <li><b>Plasma products</b></br>The data from EFIX_PL_1B have been added to VirES with the possibility to view the plasma density and temperature, in addition to the spacecraft velocity and potential both on the globe and in the Analytics View. The full set of parameters are accessible on download</li>
+      <li><b>Ionospheric bubble product</b></br>The data from IBI_TMS_2F have been added to VirES with the possibility to view the bubble probability on the globe and in the Analytics View. Positive Bubble index detections are shown in the time slider. The full set of parameters are accessible on download</li>
+      <li><b>Layers interface changes</b></br>The Layers widget has changed separating out satellite specific products. Selecting a satellite specific product is now independent of selecting what satellites to view data from. Selection of satellite is done using separate checkboxes in the Layers widget. This change was introduced to make the Layers widget more compact after adding more products.</li>
+      <li><b>Customize download fields</b></br>When downloading data, in addition to customizing the exact filter values and format, it is possible to specify what parameters to include by ticking off on "Custom download parameters", then either select the data from a dropdown menu or type it in. This customization allows for parameters from multiple Swarm products.</li>
+      <li><b>Label with colorscale information directly integrated into globe visualization</b></br>Now when using the save function the currently configured color scale and ranges are saved also into the image. It is possible to toggle the visualization of the label in the settings panel for each Layer using the "Legend" tickbox.</li>
+      <li><b>Dynamic range calculation for models</b></br>When changing model parameters (for SIFM, IGRF12, CHAOS-5 and Custom Model), such as the coefficient range or height, the colorscale range is calculated and adjusted automatically. It is still possible to manually adjust the range with both textfields available in the settings panel. This change was introduced as it became clear that finding the correct range after changing model parameters was cumbersome for users and we wanted to facilitate the process.</li>
+      <li><b>Single axis interaction</b></br>When exploring the scatterplot, one can scroll when hovering over an axis to zoom along one axis while keeping the other axes ranges fixed. Similarily one can drag on an axis to pan the plot. These features apply to both the x-axis and the y-axes and complement the zooming and panning one can perform on the scatterplot itself to zoom along all axes.</li>
+      <li><b>Zoom limit removed</b></br>The zoom limit previously applied to the scatterplot is now removed. There are now no restrictions to how far you can zoom in or out. A reset button is added to enable the user to return to the initial zoom level and position at one's convenience.</li>
+      <li><b>Customizable filter list</b></br>The data filter histograms found in the Analytics View can be removed individually, and new histograms for any other available parameter can be added by selecting it in the histogram "Add" dropdown menu. Any active filters will be removed when its corresponding histogram is removed. In addition the filters can be hidden to allow for more space for the scatterplot.</li>
+      <li><b>Secondary y-axis</b></br>When selecting multiple parameters a second y-axis will appear. When selecting two parameters this means that each parameter has its own axis. If more than two parameters are selected, they will be grouped according to their range, such that the parameters with the most similar value ranges are grouped together and share an axis.</li>
+      <li><b>Scatterplot units</b></br>The units are now displayed in a parenthesis next to the axis parameter labels in the scatterplot.</li>
+      <li><b>Extended time selection</b></br>The time selection limit when selecting a time window from the time slider has been extended from 15 days to 30 days. The limit when downloading products has not changed and is still set at the equivalent of 5 unfiltered MAGX_LR products.</li>
+</ul>
 
-          <hr>
-            <h3>
-              Release of Service v1.2 (21.12.2016)
-            </h3>
-
-          <p>
-              Features:
-          </p>
-          <ul>
-                <li><b>Resume session</b></br>Upon termination of your session information about the view, time window, area, data and filter selections and all corresponding settings will be stored for your convenience. Upon restart of the service, your session will be resumed where you left off. The session state information is stored locally with your internet browser, unless VirES is accessed using private browsing.</li>
-                <li><b>Jump to date</b></br>To quickly access data from any part of the Swarm mission, press on the button in the top right corner of the timeslider slider. This will allow you to display data from a date of your choice. The time selection will be on a corresponding time of day as your previous time selection. If the previous time selection passes over midnight, the selection will be clipped to end at midnight</li>
-                <li><b>Set detailed download time filter</b></br>In addition to filtering Swarm products by a wide range of parameters when downloading, you can select "Custom time selection" in the Download Manager. This will make it possible to define a precise start and end time for the downloaded product. Other filters shown in the Download Manager will still apply to the data</li>
-                <li><b>New overlay layers</b></br> Three new overlays are available from the layers panel:
-                  <ul>
-                    <li>Coastlines and Countries: Black coastlines with light grey country borders</li>
-                    <li>Graticules: Grid lines for geographic longitude/latitude</li>
-                    <li>Magnetic graticules: Grid lines for magnetic longitude/latitude</li>
-                  </ul>
-                </li>
-                <li><b>Additional colour scales</b></br>When selecting Swarm products or models to display on the globe, the colour representation of the data can be set in the respective settings widgets found in the Layers widget. It is now possible to choose between 27 scales including ones such as viridis, plasma and portland. The names of custom1 and custom2 colour scales have been changed to diverging_1 and diverging_2 to better represent the corresponding style.</li>
-          </ul>
-
-          <hr>
-            <h3>
-              Release of Service v1.1 (26.09.2016)
-            </h3>
-
-          <p>
-              Features:
-          </p>
-          <ul>
-                <li><b>Plasma products</b></br>The data from EFIX_PL_1B have been added to VirES with the possibility to view the plasma density and temperature, in addition to the spacecraft velocity and potential both on the globe and in the Analytics View. The full set of parameters are accessible on download</li>
-                <li><b>Ionospheric bubble product</b></br>The data from IBI_TMS_2F have been added to VirES with the possibility to view the bubble probability on the globe and in the Analytics View. Positive Bubble index detections are shown in the time slider. The full set of parameters are accessible on download</li>
-                <li><b>Layers interface changes</b></br>The Layers widget has changed separating out satellite specific products. Selecting a satellite specific product is now independent of selecting what satellites to view data from. Selection of satellite is done using separate checkboxes in the Layers widget. This change was introduced to make the Layers widget more compact after adding more products.</li>
-                <li><b>Customize download fields</b></br>When downloading data, in addition to customizing the exact filter values and format, it is possible to specify what parameters to include by ticking off on "Custom download parameters", then either select the data from a dropdown menu or type it in. This customization allows for parameters from multiple Swarm products.</li>
-                <li><b>Label with colorscale information directly integrated into globe visualization</b></br>Now when using the save function the currently configured color scale and ranges are saved also into the image. It is possible to toggle the visualization of the label in the settings panel for each Layer using the "Legend" tickbox.</li>
-                <li><b>Dynamic range calculation for models</b></br>When changing model parameters (for SIFM, IGRF12, CHAOS-5 and Custom Model), such as the coefficient range or height, the colorscale range is calculated and adjusted automatically. It is still possible to manually adjust the range with both textfields available in the settings panel. This change was introduced as it became clear that finding the correct range after changing model parameters was cumbersome for users and we wanted to facilitate the process.</li>
-                <li><b>Single axis interaction</b></br>When exploring the scatterplot, one can scroll when hovering over an axis to zoom along one axis while keeping the other axes ranges fixed. Similarily one can drag on an axis to pan the plot. These features apply to both the x-axis and the y-axes and complement the zooming and panning one can perform on the scatterplot itself to zoom along all axes.</li>
-                <li><b>Zoom limit removed</b></br>The zoom limit previously applied to the scatterplot is now removed. There are now no restrictions to how far you can zoom in or out. A reset button is added to enable the user to return to the initial zoom level and position at one's convenience.</li>
-                <li><b>Customizable filter list</b></br>The data filter histograms found in the Analytics View can be removed individually, and new histograms for any other available parameter can be added by selecting it in the histogram "Add" dropdown menu. Any active filters will be removed when its corresponding histogram is removed. In addition the filters can be hidden to allow for more space for the scatterplot.</li>
-                <li><b>Secondary y-axis</b></br>When selecting multiple parameters a second y-axis will appear. When selecting two parameters this means that each parameter has its own axis. If more than two parameters are selected, they will be grouped according to their range, such that the parameters with the most similar value ranges are grouped together and share an axis.</li>
-                <li><b>Scatterplot units</b></br>The units are now displayed in a parenthesis next to the axis parameter labels in the scatterplot.</li>
-                <li><b>Extended time selection</b></br>The time selection limit when selecting a time window from the time slider has been extended from 15 days to 30 days. The limit when downloading products has not changed and is still set at the equivalent of 5 unfiltered MAGX_LR products.</li>
-          </ul>
-
-          <hr>
-
-        </div><!--/col-->
-
-    </div><!--/container-->
-
-    <div id="footer">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="row">
-
-                <a href="http://eox.at" target="_blank" style="text-decoration: none;">
-                  <img style="height:30px; display:inline;" src="{% static 'images/EOX_Logo_inverted.png' %}">
-                </a>
-
-
-                <p class="text-muted" style="display:inline;">service for</p>
-
-
-                <a href="http://esa.int" target="_blank" style="text-decoration: none;">
-                  <img style="height:50px;  display:inline; margin-left:4px;" src="{% static 'images/esa_logo_white.png' %}">
-                </a>
-
-            </div>
-          </div>
-
-          <div class="col-md-6 text-muted" style="text-align: center; margin-top:15px;">
-            <a style="display:inline; margin-right:5px;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a> |
-            <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a> |
-            <a href="https://earth.esa.int/swarm" target="_blank">Swarm Official Site</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <ul class="nav pull-right scroll-top">
-      <li><a href="#" title="Scroll to top"><i class="glyphicon glyphicon-chevron-up"></i></a></li>
-    </ul>
-
-
-    <!-- script references -->
-    {% load staticfiles %}
-
-    <script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
-    <script src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js'%}"></script>
-    <script src="{% static 'js/landing_page.js' %}"></script>
-
-    <!-- End landing page -->
-
+<hr>
 {% endblock %}

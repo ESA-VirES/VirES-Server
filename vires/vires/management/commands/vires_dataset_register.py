@@ -196,7 +196,7 @@ class Command(CommandOutputMixIn, BaseCommand):
         range_type = models.RangeType.objects.get(name=range_type_name)
 
         metadata_keys = set((
-            "identifier", "extent", "size", "ground_path",
+            "identifier", "extent", "size",
             "footprint", "begin_time", "end_time",
         ))
 
@@ -417,7 +417,6 @@ def save(model):
     return model
 
 
-
 class VirESMetadataReader(object):
 
     LATLON_KEYS = [
@@ -432,11 +431,11 @@ class VirESMetadataReader(object):
     ]
 
     @classmethod
-    def get_times(cls, data):
+    def get_time_range_and_size(cls, data):
         # iterate possible time keys and try to extract the values
         for time_key in cls.TIME_KEYS:
             try:
-                times = data[time_key][:]
+                times = data[time_key]
             except KeyError:
                 continue
             else:
@@ -444,7 +443,7 @@ class VirESMetadataReader(object):
         else:
             raise KeyError("Temporal variable not found!")
 
-        return times
+        return (naive_to_utc(times[0]), naive_to_utc(times[-1]), times.shape[0])
 
     @classmethod
     def get_coords(cls, data):
@@ -467,25 +466,13 @@ class VirESMetadataReader(object):
         return coords
 
     @classmethod
-    def get_ground_path(cls, coords, threshold=0.1):
-        # split line segments
-        segments = []
-        idx_wrap = (np.abs(coords[1:, 0] - coords[:-1, 0]) > 180.0).nonzero()[0]
-        idx_last = 0
-        for idx in idx_wrap + 1:
-            segments.append(
-                geos.LineString(coords[idx_last:idx, :]).simplify(threshold)
-            )
-            idx_last = idx
-        segments.append(
-            geos.LineString(coords[idx_last:, :]).simplify(threshold)
-        )
-        return geos.MultiLineString(segments)
-
-    @classmethod
     def coords_to_bounding_box(cls, coords):
-        lon_min, lat_min = np.floor(np.amin(coords, 0))
-        lon_max, lat_max = np.ceil(np.amax(coords, 0))
+        coords = coords[~np.isnan(coords).any(1)]
+        if coords.size:
+            lon_min, lat_min = np.floor(np.amin(coords, 0))
+            lon_max, lat_max = np.ceil(np.amax(coords, 0))
+        else:
+            lon_min, lat_min, lon_max, lat_max = -180, -90, 180, 90
         return (lon_min, lat_min, lon_max, lat_max)
 
     @classmethod
@@ -501,21 +488,16 @@ class VirESMetadataReader(object):
     def read(cls, data):
         # NOTE: For sake of simplicity we take geocentric (ITRF) coordinates
         #       as geodetic coordinates.
-        times = cls.get_times(data)
+        begin_time, end_time, n_times = cls.get_time_range_and_size(data)
         coords = cls.get_coords(data)
-        size = (len(times), 0)
         bbox = cls.coords_to_bounding_box(coords)
-        ground_path = geos.MultiLineString([])
         footprint = cls.bounding_box_to_geometry(bbox)
-        begintime = naive_to_utc(times[0])
-        endtime = naive_to_utc(times[-1])
 
         return {
             "format": "CDF",
-            "size": size,
+            "size": (n_times, 0),
             "extent": bbox,
             "footprint": footprint,
-            "ground_path": ground_path,
-            "begin_time": begintime,
-            "end_time": endtime,
+            "begin_time": begin_time,
+            "end_time": end_time,
         }

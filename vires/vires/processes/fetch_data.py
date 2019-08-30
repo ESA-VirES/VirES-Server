@@ -29,22 +29,20 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
 
-import msgpack
 from itertools import chain, izip
 from datetime import datetime, timedelta
 from cStringIO import StringIO
+from numpy import full, nan
+import msgpack
 from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData,
-    BoundingBoxData,
-    ComplexData,
-    FormatText, FormatJSON,
-    CDFileWrapper,
-    FormatBinaryRaw,
-    CDObject,
+    LiteralData, BoundingBoxData, ComplexData, FormatText, FormatJSON,
+    CDFileWrapper, FormatBinaryRaw, CDObject, RequestParameter,
 )
-from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
-from vires.util import unique, exclude, include
+from eoxserver.services.ows.wps.exceptions import (
+    InvalidInputValueError, InvalidOutputDefError,
+)
+from vires.util import unique, exclude
 from vires.time_util import (
     naive_to_utc,
     timedelta_to_iso_duration,
@@ -55,16 +53,18 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2, parse_variables,
-    IndexKp, IndexDst, OrbitCounter, ProductTimeSeries,
-    MinStepSampler, GroupingSampler, BoundingBoxFilter,
+    parse_collections, parse_model_list, parse_variables,
+    IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
+    OrbitCounter, ProductTimeSeries,
+    MinStepSampler, GroupingSampler, ExtraSampler, BoundingBoxFilter,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
-    MagneticDipole, DipoleTiltAngle,
+    MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
     IonosphericCurrentModel, AssociatedMagneticModel,
+    extract_product_names, get_username, get_user,
+    CustomDatasetTimeSeries,
 )
-
 
 # TODO: Make following parameters configurable.
 # Limit response size (equivalent to 1/2 daily SWARM MAG LR product).
@@ -103,6 +103,7 @@ class FetchData(WPSProcess):
     profiles = ["vires"]
 
     inputs = [
+        ("username", RequestParameter(get_username)),
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -165,13 +166,19 @@ class FetchData(WPSProcess):
         )),
     ]
 
-    def execute(self, collection_ids, begin_time, end_time, bbox,
+    def execute(self, username, collection_ids, begin_time, end_time, bbox,
                 requested_variables, model_ids, shc,
                 csv_time_format, output, **kwarg):
         """ Execute process """
         # parse inputs
-        sources = parse_collections('collection_ids', collection_ids.data)
-        models = parse_models2("model_ids", model_ids, shc)
+        sources = parse_collections(
+            'collection_ids', collection_ids.data,
+            custom_dataset=CustomDatasetTimeSeries.COLLECTION_IDENTIFIER,
+            user=get_user(username)
+        )
+        requested_models, source_models = parse_model_list(
+            "model_ids", model_ids, shc
+        )
         requested_variables = parse_variables(
             'requested_variables', requested_variables
         )
@@ -199,9 +206,12 @@ class FetchData(WPSProcess):
             begin_time.isoformat("T"), end_time.isoformat("T"),
             bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
             ", ".join(
-                s.collection.identifier for l in sources.values() for s in l
+                s.collection_identifier for l in sources.values() for s in l
             ),
-            ", ".join(model.name for model in models),
+            ", ".join(
+                "%s = %s" % (model.name, model.full_expression)
+                for model in requested_models
+            ),
         )
 
         if bbox:
@@ -234,13 +244,28 @@ class FetchData(WPSProcess):
         resolvers = dict()
 
         if sources:
-            orbit_counter = dict(
-                (satellite, OrbitCounter("OrbitCounter" + satellite, path))
-                for satellite, path in settings.VIRES_ORBIT_COUNTER_DB.items()
-            )
-            index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
+            orbit_info = {
+                spacecraft: [
+                    OrbitCounter(
+                        "OrbitCounter" + spacecraft,
+                        settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
+                    ),
+                    OrbitDirection(
+                        "OrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
+                    ),
+                    QDOrbitDirection(
+                        "QDOrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft]
+                    ),
+                ]
+                for spacecraft in settings.VIRES_SPACECRAFTS
+            }
+            index_kp10 = IndexKp10(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
-            index_f10 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+            index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
+            index_imf = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+            model_kp = IndexKpFromKp10()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
@@ -254,15 +279,15 @@ class FetchData(WPSProcess):
                 sampling_step, CDF_EPOCH_TYPE
             ))
             grouping_sampler = GroupingSampler('Timestamp')
-            filters = [sampler, grouping_sampler]
+            filters = []
             if bbox:
-                filters.append(
-                    BoundingBoxFilter(['Latitude', 'Longitude'], bbox)
-                )
+                filters.append(BoundingBoxFilter(['Latitude', 'Longitude'], bbox))
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
-            for model in models:
+            for model in source_models:
+                models_with_residuals.append(model)
+            for model in requested_models:
                 models_with_residuals.append(model)
                 for variable in model.BASE_VARIABLES:
                     models_with_residuals.append(
@@ -271,58 +296,73 @@ class FetchData(WPSProcess):
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.iteritems():
-                resolver = VariableResolver(
-                    requested_variables, MANDATORY_VARIABLES
-                )
-
-                resolvers[label] = resolver
+                resolvers[label] = resolver = VariableResolver()
 
                 # master
                 master = product_sources[0]
                 resolver.add_master(master)
 
+                # time sampling
+                resolver.add_filter(sampler)
+
                 # slaves
                 for slave in product_sources[1:]:
                     resolver.add_slave(slave, 'Timestamp')
 
+                    # extra sampling for selected collections
+                    if slave.collection_identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
+                        resolver.add_filter(ExtraSampler(
+                            'Timestamp', slave.collection_identifier, slave
+                        ))
+
+                # optional sample grouping
+                if master.collection_identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
+                    resolver.add_filter(grouping_sampler)
+
                 # auxiliary slaves
-                for slave in (index_kp, index_dst, index_f10):
+                for slave in (index_kp10, index_dst, index_f10, index_imf):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
-                spacecraft = (
-                    settings.VIRES_COL2SAT.get(master.collection.identifier)
+                spacecraft = settings.VIRES_COL2SAT.get(
+                    master.collection_identifier
                 )
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
-                if spacecraft in orbit_counter:
-                    resolver.add_slave(
-                        orbit_counter[spacecraft], 'Timestamp'
-                    )
 
-                # prepare spacecraft to spacecraft residuals
-                # NOTE: No residual variables required by the filters.
-                residual_variables = get_residual_variables(requested_variables)
-                self.logger.debug("residual variables: %s", ", ".join(
-                    var for var, _ in residual_variables
-                ))
-                grouped_res_vars = group_residual_variables(
-                    product_sources, residual_variables
-                )
-                for (msc, ssc), cols in grouped_res_vars.items():
-                    resolver.add_model(Sat2SatResidual(msc, ssc, cols))
+                if spacecraft and spacecraft != "U":
+                    for item in orbit_info.get(spacecraft, []):
+                        resolver.add_slave(item, 'Timestamp')
+
+                    # prepare spacecraft to spacecraft differences
+                    # NOTE: No residual variables required by the filters.
+                    residual_variables = get_residual_variables(requested_variables)
+                    self.logger.debug("residual variables: %s", ", ".join(
+                        var for var, _ in residual_variables
+                    ))
+                    grouped_res_vars = group_residual_variables(
+                        product_sources, residual_variables
+                    )
+                    for (msc, ssc), cols in grouped_res_vars.items():
+                        resolver.add_model(Sat2SatResidual(msc, ssc, cols))
 
                 # models
                 aux_models = chain((
-                    model_qdc, model_mlt, model_sun,
+                    model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                     model_amps_cur, model_amps_mag,
                 ), models_with_residuals)
                 for model in aux_models:
                     resolver.add_model(model)
 
-                # filters
-                for filter_ in filters:
-                    resolver.add_filter(filter_)
+                # add remaining filters
+                resolver.add_filters(filters)
+
+                # add output variables
+                resolver.add_output_variables(MANDATORY_VARIABLES)
+                resolver.add_output_variables(requested_variables)
+
+                # reduce dependencies
+                resolver.reduce()
 
                 self.logger.debug(
                     "%s: available variables: %s", label,
@@ -334,11 +374,11 @@ class FetchData(WPSProcess):
                 )
                 self.logger.debug(
                     "%s: output variables: %s", label,
-                    ", ".join(resolver.output)
+                    ", ".join(resolver.output_variables)
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    "; ".join(str(f) for f in resolver.resolved_filters)
+                    "; ".join(str(f) for f in resolver.filters)
                 )
                 self.logger.debug(
                     "%s: unresolved filters: %s", label, "; ".join(
@@ -348,7 +388,7 @@ class FetchData(WPSProcess):
 
             # collect the common output variables
             output_variables = tuple(unique(chain.from_iterable(
-                resolver.output for resolver in resolvers.values()
+                resolver.output_variables for resolver in resolvers.values()
             )))
 
         else:
@@ -466,20 +506,45 @@ class FetchData(WPSProcess):
 
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
-
             output_dict = {}
+            output_shape = {}
+            data_lenght = 0
             for label, dataset in _generate_data_():
-                available = tuple(include(output_variables, dataset))
-                for variable in available:
+                for variable in output_variables:
                     data_item = dataset.get(variable)
-                    cdf_type = dataset.cdf_type.get(variable)
-                    if cdf_type == CDF_EPOCH_TYPE:
-                        data_item = time_convertor(data_item, cdf_type)
-                    if variable in output_dict:
-                        output_dict[variable].extend(data_item.tolist())
-                    else:
-                        output_dict[variable] = data_item.tolist()
+                    output_data = output_dict.get(variable)
 
+                    if data_item is None:
+                        if output_data is not None:
+                            output_data.extend(
+                                [] if dataset.length == 0 else full(
+                                    (dataset.length,) + output_shape[variable], nan
+                                ).tolist()
+                            )
+                    else:
+                        cdf_type = dataset.cdf_type.get(variable)
+                        if cdf_type == CDF_EPOCH_TYPE:
+                            data_item = time_convertor(data_item, cdf_type)
+
+                        if output_data is None:
+                            output_shape[variable] = data_item.shape[1:]
+                            output_dict[variable] = output_data = (
+                                [] if data_lenght == 0 else full(
+                                    (data_lenght,) + data_item.shape[1:], nan
+                                ).tolist()
+                            )
+                        output_data.extend(data_item.tolist())
+
+                data_lenght += dataset.length
+
+            # additional metadata
+            output_dict['__info__'] = {
+                'sources': extract_product_names(resolvers.values()),
+                'variables': {
+                    label: resolver.output_variables
+                    for label, resolver in resolvers.items()
+                },
+            }
             # encode as messagepack
             encoded = StringIO(msgpack.dumps(output_dict))
 
@@ -487,7 +552,7 @@ class FetchData(WPSProcess):
                 encoded, filename="swarm_data.mp", **output
             )
         else:
-            InvalidOutputDefError(
+            raise InvalidOutputDefError(
                 'output',
                 "Unexpected output format %r requested!" % output['mime_type']
             )

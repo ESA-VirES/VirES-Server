@@ -28,6 +28,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods
 
+import re
 import math
 import time
 from datetime import datetime, timedelta
@@ -37,6 +38,14 @@ DT_1970 = datetime(1970, 1, 1)
 DT_2000 = datetime(2000, 1, 1)
 
 TZ_UTC = utc
+
+RE_ZULU = re.compile(r'\+00:00$')
+
+
+def format_datetime(dtobj):
+    """ Convert datetime to an ISO-8601 date/time string. """
+    return RE_ZULU.sub('Z', dtobj.isoformat('T'))
+
 
 def timedelta_to_iso_duration(tdobj):
     """ Convert `datetime.timedelta` object to ISO-8601 duration string. """

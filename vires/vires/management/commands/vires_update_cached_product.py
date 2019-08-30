@@ -29,9 +29,13 @@ from logging import getLogger
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
-from vires.aux import update_kp, update_dst
+from vires.aux_kp import update_kp
+from vires.aux_dst import update_dst
+from vires.aux_f107 import update_aux_f107_2_
 from vires.orbit_counter import update_orbit_counter_file
-from vires.model_mma import update_mma_sha_2f, filter_mma_sha_2f
+from vires.model_mma import (
+    merge_mma_sha_2f, filter_mma_sha_2f, merge_mma_sha_2c, filter_mma_sha_2c,
+)
 from vires.cached_products import (
     copy_file, update_cached_product, simple_cached_product_updater,
     InvalidSourcesError,
@@ -66,6 +70,12 @@ class Command(CommandOutputMixIn, BaseCommand):
             raise CommandError(str(exc))
 
 
+def configure_cached_product(product_type, **kwargs):
+    """ Cached product configuration. """
+    if product_type in CACHED_PRODUCTS:
+        CACHED_PRODUCTS[product_type].update(kwargs)
+
+
 # load the default cached products
 CACHED_PRODUCTS = {
     product_type: {"filename": filename}
@@ -73,33 +83,61 @@ CACHED_PRODUCTS = {
     in getattr(settings, "VIRES_CACHED_PRODUCTS", {}).iteritems()
 }
 
-# custom cached products
-if "MMA_SHA_2F" in CACHED_PRODUCTS:
-    CACHED_PRODUCTS["MMA_SHA_2F"].update({
-        "updater": update_mma_sha_2f,
-        "filter": filter_mma_sha_2f,
-        "tmp_extension": ".tmp.cdf",
-    })
+configure_cached_product(
+    "MMA_CHAOS6",
+    updater=merge_mma_sha_2c,
+    filter=filter_mma_sha_2c,
+    tmp_extension=".tmp.cdf"
+)
+
+configure_cached_product(
+    "MMA_SHA_2C",
+    updater=merge_mma_sha_2c,
+    filter=filter_mma_sha_2c,
+    tmp_extension=".tmp.cdf"
+)
+
+configure_cached_product(
+    "MMA_SHA_2F",
+    updater=merge_mma_sha_2f,
+    filter=filter_mma_sha_2f,
+    tmp_extension=".tmp.cdf"
+)
+
+configure_cached_product(
+    "AUX_F10_2_",
+    updater=simple_cached_product_updater(update_aux_f107_2_),
+    tmp_extension=".tmp.cdf"
+)
+
+for spacecraft in getattr(settings, "VIRES_SPACECRAFTS", []):
+    configure_cached_product(
+        "AUX%sORBCNT" % spacecraft,
+        label="Swarm %s orbit counter" % spacecraft,
+        updater=simple_cached_product_updater(update_orbit_counter_file),
+        tmp_extension=".tmp.cdf"
+    )
+
+    #configure_cached_product(
+    #    "AUX%sODBGEO" % spacecraft,
+    #    label=(
+    #        "Swarm %s orbit directions in geographic coordinates"
+    #        % spacecraft
+    #    ),
+    #    tmp_extension=".tmp.cdf"
+    #)
+
+    #configure_cached_product(
+    #    "AUX%sODBMAG" % spacecraft,
+    #    label=(
+    #        "Swarm %s orbit directions in magnetic (QD) coordinates"
+    #        % spacecraft
+    #    ),
+    #    tmp_extension=".tmp.cdf"
+    #)
+
 
 CACHED_PRODUCTS.update({
-    "AUXAORBCNT": {
-        "filename": settings.VIRES_ORBIT_COUNTER_DB['A'],
-        "label": "Swarm A orbit counter",
-        "updater": simple_cached_product_updater(update_orbit_counter_file),
-        "tmp_extension": ".tmp.cdf",
-    },
-    "AUXBORBCNT": {
-        "filename": settings.VIRES_ORBIT_COUNTER_DB['B'],
-        "label": "Swarm B orbit counter",
-        "updater": simple_cached_product_updater(update_orbit_counter_file),
-        "tmp_extension": ".tmp.cdf",
-    },
-    "AUXCORBCNT": {
-        "filename": settings.VIRES_ORBIT_COUNTER_DB['C'],
-        "label": "Swarm C orbit counter",
-        "updater": simple_cached_product_updater(update_orbit_counter_file),
-        "tmp_extension": ".tmp.cdf",
-    },
     "GFZ_AUX_DST": {
         "filename": settings.VIRES_AUX_DB_DST,
         "label": 'Dst-index',

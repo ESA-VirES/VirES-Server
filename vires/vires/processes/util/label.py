@@ -46,6 +46,7 @@ class Label(Model):
     def __init__(self, variable, label, string_size=1,
                  description=None, unit=None,
                  logger=None, varmap=None):
+        super(Label, self).__init__()
         self._variable = variable
         self._label = str(label)[:string_size]
         self._description = description or ""

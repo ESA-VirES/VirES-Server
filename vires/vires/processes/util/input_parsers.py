@@ -26,18 +26,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring,import-error
 import re
 from collections import OrderedDict
 from eoxmagmod import load_model_shc
-from eoxserver.services.ows.wps.exceptions import (
-    MissingRequiredInputError, InvalidInputValueError
-)
-from vires.util import get_color_scale
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from vires.colormaps import get_colormap
 from vires.models import ProductCollection
+from vires.parsers.exceptions import ParserError
+from vires.parsers.model_list_parser import get_model_list_parser
+from vires.parsers.model_list_lexer import get_model_list_lexer
+from vires.parsers.model_expression_parser import get_model_expression_parser
+from vires.parsers.model_expression_lexer import get_model_expression_lexer
 from .time_series_product import ProductTimeSeries
-from .model_magmod import MagneticModel
+from .time_series_custom_data import CustomDatasetTimeSeries
+from .model_magmod import SourceMagneticModel, ComposedMagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
-from .magnetic_models import get_model
+from .magnetic_models import MODEL_CACHE
 
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
@@ -49,14 +54,14 @@ def parse_style(input_id, style):
     if style is None:
         return None
     try:
-        return get_color_scale(style)
+        return get_colormap(style)
     except ValueError:
         raise InvalidInputValueError(
             input_id, "Invalid style identifier %r!" % style
         )
 
 
-def parse_collections(input_id, source):
+def parse_collections(input_id, source, custom_dataset=None, user=None):
     """ Parse input collections definitions. """
     result = {}
     if not isinstance(source, dict):
@@ -75,19 +80,26 @@ def parse_collections(input_id, source):
                 identifier__in=collection_ids
             )
         )
-        try:
-            result[label] = [
-                available_collections[id_] for id_ in collection_ids
-            ]
-        except KeyError as exc:
-            raise InvalidInputValueError(
-                input_id, "Invalid collection identifier %r! (label: %r)" %
-                (exc.args[0], label)
-            )
+        if custom_dataset and custom_dataset in collection_ids:
+            result[label] = custom_dataset
+        else:
+            try:
+                result[label] = [
+                    available_collections[id_] if id_ != custom_dataset else id_
+                    for id_ in collection_ids
+                ]
+            except KeyError as exc:
+                raise InvalidInputValueError(
+                    input_id, "Invalid collection identifier %r! (label: %r)" %
+                    (exc.args[0], label)
+                )
 
     range_types = []
     master_rtype = None
     for label, collections in result.items():
+        if collections == custom_dataset:
+            continue
+
         # master (first collection) must be always defined
         if len(collections) < 1:
             raise InvalidInputValueError(
@@ -127,49 +139,153 @@ def parse_collections(input_id, source):
 
     # convert collections to product time-series
     return dict(
-        (label, [ProductTimeSeries(collection) for collection in collections])
-        for label, collections in result.iteritems()
+        (
+            label,
+            [CustomDatasetTimeSeries(user)] if collections == custom_dataset else
+            [ProductTimeSeries(collection) for collection in collections]
+        ) for label, collections in result.iteritems()
     )
 
 
-def parse_model(input_id, model_id, shc, shc_input_id="shc"):
-    """ Parse model identifier and returns the corresponding model."""
-    if model_id == "Custom_Model":
-        if shc is None:
-            raise MissingRequiredInputError(shc_input_id)
+def parse_model_expression(input_id, model_input, shc=None, shc_input_id="shc"):
+    """ Parse model expression and returns the final composed model and
+    a list of model sources.
+    """
+    known_models, source_models = {}, {}
 
-        try:
-            model = load_model_shc(shc)
-        except ValueError:
-            raise InvalidInputValueError(
-                shc_input_id, "Failed to parse the custom model coefficients."
+    custom_model = _parse_custom_model(shc_input_id, shc)
+    if custom_model is not None:
+        known_models[custom_model.name] = custom_model
+
+    model_obj = ComposedMagneticModel("<nameless>", [
+        _process_model_component(
+            known_models, source_models, component, input_id
+        ) for component in _parse_model_expression_string(input_id, model_input)
+    ])
+
+    return model_obj, source_models.values()
+
+
+def _parse_model_expression_string(input_id, model_expression_string):
+    lexer = get_model_expression_lexer()
+    parser = get_model_expression_parser()
+    try:
+        return parser.parse(model_expression_string, lexer=lexer)
+    except ParserError as error:
+        raise InvalidInputValueError(
+            input_id, "Invalid model expression! %s" % error
+        )
+
+
+def parse_model_list(input_id, models_input, shc=None, shc_input_id="shc"):
+    """ Parse list of model and return a list of named composed models and
+    source models.
+    """
+    requested_models, known_models, source_models = [], {}, {}
+
+    custom_model = _parse_custom_model(shc_input_id, shc)
+    if custom_model is not None:
+        known_models[custom_model.name] = custom_model
+
+    for model_def in _parse_model_list_string(input_id, models_input):
+        requested_models.append(_process_composed_model(
+            known_models, source_models, model_def, input_id
+        ))
+
+    return requested_models, source_models.values()
+
+
+def _parse_model_list_string(input_id, model_list_string):
+    lexer = get_model_list_lexer()
+    parser = get_model_list_parser()
+    try:
+        return parser.parse(model_list_string, lexer=lexer)
+    except ParserError as error:
+        raise InvalidInputValueError(
+            input_id, "Invalid model list! %s" % error
+        )
+
+
+def _parse_custom_model(input_id, shc_coefficients):
+    if shc_coefficients is None:
+        return None
+    try:
+        model = load_model_shc(shc_coefficients)
+    except ValueError:
+        raise InvalidInputValueError(
+            input_id, "Failed to parse the custom model coefficients."
+        )
+    return ComposedMagneticModel("Custom_Model", [
+        # NOTE: no source set for the custom model
+        (1.0, SourceMagneticModel(
+            "Custom_Model", model, [], {
+                "min_degree": model.min_degree, "max_degree": model.degree
+            }
+        ))
+    ])
+
+
+def _process_composed_model(known_models, source_models, model_def, input_id):
+    model_obj = ComposedMagneticModel(model_def.id, [
+        _process_model_component(
+            known_models, source_models, component, input_id
+        ) for component in model_def.components
+    ])
+    known_models[model_def.id] = model_obj
+    return model_obj
+
+
+def _process_model_component(known_models, source_models, model_def, input_id):
+
+    def _get_degree_range(parameters, min_degree, max_degree):
+        _max_degree = min(parameters.get("max_degree", max_degree), max_degree)
+        max_degree = max_degree if _max_degree < 0 else _max_degree
+        min_degree = max(parameters.get("min_degree", min_degree), min_degree)
+        return {"min_degree": min_degree, "max_degree": max_degree}
+
+    def _create_source_model(model_id, model, sources, params):
+        model_obj = SourceMagneticModel(model_id, model, sources, params)
+        source_models[model_obj.name] = model_obj
+        return model_obj
+
+    model_id = model_def.id
+    parameters = model_def.parameters.copy()
+    scale = parameters.pop("scale", 1)
+
+    model_obj = known_models.get(model_id)
+    if model_obj is not None:
+        if (
+                isinstance(model_obj, ComposedMagneticModel) and
+                len(model_obj.components) == 1
+            ):
+            model_scale, model_obj = model_obj.components[0]
+            scale *= model_scale
+
+        if isinstance(model_obj, SourceMagneticModel):
+            model_obj = _create_source_model(
+                model_id, model_obj.model, model_obj.sources, _get_degree_range(
+                    parameters, **model_obj.parameters
+                )
             )
-    else:
-        model = get_model(model_id)
+        else:
+            for parameter in parameters:
+                raise InvalidInputValueError(input_id, (
+                    "The %s parameter is not allowed for a non-source model %s!"
+                    % (parameter, model_id)
+                ))
+    else: # new source model
+        model, sources = MODEL_CACHE.get_model_with_sources(model_def.id)
         if model is None:
             raise InvalidInputValueError(
-                input_id, "Invalid model identifier %r!" % model_id
+                input_id, "Invalid model identifier %r!" % model_def.id
             )
-    return model
-
-
-def parse_models(input_id, model_ids, shc, shc_input_id="shc"):
-    """ Parse model identifiers and returns an ordered dictionary
-    the corresponding models.
-    """
-    models = OrderedDict()
-    if model_ids.strip():
-        for model_id in (id_.strip() for id_ in model_ids.split(",")):
-            models[model_id] = parse_model(
-                input_id, model_id, shc, shc_input_id
+        model_obj = _create_source_model(
+            model_id, model, sources, _get_degree_range(
+                parameters, model.min_degree, model.degree
             )
-    return models
+        )
 
-
-def parse_models2(input_id, model_ids, shc, shc_input_id="shc"):
-    """ Parse model identifiers and returns a list of the model sources. """
-    models = parse_models(input_id, model_ids, shc, shc_input_id)
-    return [MagneticModel(id_, model) for id_, model in models.iteritems()]
+    return scale, model_obj
 
 
 def parse_filters(input_id, filter_string):
@@ -203,10 +319,9 @@ def parse_filters2(input_id, filter_string):
         variable, component = match.groups()
         if component is None:
             return ScalarRangeFilter(variable, vmin, vmax)
-        else:
-            return VectorComponentRangeFilter(
-                variable, int(component), vmin, vmax
-            )
+        return VectorComponentRangeFilter(
+            variable, int(component), vmin, vmax
+        )
 
     return [
         _get_filter(name, vmin, vmax) for name, (vmin, vmax)

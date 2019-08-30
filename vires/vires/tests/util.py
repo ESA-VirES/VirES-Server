@@ -31,33 +31,13 @@
 import unittest
 from datetime import timedelta, datetime
 from numpy import array
-from matplotlib.colors import Colormap
 from vires.tests import ArrayMixIn
 from vires.util import (
     between, between_co, float_array_slice, datetime_array_slice,
-    get_total_seconds, get_color_scale,
+    get_total_seconds
 )
 
 class TestUtil(ArrayMixIn, unittest.TestCase):
-
-    COLOR_MAPS = [
-        "blackwhite", "coolwarm", "rainbow", "diverging_2", "ylgnbu", "greens",
-        "ylorrd", "bluered", "earth", "electric", "portland", "blackbody",
-        "diverging_1", "viridis", "magma", "inferno", "plasma",
-    ]
-
-    def test_color_scale(self):
-        for cm_id in self.COLOR_MAPS:
-            try:
-                self.assertTrue(
-                    isinstance(get_color_scale(cm_id), Colormap)
-                )
-            except:
-                print "Test failed for colormap %r!" % cm_id
-                raise
-
-        with self.assertRaises(ValueError):
-            get_color_scale("-invalid-")
 
     def test_between(self):
         self.assertAllEqual(

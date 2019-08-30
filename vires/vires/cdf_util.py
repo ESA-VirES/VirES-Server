@@ -29,22 +29,26 @@
 #-------------------------------------------------------------------------------
 
 from os.path import exists
-from math import ceil, floor
 from datetime import timedelta
+import ctypes
 from numpy import (
-    amin, amax, nan, vectorize, object as dt_object, float64 as dt_float64,
+    nan, vectorize, object as dt_object, float64 as dt_float64,
     ndarray, searchsorted,
 )
 import scipy
 from scipy.interpolate import interp1d
 import spacepy
 from spacepy import pycdf
+from spacepy.pycdf import CDFError
 from . import FULL_PACKAGE_NAME
 from .util import full
 from .time_util import (
     mjd2000_to_decimal_year, year_to_day2k, days_per_year,
     datetime, naive_to_utc,
 )
+
+GZIP_COMPRESSION = pycdf.const.GZIP_COMPRESSION
+GZIP_COMPRESSION_LEVEL1 = ctypes.c_long(1)
 
 CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
 CDF_FLOAT_TYPE = pycdf.const.CDF_FLOAT.value
@@ -57,6 +61,7 @@ CDF_UINT4_TYPE = pycdf.const.CDF_UINT4.value
 CDF_INT1_TYPE = pycdf.const.CDF_INT1.value
 CDF_INT2_TYPE = pycdf.const.CDF_INT2.value
 CDF_INT4_TYPE = pycdf.const.CDF_INT4.value
+CDF_INT8_TYPE = pycdf.const.CDF_INT8.value
 CDF_CHAR_TYPE = pycdf.const.CDF_CHAR.value
 
 CDF_EPOCH_1970 = 62167219200000.0
@@ -90,11 +95,18 @@ def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
                 return lambda v: "%.14g" % v
             elif dtype == dt_object:
                 return lambda v: v.isoformat("T") + "Z"
-            else:
-                return str
-        else:
             return str
+        return str
     return _get_formater(data.shape, data.dtype, cdf_type)
+
+
+def is_cdf_file(filename):
+    """ Test if file is supported CDF file. """
+    try:
+        with cdf_open(filename):
+            return True
+    except CDFError:
+        return False
 
 
 def cdf_open(filename, mode="r"):
@@ -164,8 +176,7 @@ def timedelta_to_cdf_rawtime(time_delta, cdf_type):
     if cdf_type == CDF_EPOCH_TYPE:
         # TODO: handle vectors
         return time_delta.total_seconds() * 1e3
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def datetime_to_cdf_rawtime(time, cdf_type):
@@ -173,10 +184,8 @@ def datetime_to_cdf_rawtime(time, cdf_type):
     if cdf_type == CDF_EPOCH_TYPE:
         if isinstance(time, ndarray):
             return pycdf.lib.v_datetime_to_epoch(time)
-        else:
-            return pycdf.lib.datetime_to_epoch(time)
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+        return pycdf.lib.datetime_to_epoch(time)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def cdf_rawtime_to_datetime(raw_time, cdf_type):
@@ -186,10 +195,8 @@ def cdf_rawtime_to_datetime(raw_time, cdf_type):
     if cdf_type == CDF_EPOCH_TYPE:
         if isinstance(raw_time, ndarray):
             return pycdf.lib.v_epoch_to_datetime(raw_time)
-        else:
-            return pycdf.lib.epoch_to_datetime(raw_time)
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+        return pycdf.lib.epoch_to_datetime(raw_time)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def cdf_rawtime_to_unix_epoch(raw_time, cdf_type):
@@ -197,8 +204,7 @@ def cdf_rawtime_to_unix_epoch(raw_time, cdf_type):
     """
     if cdf_type == CDF_EPOCH_TYPE:
         return (raw_time - CDF_EPOCH_1970) * 1e-3
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def cdf_rawtime_to_mjd2000(raw_time, cdf_type):
@@ -206,8 +212,7 @@ def cdf_rawtime_to_mjd2000(raw_time, cdf_type):
     """
     if cdf_type == CDF_EPOCH_TYPE:
         return (raw_time - CDF_EPOCH_2000) / 86400000.0
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def mjd2000_to_cdf_rawtime(time, cdf_type):
@@ -215,8 +220,7 @@ def mjd2000_to_cdf_rawtime(time, cdf_type):
     """
     if cdf_type == CDF_EPOCH_TYPE:
         return CDF_EPOCH_2000 + time * 86400000.0
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def cdf_rawtime_to_decimal_year_fast(raw_time, cdf_type, year):
@@ -228,8 +232,7 @@ def cdf_rawtime_to_decimal_year_fast(raw_time, cdf_type, year):
         year_offset = year_to_day2k(year) * 86400000.0 + CDF_EPOCH_2000
         year_length = days_per_year(year) * 86400000.0
         return year + (raw_time - year_offset) / year_length
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def cdf_rawtime_to_decimal_year(raw_time, cdf_type):
@@ -257,11 +260,13 @@ def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
     idx_start, idx_stop = array_slice(
         cdf.raw_var(time_field)[:], start, stop, margin
     )
-    return [(field, cdf[field][idx_start:idx_stop]) for field in fields]
+    return [
+        (field, cdf.raw_var(field)[idx_start:idx_stop]) for field in fields
+    ]
 
 
 def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
-                    nodata=None, types=None, **interp1d_prm):
+                    nodata=None, types=None, bounds=None, **interp1d_prm):
     """ Read values of the listed fields from the CDF file and interpolate
     them at the given time values (the `time` array of MDJ2000 values).
     The data exceeding the time interval of the source data is filled with the
@@ -284,10 +289,11 @@ def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
 
     # if possible get subset of the time data
     if time.size > 0 and cdf_time.shape[0] > min_len:
-        idx_start, idx_stop = array_slice(
-            cdf_time, amin(time), amax(time), min_len//2
-        )
-        cdf_time = cdf_time[idx_start:idx_stop]
+        start, stop = bounds if bounds else (time.min(), time.max())
+        slice_obj = slice(*array_slice(cdf_time, start, stop, min_len//2))
+        cdf_time = cdf_time[slice_obj]
+    else:
+        slice_obj = Ellipsis
 
     # check minimal length required by the chosen kind of interpolation
     if time.size > 0 and cdf_time.shape[0] >= min_len:
@@ -297,19 +303,18 @@ def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
                 (
                     field,
                     interp1d(
-                        cdf_time, cdf[field][idx_start:idx_stop],
+                        cdf_time, cdf[field][slice_obj],
                         fill_value=nodata.get(field, nan), **interp1d_prm
                     )(time),
                     types.get(field)
                 ) for field in fields
             )
         ]
-    else:
-        return [
-            (field, full(
-                time.shape, nodata.get(field, nan), types.get(field, 'float')
-            )) for field in fields
-        ]
+    return [
+        (field, full(
+            time.shape, nodata.get(field, nan), types.get(field, 'float')
+        )) for field in fields
+    ]
 
 
 def array_slice(values, start, stop, margin=0):

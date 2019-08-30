@@ -34,7 +34,9 @@ from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, CDFileWrapper,
 )
-from vires.aux import query_dst, query_kp
+from vires.aux_kp import KpReader
+from vires.aux_dst import DstReader
+from vires.aux_f107 import F10_2_Reader
 from vires.time_util import (
     mjd2000_to_datetime, mjd2000_to_unix_epoch, naive_to_utc,
 )
@@ -50,8 +52,16 @@ def abs_amax(arr, axis):
 
 # Auxiliary data query function and file sources
 AUX_INDEX = {
-    "kp": (query_kp, settings.VIRES_AUX_DB_KP, amax, "%d"),
-    "dst": (query_dst, settings.VIRES_AUX_DB_DST, abs_amax, "%.6g"),
+    "kp": (
+        KpReader(settings.VIRES_AUX_DB_KP), ("time", "kp"), amax, "%.1f"
+    ),
+    "dst": (
+        DstReader(settings.VIRES_AUX_DB_DST), ("time", "dst"), abs_amax, "%.6g"
+    ),
+    "f107": (
+        F10_2_Reader(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"]),
+        ("MJD2000", "F10.7"), amax, "%.6g"
+    ),
 }
 
 
@@ -68,7 +78,7 @@ class GetIndices(WPSProcess):
         ("index_id", LiteralData(
             'index_id', str, optional=False,
             abstract="Identifier of the queried auxiliary index.",
-            allowed_values=('kp', 'dst'),
+            allowed_values=('kp', 'dst', 'f107'),
         )),
         ("begin_time", LiteralData(
             'begin_time', datetime, optional=False,
@@ -106,26 +116,49 @@ class GetIndices(WPSProcess):
             index_id, begin_time.isoformat("T"), end_time.isoformat("T"),
         )
 
-        query, filename, lessen, data_format = AUX_INDEX[index_id]
-        aux_data = query(filename, begin_time, end_time)
+        reader, fields, lessen, data_format = AUX_INDEX[index_id]
 
-        time = aux_data["time"]
-        data = aux_data[index_id]
+        time, data = self._read_data(reader, begin_time, end_time, fields=fields)
+        time, data = self._reduce_data(time, data, lessen)
+        time, time_format = self._convert_time(time, csv_time_format)
 
-        if time.size > 500:
-            bin_size = (time.size - 1)//500 + 1
-            bin_count = time.size // bin_size
-            size = bin_size * bin_count
-            shape = (bin_count, bin_size)
-            data = lessen(data[:size].reshape(shape), 1)
-            time = time[:size].reshape(shape)
-            time = 0.5 * (time[:, 0] + time[:, -1])
+        if index_id == 'kp':
+            data = self._kp10_to_kp(data)
+
+        output_fobj = self._write_csv(
+            StringIO(), index_id, time, data, time_format, data_format
+        )
 
         self.access_logger.info(
             "response: index: %s, count: %s values, mime-type: %s",
             index_id, len(time), output['mime_type'],
         )
 
+        return CDFileWrapper(output_fobj, **output)
+
+    @staticmethod
+    def _kp10_to_kp(kp10):
+        return 0.1 * kp10
+
+    @staticmethod
+    def _read_data(reader, begin_time, end_time, fields):
+        aux_data = reader.subset(begin_time, end_time, fields=fields)
+        return [aux_data[field] for field in fields]
+
+    @staticmethod
+    def _reduce_data(time, data, lessen, max_count=500):
+        if time.size > max_count:
+            bin_size = (time.size - 1)//max_count + 1
+            bin_count = time.size // bin_size
+            size = bin_size * bin_count
+            shape = (bin_count, bin_size)
+            data = lessen(data[:size].reshape(shape), 1)
+            time = time[:size].reshape(shape)
+            time = 0.5 * (time[:, 0] + time[:, -1])
+        return time, data
+
+    @staticmethod
+    def _convert_time(time, csv_time_format):
         if csv_time_format == "ISO date-time":
             time_format = "%s"
             time = vectorize(mjd2000_to_datetime, otypes=(object,))(time)
@@ -134,13 +167,13 @@ class GetIndices(WPSProcess):
             time = mjd2000_to_unix_epoch(time)
         else: # csv_time_format == "MJD2000"
             time_format = "%.14g"
+        return time, time_format
 
+    @staticmethod
+    def _write_csv(file_out, index_id, time, data, time_format, data_format):
         line_format = "%s,%s,%s\r\n"
         row_format = line_format % (index_id, data_format, time_format)
-
-        output_fobj = StringIO()
-        output_fobj.write(line_format % ("id", "value", "time"))
+        file_out.write(line_format % ("id", "value", "time"))
         for row in izip(data, time):
-            output_fobj.write(row_format % row)
-
-        return CDFileWrapper(output_fobj, **output)
+            file_out.write(row_format % row)
+        return file_out

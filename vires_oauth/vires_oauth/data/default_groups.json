@@ -1,0 +1,36 @@
+[
+  {
+    "name": "admin",
+    "title": "VirES administrators",
+    "permissions": [
+      "admin",
+      "swarm",
+      "swarm_vre",
+      "swarm_disc"
+    ]
+  },
+  {
+    "name": "default",
+    "title": "Default VirES user",
+    "permissions": [
+      "swarm"
+    ]
+  },
+  {
+    "name": "swarm_vre",
+    "title": "Swarm VRE user",
+    "permissions": [
+      "swarm",
+      "swarm_vre"
+    ]
+  },
+  {
+    "name": "swarm_disc",
+    "title": "Swarm DISC user",
+    "permissions": [
+      "swarm",
+      "swarm_vre",
+      "swarm_disc"
+    ]
+  }
+]

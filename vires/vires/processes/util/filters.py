@@ -28,9 +28,23 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments
 
-from numpy import array
 from logging import getLogger, LoggerAdapter
+from numpy import array, concatenate, unique
 from vires.util import between
+
+
+def merge_indices(*indices):
+    """ Merge indices eliminating duplicate values. """
+    indices = [index for index in indices if index is not None]
+    if len(indices) > 1:
+        return unique(concatenate(indices))
+    elif len(indices) == 1:
+        return indices[0]
+    return array([], dtype='int64')
+
+
+class FilterError(Exception):
+    """ Base filter error exception. """
 
 
 class Filter(object):
@@ -52,7 +66,7 @@ class Filter(object):
         raise NotImplementedError
 
 
-class RejectAll(object):
+class RejectAll(Filter):
     """ Filter rejecting all records. """
 
     @property
@@ -111,6 +125,11 @@ class ScalarRangeFilter(BaseRangeFilter):
 
     def filter(self, dataset, index=None):
         data = dataset[self.variable]
+        if data.ndim != 1:
+            raise FilterError(
+                "An attempt to apply a scalar range filter to a non-scalar "
+                "variable %s!" % self.variable
+            )
         if index is None:
             index = self._filter(data).nonzero()[0]
         else:
@@ -138,6 +157,11 @@ class VectorComponentRangeFilter(BaseRangeFilter):
 
     def filter(self, dataset, index=None):
         data = dataset[self.variable]
+        if data.ndim != 2:
+            raise FilterError(
+                "An attempt to apply a vector component range filter to a "
+                "non-vector variable %s!" % self.variable
+            )
         if index is None:
             index = self._filter(data[:, self.component]).nonzero()[0]
         else:

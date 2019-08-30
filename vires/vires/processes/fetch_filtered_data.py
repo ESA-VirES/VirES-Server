@@ -40,7 +40,7 @@ from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, AllowedRange,
     FormatText, FormatJSON, FormatBinaryRaw,
-    CDFile,
+    CDFile, CDTextBuffer,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
@@ -56,14 +56,16 @@ from vires.cdf_util import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_models2, parse_variables, parse_filters2,
-    IndexKp, IndexDst, OrbitCounter, ProductTimeSeries,
-    MinStepSampler, GroupingSampler,
+    parse_collections, parse_model_list, parse_variables, parse_filters2,
+    IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
+    OrbitCounter, ProductTimeSeries,
+    MinStepSampler, GroupingSampler, ExtraSampler,
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
-    MagneticDipole, DipoleTiltAngle,
+    MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
     IonosphericCurrentModel, AssociatedMagneticModel,
+    extract_product_names,
 )
 
 # TODO: Make the limits configurable.
@@ -168,16 +170,23 @@ class FetchFilteredData(WPSProcess):
                 FormatBinaryRaw("application/x-cdf"),
             )
         )),
+        ("source_products", ComplexData(
+            'source_products', title="List of source products.", formats=(
+                FormatText('text/plain'),
+            )
+        )),
     ]
 
     def execute(self, collection_ids, begin_time, end_time, filters,
                 sampling_step, requested_variables, model_ids, shc,
-                csv_time_format, output, **kwarg):
+                csv_time_format, output, source_products, **kwarg):
         """ Execute process """
         workspace_dir = SystemConfigReader().path_temp
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
-        models = parse_models2("model_ids", model_ids, shc)
+        requested_models, source_models = parse_model_list(
+            "model_ids", model_ids, shc
+        )
         filters = parse_filters2("filters", filters)
         requested_variables = parse_variables(
             'requested_variables', requested_variables
@@ -205,12 +214,15 @@ class FetchFilteredData(WPSProcess):
             "models: (%s), filters: {%s}",
             begin_time.isoformat("T"), end_time.isoformat("T"),
             ", ".join(
-                s.collection.identifier for l in sources.values() for s in l
+                s.collection_identifier for l in sources.values() for s in l
             ),
-            ", ".join(model.name for model in models),
+            ", ".join(
+                "%s = %s" % (model.name, model.full_expression)
+                for model in requested_models
+            ),
             ", ".join(
                 "%s: (%g, %g)" % (f.label, f.vmin, f.vmax) for f in filters
-            )
+            ),
         )
 
         if sampling_step is not None:
@@ -220,13 +232,28 @@ class FetchFilteredData(WPSProcess):
         resolvers = dict()
 
         if sources:
-            orbit_counter = dict(
-                (satellite, OrbitCounter("OrbitCounter" + satellite, path))
-                for satellite, path in settings.VIRES_ORBIT_COUNTER_DB.items()
-            )
-            index_kp = IndexKp(settings.VIRES_AUX_DB_KP)
+            orbit_info = {
+                spacecraft: [
+                    OrbitCounter(
+                        "OrbitCounter" + spacecraft,
+                        settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
+                    ),
+                    OrbitDirection(
+                        "OrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
+                    ),
+                    QDOrbitDirection(
+                        "QDOrbitDirection" + spacecraft,
+                        settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft]
+                    ),
+                ]
+                for spacecraft in settings.VIRES_SPACECRAFTS
+            }
+            index_kp10 = IndexKp10(settings.VIRES_AUX_DB_KP)
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
-            index_f10 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+            index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
+            index_imf = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+            model_kp = IndexKpFromKp10()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
@@ -238,7 +265,9 @@ class FetchFilteredData(WPSProcess):
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
-            for model in models:
+            for model in source_models:
+                models_with_residuals.append(model)
+            for model in requested_models:
                 models_with_residuals.append(model)
                 for variable in model.BASE_VARIABLES:
                     models_with_residuals.append(
@@ -250,39 +279,49 @@ class FetchFilteredData(WPSProcess):
                     sampling_step, CDF_EPOCH_TYPE
                 ))
                 grouping_sampler = GroupingSampler('Timestamp')
-                filters = [sampler, grouping_sampler] + filters
+            else:
+                sampler, grouping_sampler = None, None
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.iteritems():
-                resolver = VariableResolver(
-                    requested_variables, MANDATORY_VARIABLES
-                )
-
-                resolvers[label] = resolver
+                resolvers[label] = resolver = VariableResolver()
 
                 # master
                 master = product_sources[0]
                 resolver.add_master(master)
 
+                # optional time sampling
+                if sampler:
+                    resolver.add_filter(sampler)
+
                 # slaves
                 for slave in product_sources[1:]:
                     resolver.add_slave(slave, 'Timestamp')
 
+                    # optional extra sampling for selected collections
+                    if sampler and slave.collection_identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
+                        resolver.add_filter(ExtraSampler(
+                            'Timestamp', slave.collection_identifier, slave
+                        ))
+
+                # optional sample grouping
+                if grouping_sampler and master.collection_identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
+                    resolver.add_filter(grouping_sampler)
+
                 # auxiliary slaves
-                for slave in (index_kp, index_dst, index_f10):
+                for slave in (index_kp10, index_dst, index_f10, index_imf):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
                 spacecraft = (
-                    settings.VIRES_COL2SAT.get(master.collection.identifier)
+                    settings.VIRES_COL2SAT.get(master.collection_identifier)
                 )
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
-                if spacecraft in orbit_counter:
-                    resolver.add_slave(
-                        orbit_counter[spacecraft], 'Timestamp'
-                    )
 
-                # prepare spacecraft to spacecraft residuals
+                for item in orbit_info.get(spacecraft, []):
+                    resolver.add_slave(item, 'Timestamp')
+
+                # prepare spacecraft to spacecraft differences
                 residual_variables = get_residual_variables(unique(chain(
                     requested_variables, chain.from_iterable(
                         filter_.required_variables for filter_ in filters
@@ -299,16 +338,22 @@ class FetchFilteredData(WPSProcess):
 
                 # models
                 aux_models = chain((
-                    model_qdc, model_mlt, model_sun,
+                    model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                     model_amps_cur, model_amps_mag,
                 ), models_with_residuals)
                 for model in aux_models:
                     resolver.add_model(model)
 
-                # filters
-                for filter_ in filters:
-                    resolver.add_filter(filter_)
+                # add remaining filters
+                resolver.add_filters(filters)
+
+                # add output variables
+                resolver.add_output_variables(MANDATORY_VARIABLES)
+                resolver.add_output_variables(requested_variables)
+
+                # reduce dependencies
+                resolver.reduce()
 
                 self.logger.debug(
                     "%s: available variables: %s", label,
@@ -320,11 +365,11 @@ class FetchFilteredData(WPSProcess):
                 )
                 self.logger.debug(
                     "%s: output variables: %s", label,
-                    ", ".join(resolver.output)
+                    ", ".join(resolver.output_variables)
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    "; ".join(str(f) for f in resolver.resolved_filters)
+                    "; ".join(str(f) for f in resolver.filters)
                 )
                 self.logger.debug(
                     "%s: unresolved filters: %s", label, "; ".join(
@@ -334,7 +379,7 @@ class FetchFilteredData(WPSProcess):
 
             # collect the common output variables
             output_variables = tuple(unique(chain.from_iterable(
-                resolver.output for resolver in resolvers.values()
+                resolver.output_variables for resolver in resolvers.values()
             )))
 
         else:
@@ -424,7 +469,7 @@ class FetchFilteredData(WPSProcess):
         temp_basename = join(workspace_dir, "vires_" + uuid4().hex)
         result_basename = "%s_%s_%s_Filtered" % (
             "_".join(
-                s.collection.identifier for l in sources.values() for s in l
+                s.collection_identifier for l in sources.values() for s in l
             ),
             begin_time.strftime("%Y%m%dT%H%M%S"),
             (end_time - timedelta(seconds=1)).strftime("%Y%m%dT%H%M%S"),
@@ -467,6 +512,7 @@ class FetchFilteredData(WPSProcess):
                         )
                         output_fobj.write("\r\n")
 
+            product_names = extract_product_names(resolvers.values())
 
         elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
             # TODO: proper no-data value configuration
@@ -514,6 +560,8 @@ class FetchFilteredData(WPSProcess):
 
                         record_count += dataset.length
 
+                product_names = extract_product_names(resolvers.values())
+
                 # add the global attributes
                 cdf.attrs.update({
                     "TITLE": result_filename,
@@ -521,17 +569,24 @@ class FetchFilteredData(WPSProcess):
                         begin_time.isoformat(), end_time.isoformat()
                     )).replace("+00:00", "Z"),
                     "DATA_FILTERS": [str(f) for f in filters],
-                    "MAGNETIC_MODELS": [model.name for model in models],
+                    "MAGNETIC_MODELS": [
+                        "%s = %s" % (model.name, model.full_expression)
+                        for model in requested_models
+                    ],
                     "SOURCES": sources.keys(),
-                    "ORIGINAL_PRODUCT_NAMES": sum(
-                        (s.products for l in sources.values() for s in l), []
-                    )
+                    "ORIGINAL_PRODUCT_NAMES": product_names,
                 })
 
         else:
-            InvalidOutputDefError(
+            raise InvalidOutputDefError(
                 'output',
                 "Unexpected output format %r requested!" % output['mime_type']
             )
 
-        return CDFile(temp_filename, filename=result_filename, **output)
+        return {
+            'output': CDFile(temp_filename, filename=result_filename, **output),
+            'source_products': CDTextBuffer(
+                "\r\n".join(product_names + [""]),
+                filename=(result_basename + "_sources.txt"), **source_products
+            ),
+        }

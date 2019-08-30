@@ -28,8 +28,10 @@
 #-------------------------------------------------------------------------------
 
 from logging import getLogger, LoggerAdapter
-from numpy import empty, diff, concatenate, in1d, arange
-from .filters import Filter
+from numpy import empty, diff, concatenate, in1d, arange, inf
+from vires.interpolate import Interp1D
+from .filters import Filter, merge_indices
+
 
 class MinStepSampler(Filter):
     """ Filter class sub-sampling the dataset so that the distance
@@ -56,14 +58,13 @@ class MinStepSampler(Filter):
     def filter(self, dataset, index=None):
         if index is None:
             return self._filter(dataset[self.variable])
-        else:
-            return index[self._filter(dataset[self.variable][index])]
+        return index[self._filter(dataset[self.variable][index])]
 
     def _filter(self, data):
         """ Low-level sub-sampling filter. """
         min_step = self.min_step
         base_value = self.base_value
-        if len(data) > 0: # non-empty array
+        if data.size > 0: # non-empty array
             if base_value is None:
                 base_value = data[0]
             self.logger.debug("min.step: %s, base value: %s", min_step, base_value)
@@ -80,6 +81,7 @@ class MinStepSampler(Filter):
         return "%s: MinStepSampler(%r, %r)" % (
             self.variable, self.min_step, self.base_value
         )
+
 
 class GroupingSampler(Filter):
     """ Filter class sub-sampling the dataset so that the distance
@@ -104,14 +106,13 @@ class GroupingSampler(Filter):
     def filter(self, dataset, index=None):
         if index is None:
             return arange(dataset.length)
-        else:
-            return self._filter(dataset[self.variable], index)
+        return self._filter(dataset[self.variable], index)
 
     def _filter(self, data, index):
         """ Sampler to get possible additional values which have the same
         variable value.
         """
-        if len(data) > 0: # non-empty array
+        if data.size > 0: # non-empty array
             self.logger.debug("initial size: %d", data.size)
             res_index = in1d(data, data[index]).nonzero()[0]
         else: # empty array
@@ -121,3 +122,48 @@ class GroupingSampler(Filter):
 
     def __str__(self):
         return "%s: GroupingSampler()" % self.variable
+
+
+class ExtraSampler(Filter):
+    """ Add extra samples to contain points of the second time-series. """
+
+    class _LoggerAdapter(LoggerAdapter):
+        def process(self, msg, kwargs):
+            return 'extra-sampler %s %s: %s' % (
+                self.extra["label"], self.extra["variable"], msg
+            ), kwargs
+
+    def __init__(self, variable, label, time_series, logger=None):
+        self.variable = variable
+        self.label = label
+        self.time_series = time_series
+        self.logger = self._LoggerAdapter(
+            logger or getLogger(__name__),
+            {"variable": self.variable, "label": self.label}
+        )
+
+    @property
+    def required_variables(self):
+        return (self.variable,)
+
+    def filter(self, dataset, index=None):
+        return merge_indices(index, self._filter(dataset[self.variable]))
+
+    def _filter(self, data):
+        """ Sampler to add additional sample from the extra time-series. """
+        gap_threshold = inf
+        segment_neighbourhood = 0
+
+        dataset = self.time_series.subset_times(data, [self.variable])
+
+        if dataset.length == 0:
+            return empty(0, 'int64')
+
+        _, _, index = Interp1D(
+            data, dataset[self.variable], gap_threshold, segment_neighbourhood
+        ).indices_nearest
+
+        return index
+
+    def __str__(self):
+        return "%s: ExtraSampler(%s)" % (self.variable, self.label)

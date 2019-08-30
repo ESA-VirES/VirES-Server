@@ -25,20 +25,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+#pylint: disable=too-few-public-methods, missing-docstring
 
-from os.path import exists
-from django.conf import settings
-from eoxmagmod.data import (
-    CHAOS5_CORE_V4, CHAOS5_STATIC, CHAOS6_CORE_X3, CHAOS6_STATIC,
-    WMM_2010, WMM_2015, EMM_2010_STATIC, EMM_2010_SECVAR,
-    IGRF11, IGRF12, SIFM,
-)
+from os.path import basename
+from logging import getLogger
+from numpy import inf
+from eoxmagmod.data import CHAOS6_STATIC, IGRF12, LCS1, MF7
 from eoxmagmod import (
     load_model_shc,
     load_model_shc_combined,
-    load_model_igrf,
-    load_model_wmm,
-    load_model_emm,
     load_model_swarm_mma_2c_internal,
     load_model_swarm_mma_2c_external,
     load_model_swarm_mma_2f_geo_internal,
@@ -46,84 +41,204 @@ from eoxmagmod import (
     load_model_swarm_mio_internal,
     load_model_swarm_mio_external,
 )
+from eoxmagmod.time_util import (
+    decimal_year_to_mjd2000, decimal_year_to_mjd2000_simple
+)
+from eoxmagmod.magnetic_model.parser_shc import parse_shc_header
 
-MODELS_FACTORIES = {
-    "IGRF11":
-        lambda: load_model_igrf(IGRF11),
-    "IGRF12":
-        lambda: load_model_shc(IGRF12),
-    "SIFM":
-        lambda: load_model_shc(SIFM),
-    "WMM2010":
-        lambda: load_model_wmm(WMM_2010),
-    "WMM2015":
-        lambda: load_model_wmm(WMM_2015),
-    "EMM2010":
-        lambda: load_model_emm(EMM_2010_STATIC, EMM_2010_SECVAR),
-    "CHAOS-6-Combined":
-        lambda: load_model_shc_combined(CHAOS6_CORE_X3, CHAOS6_STATIC),
-    "CHAOS-6-Core":
-        lambda: load_model_shc(CHAOS6_CORE_X3),
-    "CHAOS-6-Static":
-        lambda: load_model_shc(CHAOS6_STATIC),
-    "CHAOS-5-Combined":
-        lambda: load_model_shc_combined(CHAOS5_CORE_V4, CHAOS5_STATIC),
-    "CHAOS-5-Core":
-        lambda: load_model_shc(CHAOS5_CORE_V4),
-    "CHAOS-5-Static":
-        lambda: load_model_shc(CHAOS5_STATIC),
+from vires.util import cached_property
+from vires.file_util import FileChangeMonitor
+from .magnetic_model_file import (
+    ModelFileWithLiteralSource,
+    CachedModelFileWithSourceFile,
+    CachedComposedModelFile,
+)
+
+
+DIPOLE_MODEL = "IGRF12"
+IGRF12_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20191231T235959_0102"
+CHAOS6_STATIC_SOURCE = basename(CHAOS6_STATIC)
+LCS1_SOURCE = basename(LCS1)
+MF7_SOURCE = basename(MF7)
+
+
+class ModelFactory(object):
+    """ Model factory class. """
+    def __init__(self, loader, model_files):
+        self.loader = loader
+        self.model_files = model_files
+        self._tracker = FileChangeMonitor()
+
+    @cached_property
+    def files(self):
+        """ Get list of files required by this model. """
+        return [model_file.filename for model_file in self.model_files]
+
+    @property
+    def model_changed(self):
+        """ Check if the model files changed. """
+        return self._tracker.changed(*self.files)
+
+    def __call__(self):
+        """ Create new model instance. """
+        return self.loader(*self.files)
+
+    @property
+    def sources(self):
+        """ Load model sources. """
+        return [model_file.sources for model_file in self.model_files]
+
+
+class ModelCache(object):
+    """ Model cache class. """
+    def __init__(self, model_factories, model_aliases=None, logger=None):
+        self.logger = logger or getLogger(__name__)
+        self.model_factories = model_factories
+        self.model_aliases = model_aliases or {}
+        self.cache = {}
+        self.sources = {}
+
+    def get_model(self, model_id):
+        """ Get model for given identifier. """
+        model, _ = self.get_model_with_sources(model_id)
+        return model
+
+    def get_model_with_sources(self, model_id):
+        """ Get model with sources for given identifier. """
+        model_id = self.model_aliases.get(model_id, model_id)
+
+        model_factory = self.model_factories.get(model_id)
+        if not model_factory:
+            return None, None # invalid model id
+
+        model = self.cache.get(model_id)
+        if model_factory.model_changed or not model:
+            self.cache[model_id] = model = model_factory()
+            self.sources[model_id] = sources = model_factory.sources
+            self.logger.info("%s model loaded", model_id)
+        else:
+            sources = self.sources[model_id]
+        return model, sources
+
+
+MODEL_ALIASES = {
+    "MCO_SHA_2X": "CHAOS-6-Core",
 }
-MODELS_FACTORIES["IGRF"] = MODELS_FACTORIES["IGRF12"]
-MODELS_FACTORIES["WMM"] = MODELS_FACTORIES["WMM2015"]
-MODELS_FACTORIES["EMM"] = MODELS_FACTORIES["EMM2010"]
-MODELS_FACTORIES["CHAOS-Combined"] = MODELS_FACTORIES["CHAOS-6-Combined"]
-MODELS_FACTORIES["CHAOS-Static"] = MODELS_FACTORIES["CHAOS-6-Static"]
-MODELS_FACTORIES["CHAOS-Core"] = MODELS_FACTORIES["CHAOS-6-Core"]
 
 
-#FIXME - MIO primary/external below ionosphere
-CACHED_MODEL_LOADERS = {
-    "MCO_SHA_2C": load_model_shc,
-    "MCO_SHA_2D": load_model_shc,
-    "MCO_SHA_2F": load_model_shc,
-    "MLI_SHA_2C": load_model_shc,
-    "MLI_SHA_2D": load_model_shc,
-    "MMA_SHA_2C-Primary": load_model_swarm_mma_2c_external,
-    "MMA_SHA_2C-Secondary": load_model_swarm_mma_2c_internal,
-    "MMA_SHA_2F-Primary": load_model_swarm_mma_2f_geo_external,
-    "MMA_SHA_2F-Secondary": load_model_swarm_mma_2f_geo_internal,
-    "MIO_SHA_2C-Primary": load_model_swarm_mio_external,
-    "MIO_SHA_2C-Secondary": load_model_swarm_mio_internal,
-    "MIO_SHA_2D-Primary": load_model_swarm_mio_external,
-    "MIO_SHA_2D-Secondary": load_model_swarm_mio_internal,
+def shc_validity_reader(filename):
+    """ SHC model validity reader. """
+    return _shc_validity_reader(filename, decimal_year_to_mjd2000)
+
+
+def shc_validity_reader_mjd2000_simple(filename):
+    """ SHC model validity reader with simplified decimal year to MJD2000
+    conversion.
+    """
+    return _shc_validity_reader(filename, decimal_year_to_mjd2000_simple)
+
+
+
+def _shc_validity_reader(filename, to_mjd2000):
+    """ Low-level SHC model validity reader. """
+    with open(filename, "rb") as file_in:
+        header = parse_shc_header(file_in)
+    return (
+        to_mjd2000(header["validity_start"]), to_mjd2000(header["validity_end"])
+    )
+
+
+def mio_validity_reader(_):
+    """ MIO model validity reader. """
+    return (-inf, +inf)
+
+
+MODEL_FACTORIES = {
+    "IGRF12": ModelFactory(
+        lambda file_: load_model_shc(file_, interpolate_in_decimal_years=True),
+        [ModelFileWithLiteralSource(IGRF12, IGRF12_SOURCE, shc_validity_reader)]
+    ),
+    "CHAOS-6-Static": ModelFactory(
+        load_model_shc,
+        [ModelFileWithLiteralSource(
+            CHAOS6_STATIC, CHAOS6_STATIC_SOURCE, shc_validity_reader
+        )]
+    ),
+    "CHAOS-6-Core": ModelFactory(
+        lambda filename: load_model_shc(
+            filename, to_mjd2000=decimal_year_to_mjd2000_simple
+        ),
+        [CachedModelFileWithSourceFile(
+            "MCO_CHAOS6", shc_validity_reader_mjd2000_simple
+        )]
+    ),
+    "LCS-1": ModelFactory(
+        load_model_shc,
+        [ModelFileWithLiteralSource(LCS1, LCS1_SOURCE, shc_validity_reader)]
+    ),
+    "MF7": ModelFactory(
+        load_model_shc,
+        [ModelFileWithLiteralSource(MF7, MF7_SOURCE, shc_validity_reader)]
+    ),
+    "MCO_SHA_2C": ModelFactory(
+        load_model_shc,
+        [CachedModelFileWithSourceFile("MCO_SHA_2C", shc_validity_reader)]
+    ),
+    "MCO_SHA_2D": ModelFactory(
+        load_model_shc,
+        [CachedModelFileWithSourceFile("MCO_SHA_2D", shc_validity_reader)]
+    ),
+    "MLI_SHA_2C": ModelFactory(
+        load_model_shc,
+        [CachedModelFileWithSourceFile("MLI_SHA_2C", shc_validity_reader)]
+    ),
+    "MLI_SHA_2D": ModelFactory(
+        load_model_shc,
+        [CachedModelFileWithSourceFile("MLI_SHA_2D", shc_validity_reader)]
+    ),
+    "MMA_SHA_2C-Primary": ModelFactory(
+        load_model_swarm_mma_2c_external,
+        [CachedComposedModelFile("MMA_SHA_2C")]
+    ),
+    "MMA_SHA_2C-Secondary": ModelFactory(
+        load_model_swarm_mma_2c_internal,
+        [CachedComposedModelFile("MMA_SHA_2C")]
+    ),
+    "MMA_SHA_2F-Primary": ModelFactory(
+        load_model_swarm_mma_2f_geo_external,
+        [CachedComposedModelFile("MMA_SHA_2F")]
+    ),
+    "MMA_SHA_2F-Secondary": ModelFactory(
+        load_model_swarm_mma_2f_geo_internal,
+        [CachedComposedModelFile("MMA_SHA_2F")]
+    ),
+    "MIO_SHA_2C-Primary": ModelFactory(
+        load_model_swarm_mio_external,
+        [CachedModelFileWithSourceFile("MIO_SHA_2C", mio_validity_reader)]
+    ),
+    "MIO_SHA_2C-Secondary": ModelFactory(
+        load_model_swarm_mio_internal,
+        [CachedModelFileWithSourceFile("MIO_SHA_2C", mio_validity_reader)]
+    ),
+    "MIO_SHA_2D-Primary": ModelFactory(
+        load_model_swarm_mio_external,
+        [CachedModelFileWithSourceFile("MIO_SHA_2D", mio_validity_reader)]
+    ),
+    "MIO_SHA_2D-Secondary": ModelFactory(
+        load_model_swarm_mio_internal,
+        [CachedModelFileWithSourceFile("MIO_SHA_2D", mio_validity_reader)]
+    ),
+    "CHAOS-6-MMA-Primary": ModelFactory(
+        load_model_swarm_mma_2c_external,
+        [CachedComposedModelFile("MMA_CHAOS6")]
+    ),
+    "CHAOS-6-MMA-Secondary": ModelFactory(
+        load_model_swarm_mma_2c_internal,
+        [CachedComposedModelFile("MMA_CHAOS6")]
+    ),
 }
 
-MODEL_SOURCES = {
-    "MMA_SHA_2C-Primary": "MMA_SHA_2C",
-    "MMA_SHA_2C-Secondary": "MMA_SHA_2C",
-    "MMA_SHA_2F-Primary": "MMA_SHA_2F",
-    "MMA_SHA_2F-Secondary": "MMA_SHA_2F",
-    "MIO_SHA_2C-Primary": "MIO_SHA_2C",
-    "MIO_SHA_2C-Secondary": "MIO_SHA_2C",
-    "MIO_SHA_2D-Primary": "MIO_SHA_2D",
-    "MIO_SHA_2D-Secondary": "MIO_SHA_2D",
-}
+# list of all available models
+MODEL_LIST = list(MODEL_FACTORIES) + list(MODEL_ALIASES)
 
-
-def _get_cached_model(model_id):
-    cached_products = getattr(settings, "VIRES_CACHED_PRODUCTS", {})
-    try:
-        loader = CACHED_MODEL_LOADERS[model_id]
-        path = cached_products[MODEL_SOURCES.get(model_id, model_id)]
-    except KeyError:
-        return None
-    return loader(path) if exists(path) else None
-
-
-def get_model(model_id):
-    """ Get model for given identifier. """
-    read_model = MODELS_FACTORIES.get(model_id)
-    if read_model:
-        return read_model()
-    else:
-        return _get_cached_model(model_id)
+MODEL_CACHE = ModelCache(MODEL_FACTORIES, MODEL_ALIASES)
