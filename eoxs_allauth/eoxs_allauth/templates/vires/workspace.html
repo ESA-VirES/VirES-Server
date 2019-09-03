@@ -4,16 +4,28 @@
   <title>VirES for Swarm</title>
 {% endblock %}
 
-
 {% block content %}
+
+{% if client_state %}
+  <script type="text/javascript">
+    (function (config) {
+      var key;
+      localStorage.clear();
+      for (key in config) {
+        localStorage.setItem(key, JSON.stringify(config[key]));
+      }
+    })(JSON.parse("{{ client_state|escapejs }}"));
+  </script>
+{% endif %}
 
 {% if user.is_authenticated %}
 
   {% load staticfiles %}
   {% load account %}
+  {% load vires_oauth %}
 
-  <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
+  <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
 
   <script type="text/javascript">
     var _paq = _paq || [];
@@ -72,12 +84,18 @@
       this.NAVBARITEMS = [{
         "name": "{% user_display user %}",
         "icon": "fa-user",
-        "eventToRaise": "modal:accountSettingsModal",
-      },{
-        "name": "Log out",
-        "icon": "fa-sign-out",
-        "url": "{% url 'account_logout' %}",
+        "subitems": [{
+            "name": "Manage access tokens",
+            "url": "{% url 'account_manage_access_tokens' %}"
+        }, {
+            "name": "Change account settings",
+            "url": "{% vires_oauth_url 'account_update_profile' %}"
+        }, {
+            "name": "Leave application",
+            "eventToRaise": "modal:accountLogout"
+        }]
       }];
+      console.log(this.NAVBARITEMS)
       var CONFIG_URL = "{% static 'workspace/scripts/config.json'%}";
       CESIUM_BASE_URL = "{% static 'workspace/bower_components/cesium/Build/Cesium/'%}";
       // you can register settings like this before require.js is loaded
@@ -86,31 +104,30 @@
       };
     </script>
     <!-- Modal forms -->
-    <div class="modal fade" id="accountSettingsModal" tabindex="-1" role="dialog" aria-labelledby="accountSettingsLabel">
+    <div class="modal fade" id="accountLogout" tabindex="-1" role="dialog" aria-labelledby="accountLogout">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="accountSettingsLabel">Settings ({% user_display user %})</h4>
+            <h4 class="modal-title" id="accountSettingsLabel">Leave the VirES for Swarm application</h4>
           </div>
           <div class="modal-body">
-            <a href="{% url 'account_manage_access_tokens' %}">{% trans "Manage access tokens" %}</a><br/>
-            <a href="{% url 'account_change_password' %}">{% trans "Change password" %}</a><br/>
-            <a href="{% url 'account_email' %}">{% trans "Change e-mail" %}</a><br/>
-            <a href="{% url 'socialaccount_connections' %}">{% trans "Connect social accounts" %}</a><br/>
-            <a href="{% url 'account_change_profile' %}">{% trans "Change profile information" %}</a>
+            <p>Are you sure you want to leave the VirES for Swarm application?</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <form method="post" action="{% url 'account_logout' %}">
+              {% csrf_token %}
+              {% if redirect_field_value %}
+              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+              {% endif %}
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary"><i class="fa fa-sign-out"></i>&nbsp;Leave</button>
+            </form>
           </div>
         </div>
       </div>
     </div>
     <script data-main="{% static 'workspace/scripts/init.js' %}" src="{% static 'workspace/bower_components/requirejs/require.js' %}"></script>
-
-
-
-
 
   {% else %}
 
@@ -212,10 +229,7 @@
            <div class="image-attribution">&copy; ESA/EOX/AOES Medialab</div>
         </div>
 
-
-
     </header>
-
 
     <!-- Fixed navbar -->
     <div class="navbar navbar-custom navbar-inverse navbar-static-top" id="nav">
@@ -232,7 +246,7 @@
               <li><a href="#Features">Features</a></li>
               <li><a href="#Data">Data</a></li>
               <li><a href="#Signup">Sign-up</a></li>
-              <li><a href="#Login">Log in</a></li>
+              <li><a href="{% url 'vires_login' %}?process=login">Log in</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div><!--/.container -->
@@ -249,8 +263,8 @@
       </div>
 
         <p class="lead current-version text-center">
-          <strong>Version 3.0.0</strong> (<a href="/accounts/changelog">Changelog</a>)<br>
-          <em>May 2019</em>
+          <strong>Version 3.1.0</strong> (<a href="/accounts/changelog">Changelog</a>)<br>
+          <em>August 2019</em>
         </p>
 
         <p class="lead text-center">
@@ -328,31 +342,41 @@
           <p>The following products are taken from all three Swarm Satellites:</p>
           <ul>
             <li style="list-style-type: circle;">
-              The magnetic vector and scalar data at a 1 Hz at exact UTC seconds (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product">Swarm MAGX_LR_1B</a>).
+              The magnetic vector and scalar data at a 1 Hz at exact UTC seconds (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product">Swarm MAGX_LR_1B</a>)
             </li>
             <li style="list-style-type: circle;">
-              The official plasma data including electron temperature and density at 2 Hz (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#EFIX_PL_1B_Product">Swarm EFIX_PL_1B</a>).
-            <li style="list-style-type: circle;">
-              The ionospheric bubble index data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#IBIxTMS_2F">Swarm IBIxTMS_2F</a>).
+              The plasma data from the Langmuir probe including electron temperature and plasma density at 2 Hz (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#EFIX_LP_1B_Product">Swarm EFIX_LP_1B</a>)
             </li>
             <li style="list-style-type: circle;">
-              The ionospheric total electron content data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#TECxTMS_2F">Swarm TECxTMS_2F)</a></li>
+              The ionospheric bubble index data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#IBIxTMS_2F">Swarm IBIxTMS_2F</a>)
+            </li>
             <li style="list-style-type: circle;">
-              The single and combined S/C solution for the current density data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#FACxTMS_2F">Swarm FACxTMS_2F</a> and <a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#FAC_TMS_2F">FAC_TMS)</a></li>
+              The ionospheric total electron content data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#TECxTMS_2F">Swarm TECxTMS_2F</a>)
+            </li>
             <li style="list-style-type: circle;">
-              The dayside equatorial electric field data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#EEFxTMS_2F">Swarm EEFxTMS_2F)</a></li>
+              The single and combined S/C solution for the current density data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#FACxTMS_2F">Swarm FACxTMS_2F</a> and <a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#FAC_TMS_2F">FAC_TMS</a>)
+            </li>
+            <li style="list-style-type: circle;">
+              The dayside equatorial electric field data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#EEFxTMS_2F">Swarm EEFxTMS_2F</a>)
+            </li>
+            <li style="list-style-type: circle;">
+              The characteristics of the plasma density and plasma irregularities along the orbit (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#IPDxIRR_2F">Swarm IPDxIRR_2F</a>)
+            </li>
           </ul>
 
           <p>The following models of the Earth's magnetic field and its time variation are pre-loaded:</p>
           <ul>
             <li style="list-style-type: circle;">
-              The Swarm Initial Field Model for 2014 derived from the first year of data from the Swarm satellite trio (<a target="_blank" href="http://onlinelibrary.wiley.com/doi/10.1002/2014GL062659/abstract">SIFM</a>)
-            </li>
-            <li style="list-style-type: circle;">
               The 12th Generation International Geomagnetic Reference Field (<a target="_blank" href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0228-9">IGRF 12</a>) released in 2015 by the International Association of Geomagnetism and Aeronomy
             </li>
             <li style="list-style-type: circle;">
               The CHAOS-6 high resolution geomagnetic field model, derived primarily from Swarm, CHAMP, and Ørsted satellite magnetic data along with ground observatory data (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/">CHAOS-6</a>)
+            </li>
+            <li style="list-style-type: circle;">
+              The LCS-1 high-resolution lithospheric field model, derived from CHAMP and Swarm satellite observations (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/LCS-1/">LCS-1</a>)
+            </li>
+            <li style="list-style-type: circle;">
+              The MF7 crustal field model, derived from CHAMP satellite observations (<a target="_blank" href="http://geomag.org/models/MF7.html">MF7</a>)
             </li>
           </ul>
           <p>The following Spherical Harmonic Models of the Core Field are available:</p>
@@ -363,11 +387,8 @@
             <li style="list-style-type: circle;">
               Spherical harmonic model of the main (core) field and its temporal variation (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MCO_SHA_2D">MCO_SHA_2D</a>)
             </li>
-            <li style="list-style-type: circle;">
-              Spherical harmonic model of the main (core) field and its temporal variation (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MCO_SHA_2F">MCO_SHA_2F</a>)
-            </li>
           </ul>
-          <p>The following Spherical Harmonic Models of the Lithosphereic Field are available:</p>
+          <p>The following Spherical Harmonic Models of the Lithospheric Field are available:</p>
           <ul>
             <li style="list-style-type: circle;">
               Spherical harmonic model of the lithospheric field (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MLI_SHA_2C">MLI_SHA_2C</a>)
@@ -429,106 +450,48 @@
     </section>
 
     <div class="divider" id="Signup"></div>
-
-
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3 larger">
           <h1>Sign up</h1>
-
           <hr>
-
           <p>
             To access Swarm data you simply sign up (register) as a user by providing user profile information
             such as username, email and optionally title, country, institution and an executive
-            description of the the project in which your Swarm data is being used.
+            description of the project in which your Swarm data is being used.
           </p>
-
-          <hr>
-
           <div style="text-align: center">
-            <p style="text-align: center;">Sign up directly:</p>
             <div style="margin-top: 2em;">
-              <a class="linkbutton" href="{% url 'account_signup' %}">Sign-up</a>
+              <a class="linkbutton" href="{% url 'vires_login' %}?process=signup">Sign up</a>
             </div>
-            <p style="text-align: center; margin-top: 2em;">or sign up using your preferred social provider:</p>
-            <ul class="socialaccount_providers">
-              {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
-            </ul>
-            <div class="divider"></div>
-            <p style="text-align: center;">The service will work on most modern browsers, but using the service on Google Chrome has been found to give the best results. We therefore recommend the use of Chrome.</p>
           </div>
-
-        </div><!--/col-->
-    </div><!--/container-->
-    <div class="row form-group">
-        <div class="col-xs-10">
-
         </div>
     </div>
 
-
     <div class="divider" id="Login"></div>
-
     <div class="row">
-
-      <hr>
-
-      <div class="col-sm-6 col-sm-offset-3 larger">
-
-        <div class="row form-group">
+        <div class="col-sm-6 col-sm-offset-3 larger">
           <h1>Log in</h1>
+          <hr>
+          <p>
+            Log in using your preferred social provider or directly with your account credentials.
+          </p>
+          <div style="text-align: center">
+            <div style="margin-top: 2em;">
+              <a class="linkbutton" href="{% url 'vires_login' %}?process=login">Log in</a>
+            </div>
+          </div>
         </div>
+    </div>
 
-      </div><!--/row-->
-
-     <div class="col-sm-4 col-sm-offset-4 larger">
-      <p style="text-align: center;">Log in using your preferred social provider:</p>
-      <ul class="socialaccount_providers">
-        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
-      </ul>
-      <p style="text-align: center;">or directly with your account credentials here:</p>
-      <form class="form-horizontal inputwide" method="POST" action="{% url 'account_login' %}">
-          {% csrf_token %}
-          <fieldset>
-           {% if form.errors %}
-             <p class="help-inline error">
-               Incorrect user credentials or password.<br>
-               Please try again.<br>
-               Note that both fields are case sensitive.
-             </p>
-           {% endif %}
-           {% for field in login_form %}
-             {% if field.errors %}
-               <div class="control-group error">
-                 <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                 {{ field }}
-                 <span class="help-inline error">
-                   {% for error in  field.errors %}{{ error }}{% endfor %}
-                 </span>
-               </div>
-             {% else %}
-               <div class="control-group">
-                 <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                 {{ field }}
-                 {% if field.help_text %}
-                     <p class="help-inline"><small>{{ field.help_text }}</small></p>
-                 {% endif %}
-               </div>
-             {% endif %}
-           {% endfor %}
-           {% if redirect_field_value %}
-               <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-           {% endif %}
-           <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-               <button style="border: none;" type="submit" class="linkbutton">{% trans "Log in" %}</button>
-           </div>
-          </fieldset>
-        </form>
-        <div class="divider"></div>
-        <p style="text-align: center;">
+    <div class="divider"></div>
+    <div class="divider"></div>
+    <div class="row">
+      <div class="col-sm-6 col-sm-offset-3">
+        <p >
           Feedback and ideas are very welcome, feel free to contact us under <a href="mailto:feedback@vires.services">feedback@vires.services</a>.
         </p>
-     </div>
+      </div>
+    </div>
 
     <div class="container">
         <div class="col-sm-8 col-sm-offset-2 text-center">
@@ -572,7 +535,6 @@
     <ul class="nav pull-right scroll-top">
       <li><a href="#" title="Scroll to top"><i class="glyphicon glyphicon-chevron-up"></i></a></li>
     </ul>
-
 
     <!-- script references -->
     {% load staticfiles %}

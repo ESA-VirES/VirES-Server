@@ -247,6 +247,19 @@ class FetchFilteredDataAsync(WPSProcess):
         job.response_url = context.status_location
         job.save()
 
+
+    def discard(self, context):
+        """ Asynchronous process removal. """
+        context.logger.info("removing %s" % context.identifier)
+        try:
+            job = Job.objects.get(identifier=context.identifier)
+        except Job.DoesNotExist:
+            pass
+        else:
+            job.delete()
+            context.logger.info("Job removed.")
+
+
     @with_cache_session
     def execute(self, collection_ids, begin_time, end_time, filters,
                 sampling_step, requested_variables, model_ids, shc,

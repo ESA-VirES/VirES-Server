@@ -1,0 +1,70 @@
+/* Special form styling*/
+.inputwide input{
+    width: 100%;
+}
+.inputwide input[type=checkbox]{
+    width: auto;
+}
+.inputwide textarea {
+  width: 100%;
+  height: 5em;
+  resize: vertical;
+}
+.inputwide select{
+    width: 100%;
+}
+#formcontainer {
+  padding: 25px;
+}
+.help-inline.error{
+  color: #CC4C4C;
+  display: inline;
+  font-size: 0.9em;
+  padding: 0;
+  list-style-type: none;
+}
+.help-inline{
+  color: #333;
+  font-size: 0.9em;
+  padding: 0;
+}
+.helptext{
+  color: #777;
+  font-size: 0.8em;
+  padding: 0;
+}
+
+.control-label.required {
+  font-weight: 700;
+}
+
+.control-label{
+  font-weight: 500;
+}
+/* Overwrite default navbar collapse size */
+@media (max-width: 1250px) {
+  .navbar-header {
+    float: none;
+  }
+  .navbar-toggle {
+    display: block;
+  }
+  .navbar-collapse {
+    border-top: 1px solid transparent;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .navbar-collapse.collapse {
+    display: none!important;
+  }
+  .navbar-nav {
+    float: none!important;
+    margin: 7.5px -15px;
+  }
+  .navbar-nav>li {
+    float: none;
+  }
+  .navbar-nav>li>a {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}

@@ -27,11 +27,6 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-class InvalidFileFormat(Exception):
-    """ Invalid data format error. """
-    pass
-
-
 class HttpError(Exception):
     """ Simple HTTP error exception """
     def __init__(self, status, message, headers=None):

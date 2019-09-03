@@ -61,6 +61,7 @@ CDF_UINT4_TYPE = pycdf.const.CDF_UINT4.value
 CDF_INT1_TYPE = pycdf.const.CDF_INT1.value
 CDF_INT2_TYPE = pycdf.const.CDF_INT2.value
 CDF_INT4_TYPE = pycdf.const.CDF_INT4.value
+CDF_INT8_TYPE = pycdf.const.CDF_INT8.value
 CDF_CHAR_TYPE = pycdf.const.CDF_CHAR.value
 
 CDF_EPOCH_1970 = 62167219200000.0
@@ -97,6 +98,15 @@ def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
             return str
         return str
     return _get_formater(data.shape, data.dtype, cdf_type)
+
+
+def is_cdf_file(filename):
+    """ Test if file is supported CDF file. """
+    try:
+        with cdf_open(filename):
+            return True
+    except CDFError:
+        return False
 
 
 def cdf_open(filename, mode="r"):

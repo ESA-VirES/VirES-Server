@@ -238,7 +238,7 @@ class RetrieveFieldLines(WPSProcess):
             fieldlines[model_id].append({
                 'start_point': start.tolist(),
                 'ground_points': ground_points.tolist(),
-                'apex_point': apex_point.tolist(),
+                'apex_point': None if apex_point is None else apex_point.tolist(),
                 'apex_height': apex_height,
                 'coordinates': coords.tolist(),
                 'values': values.tolist(),

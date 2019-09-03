@@ -1,0 +1,18 @@
+[
+    {
+        "name": "admin",
+        "description": "VirES administration"
+    },
+    {
+        "name": "swarm",
+        "description": "Access to VirES for Swarm"
+    },
+    {
+        "name": "swarm_vre",
+        "description": "Access to Swarm VRE"
+    },
+    {
+        "name": "swarm_disc",
+        "description": "Access to Swarm DISC"
+    }
+]

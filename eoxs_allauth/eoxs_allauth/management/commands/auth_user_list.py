@@ -80,8 +80,8 @@ class Command(CommandOutputMixIn, BaseCommand):
         else:
             if not args:
                 self.print_wrn(
-                    "No user name has provided! Use '--help' to get more "
-                    "information of the command usage."
+                    "No user name has been provided! Use '--help' to get more "
+                    "information about the command usage."
                 )
             qset = qset.filter(user__username__in=args)
         # select output class
