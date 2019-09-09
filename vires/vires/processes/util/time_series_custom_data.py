@@ -38,6 +38,7 @@ from vires.cdf_util import (
 from vires.models import CustomDataset
 from vires.dataset import Dataset
 from vires.util import cached_property
+from vires.views.custom_data import sanitize_info
 from .time_series_product import (
     BaseProductTimeSeries,
     DEFAULT_PRODUCT_TYPE_PARAMETERS,
@@ -178,8 +179,8 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
                 continue
 
             dataset.set(
-                variable, empty((0,) + type_['shape']), type_['cdf_type'],
-                type_.get('attributes', {})
+                variable, empty((0,) + type_['shape']),
+                c_long(type_['cdf_type']), type_.get('attributes', {})
             )
 
         return dataset
@@ -205,28 +206,25 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
         return dataset
 
     def _subset_qs(self, start, stop):
-        """ Subset Django query set. """
+        """ Temporal subset Django query set. """
         # multiple uploads
         #return CustomDataset.objects.filter(
-        #    owner=self.user, start__lt=stop, end__gte=start,
+        #    owner=self.user, is_valid=True, start__lt=stop, end__gte=start,
         #).order_by('start')
         # single upload
         return [
-            dataset for dataset in (
-                CustomDataset.objects
-                .filter(owner=self.user)
-                .order_by('-created')[:1]
-            ) if dataset.start < stop and dataset.end >= start
+            dataset for dataset in self._all_qs()
+            if dataset.start < stop and dataset.end >= start
         ]
 
     def _all_qs(self):
-        """ Subset Django query set. """
+        """ all items Django query set. """
         # multiple uploads
-        #return CustomDataset.objects.filter(owner=self.user)
+        #return CustomDataset.objects.filter(owner=self.user, is_valid=True)
         # single upload
         return (
             CustomDataset.objects
-            .filter(owner=self.user)
+            .filter(owner=self.user, is_valid=True)
             .order_by('-created')[:1]
         )
 
@@ -234,12 +232,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     def _variables(self):
 
         def _load_variables(dataset):
-            return {
-                variable: {
-                    "shape": tuple(type_['shape'][1:]),
-                    "cdf_type": c_long(type_['cdf_type']),
-                } for variable, type_ in json.loads(dataset.info).items()
-            }
+            return sanitize_info(json.loads(dataset.info))['fields']
 
         def _not_equal(type1, type2):
             return (

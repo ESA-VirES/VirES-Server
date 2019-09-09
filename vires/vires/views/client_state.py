@@ -35,7 +35,7 @@ from ..time_util import datetime, naive_to_utc, format_datetime
 from ..models import ClientState
 from .exceptions import HttpError400, HttpError404, HttpError405, HttpError413
 from .decorators import (
-    set_extra_kwargs, handle_error, allow_methods, allow_content_types,
+    set_extra_kwargs, handle_error, allow_methods, allow_content_type,
     allow_content_length, reject_content,
 )
 
@@ -111,7 +111,7 @@ def get_item(request, identifier, **kwargs):
 
 
 @allow_content_length(MAX_PAYLOAD_SIZE)
-@allow_content_types(["application/json"])
+@allow_content_type("application/json")
 def post_item(request, **kwargs):
     """ Post client state. """
     # metadata
@@ -154,7 +154,7 @@ def delete_item(request, identifier, **kwargs):
 
 
 @allow_content_length(MAX_PAYLOAD_SIZE)
-@allow_content_types(["application/json"])
+@allow_content_type("application/json")
 def update_item(request, identifier, **kwargs):
     """ Post client state. """
     # metadata
