@@ -421,13 +421,14 @@ class VirESMetadataReader(object):
 
     LATLON_KEYS = [
         ("Longitude", "Latitude"),
-        ("longitude", "latitude"),
+        ("longitude", "latitude"), # EEF products
     ]
 
     TIME_KEYS = [
         "Timestamp",
-        "timestamp",
-        "Epoch"
+        "timestamp", # EEF products
+        "Epoch",
+        "t", # AEJ and AOB products
     ]
 
     @classmethod

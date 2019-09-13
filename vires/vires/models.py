@@ -29,11 +29,11 @@
 #-------------------------------------------------------------------------------
 
 #pylint: disable=missing-docstring,fixme,unused-argument
-#pylint: disable=old-style-class,no-init,too-few-public-methods
+#pylint: disable=old-style-class,no-init,too-few-public-methods,too-many-ancestors
 
 from django.core.exceptions import ValidationError
 from django.db.models import (
-    Model, ForeignKey, CharField, DateTimeField, IntegerField, BigIntegerField,
+    Model, ForeignKey, BooleanField, CharField, DateTimeField, BigIntegerField,
     TextField,
 )
 from django.contrib.gis import geos
@@ -83,6 +83,7 @@ class Job(Model):
 
 class UploadedFile(Model):
     """ Model describing user uploaded file. """
+    is_valid = BooleanField(default=True)
     created = DateTimeField(auto_now_add=True)
     identifier = CharField(max_length=64, null=False, blank=False, unique=True)
     filename = CharField(max_length=255, null=False, blank=False)

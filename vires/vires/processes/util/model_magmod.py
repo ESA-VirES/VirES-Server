@@ -87,7 +87,7 @@ class MagneticModelResidual(Model):
         if variable == "B_NEC":
             base = 'Magnetic field vector residual, NEC frame'
         else:
-            base = "%s residual" % src_attr['DESCRIPTION']
+            base = 'Magnetic field intensity residual'
 
         return {
             'DESCRIPTION': (

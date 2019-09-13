@@ -111,18 +111,20 @@ def allow_methods(allowed_methods, allowed_headers=None, handle_options=True,
     return _allow_methods_decorator_
 
 
-def allow_content_types(content_types, methods=('POST', 'PUT', 'PATCH')):
+def allow_content_type(*content_types, **kwargs):
     """ Reject non-supported request content type.
     The content type is requested to be one of the listed.
     """
-    methods = set(methods)
+    methods = set(kwargs.get('methods', ('POST', 'PUT', 'PATCH')))
     content_types = set(content_types)
 
     def _allow_content_types_decorator_(view):
         @wraps(view)
-        def _allow_content_types_(request, *args, **kwargs):
+        def _allow_content_type_(request, *args, **kwargs):
             if request.method in methods:
                 content_type = request.META.get("CONTENT_TYPE")
+                if content_type is not None:
+                    content_type = content_type.partition(";")[0].strip()
                 if content_type not in content_types:
                     if content_type is None:
                         raise HttpError400(
@@ -131,7 +133,7 @@ def allow_content_types(content_types, methods=('POST', 'PUT', 'PATCH')):
                     else:
                         raise HttpError400("Invalid payload content type!")
             return view(request, *args, **kwargs)
-        return _allow_content_types_
+        return _allow_content_type_
     return _allow_content_types_decorator_
 
 

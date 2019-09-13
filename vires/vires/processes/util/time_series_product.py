@@ -31,7 +31,7 @@
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
-from numpy import empty, searchsorted
+from numpy import searchsorted, broadcast_to
 from eoxserver.backends.access import connect
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
@@ -83,10 +83,40 @@ class AuxImf2Parameters(SwarmDefaultParameters):
     }
 
 
+class SwarmAEJParameters(SwarmDefaultParameters):
+    """ AEJ product parameters. """
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 't',
+        'MLT_QD': 'MLT',
+    }
+
+
+class SwarmAEJLPSParameters(SwarmDefaultParameters):
+    """ AEJxLPS product parameters. """
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 't',
+        'Latitude': 'lat_GD',
+        'Longitude': 'long_GD',
+        'Latitude_QD': 'lat_QD',
+        'Longitude_QD': 'long_QD',
+        'MLT_QD': 'mlt_QD',
+        'J_CF': 'JCF_GEO',
+        'J_DF': 'JDF_GEO',
+        'J_CF_SemiQD': 'JCF_SemiQD',
+        'J_DF_SemiQD': 'JDF_SemiQD',
+        'J_C': 'JC',
+    }
+
+
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
     "SWARM_EEF": SwarmEEFParameters,
     "AUX_IMF_2_": AuxImf2Parameters,
+    "SWARM_AEJ_LPL": SwarmAEJParameters,
+    "SWARM_AEJ_LPS": SwarmAEJLPSParameters,
+    "SWARM_AEJ_BPL": SwarmAEJParameters,
+    "SWARM_AEJ_PBL": SwarmAEJParameters,
+    "SWARM_AOB_FAC": SwarmAEJParameters,
 }
 
 
@@ -225,11 +255,12 @@ class ProductTimeSeries(BaseProductTimeSeries):
         dataset = Dataset()
         for variable in extracted_variables:
             cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
-            if cdf_var.shape: # regular array variable
+            if cdf_var.rv(): # regular record variable
                 data = cdf_var[idx_low:idx_high]
-            else: # NRV scalar variable
-                data = empty(max(0, idx_high - idx_low), dtype=cdf_var.dtype)
-                data.fill(cdf_var[...])
+            else: # NRV variable
+                value = cdf_var[...]
+                size = max(0, idx_high - idx_low)
+                data = broadcast_to(value, (size,) + value.shape[1:])
             dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
         return dataset
 
