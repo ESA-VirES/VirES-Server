@@ -1783,4 +1783,404 @@
             "uom": "TECU"
         }
     ]
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time of observation, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Geocentric latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Geocentric longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quasi-dipole latitude",
+            "identifier": "Latitude_QD",
+            "name": "Latitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quasi-dipole longitude",
+            "identifier": "Longitude_QD",
+            "name": "Longitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic Local Time",
+            "identifier": "MLT",
+            "name": "MLT",
+            "nil_values": [],
+            "uom": "h"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "North- and East-component of horizontal sheet current density vector in geographic frame",
+            "identifier": "J",
+            "name": "J",
+            "nil_values": [],
+            "uom": "A/km"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Eastward horizontal sheet current density in QD frame (positive in East QD direction)",
+            "identifier": "J_QD",
+            "name": "J_QD",
+            "nil_values": [],
+            "uom": "A/km"
+        }
+    ],
+    "name": "SWARM_AEJ_LPL"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time of observation, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Geocentric latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Geocentric longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quasi-dipole latitude",
+            "identifier": "Latitude_QD",
+            "name": "Latitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quasi-dipole longitude",
+            "identifier": "Longitude_QD",
+            "name": "Longitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic Local Time (QD)",
+            "identifier": "MLT",
+            "name": "MLT",
+            "nil_values": [],
+            "uom": "h"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Peak horizontal sheet current density in QD frame (positive in East QD direction). Set to NaN for boundaries.",
+            "identifier": "J_QD",
+            "name": "J_QD",
+            "nil_values": [],
+            "uom": "A/km"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Uint16",
+            "definition": "",
+            "description": "Quality indicator",
+            "identifier": "Flags",
+            "name": "Flags",
+            "nil_values": [],
+            "uom": "N/A"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Uint16",
+            "definition": "",
+            "description": "Point Type: 0 - EB0, 1 - EB1, 2 - PB0, 3 - PB1, 4 - Minimum, 5 - Maximum, 255 - No-data",
+            "identifier": "PointType",
+            "name": "PointType",
+            "nil_values": [],
+            "uom": "N/A"
+        }
+    ],
+    "name": "SWARM_AEJ_PBL"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time of observation, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Geocentric latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Geocentric longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quasi-dipole latitude",
+            "identifier": "Latitude_QD",
+            "name": "Latitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quasi-dipole longitude",
+            "identifier": "Longitude_QD",
+            "name": "Longitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic Local Time",
+            "identifier": "MLT",
+            "name": "MLT",
+            "nil_values": [],
+            "uom": "h"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Radial ionospheric current density in the SECS frame",
+            "identifier": "J_C",
+            "name": "J_C",
+            "nil_values": [],
+            "uom": "A/km^2"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "north/east components of the curl-free ionospheric current density in the spherical frame",
+            "identifier": "J_CF",
+            "name": "J_CF",
+            "nil_values": [],
+            "uom": "A/km"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "north/east components of the divergence-free ionospheric current density in the spherical frame",
+            "identifier": "J_DF",
+            "name": "J_DF",
+            "nil_values": [],
+            "uom": "A/km"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "theta component of the curl-free ionospheric current density in the SECS frame",
+            "identifier": "J_CF_SemiQD",
+            "name": "J_CF_SemiQD",
+            "nil_values": [],
+            "uom": "A/km"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "phi component of the divergence-free ionospheric current density in the SECS frame",
+            "identifier": "J_DF_SemiQD",
+            "name": "J_DF_SemiQD",
+            "nil_values": [],
+            "uom": "A/km"
+        }
+    ],
+    "name": "SWARM_AEJ_LPS"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time of equatorward/poleward boundary, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position of equatorward/poleward boundary in ITRF - Geocentric latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position of equatorward/poleward boundary in ITRF - Geocentric longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position of equatorward/poleward boundary in ITRF - Radius from the Earth centre",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "QD latitude of equatorward/poleward boundary",
+            "identifier": "Latitude_QD",
+            "name": "Latitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "QD longitude of equatorward/poleward boundary",
+            "identifier": "Longitude_QD",
+            "name": "Longitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic local time of equatorward/poleward boundary",
+            "identifier": "MLT",
+            "name": "MLT",
+            "nil_values": [],
+            "uom": "h"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Indicator for equatorward (=1) or poleward (=2) boundary",
+            "identifier": "Boundary_Flag",
+            "name": "Boundary_Flag",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quality indicator of equatorward/poleward boundary (Pa, Sigma)",
+            "identifier": "Quality",
+            "name": "Quality",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Indicator of equatorward/poleward boundary of auroral oval. If the auroral oval boundaries are detectable as one pair, the pair indicator represents the record of previous (-1) or next (1) equatorward/poleward boundary within one pair; otherwise, the pair indicator is set to 0",
+            "identifier": "Pair_Indicator",
+            "name": "Pair_Indicator",
+            "nil_values": [],
+            "uom": ""
+        }
+    ],
+    "name": "SWARM_AOB_FAC"
 }]

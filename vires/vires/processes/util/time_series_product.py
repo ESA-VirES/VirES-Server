@@ -83,10 +83,40 @@ class AuxImf2Parameters(SwarmDefaultParameters):
     }
 
 
+class SwarmAEJParameters(SwarmDefaultParameters):
+    """ AEJ product parameters. """
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 't',
+        'MLT_QD': 'MLT',
+    }
+
+
+class SwarmAEJLPSParameters(SwarmDefaultParameters):
+    """ AEJxLPS product parameters. """
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 't',
+        'Latitude': 'lat_GD',
+        'Longitude': 'long_GD',
+        'Latitude_QD': 'lat_QD',
+        'Longitude_QD': 'long_QD',
+        'MLT_QD': 'mlt_QD',
+        'J_CF': 'JCF_GEO',
+        'J_DF': 'JDF_GEO',
+        'J_CF_SemiQD': 'JCF_SemiQD',
+        'J_DF_SemiQD': 'JDF_SemiQD',
+        'J_C': 'JC',
+    }
+
+
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
     "SWARM_EEF": SwarmEEFParameters,
     "AUX_IMF_2_": AuxImf2Parameters,
+    "SWARM_AEJ_LPL": SwarmAEJParameters,
+    "SWARM_AEJ_LPS": SwarmAEJLPSParameters,
+    "SWARM_AEJ_BPL": SwarmAEJParameters,
+    "SWARM_AEJ_PBL": SwarmAEJParameters,
+    "SWARM_AOB_FAC": SwarmAEJParameters,
 }
 
 
