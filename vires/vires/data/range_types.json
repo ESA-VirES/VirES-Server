@@ -1841,8 +1841,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "Magnetic Local Time",
-            "identifier": "MLT",
-            "name": "MLT",
+            "identifier": "MLT_QD",
+            "name": "MLT_QD",
             "nil_values": [],
             "uom": "h"
         },
@@ -1926,8 +1926,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "Magnetic Local Time (QD)",
-            "identifier": "MLT",
-            "name": "MLT",
+            "identifier": "MLT_QD",
+            "name": "MLT_QD",
             "nil_values": [],
             "uom": "h"
         },
@@ -2021,8 +2021,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "Magnetic Local Time",
-            "identifier": "MLT",
-            "name": "MLT",
+            "identifier": "MLT_QD",
+            "name": "MLT_QD",
             "nil_values": [],
             "uom": "h"
         },
@@ -2146,8 +2146,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "Magnetic local time of equatorward/poleward boundary",
-            "identifier": "MLT",
-            "name": "MLT",
+            "identifier": "MLT_QD",
+            "name": "MLT_QD",
             "nil_values": [],
             "uom": "h"
         },
