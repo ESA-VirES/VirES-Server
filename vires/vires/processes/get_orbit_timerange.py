@@ -72,7 +72,7 @@ class GetOrbitTimeRange(WPSProcess):
         if end_orbit < start_orbit:
             start_orbit, end_orbit = end_orbit, start_orbit
 
-        orbit_counter_file = settings.VIRES_ORBIT_COUNTER_DB[spacecraft]
+        orbit_counter_file = settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
 
         start_orbit, end_orbit, start_time, end_time = get_orbit_timerange(
             orbit_counter_file, start_orbit, end_orbit
