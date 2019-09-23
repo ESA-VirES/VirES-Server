@@ -2085,6 +2085,91 @@
             "color_interpretation": "Undefined",
             "data_type": "CFloat64",
             "definition": "",
+            "description": "Time of observation, UTC",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Geocentric latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Geocentric longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quasi-dipole latitude",
+            "identifier": "Latitude_QD",
+            "name": "Latitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quasi-dipole longitude",
+            "identifier": "Longitude_QD",
+            "name": "Longitude_QD",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic Local Time (QD)",
+            "identifier": "MLT_QD",
+            "name": "MLT_QD",
+            "nil_values": [],
+            "uom": "h"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Uint16",
+            "definition": "",
+            "description": "Quality indicator",
+            "identifier": "Flags",
+            "name": "Flags",
+            "nil_values": [],
+            "uom": "N/A"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Uint16",
+            "definition": "",
+            "description": "Point Type: 0 - EB0, 1 - EB1, 2 - PB0, 3 - PB1, 4 - Minimum, 5 - Maximum, 255 - No-data",
+            "identifier": "PointType",
+            "name": "PointType",
+            "nil_values": [],
+            "uom": "N/A"
+        }
+    ],
+    "name": "SWARM_AEJ_PBS"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
             "description": "Time of equatorward/poleward boundary, UTC",
             "identifier": "Timestamp",
             "name": "Timestamp",

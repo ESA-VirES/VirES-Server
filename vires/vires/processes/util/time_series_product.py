@@ -83,12 +83,17 @@ class AuxImf2Parameters(SwarmDefaultParameters):
     }
 
 
-class SwarmAEJParameters(SwarmDefaultParameters):
-    """ AEJ product parameters. """
+class SwarmAEJLPLParameters(SwarmDefaultParameters):
+    """ AEJxLPL product parameters. """
     VARIABLE_TRANSLATES = {
         'Timestamp': 't',
         'MLT_QD': 'MLT',
     }
+
+
+class SwarmAOBFACParameters(SwarmAEJLPLParameters):
+    """ AOBxFAC product parameters. """
+    pass
 
 
 class SwarmAEJLPSParameters(SwarmDefaultParameters):
@@ -108,15 +113,27 @@ class SwarmAEJLPSParameters(SwarmDefaultParameters):
     }
 
 
+class SwarmAEJPBLParameters(SwarmDefaultParameters):
+    """ AEJxPBL product parameters. """
+    VARIABLE_TRANSLATES = {
+        'MLT_QD': 'MLT',
+    }
+
+
+class SwarmAEJPBSParameters(SwarmAEJPBLParameters):
+    """ AEJxPBS product parameters. """
+    pass
+
+
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
     "SWARM_EEF": SwarmEEFParameters,
     "AUX_IMF_2_": AuxImf2Parameters,
-    "SWARM_AEJ_LPL": SwarmAEJParameters,
+    "SWARM_AEJ_LPL": SwarmAEJLPLParameters,
     "SWARM_AEJ_LPS": SwarmAEJLPSParameters,
-    "SWARM_AEJ_BPL": SwarmAEJParameters,
-    "SWARM_AEJ_PBL": SwarmAEJParameters,
-    "SWARM_AOB_FAC": SwarmAEJParameters,
+    "SWARM_AEJ_PBL": SwarmAEJPBLParameters,
+    "SWARM_AEJ_PBS": SwarmAEJPBSParameters,
+    "SWARM_AOB_FAC": SwarmAOBFACParameters,
 }
 
 
