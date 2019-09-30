@@ -51,6 +51,7 @@ from .model_magmod import (
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
 from .model_sunpos import SunPosition, SubSolarPoint
 from .model_dipole import MagneticDipole, DipoleTiltAngle
+from .identity import Identity
 from .label import Label, SpacecraftLabel
 from .input_parsers import (
     parse_style, parse_collections,

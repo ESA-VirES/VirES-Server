@@ -62,7 +62,7 @@ from vires.processes.util import (
     Sat2SatResidual, group_residual_variables, get_residual_variables,
     MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
     extract_product_names, get_username, get_user,
-    CustomDatasetTimeSeries,
+    CustomDatasetTimeSeries, Identity,
 )
 
 # TODO: Make following parameters configurable.
@@ -271,6 +271,11 @@ class FetchData(WPSProcess):
             model_subsol = SubSolarPoint()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
+            copied_variables = [
+                Identity("MLT_QD", "MLT"),
+                Identity("Latitude_QD", "QDLat"),
+                Identity("Longitude_QD", "QDLon"),
+            ]
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
             ))
@@ -345,7 +350,7 @@ class FetchData(WPSProcess):
                 aux_models = chain((
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
-                ), models_with_residuals)
+                ), models_with_residuals, copied_variables)
                 for model in aux_models:
                     resolver.add_model(model)
 
