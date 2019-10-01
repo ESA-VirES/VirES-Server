@@ -125,6 +125,15 @@ class SwarmAEJPBSParameters(SwarmAEJPBLParameters):
     pass
 
 
+class SwarmAEJPBSGroundMagneticDisturbancesParameters(SwarmDefaultParameters):
+    """ AEJxPBS peak ground magnetic disturbances product parameters. """
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 'Timestamp_B',
+        'Latitude': 'Latitude_B',
+        'Longitude': 'Longitude_B',
+    }
+
+
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
     "SWARM_EEF": SwarmEEFParameters,
@@ -133,6 +142,7 @@ PRODUCT_TYPE_PARAMETERS = {
     "SWARM_AEJ_LPS": SwarmAEJLPSParameters,
     "SWARM_AEJ_PBL": SwarmAEJPBLParameters,
     "SWARM_AEJ_PBS": SwarmAEJPBSParameters,
+    "SWARM_AEJ_PBS:PGMFD": SwarmAEJPBSGroundMagneticDisturbancesParameters,
     "SWARM_AOB_FAC": SwarmAOBFACParameters,
 }
 
