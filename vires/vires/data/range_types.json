@@ -2170,6 +2170,51 @@
             "color_interpretation": "Undefined",
             "data_type": "CFloat64",
             "definition": "",
+            "description": "UTC time of peak (minimum and maximum) ground magnetic field disturbance.",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position of peak (minimum and maximum) ground magnetic field disturbance in ITRF - Latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position of peak (minimum and maximum) ground magnetic field disturbance in ITRF - Longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Peak ground magnetic field disturbance, NEC frame.",
+            "identifier": "B_NEC",
+            "name": "B_NEC",
+            "nil_values": [],
+            "uom": "nT"
+        }
+    ],
+    "name": "SWARM_AEJ_PBS:PGMFD"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
             "description": "Time of equatorward/poleward boundary, UTC",
             "identifier": "Timestamp",
             "name": "Timestamp",
