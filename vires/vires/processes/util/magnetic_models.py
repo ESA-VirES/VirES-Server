@@ -30,10 +30,9 @@
 from os.path import basename
 from logging import getLogger
 from numpy import inf
-from eoxmagmod.data import CHAOS6_STATIC, IGRF12, LCS1, MF7
+from eoxmagmod.data import CHAOS_STATIC_LATEST, IGRF12, LCS1, MF7
 from eoxmagmod import (
     load_model_shc,
-    load_model_shc_combined,
     load_model_swarm_mma_2c_internal,
     load_model_swarm_mma_2c_external,
     load_model_swarm_mma_2f_geo_internal,
@@ -41,9 +40,7 @@ from eoxmagmod import (
     load_model_swarm_mio_internal,
     load_model_swarm_mio_external,
 )
-from eoxmagmod.time_util import (
-    decimal_year_to_mjd2000, decimal_year_to_mjd2000_simple
-)
+from eoxmagmod.time_util import decimal_year_to_mjd2000
 from eoxmagmod.magnetic_model.parser_shc import parse_shc_header
 
 from vires.util import cached_property
@@ -57,7 +54,7 @@ from .magnetic_model_file import (
 
 DIPOLE_MODEL = "IGRF12"
 IGRF12_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20191231T235959_0102"
-CHAOS6_STATIC_SOURCE = basename(CHAOS6_STATIC)
+CHAOS_STATIC_SOURCE = basename(CHAOS_STATIC_LATEST)
 LCS1_SOURCE = basename(LCS1)
 MF7_SOURCE = basename(MF7)
 
@@ -122,21 +119,17 @@ class ModelCache(object):
 
 
 MODEL_ALIASES = {
-    "MCO_SHA_2X": "CHAOS-6-Core",
+    "MCO_SHA_2X": "CHAOS-Core",
+    "CHAOS-6-Core": "CHAOS-Core",
+    "CHAOS-6-Static": "CHAOS-Static",
+    "CHAOS-6-MMA-Primary": "CHAOS-MMA-Primary",
+    "CHAOS-6-MMA-Secondary": "CHAOS-MMA-Secondary",
 }
 
 
 def shc_validity_reader(filename):
     """ SHC model validity reader. """
     return _shc_validity_reader(filename, decimal_year_to_mjd2000)
-
-
-def shc_validity_reader_mjd2000_simple(filename):
-    """ SHC model validity reader with simplified decimal year to MJD2000
-    conversion.
-    """
-    return _shc_validity_reader(filename, decimal_year_to_mjd2000_simple)
-
 
 
 def _shc_validity_reader(filename, to_mjd2000):
@@ -158,19 +151,15 @@ MODEL_FACTORIES = {
         lambda file_: load_model_shc(file_, interpolate_in_decimal_years=True),
         [ModelFileWithLiteralSource(IGRF12, IGRF12_SOURCE, shc_validity_reader)]
     ),
-    "CHAOS-6-Static": ModelFactory(
+    "CHAOS-Static": ModelFactory(
         load_model_shc,
         [ModelFileWithLiteralSource(
-            CHAOS6_STATIC, CHAOS6_STATIC_SOURCE, shc_validity_reader
+            CHAOS_STATIC_LATEST, CHAOS_STATIC_SOURCE, shc_validity_reader
         )]
     ),
-    "CHAOS-6-Core": ModelFactory(
-        lambda filename: load_model_shc(
-            filename, to_mjd2000=decimal_year_to_mjd2000_simple
-        ),
-        [CachedModelFileWithSourceFile(
-            "MCO_CHAOS6", shc_validity_reader_mjd2000_simple
-        )]
+    "CHAOS-Core": ModelFactory(
+        load_model_shc,
+        [CachedModelFileWithSourceFile("MCO_CHAOS6", shc_validity_reader)]
     ),
     "LCS-1": ModelFactory(
         load_model_shc,
@@ -228,11 +217,11 @@ MODEL_FACTORIES = {
         load_model_swarm_mio_internal,
         [CachedModelFileWithSourceFile("MIO_SHA_2D", mio_validity_reader)]
     ),
-    "CHAOS-6-MMA-Primary": ModelFactory(
+    "CHAOS-MMA-Primary": ModelFactory(
         load_model_swarm_mma_2c_external,
         [CachedComposedModelFile("MMA_CHAOS6")]
     ),
-    "CHAOS-6-MMA-Secondary": ModelFactory(
+    "CHAOS-MMA-Secondary": ModelFactory(
         load_model_swarm_mma_2c_internal,
         [CachedComposedModelFile("MMA_CHAOS6")]
     ),
