@@ -83,46 +83,19 @@ class AuxImf2Parameters(SwarmDefaultParameters):
     }
 
 
-class SwarmAEJLPLParameters(SwarmDefaultParameters):
-    """ AEJxLPL product parameters. """
+class SwarmAEJLPParameters(SwarmDefaultParameters):
+    """ Common AEJ_LPx and AOB_FAC product parameters. """
     VARIABLE_TRANSLATES = {
         'Timestamp': 't',
         'MLT_QD': 'MLT',
     }
 
 
-class SwarmAOBFACParameters(SwarmAEJLPLParameters):
-    """ AOBxFAC product parameters. """
-    pass
-
-
-class SwarmAEJLPSParameters(SwarmDefaultParameters):
-    """ AEJxLPS product parameters. """
-    VARIABLE_TRANSLATES = {
-        'Timestamp': 't',
-        'Latitude': 'lat_GD',
-        'Longitude': 'long_GD',
-        'Latitude_QD': 'lat_QD',
-        'Longitude_QD': 'long_QD',
-        'MLT_QD': 'mlt_QD',
-        'J_CF': 'JCF_GEO',
-        'J_DF': 'JDF_GEO',
-        'J_CF_SemiQD': 'JCF_SemiQD',
-        'J_DF_SemiQD': 'JDF_SemiQD',
-        'J_C': 'JC',
-    }
-
-
-class SwarmAEJPBLParameters(SwarmDefaultParameters):
-    """ AEJxPBL product parameters. """
+class SwarmAEJPBParameters(SwarmDefaultParameters):
+    """ Common AEJxPBx product parameters. """
     VARIABLE_TRANSLATES = {
         'MLT_QD': 'MLT',
     }
-
-
-class SwarmAEJPBSParameters(SwarmAEJPBLParameters):
-    """ AEJxPBS product parameters. """
-    pass
 
 
 class SwarmAEJPBSGroundMagneticDisturbancesParameters(SwarmDefaultParameters):
@@ -138,12 +111,12 @@ DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invali
 PRODUCT_TYPE_PARAMETERS = {
     "SWARM_EEF": SwarmEEFParameters,
     "AUX_IMF_2_": AuxImf2Parameters,
-    "SWARM_AEJ_LPL": SwarmAEJLPLParameters,
-    "SWARM_AEJ_LPS": SwarmAEJLPSParameters,
-    "SWARM_AEJ_PBL": SwarmAEJPBLParameters,
-    "SWARM_AEJ_PBS": SwarmAEJPBSParameters,
+    "SWARM_AEJ_LPL": SwarmAEJLPParameters,
+    "SWARM_AEJ_LPS": SwarmAEJLPParameters,
+    "SWARM_AEJ_PBL": SwarmAEJPBParameters,
+    "SWARM_AEJ_PBS": SwarmAEJPBParameters,
     "SWARM_AEJ_PBS:PGMFD": SwarmAEJPBSGroundMagneticDisturbancesParameters,
-    "SWARM_AOB_FAC": SwarmAOBFACParameters,
+    "SWARM_AOB_FAC": SwarmAEJLPParameters,
 }
 
 
