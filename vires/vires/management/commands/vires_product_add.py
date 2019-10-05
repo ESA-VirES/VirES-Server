@@ -199,7 +199,7 @@ class Command(CommandOutputMixIn, BaseCommand):
 
         for data_file in read_products(kwargs["input_file"], args):
 
-            product_id = get_product_id(data_file)
+            product_id = get_product_id(data_file, collection)
 
             try:
                 removed, inserted = self._register_product(
@@ -332,9 +332,15 @@ def get_range_type(range_type_name):
     return range_type
 
 
-def get_product_id(data_file):
-    """ Get the product identifier. """
-    return basename(data_file).partition(".")[0]
+def get_product_id(data_file, collection):
+    """ Get the product identifier derived from the data filename and
+    collection range type name.
+    If the range type contains a colon (:) the part after the colon
+    is used as a products id suffix.
+    """
+    base = basename(data_file).partition(".")[0]
+    suffix = "".join(collection.range_type.name.partition(":")[1:])
+    return base + suffix
 
 
 def collection_create(identifier, range_type):
