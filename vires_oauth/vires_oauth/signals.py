@@ -155,7 +155,7 @@ def receive_social_account_added(request, sociallogin, **kwargs):
 @receiver(social_account_removed)
 def receive_social_account_removed(request, socialaccount, **kwargs):
     _get_access_logger(request, socialaccount.user).info(
-        "%s social account removed", socialaccount.account.provider
+        "%s social account removed", socialaccount.provider
     )
 
 
