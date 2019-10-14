@@ -31,7 +31,15 @@ from logging import getLogger
 from django.conf import settings
 from django.dispatch import receiver
 from django.contrib.auth.models import Group
-from allauth.account.signals import user_signed_up
+from allauth.account.signals import (
+    user_logged_in, user_signed_up, password_set, password_changed,
+    password_reset, email_confirmed, email_confirmation_sent, email_changed,
+    email_added, email_removed,
+)
+from allauth.socialaccount.signals import (
+    pre_social_login, social_account_added, social_account_removed,
+)
+from .utils import AccessLoggerAdapter
 
 
 @receiver(user_signed_up)
@@ -48,3 +56,110 @@ def set_default_group(sender, request, user, **kwargs):
         return
     user.groups.add(group)
     logger.debug("User %s added to group %s.", user.username, group.name)
+
+
+
+@receiver(user_logged_in)
+def receive_user_logged_in(request, user, **kwargs):
+    getLogger(__name__).info("%s: %s", request, user)
+    _get_access_logger(request, user).info("user logged in")
+
+
+@receiver(user_signed_up)
+def receive_user_signed_up(request, user, **kwargs):
+    _get_access_logger(request, user).info("new user signed up")
+
+
+@receiver(password_set)
+def receive_password_set(request, user, **kwargs):
+    _get_access_logger(request, user).info("password set")
+
+
+@receiver(password_changed)
+def receive_password_changed(request, user, **kwargs):
+    _get_access_logger(request, user).info("password changed")
+
+
+@receiver(password_reset)
+def receive_password_reset(request, user, **kwargs):
+    _get_access_logger(request, user).info("password reset")
+
+
+@receiver(email_changed)
+def receive_email_changed(request, user, from_email_address, to_email_address,
+                          **kwargs):
+    _get_access_logger(request, user).info(
+        "primary e-mail changed from %s to %s",
+        from_email_address.email, to_email_address.email
+    )
+
+
+@receiver(email_added)
+def receive_email_added(request, user, email_address, **kwargs):
+    _get_access_logger(request, user).info(
+        "new e-mail %s added", email_address.email
+    )
+
+
+@receiver(email_removed)
+def receive_email_removed(request, user, email_address, **kwargs):
+    _get_access_logger(request, user).info(
+        "e-mail %s removed", email_address.email
+    )
+
+
+@receiver(email_confirmed)
+def receive_email_confirmed(email_address, **kwargs):
+    _get_access_logger(None, email_address.user).info(
+        "e-mail %s confirmed", email_address.email
+    )
+
+
+@receiver(email_confirmation_sent)
+def receive_email_confirmation_sent(confirmation, **kwargs):
+    _get_access_logger(None, confirmation.email_address.user).info(
+        "e-mail confirmation request sent to %s",
+        confirmation.email_address.email
+    )
+
+
+@receiver(pre_social_login)
+def receive_pre_social_login(request, sociallogin, **kwargs):
+    getLogger(__name__).debug(
+        "%s: %s, %s", sociallogin, sociallogin.user, sociallogin.email_addresses
+    )
+    user = sociallogin.user
+
+    #username = sociallogin.user.username
+    #emails = ", ".join(addr.email for addr in sociallogin.email_addresses)
+    #if user_id:
+    #    if emails:
+    #        user_id += ", %s" % emails
+    #else:
+    #    if emails:
+    #        user_id = emails
+    #    else:
+    #        user_id = '<unknown>'
+    _get_access_logger(request, user).info(
+        "%s social account authentication", sociallogin.account.provider
+    )
+
+
+@receiver(social_account_added)
+def receive_social_account_added(request, sociallogin, **kwargs):
+    _get_access_logger(request, socialaccount.user).info(
+        "%s social account added", sociallogin.account.provider
+    )
+
+
+@receiver(social_account_removed)
+def receive_social_account_removed(request, socialaccount, **kwargs):
+    _get_access_logger(request, socialaccount.user).info(
+        "%s social account removed", sociallogin.account.provider
+    )
+
+
+def _get_access_logger(request, user):
+    return AccessLoggerAdapter(
+        getLogger("vires_oauth.allauth"), request, user=user
+    )

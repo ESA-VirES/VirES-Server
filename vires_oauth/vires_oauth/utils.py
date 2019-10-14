@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+from logging import LoggerAdapter
 
 def decorate(decorators, function):
     """ Decorate `function` with one or more decorators. `decorators` can be
@@ -38,3 +39,22 @@ def decorate(decorators, function):
     for decorator in decorators:
         function = decorator(function)
     return function
+
+
+def get_remote_addr(request):
+    """ Extract remote address from a request. """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.partition(',')[0]
+    return request.META.get('REMOTE_ADDR')
+
+
+class AccessLoggerAdapter(LoggerAdapter):
+    """ Logger adapter adding extra fields required by the access logger. """
+
+    def __init__(self, logger, request, user=None):
+        user = user or request.user
+        super().__init__(logger, {
+            "remote_addr": get_remote_addr(request) if request else "-",
+            "username": "-" if user.is_anonymous else user.username,
+        })
