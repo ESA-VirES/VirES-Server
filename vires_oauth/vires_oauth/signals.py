@@ -25,7 +25,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, invalid-name
+# pylint: disable=missing-docstring, invalid-name, unused-argument
 
 from logging import getLogger
 from django.conf import settings
@@ -124,14 +124,14 @@ def receive_email_confirmation_sent(confirmation, **kwargs):
 
 
 @receiver(pre_social_login)
-def receive_pre_social_login(request, sociallogin, **kwargs):
+def receive_pre_social_login(request, social_account, **kwargs):
     getLogger(__name__).debug(
-        "%s: %s, %s", sociallogin, sociallogin.user, sociallogin.email_addresses
+        "%s: %s, %s", social_account, social_account.user, social_account.email_addresses
     )
-    user = sociallogin.user
+    user = social_account.user
 
-    #username = sociallogin.user.username
-    #emails = ", ".join(addr.email for addr in sociallogin.email_addresses)
+    #username = social_account.user.username
+    #emails = ", ".join(addr.email for addr in social_account.email_addresses)
     #if user_id:
     #    if emails:
     #        user_id += ", %s" % emails
@@ -141,21 +141,21 @@ def receive_pre_social_login(request, sociallogin, **kwargs):
     #    else:
     #        user_id = '<unknown>'
     _get_access_logger(request, user).info(
-        "%s social account authentication", sociallogin.account.provider
+        "%s social account authentication", social_account.account.provider
     )
 
 
 @receiver(social_account_added)
-def receive_social_account_added(request, sociallogin, **kwargs):
-    _get_access_logger(request, socialaccount.user).info(
-        "%s social account added", sociallogin.account.provider
+def receive_social_account_added(request, social_account, **kwargs):
+    _get_access_logger(request, social_account.user).info(
+        "%s social account added", social_account.account.provider
     )
 
 
 @receiver(social_account_removed)
-def receive_social_account_removed(request, socialaccount, **kwargs):
-    _get_access_logger(request, socialaccount.user).info(
-        "%s social account removed", sociallogin.account.provider
+def receive_social_account_removed(request, social_account, **kwargs):
+    _get_access_logger(request, social_account.user).info(
+        "%s social account removed", social_account.account.provider
     )
 
 
