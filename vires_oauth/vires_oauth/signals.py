@@ -65,7 +65,7 @@ def receive_app_authorized(request, token, **kwargs):
     app_info = [("client_id", token.application.client_id)]
     if token.application.name:
         app_info.append(("name", token.application.name))
-    _get_access_logger(request, token.user).info(
+    _get_access_logger(request, token.user, "vires_oauth.oauth2_provider").info(
         "oauth application authorized (%s)" % _items2str(app_info)
     )
 
@@ -189,7 +189,7 @@ def _items2str(data):
     return ", ".join("%s: %s" % (key, value) for key, value in data if value)
 
 
-def _get_access_logger(request, user):
+def _get_access_logger(request, user, name=None):
     return AccessLoggerAdapter(
-        getLogger("vires_oauth.allauth"), request, user=user
+        getLogger(name or "vires_oauth.allauth"), request, user=user
     )
