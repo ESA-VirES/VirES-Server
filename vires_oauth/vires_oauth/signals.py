@@ -31,6 +31,7 @@ from logging import getLogger
 from django.conf import settings
 from django.dispatch import receiver
 from django.contrib.auth.models import Group
+from allauth.socialaccount import providers
 from allauth.account.signals import (
     user_logged_in, user_signed_up, password_set, password_changed,
     password_reset, email_confirmed, email_confirmation_sent, email_changed,
@@ -61,13 +62,20 @@ def set_default_group(sender, request, user, **kwargs):
 
 @receiver(user_logged_in)
 def receive_user_logged_in(request, user, **kwargs):
-    getLogger(__name__).info("%s: %s", request, user)
-    _get_access_logger(request, user).info("user logged in")
+    provider = getattr(user, 'provider', None)
+    socialaccount = user.socialaccount_set.get(provider=provider) if provider else None
+    _get_access_logger(request, user).info(
+        "user logged in %s", _extract_login_info(socialaccount)
+    )
 
 
 @receiver(user_signed_up)
 def receive_user_signed_up(request, user, **kwargs):
-    _get_access_logger(request, user).info("new user signed up")
+    socialaccounts = list(user.socialaccount_set.all())
+    socialaccount = socialaccounts[0] if socialaccounts else None
+    _get_access_logger(request, user).info(
+        "user signed up %s", _extract_login_info(socialaccount)
+    )
 
 
 @receiver(password_set)
@@ -125,37 +133,47 @@ def receive_email_confirmation_sent(confirmation, **kwargs):
 
 @receiver(pre_social_login)
 def receive_pre_social_login(request, sociallogin, **kwargs):
-    getLogger(__name__).debug(
-        "%s: %s, %s", sociallogin, sociallogin.user, sociallogin.email_addresses
-    )
-    user = sociallogin.user
-
-    #username = sociallogin.user.username
-    #emails = ", ".join(addr.email for addr in sociallogin.email_addresses)
-    #if user_id:
-    #    if emails:
-    #        user_id += ", %s" % emails
-    #else:
-    #    if emails:
-    #        user_id = emails
-    #    else:
-    #        user_id = '<unknown>'
-    _get_access_logger(request, user).info(
-        "%s social account authentication", sociallogin.account.provider
-    )
+    if sociallogin.is_existing:
+        sociallogin.user.provider = sociallogin.account.provider
 
 
 @receiver(social_account_added)
 def receive_social_account_added(request, sociallogin, **kwargs):
     _get_access_logger(request, sociallogin.user).info(
-        "%s social account added", sociallogin.account.provider
+        "%s social account added %s", sociallogin.account.provider,
+        _extract_user_info(sociallogin.account)
     )
 
 
 @receiver(social_account_removed)
 def receive_social_account_removed(request, socialaccount, **kwargs):
     _get_access_logger(request, socialaccount.user).info(
-        "%s social account removed", socialaccount.provider
+        "%s social account removed %s", socialaccount.provider,
+        _extract_user_info(socialaccount)
+    )
+
+
+def _extract_login_info(social_account):
+    if social_account:
+        return "via %s social account %s" % (
+            social_account.provider, _extract_user_info(social_account)
+        )
+    return "directly"
+
+
+def _extract_user_info(social_account):
+    social_provider = providers.registry.by_id(social_account.provider)
+    data = social_provider.extract_common_fields(social_account.extra_data)
+
+    first_name = data.pop('first_name', None)
+    last_name = data.pop('last_name', None)
+    if first_name and last_name:
+        data['name'] = "%s %s" % (first_name, last_name)
+
+    return "(%s)" % ", ".join(
+        "%s: %s" % (key, value) for key, value in (
+            (key, data.get(key)) for key in ['name', 'username', 'email']
+        ) if value
     )
 
 
