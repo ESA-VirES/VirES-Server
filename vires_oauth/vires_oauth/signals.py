@@ -31,6 +31,7 @@ from logging import getLogger
 from django.conf import settings
 from django.dispatch import receiver
 from django.contrib.auth.models import Group
+from oauth2_provider.signals import app_authorized
 from allauth.socialaccount import providers
 from allauth.account.signals import (
     user_logged_in, user_signed_up, password_set, password_changed,
@@ -58,6 +59,15 @@ def set_default_group(sender, request, user, **kwargs):
     user.groups.add(group)
     logger.debug("User %s added to group %s.", user.username, group.name)
 
+
+@receiver(app_authorized)
+def receive_app_authorized(request, token, **kwargs):
+    app_info = [("client_id", token.application.client_id)]
+    if token.application.name:
+        app_info.append(("name", token.application.name))
+    _get_access_logger(request, token.user).info(
+        "oauth application authorized (%s)" % _items2str(app_info)
+    )
 
 
 @receiver(user_logged_in)
@@ -170,11 +180,13 @@ def _extract_user_info(social_account):
     if first_name and last_name:
         data['name'] = "%s %s" % (first_name, last_name)
 
-    return "(%s)" % ", ".join(
-        "%s: %s" % (key, value) for key, value in (
-            (key, data.get(key)) for key in ['name', 'username', 'email']
-        ) if value
+    return "(%s)" % _items2str(
+        (key, data.get(key)) for key in ['name', 'username', 'email']
     )
+
+
+def _items2str(data):
+    return ", ".join("%s: %s" % (key, value) for key, value in data if value)
 
 
 def _get_access_logger(request, user):
