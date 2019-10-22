@@ -35,3 +35,6 @@
     color: black;
     text-decoration: none;
 }
+#cookie-law > .cookiebutton > a > span {
+    white-space: nowrap;
+}
