@@ -7,21 +7,21 @@
     right: 0;
     padding: 20px 5%;
     background-color: #ccc;
-    z-index: 999;
+    z-index: 1015;
 }
 #cookie-law > div {
 
 }
-#cookie-law > div:first-child {
+#cookie-law > .cookiebutton {
     padding-right: 40px;
 }
-#cookie-law > div:first-child > a {
+#cookie-law > .cookiebutton > a {
     color: inherit;
 }
-#cookie-law > div:last-child {
+#cookie-law > .cookiebutton:last-child {
     vertical-align: middle;
 }
-#cookie-law > div:last-child > a {
+#cookie-law > .cookiebutton:last-child > a {
     padding: 10px 20px;
     background-color: rgb(226, 231, 144);
     border-radius: 5px;

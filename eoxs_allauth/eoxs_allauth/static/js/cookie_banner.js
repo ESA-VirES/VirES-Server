@@ -10,7 +10,6 @@ var CookieBanner = (function() {
         'createCookieWhenAcceptIsClicked': true,
         'cookieDuration': 14,                   // Number of days before the cookie expires, and the banner reappears
         'cookieName': 'cookieConsent',          // Name of our cookie
-        'cookieValue': 'accepted',              // Value of cookie
 
         '_createDiv': function(html) {
             var bodytag = document.getElementsByTagName('body')[0];
@@ -57,8 +56,8 @@ var CookieBanner = (function() {
             CookieBanner._createCookie(name,"",-1);
         },
 
-        'createAcceptCookie': function() {
-            CookieBanner._createCookie(CookieBanner.cookieName, CookieBanner.cookieValue, CookieBanner.cookieDuration); // Create the cookie
+        'createCookie': function(cookieValue) {
+            CookieBanner._createCookie(CookieBanner.cookieName, cookieValue, CookieBanner.cookieDuration); // Create the cookie
         },
 
         'closeBanner': function() {
@@ -67,14 +66,20 @@ var CookieBanner = (function() {
         },
 
         'accept': function() {
-            CookieBanner.createAcceptCookie();
+            CookieBanner.createCookie('accepted');
             CookieBanner.closeBanner();
         },
 
-        'showUnlessAccepted': function(html) {
+        'deny': function() {
+            CookieBanner.createCookie('denied');
+            CookieBanner.closeBanner();
+        },
+
+        'showUnlessInteracted': function(html) {
             //alert(CookieBanner._checkCookie(CookieBanner.cookieName));
             //alert(document.cookie);
-            if(CookieBanner._checkCookie(CookieBanner.cookieName) != CookieBanner.cookieValue){
+            if( (CookieBanner._checkCookie(CookieBanner.cookieName) != 'accepted') ||
+                (CookieBanner._checkCookie(CookieBanner.cookieName) != 'denied') ){
                 CookieBanner._createDiv(html);
             }
         }
@@ -86,15 +91,14 @@ var CookieBanner = (function() {
 window.onload = function(){
     //var html = '<p>Our website uses cookies. By continuing we assume your permission to deploy cookies, as detailed in our <a href="/privacy-cookies-policy/" rel="nofollow" title="Privacy &amp; Cookies Policy">privacy and cookies policy</a>. <a class="close-cookie-banner" href="javascript:void(0);" onclick="CookieBanner.accept();"><span>X</span></a></p>'
     var html = '<div>' +
-        'This site uses cookies to enhance your experience, personalize content and advertisements, and ' +
-        'analyze traffic. We may share your information with our marketing and analytics partners. ' +
-        'For further information, please review our ' +
-        '<a href="">Privacy Policy</a>. ' +
-        'By clicking "Accept", you agree to our use of cookies and similar technologies.' +
+        'By clicking "Ok" you consent to the use of cookies on our website. '+
+        'You can withdraw your consent at any time with effect for the future. '+
+        'For further information see our <a href="/">Privacy Notice</a>.'+
         '</div>'
 
     // Add the accept button
-    html += '<div><a href="javascript:void(0);" onclick="CookieBanner.accept();"><span>Accept</span></a></div>';
+    html += '<div class="cookiebutton ok"><a href="javascript:void(0);" onclick="CookieBanner.accept();"><span>Ok</span></a></div>';
+    html += '<div class="cookiebutton notok"><a href="javascript:void(0);" onclick="CookieBanner.deny();"><span>Not Ok</span></a></div>';
 
-    CookieBanner.showUnlessAccepted(html);
+    CookieBanner.showUnlessInteracted(html);
 }
