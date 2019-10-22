@@ -8,7 +8,7 @@ var CookieBanner = (function() {
     return {
         'createCookieWhenBannerIsShown': false,
         'createCookieWhenAcceptIsClicked': true,
-        'cookieDuration': 14,                   // Number of days before the cookie expires, and the banner reappears
+        'cookieDuration': false,                   // Number of days before the cookie expires, and the banner reappears
         'cookieName': 'cookieConsent',          // Name of our cookie
 
         '_createDiv': function(html) {
