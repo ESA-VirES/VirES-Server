@@ -91,10 +91,17 @@
     <script type="text/javascript">
      var _paq = _paq || [];
 
+    // require user consent before processing data
+    _paq.push(['requireConsent']);
+    _paq.push(['trackPageview']);
+    
      // Check for tracking cookie
      var consentCookie = document.cookie.match(new RegExp('(^| )' + 'cookieConsent' + '=([^;]+)'));
       if (consentCookie) {
-        console.log(consentCookie[2]);
+        if(consentCookie[2] === 'accepted'){
+          // user has given consent to process their data
+        _paq.push(['setConsentGiven']);
+        } 
       }
 
      // Check if the title was set already somewhere else

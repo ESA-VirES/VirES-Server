@@ -68,6 +68,8 @@ var CookieBanner = (function() {
         'accept': function() {
             CookieBanner.createCookie('accepted');
             CookieBanner.closeBanner();
+            var _paq = _paq || [];
+            _paq.push(['setConsentGiven']);
         },
 
         'deny': function() {
@@ -76,9 +78,7 @@ var CookieBanner = (function() {
         },
 
         'showUnlessInteracted': function(html) {
-            //alert(CookieBanner._checkCookie(CookieBanner.cookieName));
-            //alert(document.cookie);
-            if( (CookieBanner._checkCookie(CookieBanner.cookieName) != 'accepted') ||
+            if( (CookieBanner._checkCookie(CookieBanner.cookieName) != 'accepted') &&
                 (CookieBanner._checkCookie(CookieBanner.cookieName) != 'denied') ){
                 CookieBanner._createDiv(html);
             }
