@@ -51,9 +51,6 @@
   </style>
   <link rel="stylesheet" type="text/css" href="{% static 'css/social_providers.css' %}" />
   <link rel="stylesheet" type="text/css" href="{% static 'css/cookie_banner.css' %}" />
-
-  <script src="{% static 'js/cookie_banner.js'%}"></script>
-
 </head>
 <body>
 	{% block messages %}
@@ -89,45 +86,42 @@
 
     <!-- Piwik -->
     <script type="text/javascript">
-     var _paq = _paq || [];
 
-    // require user consent before processing data
-    _paq.push(['requireConsent']);
+      var _paq = _paq || [];
 
-     // Check for tracking cookie
-     var consentCookie = document.cookie.match(new RegExp('(^| )' + 'cookieConsent' + '=([^;]+)'));
+      // Check for tracking cookie
+      var consentCookie = document.cookie.match(new RegExp('(^| )' + 'cookieConsent' + '=([^;]+)'));
       if (consentCookie) {
         if(consentCookie[2] === 'accepted'){
           // user has given consent to process their data
-        _paq.push(['setConsentGiven']);
-        } 
+          // Check if the title was set already somewhere else
+          var documentTitleSet = false;
+          for (var i = _paq.length - 1; i >= 0; i--) {
+          if (_paq[i][0]=="setDocumentTitle"){
+            documentTitleSet = true;
+          }
+          }
+          // only if it is not set set it here with the default
+          if(!documentTitleSet){
+          _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+          }
+
+          _paq.push(["setDoNotTrack", true]);
+          _paq.push(['trackPageView']);
+          _paq.push(['enableLinkTracking']);
+          (function() {
+           var u="//nix.eox.at/piwik/";
+           _paq.push(['setTrackerUrl', u+'piwik.php']);
+           _paq.push(['setSiteId', 4]);
+           var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+           g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+          })();
+        }
       }
-
-     // Check if the title was set already somewhere else
-     var documentTitleSet = false;
-     for (var i = _paq.length - 1; i >= 0; i--) {
-     	if (_paq[i][0]=="setDocumentTitle"){
-     		documentTitleSet = true;
-     	}
-     }
-     // only if it is not set set it here with the default
-     if(!documentTitleSet){
-     	_paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-     }
-
-     _paq.push(["setDoNotTrack", true]);
-     _paq.push(['trackPageView']);
-     _paq.push(['enableLinkTracking']);
-     (function() {
-       var u="//nix.eox.at/piwik/";
-       _paq.push(['setTrackerUrl', u+'piwik.php']);
-       _paq.push(['setSiteId', 4]);
-       var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-       g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-     })();
     </script>
     <noscript><p><img src="//nix.eox.at/piwik/piwik.php?idsite=4" style="border:0;" alt="" /></p></noscript>
     <!-- End Piwik Code -->
+    <script src="{% static 'js/cookie_banner.js'%}"></script>
 
 </body>
 </html>

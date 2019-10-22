@@ -69,7 +69,31 @@ var CookieBanner = (function() {
             CookieBanner.createCookie('accepted');
             CookieBanner.closeBanner();
             var _paq = _paq || [];
-            _paq.push(['setConsentGiven']);
+            
+            // Check if the title was set already somewhere else
+            var documentTitleSet = false;
+            for (var i = _paq.length - 1; i >= 0; i--) {
+                if (_paq[i][0]=='setDocumentTitle'){
+                    documentTitleSet = true;
+                }
+            }
+            // only if it is not set set it here with the default
+            if(!documentTitleSet){
+                _paq.push(['setDocumentTitle', document.domain + '/' + document.title]);
+            }
+
+            _paq.push(['setDoNotTrack', true]);
+            _paq.push(['trackPageView']);
+            _paq.push(['enableLinkTracking']);
+            (function() {
+                var u='//nix.eox.at/piwik/';
+                _paq.push(['setTrackerUrl', u+'piwik.php']);
+                _paq.push(['setSiteId', 4]);
+                var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+                g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+            })();
+
+
         },
 
         'deny': function() {
@@ -83,18 +107,15 @@ var CookieBanner = (function() {
                 CookieBanner._createDiv(html);
             }
         }
-
-    }
-
+    };
 })();
 
 window.onload = function(){
-    //var html = '<p>Our website uses cookies. By continuing we assume your permission to deploy cookies, as detailed in our <a href="/privacy-cookies-policy/" rel="nofollow" title="Privacy &amp; Cookies Policy">privacy and cookies policy</a>. <a class="close-cookie-banner" href="javascript:void(0);" onclick="CookieBanner.accept();"><span>X</span></a></p>'
     var html = '<div>' +
         'By clicking "Ok" you consent to the use of cookies on our website. '+
         'You can withdraw your consent at any time with effect for the future. '+
         'For further information see our <a href="/">Privacy Notice</a>.'+
-        '</div>'
+        '</div>';
 
     // Add the accept button
     html += '<div class="cookiebutton ok"><a href="javascript:void(0);" onclick="CookieBanner.accept();"><span>Ok</span></a></div>';
