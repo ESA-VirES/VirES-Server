@@ -13,7 +13,7 @@
 
 }
 #cookie-law > .cookiebutton {
-    padding-left: 40px;
+    padding-left: 15px;
 }
 #cookie-law > .cookiebutton > a {
     color: inherit;
@@ -23,7 +23,7 @@
 }
 #cookie-law > .cookiebutton.ok > a {
     padding: 10px 20px;
-    background-color: rgb(128, 204, 71);
+    background-color: #579459;
     border-radius: 5px;
     color: black;
     text-decoration: none;
