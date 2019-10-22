@@ -114,7 +114,7 @@ window.onload = function(){
     var html = '<div>' +
         'By clicking "Ok" you consent to the use of cookies on our website. '+
         'You can withdraw your consent at any time with effect for the future. '+
-        'For further information see our <a href="/">Privacy Notice</a>.'+
+        'For further information see our <a href="/accounts/privacy_notice" target="_blank">Privacy Notice</a>.'+
         '</div>';
 
     // Add the accept button
