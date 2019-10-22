@@ -1,0 +1,30 @@
+#cookie-law {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 5%;
+    background-color: #ccc;
+    z-index: 999;
+}
+#cookie-law > div {
+
+}
+#cookie-law > div:first-child {
+    padding-right: 40px;
+}
+#cookie-law > div:first-child > a {
+    color: inherit;
+}
+#cookie-law > div:last-child {
+    vertical-align: middle;
+}
+#cookie-law > div:last-child > a {
+    padding: 10px 20px;
+    background-color: rgb(226, 231, 144);
+    border-radius: 5px;
+    color: black;
+    text-decoration: none;
+}
