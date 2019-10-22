@@ -112,14 +112,16 @@ var CookieBanner = (function() {
 
 window.onload = function(){
     var html = '<div>' +
-        'By clicking "Ok" you consent to the use of cookies on our website. '+
-        'You can withdraw your consent at any time with effect for the future. '+
+        'You may choose to prevent this website from aggregating and analyzing '+
+        'the actions you take here. Doing so will protect your privacy, but '+
+        'will also prevent the service provider from learning from your actions '+
+        'and creating a better experience for you and other users.'+
         'For further information see our <a href="/accounts/privacy_notice" target="_blank">Privacy Notice</a>.'+
         '</div>';
 
     // Add the accept button
-    html += '<div class="cookiebutton ok"><a href="javascript:void(0);" onclick="CookieBanner.accept();"><span>Ok</span></a></div>';
-    html += '<div class="cookiebutton notok"><a href="javascript:void(0);" onclick="CookieBanner.deny();"><span>Not Ok</span></a></div>';
+    html += '<div class="cookiebutton ok"><a href="javascript:void(0);" onclick="CookieBanner.accept();"><span>Accept</span></a></div>';
+    html += '<div class="cookiebutton notok"><a href="javascript:void(0);" onclick="CookieBanner.deny();"><span>Decline</span></a></div>';
 
     CookieBanner.showUnlessInteracted(html);
 }
