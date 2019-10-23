@@ -69,7 +69,7 @@ var CookieBanner = (function() {
             CookieBanner.createCookie('accepted');
             CookieBanner.closeBanner();
             var _paq = _paq || [];
-            
+
             // Check if the title was set already somewhere else
             var documentTitleSet = false;
             for (var i = _paq.length - 1; i >= 0; i--) {
