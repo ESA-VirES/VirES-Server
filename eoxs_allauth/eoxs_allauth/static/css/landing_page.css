@@ -142,7 +142,7 @@ h1 {
 /* customize nav style */
 .navbar-custom {
     background-color: #2e2e2e;
-	font-weight:700;
+    font-weight:700;
     text-transform:uppercase;
     border-width:0;
 }
@@ -150,7 +150,7 @@ h1 {
 	color: #ddd;
 }
 .navbar-custom  li>a:hover {
-	color: #eee;
+	color: #000;
 }
 
 .navbar-custom .navbar-nav>.dropdown>a .caret {
