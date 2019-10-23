@@ -149,12 +149,10 @@ h1 {
 .navbar-custom  .navbar-nav>li>a {
 	color: #ddd;
 }
-.navbar-custom  .dropdown-menu li>a:hover {
+.navbar-custom  li>a:hover {
 	color: #eee;
 }
-.navbar-custom  .navbar-nav li>a:hover, .navbar-nav li .open, .navbar-custom .navbar-nav .active a  {
-	background-color: #000;
-}
+
 .navbar-custom .navbar-nav>.dropdown>a .caret {
 	border-top-color: #999;
 	border-bottom-color: #999;
