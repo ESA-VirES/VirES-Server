@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django template tags and filters
+# Custom Django context processors
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,27 +26,23 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from django.template import Library
-from allauth.socialaccount import app_settings
-from ..provider import ViresProvider
-
-register = Library()
+from django.core.exceptions import ObjectDoesNotExist
+from .provider import ViresProvider
 
 
-VIRES_OAUTH_URL_PATHS = {
-    'account_update_profile': '/',
-    'account_change_password': '/accounts/password/change/',
-    'account_email': '/accounts/email/',
-    'socialaccount_connections': '/accounts/social/connections/',
-}
+def vires_oauth(request):
+    return {
+        "vires_permissions": set(_get_vires_permissions(request.user))
+    }
 
 
-@register.simple_tag
-def vires_oauth_url(name):
-    """ Resolve VirES OAuth server URL. """
-    settings = app_settings.PROVIDERS.get(ViresProvider.id, {})
-    base_url = settings['SERVER_URL'].rstrip('/')
+def _get_vires_permissions(user):
+    if not user.is_authenticated():
+        return []
+
     try:
-        return '{0}{1}'.format(base_url, VIRES_OAUTH_URL_PATHS[name])
-    except KeyError:
-        raise ValueError("Unknown URL name '%s'!" % name)
+        vires_account = user.socialaccount_set.get(provider=ViresProvider.id)
+    except ObjectDoesNotExist:
+        return []
+
+    return vires_account.extra_data.get("permissions", [])

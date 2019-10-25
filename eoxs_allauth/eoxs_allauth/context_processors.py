@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django template tags and filters
+# Custom Django context processors
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,27 +26,11 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from django.template import Library
-from allauth.socialaccount import app_settings
-from ..provider import ViresProvider
+from django.conf import settings
 
-register = Library()
-
-
-VIRES_OAUTH_URL_PATHS = {
-    'account_update_profile': '/',
-    'account_change_password': '/accounts/password/change/',
-    'account_email': '/accounts/email/',
-    'socialaccount_connections': '/accounts/social/connections/',
-}
-
-
-@register.simple_tag
-def vires_oauth_url(name):
-    """ Resolve VirES OAuth server URL. """
-    settings = app_settings.PROVIDERS.get(ViresProvider.id, {})
-    base_url = settings['SERVER_URL'].rstrip('/')
-    try:
-        return '{0}{1}'.format(base_url, VIRES_OAUTH_URL_PATHS[name])
-    except KeyError:
-        raise ValueError("Unknown URL name '%s'!" % name)
+def vre_jhub(request):
+    context = {
+        "has_vre_jhub": getattr(settings, "VIRES_VRE_JHUB_URL", None) is not None,
+        "vre_permission": getattr(settings, "VIRES_VRE_JHUB_PERMISSION", None),
+    }
+    return {key: value for key, value in context.items() if value is not None}

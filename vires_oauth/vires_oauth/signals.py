@@ -48,16 +48,20 @@ from .utils import AccessLoggerAdapter
 def set_default_group(sender, request, user, **kwargs):
     """ Set default groups for newly signed-up users. """
     logger = getLogger(__name__)
-    default_group = getattr(settings, "VIRES_OAUTH_DEFAULT_GROUP", None)
-    if not default_group:
+    default_groups = getattr(settings, "VIRES_OAUTH_DEFAULT_GROUPS", [])
+    if not default_groups:
         return
-    try:
-        group = Group.objects.get(name=default_group)
-    except Group.DoesNotExist:
-        logger.warning("Default group %s does not exist!", default_group)
-        return
-    user.groups.add(group)
-    logger.debug("User %s added to group %s.", user.username, group.name)
+    groups = {
+        group.name: group
+        for group in Group.objects.filter(name__in=default_groups)
+    }
+    for group_name in default_groups:
+        group = groups.get(group_name)
+        if group:
+            user.groups.add(group)
+            logger.debug("User %s added to group %s.", user.username, group.name)
+        else:
+            logger.warning("Default group %s does not exist!", group_name)
 
 
 @receiver(app_authorized)
