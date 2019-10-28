@@ -29,6 +29,7 @@
 
 import re
 from logging import getLogger
+from django.conf import settings
 from django.forms import Form, CharField, Textarea
 from django_countries import countries
 from django_countries.fields import LazyTypedChoiceField
@@ -123,6 +124,11 @@ class SignupForm(Form):
             study_area=self.cleaned_data['study_area'],
             executive_summary=self.cleaned_data['executive_summary'],
         )
+        service_terms_version = getattr(
+            settings, "VIRES_SERVICE_TERMS_VERSION", None
+        )
+        if service_terms_version:
+            user_profile.consented_service_terms_version = service_terms_version
         user_profile.full_clean()
         user_profile.save()
 

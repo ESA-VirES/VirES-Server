@@ -159,6 +159,7 @@ def get_groups():
 
 USER_PROFILE_FIELDS = [
     "title", "institution", "country", "study_area", "executive_summary",
+    "consented_service_terms_version",
 ]
 
 
