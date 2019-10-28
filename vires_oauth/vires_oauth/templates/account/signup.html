@@ -53,7 +53,7 @@
   </form>
 
   <script type="text/javascript">
-    window.onload = function () {
+    onLoadCallbacks.push(function() {
       $('#id_password2').parent().prependTo("fieldset");
       $('#id_password1').parent().prependTo("fieldset");
       $('#id_email2').parent().prependTo("fieldset");
@@ -73,6 +73,6 @@
               $(this).trigger('click');
           }
       });
-    }
+    });
   </script>
 {% endblock %}
