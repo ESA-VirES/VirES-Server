@@ -30,6 +30,8 @@
 #from logging import INFO, WARNING
 from django.conf.urls import url, include
 from django.views.generic import TemplateView
+from django.views.generic.base import RedirectView
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from allauth.account.views import logout as account_logout
 from .views import AccessTokenManagerView
 #from .url_tools import decorate
@@ -51,4 +53,10 @@ document_urlpatterns = [
         'service_terms',
         'privacy_notice',
     ]
+] + [
+    url(
+        r'^data_terms$',
+        RedirectView.as_view(url=static('other/T&C_for_ESA_Dataset-v1.pdf').replace("%", "%%")),
+        name="data_terms"
+    ),
 ]
