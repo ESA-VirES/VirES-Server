@@ -27,6 +27,8 @@
 # pylint: disable=missing-docstring
 
 from logging import LoggerAdapter
+from django.utils.http import is_safe_url
+
 
 def decorate(decorators, function):
     """ Decorate `function` with one or more decorators. `decorators` can be
@@ -39,6 +41,16 @@ def decorate(decorators, function):
     for decorator in decorators:
         function = decorator(function)
     return function
+
+
+def get_next_redirect_url(request, redirect_field='next', allowed_hosts=None):
+    """ Get safe redirect URL from the request. """
+    redirect_url = (
+        request.POST.get(redirect_field) or request.GET.get(redirect_field)
+    )
+    if is_safe_url(redirect_url, allowed_hosts=allowed_hosts):
+        return redirect_url
+    return None
 
 
 def get_remote_addr(request):

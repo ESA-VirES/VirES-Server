@@ -1,0 +1,44 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% block head_title %}{% trans "Confirmation" %}{% endblock %}
+{% block content %}
+  <h2>{% trans "Confirmation" %}</h2>
+  <p>
+  We apologise for this interruption. Recently, there has been a change
+  of the VirES for Swarm legal terms and condition which requires your
+  confirmation.
+  </p>
+  <form class="form-horizontal inputwide" method="POST" action="{% url 'update_user_consent' %}">
+    {% csrf_token %}
+    <fieldset>
+      {% if redirect_field_value %}
+          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+      {% endif %}
+      <div class="checkbox">
+          <label style="font-weight: bold;">
+              <input id="mandatory_consent" style="width: auto;" type="checkbox" value="">
+              I have read and hereby accept the <a style="display:inline;" href="/data_terms" target="_blank">ESA Data Terms</a>,
+              <a style="display:inline;" href="/service_terms" target="_blank">VirES Service Terms</a>,
+              and <a style="display:inline;" href="/privacy_notice" target="_blank">VirES Privacy Notice</a>. *
+          </label>
+      </div>
+      <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
+          <button id="formsubmit" type="submit" class="btn btn-primary" disabled="true">{% trans "Confirm" %} &raquo;</button>
+      </div>
+    </fieldset>
+  </form>
+
+  <script type="text/javascript">
+    onLoadCallbacks.push(function() {
+      $('#mandatory_consent').change(function () {
+        var enabled = $('#mandatory_consent')[0].checked;
+        $('#formsubmit').prop('disabled', !enabled);
+      })
+      $('#mandatory_consent').keypress(function (e) {
+          if((e.keyCode ? e.keyCode : e.which) == 13) {
+              $(this).trigger('click');
+          }
+      });
+    });
+  </script>
+{% endblock content %}

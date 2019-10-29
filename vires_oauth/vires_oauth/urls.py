@@ -49,9 +49,10 @@ from .views import (
     FilteredAuthorizedTokensListView,
     FixedAuthorizedTokenDeleteView,
     update_user_profile_view,
+    update_user_consent_view,
     api_user_view,
 )
-from .decorators import has_permission
+from .decorators import has_permission, request_consent
 
 
 vires_admin_only = has_permission('admin')
@@ -62,7 +63,7 @@ oauth2_provider_urlpatterns = [
     # Base views
     path(
         "authorize/",
-        AuthorizationView.as_view(),
+        request_consent(AuthorizationView.as_view()),
         name="authorize"
     ),
     path(
@@ -122,8 +123,9 @@ oauth2_provider_urlpatterns = [
 ]
 
 urlpatterns = [
-    path('', update_user_profile_view, name='account_update_profile'),
+    path('', request_consent(update_user_profile_view), name='account_update_profile'),
     path('', include((oauth2_provider_urlpatterns, "oauth2_provider"))),
+    path('consent/', update_user_consent_view, name="update_user_consent"),
     path('user/', api_user_view),
     path('accounts/', include('allauth.urls')),
 ]

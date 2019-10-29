@@ -243,6 +243,9 @@
     while (onLoadCallbacks.length > 0) {
       (onLoadCallbacks.shift())();
     }
+    window.history.replaceState(
+      {}, document.title, window.location.href.split(/[?#]/)[0]
+    );
   }
 </script>
 </body>
