@@ -6,7 +6,10 @@
   {% url 'account_login' as login_url %}
   <p>
     {% blocktrans %}You decided to cancel logging in to our site using one of
-    your existing accounts. If this was a mistake, please proceed to
-    <a href="{{login_url}}">log in</a>.{% endblocktrans %}
+    your existing accounts. If this was a mistake, please, re-try to log in.
+    {% endblocktrans %}
+  </p>
+  <p>
+    <a href="{% url 'account_login' %}"  class="btn btn-primary">Retry to log in &raquo;</a>
   </p>
 {% endblock %}

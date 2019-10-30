@@ -33,12 +33,23 @@ from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from allauth.account.views import logout as account_logout
+from allauth.socialaccount.views import (
+    login_cancelled as socialaccount_login_cancelled,
+    login_error as socialaccount_login_error,
+)
 from .views import AccessTokenManagerView
-#from .url_tools import decorate
-#from .decorators import log_access
 
 urlpatterns = [
-    url(r'^', include('allauth.socialaccount.urls')),
+    url(
+        r'^login/cancelled/$',
+        socialaccount_login_cancelled,
+        name='socialaccount_login_cancelled'
+    ),
+    url(
+        r'^login/error/$',
+        socialaccount_login_error,
+        name='socialaccount_login_error'
+    ),
     url(r'^', include('eoxs_allauth.vires_oauth.urls')),
     url(r"^logout/$", account_logout, name="account_logout"),
     url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
