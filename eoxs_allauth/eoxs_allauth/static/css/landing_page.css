@@ -196,7 +196,7 @@ h1 {
 } 
  
 
-section {
+section.bg {
   color: #ffffff;
   min-height: 400px;
   height: auto !important;

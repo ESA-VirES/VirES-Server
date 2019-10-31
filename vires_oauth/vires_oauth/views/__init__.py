@@ -27,7 +27,12 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from .vires import test_view, api_user_view, update_user_profile_view
+from .vires import (
+    test_view,
+    api_user_view,
+    update_user_profile_view,
+    update_user_consent_view,
+)
 from .oauth2 import (
     AdminApplicationList,
     AdminApplicationDetail,
