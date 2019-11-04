@@ -99,7 +99,7 @@
       {% if has_vre_jhub and vre_permission in vires_permissions %}
       this.NAVBARITEMS[0].subitems.splice(0, 0, {
         "name": "VRE (JupyterLab)",
-        "url": "{% vre_jhub_url 'login' %}",
+        "url": "{% vre_jhub_url 'oauth_login' %}",
         "target": "_blank"
       }, {
         "type": "divider"
@@ -363,7 +363,7 @@
           </p>
           <p>
             To access the VirES for Swarm Jupyter Lab you need to have a VirES account
-            (<a href="#Signup">sign up</a>) and <a href="{% vre_jhub_url 'login' %}">login in VRE</a>.
+            (<a href="#Signup">sign up</a>) and <a href="{% vre_jhub_url 'oauth_login' %}">login in VRE</a>.
           </p>
           {% endif %}
 
