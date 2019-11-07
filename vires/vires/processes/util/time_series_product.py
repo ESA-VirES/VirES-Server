@@ -45,7 +45,7 @@ from .time_series import TimeSeries
 class SwarmDefaultParameters(object):
     """ Default SWARM product parameters. """
     TIME_VARIABLE = "Timestamp"
-    TIME_TOLERANCE = timedelta(microseconds=10) # time selection tolerance
+    TIME_TOLERANCE = timedelta(microseconds=0) # time selection tolerance
     TIME_OVERLAP = timedelta(seconds=60) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(seconds=30) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=0.5)
