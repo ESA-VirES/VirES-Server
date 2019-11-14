@@ -1,0 +1,183 @@
+{% extends "documents/base.html" %}
+{% block static_title %}VirES for Swarm - Website Privacy Notice{% endblock %}
+{% block static_content %}
+{% load static %}
+<style type="text/css">
+  body {
+    counter-reset: level1;
+  }
+  h1.title {
+    font-size:200%;
+    font-weight: bold;
+  }
+  section.level1>h1 {
+    font-size:167%;
+    counter-reset: level2;
+    margin-left: 1.8em;
+    position: relative;
+  }
+  section.level1>h1::before {
+    counter-increment: level1;
+    content: counter(level1) " ";
+    position: absolute;
+    left: -1.8em;
+  }
+  section.level1>p {
+    margin-left: 3em;
+    position: relative;
+  }
+  section.level1>p::before {
+    counter-increment: level2;
+    font-weight: bold;
+    content: counter(level1) "." counter(level2) " ";
+    position: absolute;
+    left: -3em;
+  }
+  section.level2>h2 {
+    font-size:125%;
+    counter-reset: level3;
+    position: relative;
+    margin-left: 2.4em;
+  }
+  section.level2>h2::before {
+    counter-increment: level2;
+    content: counter(level1) "." counter(level2) " ";
+    position: absolute;
+    left: -2.4em;
+  }
+  section.level2>p {
+    margin-left: 3em;
+    position: relative;
+  }
+  section.level2>p::before {
+    counter-increment: level3;
+    font-weight: bold;
+    content: counter(level1) "." counter(level2) "." counter(level3) " ";
+    position: absolute;
+    left: -3em;
+  }
+  p.end-of-document {
+    text-align: center;
+  }
+  .subtitle {
+    font-size:125%;
+  }
+  .note {
+    font-size:80%;
+  }
+  ol, ul {
+    margin-left: 3em;
+  }
+  ol > li {
+    list-style-type: upper-alpha;
+    list-style-position: outside;
+  }
+  ul > li {
+    list-style-type: square;
+    list-style-position: outside;
+  }
+  ul.no-symbol > li{
+    list-style-type: none;
+  }
+
+</style>
+<div id="header">
+<h1 class="title">VirES for Swarm Website Privacy Notice</h1>
+</div>
+<p>&quot;Privacy Notice&quot;</p>
+<p>Version of 12/11/2019</p>
+<hr>
+<p class="note">Download a <a href="{% static 'other/VirES_for_Swarm_Website_Privacy_Notice.pdf' %}">PDF version</a> to save or print this document.</p>
+<section class="level1">
+<h1 id="this-privacy-notice">This Privacy Notice</h1>
+<p>This Privacy Notice explains which personal data are collected when you visit and use the <em>VirES for Swarm</em> service (the &quot;Service&quot;) and how this data is processed by <em>EOX IT Service GmbH</em> as the data controller (&quot;EOX&quot; or &quot;we&quot;).</p>
+<p>This Privacy Notice is addressed to <em>any user of the Service</em> (&quot;data subject&quot; or &quot;you&quot;).</p>
+<p>We process your personal data in accordance with the EU General Data Protection Regulation (&quot;GDPR&quot;) and applicable national data protection laws. Unless otherwise defined in this Notice, the terms used herein shall have the same meaning as defined in the GDPR.</p>
+</section>
+<section class="level1">
+<h1 id="what-personal-data-we-collect-and-how-we-use-it">What Personal Data We Collect and How We Use It</h1>
+<p>When you use the Service we process those personal data which you voluntarily provide to us via our sign-up form or email contact.</p>
+<p>However, we also collect certain data that your browser transmits to our website server (i.e. log files) as well as data that we collect via the use of cookies or similar technologies.</p>
+<p>The following explanations shall serve to inform you about the different ways we may collect personal data about you when you use the Service and for what lawful purposes we may use them.</p>
+<section class="level2">
+<h2 id="sign-up-form-and-email-contact">Sign-up Form and Email Contact</h2>
+<p>If you register a user account for the Service, the personal data you voluntarily provide to us (i.e. user name, email address, password, title, first name, last name, institution, country, study area, project data) will be processed for the purposes of providing you access to and use the Service (legal basis: Art 6(1) b GDPR – <em>performance of contract</em>).</p>
+<p>In addition, you may choose to send us your feedback and ideas via the provided email contact. In this case, we process the personal data you voluntarily provide to us (e.g. name, email address, content of feedback) in order to evaluate your feedback and improve the Service. Equally, EOX may contact the registered users to inform them about changes to the Service or to inquire about the user's interest in the Service. This may be prevented by sending an email to <a href="mailto:at%20support@vires.services"><a href="mailto:support@vires.services">support@vires.services</a></a>. requesting unsubscription (legal basis: Art 6(1) f GDPR – <em>legitimate interest in the improvement of the Service</em>).</p>
+<p>Some of the data we request in the sign-up process are marked as mandatory fields. You are not required to provide these data. However, without providing this information we are not able to provide the Service.</p>
+</section>
+<section class="level2">
+<h2 id="log-files">Log Files</h2>
+<p>In addition to the data you actively provide, we collect certain data that your browser transmits to our website server (i.e. log files).</p>
+<p>Our log files contain the following information: (i) date and time of retrieval of our Website, (ii) type, version and settings of your web-browser, (iii) your operating system and internet service provider, (iv) requested pages, files and data, (v) address of the previous website from which a link to our Website was followed (Referer HTTP header) (vi) username and e-mail of the authenticated users (vii) social network identity (username, civil name, e-mail), in case of the social network authentication, as well as (viii) your IP-address. The IP address is a specific number assigned to your computer which enables your device to communicate in a network using the Internet Protocol (IP). IP addresses may qualify as personal data as they technically allow the identification of the user in certain circumstances.</p>
+<p>The processing of these log files is necessary for us to maintain the functionality, stability and security of the Service. We may also process them for the purpose of forensic investigations in the case of a security incident. Further, we may use these data in order to generate user statistics, however, log files (including IP addresses) and personal identification are not linked to each other (legal basis: Art 6(1) f GDPR – <em>legitimate interest in maintaining functionality, stability and security of our Website</em>).</p>
+</section>
+<section class="level2">
+<h2 id="cookies">Cookies</h2>
+<p>In addition, the Service uses cookies. These are small text files that may be placed on your device while browsing our Website which store certain information about you. Cookies cannot access, read or modify other data stored on your device. When we refer to “cookies” we include other technologies with similar purposes, such as pixel tags or HTML5 local storage.</p>
+</section>
+<section class="level2">
+<h2 id="we-use-two-types-of-cookies-on-our-website">We use two types of cookies on our Website:</h2>
+<!-- ol type="A" style="list-style-type: upper-alpha"-->
+<ol>
+<li><em>Necessary cookies</em>: Without necessary cookies the proper functioning of our Website would not be possible or only to a limited extent. We use necessary cookies for user authentication as well as to temporarily save your session activity, optional cookie consent (see below), session preferences and settings. The use of necessary cookies on our Website is possible without your consent. However, you can deactivate cookies at any time by modifying your browser settings (legal basis: Art 6 (1) f GDPR – <em>legitimate interest in proper website functionality</em>).</li>
+<li><em>Optional cookies:</em> These types of cookies may be used to improve our Service and optimize your user experience by analyzing user activity. They are not used for marketing purposes. Optional cookies will only be used upon your consent which you may provide by clicking &quot;Accept&quot; on our Website's cookie banner. This consent can be withdrawn at any time (see Section 2.8 below) with effect for the future (legal basis: Art 6(1) a GDPR – <em>consent</em>)</li>
+</ol>
+</section>
+<section class="level2">
+<h2 id="web-analytics-matomo">Web Analytics – Matomo</h2>
+<p>Our Website uses the open source software Matomo, a web analytics software developed by InnoCraft Ltd., 150 Willis St, 6011 Wellington, New Zealand. Matomo uses cookies to help the Website analyze how users use the site.</p>
+<p>The information collected by the Matomo software about your use of our Website (including your IP address and the URLs of the accessed pages) will be stored by us and will not be disclosed to third parties. Your IP address is made anonymous by truncating it.</p>
+<p>We will use this information for the purpose of evaluating your use of our Website, compiling reports on website activity and providing other services relating to website activity and internet usage. We will not associate your IP address with any other data held by us.</p>
+<p>Our processing using the Matomo software is based on your consent which you may provide by clicking &quot;Accept&quot; on our Website's cookie banner (Art 6(1) lit a GDPR). This consent can be withdrawn at any time with effect for the future. You may also refuse the use of cookies by selecting the appropriate settings on your browser (see Section 2.8 below).</p>
+</section>
+<section class="level2">
+<h2 id="how-to-control-and-manage-the-use-of-cookies">How to Control and Manage the Use of Cookies</h2>
+<p>By clicking on the &quot;Accept&quot; button in the Website's cookie banner you agree to the use of the above listed optional cookies on the Service. Your consent can be withdrawn (for all or individual cookies) at any time with effect for the future.</p>
+<p>You may also refuse the use of cookies by selecting the appropriate settings on your browser or by deleting the cookies from the device and browser. Most browsers accept cookies automatically, but you can alter the settings of your browser to erase cookies or prevent automatic acceptance if you prefer. Generally you have the option to see what cookies have been placed and delete them individually, block third party cookies or cookies from particular sites, accept all cookies, to be notified when a cookie is issued or reject all cookies. Visit the ‘options’ or ‘preferences’ menu on your browser to change settings, and check the following links for more browser-specific information:</p>
+<ul class="no-symbol">
+<li><a href="https://support.microsoft.com/en-us/help/17442/windows-internet-explorer-delete-manage-cookies">Cookie settings in Internet Explorer</a></li>
+<li><a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer?redirectlocale=en-US&amp;redirectslug=Cookies">Cookie settings in Firefox</a></li>
+<li><a href="https://support.google.com/chrome/answer/95647?hl=en">Cookie settings in Chrome</a></li>
+<li><a href="https://support.apple.com/?path=Safari/3.0/en/9277.html">Cookie settings in Safari</a></li>
+</ul>
+<p>You should be aware that any preferences will be lost, if you delete all cookies and many websites will not work properly or you will lose some functionality. We do not recommend turning cookies off when using our website for these reasons.</p>
+</section>
+</section>
+<section class="level1">
+<h1 id="to-whom-we-may-disclose-your-personal-data">To Whom We May Disclose Your Personal Data</h1>
+<p>For the above mentioned purposes we may share your personal data with IT service providers who provide hosting, maintenance and security services for our Service.</p>
+<p>In addition, we may submit your data to the European Space Agency (ESA), should these data be requested by ESA.</p>
+<p>Where disclosure is required (i) by law or regulation or (ii) to establish, exercise or defend legal claims, we may also disclose personal data to a competent authority, such as supervisory, regulatory or criminal authorities, courts of law or other third parties who advise us in this context (e.g. lawyers or forensics experts).</p>
+<p>Some of these recipients may be located in countries outside the EU/EEA for which an adequate level of data protection has not yet been established by the EU Commission. It should be noted that the level of data protection in such countries may not be the same as within the EU/EEA. Also, subject to local laws and regulations data may be accessible to local authorities or courts.</p>
+<p>However, where personal data is transferred to such third countries we implement appropriate safeguards to ensure that your rights are protected in accordance with the GDPR. This includes the conclusion of the EU Commission's standard contractual clauses for the transfer of personal data (Art 46(2) c GDPR). Further details on the implemented safeguards as well as copies of the respective agreements are available on request at <a href="mailto:at%20support@vires.services"><a href="mailto:support@vires.services">support@vires.services</a></a>.</p>
+</section>
+<section class="level1">
+<h1 id="how-long-we-keep-your-personal-data">How Long We Keep Your Personal Data</h1>
+<p>Log files are generally kept for a period one year. Beyond this time period log files will only be stored for the purpose of investigating irregularities or security incidents in our system. Cookies are usually valid for a short term (a day, a week or a month), though in some cases they may remain valid for up to 2 years.</p>
+<p>We generally retain your personal data for as long as this is necessary for the fulfilment of the purpose for which they were obtained. Thus, in any case we process your personal data for the duration of the active user account (i.e. until the deletion of the account is requested). Where necessary we may also keep your data for as long as potential legal claims against us are not yet time-barred; for certain claims the statutory limitation period may be up to 30 years.</p>
+<p>As soon as there are no legitimate grounds for the further storage of personal data available, they will either be deleted or anonymized.</p>
+</section>
+<section class="level1">
+<h1 id="your-rights-as-a-data-subject">Your Rights as a Data Subject</h1>
+<p>As a data subject you have <em>inter alia</em> the following rights under the statutory conditions:</p>
+<ul>
+<li>to check whether and what kind of personal data we hold about you and to request copies of such data (<em>right of access</em>)</li>
+<li>to request correction, supplementation or deletion of your personal data that is inaccurate or processed in non-compliance with applicable requirements (<em>right to rectification and erasure</em>)</li>
+<li>to request us to restrict the processing of your personal data (<em>right to restriction</em>)</li>
+<li>in certain circumstances, to object for legitimate reasons to the processing of your personal data or to revoke consent previously granted for the processing (<em>right to object or withdraw consent</em>)</li>
+<li>to receive the personal data you provided to us in a structured, commonly used and machine-readable format and to transmit those data to another controller (<em>right to data portability</em>)</li>
+</ul>
+<p>We do not process your personal data for the purpose of taking decisions based solely on automated processing, including profiling, which produce legal effects concerning you (Art 22 GDPR).</p>
+<p>To exercise any of the above rights kindly send an email to <a href="mailto:at%20support@vires.services"><a href="mailto:support@vires.services">support@vires.services</a></a>. In addition, you have the right to lodge a complaint with a supervisory authority, if you believe your data protection rights have been violated. For Austria the competent authority is the Data Protection Authority (<em>Datenschutzbehörde</em>).</p>
+</section>
+<section class="level1">
+<h1 id="updates-to-this-notice">Updates to This Notice</h1>
+<p>We may update this Privacy Notice to reflect legal, technical or business changes. When we update this Privacy Notice, we will take reasonable steps to inform you about the changes made. You will find the date of the &quot;last update&quot; at the beginning of this Notice.</p>
+<h1 id="disclaimer">Disclaimer</h1>
+<p>The Service contains links to third-party websites. We have no control over the content or privacy practices of these other websites. Please read the respective data protection provisions of other websites that you visit.</p>
+<h1 id="our-contact">Our Contact</h1>
+<p>Should you have any requests or questions in relation to the processing of your personal data by us, kindly address them to our data protection officer, Dr. Christian Schiller, at <a href="mailto:at%20christian.schiller@eox.at"><a href="mailto:christian.schiller@eox.at">christian.schiller@eox.at</a></a>.</p>
+<p>Our office addresses are: Thurngasse 8/4, 1090 Vienna (Austria)</p>
+</section>
+<p class="end-of-document">***</p>
+{% endblock %}

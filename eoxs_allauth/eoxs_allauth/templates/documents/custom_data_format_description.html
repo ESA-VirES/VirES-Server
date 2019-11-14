@@ -1,4 +1,4 @@
-{% extends "static_base.html" %}
+{% extends "documents/base.html" %}
 {% block static_title %}VirES for Swarm - Custom File Format{% endblock %}
 {% block static_content %}
 <!--
@@ -17,7 +17,9 @@ remove pointless line breaks added by the conversion tool.
 <p>The vector variables will be decomposed to its scalar components.</p>
 <p>While any input variable is allowed, there are special variables which are interpreted similarly as the equivalent Swarm product variables, e.g., magnetic model residuals can be calculated for <code>F</code> and <code>B_NEC</code> variables.</p>
 <p>The time-stamps do not need to be ordered.</p>
-<p>The data can be uploaded in the <a href="https://cdf.gsfc.nasa.gov/">CDF</a> and <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> data formats. Details of the data formats are described in the following sections.</p>
+<p>The data can be uploaded in the <a href="https://cdf.gsfc.nasa.gov/">CDF</a> and <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> data formats.</p>
+<p>The input data are internally converted in the CDF data format. The timestamps are internally converted to <code>CDF_EPOCH</code> (UTC, 1ms precision).</p>
+<p>Details of the data formats are described in the following sections.</p>
 <h3 id="cdf-file-format-description">CDF File Format Description</h3>
 <p>The <a href="https://cdf.gsfc.nasa.gov/">CDF</a> file structure is expected to be similar to the format of the Swarm satellite products (e.g., <a href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#Mag-L_Data_Set_Record.2C_MDR_MAG_LR">MAGx_LR_1B</a>) or data downloaded via the VirES Web Client (<a href="https://vires.services">https://vires.services</a>)</p>
 <p>Each separate CDF file variable is expected to have the same amount of records as the time-stamp. If not, the variable is ignored.</p>
@@ -41,7 +43,7 @@ remove pointless line breaks added by the conversion tool.
 <td style="text-align:left">Time of observation</td>
 <td style="text-align:center">UTC</td>
 <td style="text-align:center">1</td>
-<td style="text-align:center"><code>CDF_EPOCH</code> </td>
+<td style="text-align:center"><code>CDF_EPOCH</code> or <code>CDF_EPOCH16</code> or <code>CDF_TIME_TT2000</code></td>
 </tr>
 <tr>
 <td style="text-align:left"> <strong>Latitude</strong></td>

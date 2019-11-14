@@ -124,10 +124,9 @@ def save_user(data):
     groups = data.get('groups')
     if groups is None:
         groups = []
-        # set the default group for new
-        default_group = getattr(settings, "VIRES_OAUTH_DEFAULT_GROUP", None)
-        if not is_updated and default_group:
-            groups.append(default_group)
+        # set the default groups for a new user
+        if not is_updated:
+            groups.extend(getattr(settings, "VIRES_OAUTH_DEFAULT_GROUPS", []))
 
     set_groups(user, groups)
 
@@ -160,6 +159,7 @@ def get_groups():
 
 USER_PROFILE_FIELDS = [
     "title", "institution", "country", "study_area", "executive_summary",
+    "consented_service_terms_version",
 ]
 
 

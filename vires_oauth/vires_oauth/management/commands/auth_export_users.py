@@ -80,6 +80,9 @@ def serialize_user_profile(object_):
         "country": object_.country.code,
         "study_area": object_.study_area,
         "executive_summary": object_.executive_summary,
+        "consented_service_terms_version": (
+            object_.consented_service_terms_version
+        ),
     }
 
 

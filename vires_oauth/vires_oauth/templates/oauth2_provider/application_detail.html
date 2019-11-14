@@ -1,5 +1,4 @@
 {% extends "oauth2_provider/base.html" %}
-{% block title %}<title>VirES OAuth2 - registered application</title>{% endblock %}
 {% block content %}
   <h2>Registered application</h2>
   <form class="form-horizontal inputwide">
@@ -34,7 +33,7 @@
       <div class="control-group" style="text-align: right;">
       <div class="controls">
         <a class="btn btn-default" role="button" href="{% url "oauth2_provider:list" %}">Cancel</a>
-        <a class="btn btn-primary" role="button" href="{% url "oauth2_provider:update" application.id %}">Update</a>
+        <a class="btn btn-primary" role="button" href="{% url "oauth2_provider:update" application.id %}">Edit</a>
         <a class="btn btn-danger" role="button" data-toggle="modal" data-target="#deleteApp">Delete</a>
       </div>
     </div>

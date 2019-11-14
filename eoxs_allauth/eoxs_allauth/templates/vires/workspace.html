@@ -23,6 +23,7 @@
   {% load staticfiles %}
   {% load account %}
   {% load vires_oauth %}
+  {% load vre_jhub %}
 
   <link rel="stylesheet" type="text/css" href="{% static 'workspace/styles/main.css' %}" />
   <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
@@ -95,7 +96,15 @@
             "eventToRaise": "modal:accountLogout"
         }]
       }];
-      console.log(this.NAVBARITEMS)
+      {% if has_vre_jhub and vre_permission in vires_permissions %}
+      this.NAVBARITEMS[0].subitems.splice(0, 0, {
+        "name": "VRE (JupyterLab)",
+        "url": "{% vre_jhub_url 'oauth_login' %}",
+        "target": "_blank"
+      }, {
+        "type": "divider"
+      });
+      {% endif %}
       var CONFIG_URL = "{% static 'workspace/scripts/config.json'%}";
       CESIUM_BASE_URL = "{% static 'workspace/bower_components/cesium/Build/Cesium/'%}";
       // you can register settings like this before require.js is loaded
@@ -177,7 +186,6 @@
       }
       /* Loading image related styles inside template to use template tags*/
 
-
       .bg-1 {
         background: url('{% static 'images/Core_and_crust_from_Swarm.jpg' %}') no-repeat center center fixed;
           -webkit-background-size: cover;
@@ -243,7 +251,16 @@
           </div>
           <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav nav-justified">
-              <li><a href="#Features">Features</a></li>
+              <li class="dropdown">
+                <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">Features<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="#WebUI">Web Client</a></li>
+                  <li><a href="#API">Python Client</a></li>
+                  {% if has_vre_jhub %}
+                  <li><a href="#VRE">Jupyter / VRE</a></li>
+                  {% endif %}
+                </ul>
+              </li>
               <li><a href="#Data">Data</a></li>
               <li><a href="#Signup">Sign-up</a></li>
               <li><a href="{% url 'vires_login' %}?process=login">Log in</a></li>
@@ -263,8 +280,8 @@
       </div>
 
         <p class="lead current-version text-center">
-          <strong>Version 3.1.0</strong> (<a href="/accounts/changelog">Changelog</a>)<br>
-          <em>August 2019</em>
+          <strong>Version 3.1.1</strong> (<a href="/changelog">Changelog</a>)<br>
+          <em>November 2019</em>
         </p>
 
         <p class="lead text-center">
@@ -277,7 +294,7 @@
     </div>
 
 
-    <section class="bg-1">
+    <section class="bg bg-1">
       <div class="image-attribution">&copy; ESA/DTU Space/ATG medialab</div>
       <div class="col-sm-6 col-sm-offset-3 text-center"></div>
     </section>
@@ -287,52 +304,77 @@
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3 larger">
           <h1>Features</h1>
-
           <hr>
-            <p>
-              Here is a demonstration of the VirES for Swarm tools and main features.
-            </p>
 
+          <div class="divider" id="WebUI"></div>
+          <h2>VirES for Swarm - Web Client</h2>
+          <hr>
+          <p>
+            Here is a demonstration of the main features of the VirES for Swarm
+            web user interface.
+          </p>
           <div class="divider"></div>
-
           <div class="videowrapper">
             <iframe src="https://www.youtube.com/embed/7IuChwuye8c?rel=0" allowfullscreen></iframe>
           </div>
-
           <p>Slides with detailed information on service usage can be found <a href="{% static 'other/VirES_for_Swarm_Tutorial_Slides.pdf' %}" target="_blank_">here</a>.</p>
-
           <div class="divider"></div>
+          <p>
+            <a href="#Data">Various Swarm product data</a> can be visualized on the platform
+            plotted over the globe and shown in a scatterplot.
+            The scatterplot allows for dual y-axes with independent zoom and
+            panning features.
+            Different variables can be plotted in multiple vertically-stacked
+            plots sharing the common x-axis.
+            The time slider and various controls offer the
+            possibility to make selections and set criteria for data filtering
+            and visualization which immediately take effect on the display.
+          </p>
+          <p>
+            The subset of Swarm data selected by the user in this way can be
+            downloaded in different file formats.
+            The downloaded data can be combined to fit various use cases.
+          </p>
+          <p>
+            VirES allows visual and numerical comparison with geomagnetic
+            models, analysis with respect to various ancillary data
+            and generation of publication-ready plots and diagrams
+            in an intuitive and powerful yet customizable interface.
+          </p>
 
-          <p>
-              Magnetic and plasmatic Swarm product data can be visualized on the platform
-              plotted over the globe and shown in a scatterplot. The scatterplot allows for dual y-axes with independent zoom and panning features.
-              The time slider and various controls offer the
-              possibility to make selections and set criteria for data filtering and visualization
-              which immediately take effect on the display.
-          </p>
-          <p>
-              The subset of Swarm data selected by the user in this way can be downloaded in different encoding
-              formats. The data downloaded can be combined to fit various use cases.
-          </p>
-          <p>
-              VirES enables
-              visual and numerical comparison with geomagnetic models, analysis with respect to
-              various ancillary data and generation of publication-ready plots and diagrammes in an
-              intuitive and powerful yet customizable interface.
-          </p>
-
+          <div class="divider" id="API"></div>
+          <h2>VirES for Swarm - API</h2>
           <hr>
+          <p>
+            In addition to the web graphical user interface, the data can be
+            accessed directly trough the VirES server API using an alternative
+            client such as the <a href="https://viresclient.readthedocs.io" target="_blank">VirES Python client</a>.
+          </p>
+
+          {% if has_vre_jhub %}
+          <div class="divider" id="VRE"></div>
+          <h2>VirES for Swarm - Jupyter Lab</h2>
+          <hr>
+          <p><img src="{% static 'images/VRE_JupyterLab.png' %}" style="width:75%;margin:1em auto 1em auto;display: block;"></p>
+          <p>
+            The direct data access using the VirES Python client can be
+            performed in Jupyter notebook running in the VirES for Swarm
+            Jupyter based <a href="https://swarm-vre.readthedocs.io/en/latest/intro.html#what-is-the-vre" target="_blank">Virtual Research Environment (VRE)</a>.
+          </p>
+          <p>
+            To access the VirES for Swarm Jupyter Lab you need to have a VirES account
+            (<a href="#Signup">sign up</a>) and <a href="{% vre_jhub_url 'oauth_login' %}">login in VRE</a>.
+          </p>
+          {% endif %}
 
         </div><!--/col-->
     </div><!--/container-->
 
-    <div class="divider" id="Data"></div>
-
-    <section class="bg-2">
+    <section class="bg bg-2">
       <div class="image-attribution">&copy; ESA&nbsp;-&nbsp;P. Carril, 2013</div>
     </section>
 
-
+    <div class="divider" id="Data"></div>
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3 larger">
           <h1>Data</h1>
@@ -370,7 +412,7 @@
               The 12th Generation International Geomagnetic Reference Field (<a target="_blank" href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0228-9">IGRF 12</a>) released in 2015 by the International Association of Geomagnetism and Aeronomy
             </li>
             <li style="list-style-type: circle;">
-              The CHAOS-6 high resolution geomagnetic field model, derived primarily from Swarm, CHAMP, and Ørsted satellite magnetic data along with ground observatory data (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/">CHAOS-6</a>)
+              The CHAOS-7 high resolution geomagnetic field model derived from Swarm, CHAMP, Ørsted, SAC-C and Cryosat satellite magnetic data along with ground observatory data (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/">CHAOS-7</a>)
             </li>
             <li style="list-style-type: circle;">
               The LCS-1 high-resolution lithospheric field model, derived from CHAMP and Swarm satellite observations (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/LCS-1/">LCS-1</a>)
@@ -400,22 +442,22 @@
           <p>The following Spherical Harmonic Models of the Magnetospheric Field are available:</p>
           <ul>
             <li style="list-style-type: circle;">
-              Spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MMA_SHA_2C">MMA_SHA_2C-Primary &amp; MMA_SHA_2C-Secondary Field</a>)
+              Spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MMA_SHA_2C">MMA_SHA_2C primary and secondary field</a>)
             </li>
             <li style="list-style-type: circle;">
-              Spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MMA_SHA_2F">MMA_SHA_2F-Primary &amp; MMA_SHA_2F-Secondary Field</a>)
+              Spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MMA_SHA_2F">MMA_SHA_2F primary and secondary field</a>)
             </li>
             <li style="list-style-type: circle;">
-              The <a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/">CHAOS-6</a> spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (CHAOS-6-MMA-Primary &amp; CHAOS-6-MMA-Secondary Field)
+              The <a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/">CHAOS</a> spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (CHAOS-MMA primary and secondary field)
             </li>
           </ul>
           <p>The following Spherical Harmonic Models of the Daily Geomagnetic Variation are available:</p>
           <ul>
             <li style="list-style-type: circle;">
-              Spherical harmonic model of the daily geomagnetic variation at middle latitudes (Sq) and low latitudes (EEJ) (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MIO_SHA_2C">MIO_SHA_2C-Primary &amp; MIO_SHA_2C-Secondary Field</a>)
+              Spherical harmonic model of the daily geomagnetic variation at middle latitudes (Sq) and low latitudes (EEJ) (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MIO_SHA_2C">MIO_SHA_2C primary and secondary field</a>)
             </li>
             <li style="list-style-type: circle;">
-              Spherical harmonic model of the daily geomagnetic variation at middle latitudes (Sq) and low latitudes (EEJ) (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MIO_SHA_2D">MIO_SHA_2D-Primary &amp; MIO_SHA_2D-Secondary Field</a>)
+              Spherical harmonic model of the daily geomagnetic variation at middle latitudes (Sq) and low latitudes (EEJ) (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MIO_SHA_2D">MIO_SHA_2D primary and secondary field</a>)
             </li>
           </ul>
 
@@ -445,7 +487,7 @@
     <div class="divider"></div>
 
 
-    <section class="bg-3">
+    <section class="bg bg-3">
       <div class="image-attribution">&copy; DTU Space-P-E. Holmdahl-Olsen, 2014</div>
     </section>
 
@@ -524,8 +566,9 @@
           </div>
 
           <div class="col-md-6 text-muted" style="text-align: center; margin-top:15px;">
-            <a style="display:inline; margin-right:5px;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a> |
-            <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a> |
+            <a style="display:inline; margin-right:5px;" href="/data_terms" target="_blank_">ESA Data Terms</a> |
+            <a style="display:inline; margin-left:5px;" href="/service_terms" target="_blank_">VirES Service Terms</a> |
+            <a style="display:inline; margin-left:5px;" href="/privacy_notice" target="_blank_">Privacy Notice</a> |
             <a href="https://earth.esa.int/swarm" target="_blank">Swarm Official Site</a>
           </div>
         </div>

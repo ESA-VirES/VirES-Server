@@ -27,7 +27,13 @@ magnetic model residuals can be calculated for `F` and `B_NEC` variables.
 
 The time-stamps do not need to be ordered.
 
-The data can be uploaded in the [CDF](https://cdf.gsfc.nasa.gov/) and [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) data formats. Details of the data formats are described in the following sections.
+The data can be uploaded in the [CDF](https://cdf.gsfc.nasa.gov/) and
+[CSV](https://en.wikipedia.org/wiki/Comma-separated_values) data formats.
+
+The input data are internally converted in the CDF data format. The timestamps
+are internally converted to `CDF_EPOCH` (UTC, 1ms precision).
+
+Details of the data formats are described in the following sections.
 
 ### CDF File Format Description
 
@@ -43,7 +49,7 @@ The CDF variables are described in the following table.
 #### CDF Variables
 Field | Mandatory | Description | Units | Dim | Data Type
 :-----|:---------:|:------------|:-----:|:---:|:---:
- **Timestamp** | yes | Time of observation | UTC | 1 | `CDF_EPOCH` 
+ **Timestamp** | yes | Time of observation | UTC | 1 | `CDF_EPOCH` or `CDF_EPOCH16` or `CDF_TIME_TT2000`
  **Latitude** | yes | Position in ITRF – Geocentric latitude | deg | 1 | `CDF_DOUBLE` 
  **Longitude** | yes | Position in ITRF – Geocentric longitude | deg | 1 | `CDF_DOUBLE` 
  **Radius** | no | Position in ITRF – Radius (required to calculate QD-coordinates, MLT, and magnetic models) | m | 1 | `CDF_DOUBLE`

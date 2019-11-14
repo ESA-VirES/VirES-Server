@@ -28,6 +28,9 @@
 
 from functools import wraps
 from logging import getLogger, NOTSET
+from urllib.parse import quote
+from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from oauth2_provider.settings import oauth2_settings
@@ -109,7 +112,7 @@ def redirect_unauthenticated(view_func):
     def _wrapper_(request, *args, **kwargs):
         if not request.user.is_authenticated:
             response = redirect('account_login')
-            response["Location"] += "?next=%s" % request.path
+            response["Location"] += "?next=%s" % quote(request.get_full_path())
             return response
         return view_func(request, *args, **kwargs)
     return _wrapper_
@@ -127,3 +130,32 @@ def log_exception(logger):
                 raise
         return _wrapper_
     return _decorator_
+
+
+def request_consent(view_func):
+    """ Request legal consent with the current service terms and related
+    documents. """
+    required_version = getattr(settings, "VIRES_SERVICE_TERMS_VERSION", None)
+
+    @wraps(view_func)
+    def _wrapper_(request, *args, **kwargs):
+        if request.user.is_authenticated and required_version:
+            try:
+                profile = request.user.userprofile
+            except ObjectDoesNotExist:
+                consented_version = None
+            else:
+                consented_version = profile.consented_service_terms_version
+            consent_required = (
+                consented_version is not None
+                and consented_version != required_version
+            )
+            if consent_required:
+                response = redirect('update_user_consent')
+                response["Location"] += "?next=%s" % (
+                    quote(request.get_full_path())
+                )
+                return response
+        return view_func(request, *args, **kwargs)
+
+    return _wrapper_

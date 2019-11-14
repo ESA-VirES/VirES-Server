@@ -32,14 +32,15 @@
   <meta name="twitter:image" content="https://vires.services"{% static "images/VirES_Swarm_twitter.jpg" %}"">
   <meta name="twitter:image:alt" content="VirES for Swarm service image">
   {% block title %}
-  <title>VirES for Swarm</title>
+  <title>VirES Identity Server</title>
   {% endblock %}
   {% block additional_headers %}
   <link rel="stylesheet" type="text/css" href="/eoxs_static/workspace/styles/main.css" />
   <script type="text/javascript" src="/eoxs_static/workspace/bower_components/jquery/jquery.min.js"></script>
   <script type="text/javascript" src="/eoxs_static/workspace/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-  <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
-  <link href="{% static 'css/social_providers.css' %}" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/form_styles.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/social_providers.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/cookie_banner.css' %}" />
   <style type="text/css">
     body {
       background-color: #fff!important;
@@ -59,9 +60,11 @@
       top: 66px;
     }
   </style>
-  <link rel="stylesheet" type="text/css" href="{% static 'css/social_providers.css' %}" />
 </head>
 <body>
+<script type="text/javascript">
+  var onLoadCallbacks = [];
+</script>
 {% block messages %}
 {% if messages %}
 <div class="container" id="messagescontainer" style="z-index: 5001;width:40%;">
@@ -102,12 +105,18 @@
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav" id="tab-headers-main">
-        <li class="divider-vertical"></li>
-        <li>
-          <a class="tab-header" href="/">
-            <i class="fa fa-fw fa-desktop"></i>&nbsp;Application
+        {% if vires_apps %}
+        <li class="dropdown">
+          <a class="dropdown-toggle" role="button" data-toggle="dropdown" aria-expanded="false">
+            <i class="fa fa-fw fa-desktop"></i>&nbsp;Applications
           </a>
+          <ul class="dropdown-menu" role="menu">
+            {% for app in vires_apps %}
+            <li><a href="{{app.url}}">{{app.name}}</a></li>
+            {% endfor %}
+          </ul>
         </li>
+        {% endif %}
         {% block navbar_items %}
           {% if user.is_authenticated %}
             {% if 'admin' in user.oauth_user_permissions %}
@@ -181,30 +190,63 @@
   {% endif %}
 {% endblock modals %}
 {% endblock accounts_content %}
-<script type="text/javascript">
-var _paq = _paq || [];
-// Check if the title was set already somewhere else
-var documentTitleSet = false;
-for (var i = _paq.length - 1; i >= 0; i--) {
-	if (_paq[i][0]=="setDocumentTitle"){
-		documentTitleSet = true;
-	}
-}
-// only if it is not set set it here with the default
-if(!documentTitleSet){
-	_paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-}
-_paq.push(["setDoNotTrack", true]);
-_paq.push(['trackPageView']);
-_paq.push(['enableLinkTracking']);
-(function() {
-  var u="//nix.eox.at/piwik/";
-  _paq.push(['setTrackerUrl', u+'piwik.php']);
-  _paq.push(['setSiteId', 4]);
-  var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-  g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-})();
-</script>
+<script src="{% static 'js/cookie_banner.js'%}"></script>
 <noscript><p><img src="//nix.eox.at/piwik/piwik.php?idsite=4" style="border:0;" alt="" /></p></noscript>
+<script type="text/javascript">
+  var _paq = _paq || [];
+  function startPiwicTracking() {
+    // user has given consent to process their data
+    // Check if the title was set already somewhere else
+    var documentTitleSet = false;
+    for (var i = _paq.length - 1; i >= 0; i--) {
+    if (_paq[i][0]=="setDocumentTitle"){
+      documentTitleSet = true;
+    }
+    }
+    // only if it is not set set it here with the default
+    if(!documentTitleSet){
+    _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+    }
+
+    _paq.push(["setDoNotTrack", true]);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function() {
+     var u="//nix.eox.at/piwik/";
+     _paq.push(['setTrackerUrl', u+'piwik.php']);
+     _paq.push(['setSiteId', 4]);
+     var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+     g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+    })();
+  }
+
+  onLoadCallbacks.push(function() {
+    var html = '<div>' +
+        'You may choose to prevent this website from aggregating and analyzing '+
+        'the actions you take here. Doing so will protect your privacy, but it '+
+        'will also prevent the service provider from learning from your actions '+
+        'and creating a better experience for you and other users. '+
+        'For further information see our <a href="/privacy_notice" target="_blank">Privacy Notice</a>.'+
+        '</div>';
+
+    // Add the accept button
+    html += '<div class="cookiebutton ok"><a href="javascript:void(0);" onclick="CookieBanner.accept();startPiwicTracking();"><span>Accept</span></a></div>';
+    html += '<div class="cookiebutton notok"><a href="javascript:void(0);" onclick="CookieBanner.deny();"><span>Decline</span></a></div>';
+
+    CookieBanner.showUnlessInteracted(html);
+    if (CookieBanner._checkCookie(CookieBanner.cookieName) == 'accepted') {
+      startPiwicTracking();
+    }
+  });
+
+  window.onload = function() {
+    while (onLoadCallbacks.length > 0) {
+      (onLoadCallbacks.shift())();
+    }
+    window.history.replaceState(
+      {}, document.title, window.location.href.split(/[?#]/)[0]
+    );
+  }
+</script>
 </body>
 </html>

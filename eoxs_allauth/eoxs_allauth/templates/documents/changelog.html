@@ -1,7 +1,38 @@
-{% extends "static_base.html" %}
+{% extends "documents/base.html" %}
 {% block static_title %}VirES for Swarm - Changelog{% endblock %}
 {% block static_content %}
 <h1>Changelog</h1>
+<hr>
+<h3>
+    Release of Service v3.1.1 (14.11.2019)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>CHAOS-7</b></br>
+      The CHAOS geomagnetic model has been updated to its
+      latest version <a href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/" target="_blank">CHAOS-7</a>.
+    </li>
+    <li><b>Redesigned data upload user interface</b></br>
+      The data upload user interface has been redesigned.
+      It is now possible to set additional constant parameters
+      not present in uploaded dataset. This feature can be use, e.g.,
+      to specify missing mandatory coordinates of a stationary ground observatory.
+    </li>
+    <li><b>VRE integration</b></br>
+      The Jupyter-based
+      <a href="https://swarm-vre.readthedocs.io" target="_blank">Virtual Research Environment (VRE)</a>
+      has been opened for all VirES users and a direct link has been added
+      to the VirES client user interface.
+    </li>
+    <li><b>Reviewed service terms and conditions</b></br>
+      The VirES <a href="/service_terms" target="_blank">Service Terms</a>
+      have been reviewed and updated. In addition, a
+      <a href="https://en.wikipedia.org/wiki/General_Data_Protection_Regulation" target="_blank">GDPR</a>
+      compliant <a href="/privacy_notice" target="_blank">Privacy Notice</a> has been added.
+    </li>
+</ul>
 <hr>
 <h3>
     Release of Service v3.1.0 (3.9.2019)
@@ -36,7 +67,7 @@
       to the initial implementation released in v3.0.0.
       Support for arbitrary custom variables and CSV data format has been added.
       For more details, see the
-      <a href="/accounts/custom_data_format_description/" target="_blank">data format specification</a>.
+      <a href="/custom_data_format_description" target="_blank">data format specification</a>.
     </li>
     <li>
       <b>Revised user management</b><br>
@@ -266,7 +297,7 @@
         <li>SunDeclination, SunRightAscension and SunHourAngle defining Sun position in the Equatorial Coordinate System</li>
         <li>SunZenithAngle, SunAzimuthAngle defining Sun position in the local Horizontal Coordinate System</li>
       </ul>
-      See <a href="https://en.wikipedia.org/wiki/Equatorial_coordinate_system">"Equatorial coordinate system"</a> and <a href="https://en.wikipedia.org/wiki/Horizontal_coordinate_system">"Horizontal coordinate system"</a>.
+      See <a href="https://en.wikipedia.org/wiki/Equatorial_coordinate_system" target="_blank">"Equatorial coordinate system"</a> and <a href="https://en.wikipedia.org/wiki/Horizontal_coordinate_system" target="_blank">"Horizontal coordinate system"</a>.
     </li>
     <li>All new parameters described above can be downloaded as part of a product by selecting them with the "Custom download parameters" in the Download panel.
     </li>
@@ -281,7 +312,7 @@
         </ul>
     </li>
     <li><b>Model difference</b></br>The difference between two models at any coefficient range can be displayed on the globe. This functionality can be accessed under settings of any of the geomagnetic models available in the Layers panel.</li>
-    <li><b>CHAOS-6</b></br>Geomagnetic field model CHAOS-5 has been replaced by <a href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/">CHAOS-6</a> in the Layers panel.</li>
+    <li><b>CHAOS-6</b></br>Geomagnetic field model CHAOS-5 has been replaced by <a href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/" target="_blank">CHAOS-6</a> in the Layers panel.</li>
     <li><b>Cartographic layer update</b></br>"Blue Marble" layer previously available in the Layers panel has been updated with a "S2 Cloudless" mosaic, which has higher resolution and is based on Sentinel-2 data.</li>
 </ul>
 

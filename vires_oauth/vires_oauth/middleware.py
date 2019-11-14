@@ -56,7 +56,7 @@ def session_idle_timeout(get_response):
                 last_activity = None
             if last_activity is None or (_now() - last_activity) > timeout:
                 logout(request)
-                messages.error(request, "Session timed out.")
+                #messages.error(request, "Session timed out.")
 
     def _update_timestamp(request):
         request.session[timestamp_tag] = _now()

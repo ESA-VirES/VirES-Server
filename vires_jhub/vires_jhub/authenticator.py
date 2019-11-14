@@ -126,6 +126,7 @@ class ViresOAuthenticator(OAuthenticator):
             "client_id": self.client_id,
             "client_secret": self.client_secret,
             "code": handler.get_argument("code"),
+            "redirect_uri": self.get_callback_url(handler),
         }
         request = HTTPRequest(
             _join_url(self.direct_server_url or self.server_url, ACCESS_TOKEN_PATH),
