@@ -30,7 +30,7 @@ import sys
 from collections import OrderedDict
 from django.core.management.base import BaseCommand
 from ...models import UserProfile, Permission
-from ._common import ConsoleOutput
+from ._common import ConsoleOutput, datetime_to_string
 
 
 class Command(ConsoleOutput, BaseCommand):
@@ -153,7 +153,3 @@ class VerboseOutput():
             "consented service terms version",
             profile.consented_service_terms_version
         )
-
-
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')

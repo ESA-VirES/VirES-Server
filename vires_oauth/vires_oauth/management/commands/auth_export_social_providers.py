@@ -30,20 +30,14 @@ import sys
 import json
 from django.core.management.base import BaseCommand
 from allauth.socialaccount.models import SocialApp
-from ._common import ConsoleOutput
-
-JSON_OPTS = {
-    'sort_keys': False,
-    'indent': 2,
-    'separators': (',', ': '),
-}
+from ._common import ConsoleOutput, JSON_OPTS
 
 
 class Command(ConsoleOutput, BaseCommand):
     help = "Export social network providers configuration in JSON format."
 
     def add_arguments(self, parser):
-        parser.add_argument("providers", nargs="*", help="Selected users.")
+        parser.add_argument("providers", nargs="*", help="Selected providers.")
         parser.add_argument(
             "-f", "--file", dest="filename", default="-",
             help="Output filename."

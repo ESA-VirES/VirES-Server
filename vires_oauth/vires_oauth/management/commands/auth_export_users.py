@@ -31,10 +31,8 @@ import json
 from functools import partial
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from ._common import ConsoleOutput
+from ._common import ConsoleOutput, datetime_to_string, JSON_OPTS
 from ...models import UserProfile, Permission
-
-JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
 
 
 class Command(ConsoleOutput, BaseCommand):
@@ -140,10 +138,6 @@ def serialize_social_account(object_):
         "last_login": datetime_to_string(object_.last_login),
         "extra_data": object_.extra_data,
     }
-
-
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')
 
 
 def serialize_list(funct, objects):

@@ -29,6 +29,18 @@
 import sys
 
 
+JSON_OPTS = {
+    'sort_keys': False,
+    'indent': 2,
+    'separators': (',', ': '),
+}
+
+
+def datetime_to_string(dtobj):
+    """ datetime.datetime to string conversion. """
+    return dtobj if dtobj is None else dtobj.isoformat('T')
+
+
 class ConsoleOutput():
     @classmethod
     def info(cls, message, *args):
