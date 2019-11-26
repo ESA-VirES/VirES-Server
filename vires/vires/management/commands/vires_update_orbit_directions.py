@@ -34,6 +34,7 @@ from django.core.management.base import BaseCommand, CommandError
 from eoxserver.backends.access import connect
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
 from vires.cdf_util import cdf_open
+from vires.time_util import naive_to_utc
 from vires.models import ProductCollection, Product
 from vires.management.commands import cache_session
 from vires.orbit_direction_update import (
@@ -339,7 +340,9 @@ def collection_to_spacecraft(collection_id):
 def find_product_by_time_interval(collection, begin_time, end_time):
     """ Locate product matched by the given time interval. """
     return _find_product(
-        collection.eo_objects, begin_time__lte=end_time, end_time__gte=begin_time
+        collection.eo_objects,
+        begin_time__lte=naive_to_utc(end_time),
+        end_time__gte=naive_to_utc(begin_time)
     )
 
 
