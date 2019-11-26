@@ -33,7 +33,7 @@ from allauth.socialaccount.models import SocialApp
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn,
 )
-from .common import JSON_OPTS
+from ._common import JSON_OPTS
 
 
 class Command(CommandOutputMixIn, BaseCommand):

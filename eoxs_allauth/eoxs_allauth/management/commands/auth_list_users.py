@@ -34,7 +34,7 @@ from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, #nested_commit_on_success
 )
 from ...models import UserProfile
-from .common import datetime_to_string
+from ._common import datetime_to_string
 
 
 class Command(CommandOutputMixIn, BaseCommand):
