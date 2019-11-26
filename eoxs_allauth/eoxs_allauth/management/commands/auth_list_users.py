@@ -30,6 +30,7 @@
 
 import sys
 from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, #nested_commit_on_success
 )
@@ -63,11 +64,11 @@ class Command(CommandOutputMixIn, BaseCommand):
 
     def handle(self, *args, **kwargs):
         usernames = kwargs['username']
-        qset = UserProfile.objects.select_related('user')
+        query = User.objects
         if not usernames:
-            qset = qset.all()
+            query = query.all()
         else:
-            qset = qset.filter(user__username__in=usernames)
+            query = query.filter(username__in=usernames)
         # select output class
         if kwargs["info_dump"]:
             output = VerboseOutput
@@ -78,7 +79,7 @@ class Command(CommandOutputMixIn, BaseCommand):
         with fout:
             fout.write(output.start)
             dlm = ""
-            for item in qset:
+            for item in query:
                 fout.write(dlm)
                 fout.write(output.to_str(item))
                 dlm = output.delimiter
@@ -91,8 +92,8 @@ class BriefOutput(object):
     delimiter = ""
 
     @staticmethod
-    def to_str(profile):
-        return profile.user.username + "\n"
+    def to_str(user):
+        return user.username + "\n"
 
 
 class VerboseOutput(object):
@@ -101,49 +102,58 @@ class VerboseOutput(object):
     delimiter = "\n"
 
     @classmethod
-    def to_str(cls, profile):
-        out = ["user: %s" % profile.user.username]
+    def to_str(cls, user):
+        out = ["user: %s" % user.username]
         out.extend(
             "%14s: %s" % (key, value)
-            for key, value in cls.extract_user_profile(profile)
+            for key, value in cls.extract_user_profile(user)
         )
         out.append("")
         return ("\n".join(out)).encode('utf8')
 
     @classmethod
-    def extract_user_profile(cls, profile):
-        social_accounts = list(profile.user.socialaccount_set.all())
-        emails = list(profile.user.emailaddress_set.all())
+    def get_profile(cls, user):
+        try:
+            return user.userprofile
+        except UserProfile.DoesNotExist:
+            return None
+
+    @classmethod
+    def extract_user_profile(cls, user):
+        social_accounts = list(user.socialaccount_set.all())
+        emails = list(user.emailaddress_set.all())
 
         dates_joined = [
             item.date_joined for item in social_accounts
             if item.date_joined is not None
         ]
-        if profile.user.date_joined is not None:
-            dates_joined.append(profile.user.date_joined)
+        if user.date_joined is not None:
+            dates_joined.append(user.date_joined)
         date_joined = max(dates_joined) if dates_joined else None
 
         last_logins = [
             item.last_login for item in social_accounts
             if item.last_login is not None
         ]
-        if profile.user.last_login is not None:
-            last_logins.append(profile.user.last_login)
+        if user.last_login is not None:
+            last_logins.append(user.last_login)
         last_login = max(last_logins) if last_logins else None
 
         providers = [item.provider for item in social_accounts]
         primary_emails = [item.email for item in emails if item.primary]
         other_emails = [item.email for item in emails if not item.primary]
-        if profile.user.email and profile.user.email not in primary_emails:
-            primary_emails = [profile.user.email] + primary_emails
+        if user.email and user.email not in primary_emails:
+            primary_emails = [user.email] + primary_emails
 
-        yield ("is active", profile.user.is_active)
-        yield ("first name", profile.user.first_name)
-        yield ("last name", profile.user.last_name)
-        yield ("title", profile.title)
-        yield ("institution", profile.institution)
-        yield ("country", profile.country)
-        yield ("study area", profile.study_area)
+        profile = cls.get_profile(user) or ""
+
+        yield ("is active", user.is_active)
+        yield ("first name", user.first_name)
+        yield ("last name", user.last_name)
+        yield ("title", profile and profile.title)
+        yield ("institution", profile and profile.institution)
+        yield ("country", profile and profile.country)
+        yield ("study area", profile and profile.study_area)
         yield ("primary email", ", ".join(primary_emails))
         yield ("other emails", ", ".join(other_emails))
         yield ("social accts.", ", ".join(providers))
