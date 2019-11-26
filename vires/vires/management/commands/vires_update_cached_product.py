@@ -59,7 +59,7 @@ class Command(CommandOutputMixIn, BaseCommand):
 
     def handle(self, *args, **kwargs):
         product_type = kwargs['product_type']
-        source = kwargs['cource']
+        source = kwargs['source']
         product_info = CACHED_PRODUCTS[product_type]
         try:
             update_cached_product(
