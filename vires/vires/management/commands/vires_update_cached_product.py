@@ -24,6 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+#pylint: disable=missing-docstring
 
 from logging import getLogger
 from django.conf import settings
@@ -43,10 +44,11 @@ from vires.cached_products import (
 
 
 class Command(CommandOutputMixIn, BaseCommand):
-    help = """ Update a cached singleton product. """
-    option_list = BaseCommand.option_list
+
+    help = """ Update cached product. """
 
     def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
         parser.add_argument(
             "product_type", help="Product type",
             choices=list(sorted(CACHED_PRODUCTS)),
@@ -55,7 +57,9 @@ class Command(CommandOutputMixIn, BaseCommand):
             "source", nargs="+", help="Source filename or URL."
         )
 
-    def handle(self, product_type, source, **kwargs):
+    def handle(self, *args, **kwargs):
+        product_type = kwargs['product_type']
+        source = kwargs['cource']
         product_info = CACHED_PRODUCTS[product_type]
         try:
             update_cached_product(

@@ -29,65 +29,47 @@
 # pylint: disable=missing-docstring, too-few-public-methods
 
 import sys
-import json
-from collections import OrderedDict
-from optparse import make_option
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, #nested_commit_on_success
 )
 from ...models import UserProfile
-
-JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
+from .common import datetime_to_string
 
 
 class Command(CommandOutputMixIn, BaseCommand):
-    args = "<username> [<username> ...]"
+
     help = (
         "Print information about the AllAuth users. The users are selected "
         "either by the provided user names (no user name - no output) or "
         "by the '--all' option. "
         "By default, only the user names are listed. A brief summary for each "
-        "user can be obtained by '--info' option. The '--json' option produces "
-        "full user profile dump in JSON format."
+        "user can be obtained by '--info' option."
     )
-    option_list = BaseCommand.option_list + (
-        make_option(
-            "-a", "--all", dest="all_users", action="store_true", default=False,
-            help="Select all users."
-        ),
-        make_option(
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("username", nargs="*")
+        parser.add_argument(
             "--info", dest="info_dump", action="store_true", default=False,
             help="Verbose text output."
-        ),
-        make_option(
-            "--json", dest="json_dump", action="store_true", default=False,
-            help="JSON dump."
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "-f", "--file-name", dest="file", default="-", help=(
                 "Optional file-name the output is written to. "
                 "By default it is written to the standard output."
             )
-        ),
-    )
+        )
 
     def handle(self, *args, **kwargs):
-        # select user profile
+        usernames = kwargs['username']
         qset = UserProfile.objects.select_related('user')
-        if kwargs["all_users"]:
+        if not usernames:
             qset = qset.all()
         else:
-            if not args:
-                self.print_wrn(
-                    "No user name has been provided! Use '--help' to get more "
-                    "information about the command usage."
-                )
-            qset = qset.filter(user__username__in=args)
+            qset = qset.filter(user__username__in=usernames)
         # select output class
-        if kwargs["json_dump"]:
-            output = JSONOutput
-        elif kwargs["info_dump"]:
+        if kwargs["info_dump"]:
             output = VerboseOutput
         else:
             output = BriefOutput
@@ -167,76 +149,3 @@ class VerboseOutput(object):
         yield ("social accts.", ", ".join(providers))
         yield ("date joined", datetime_to_string(date_joined))
         yield ("last login", datetime_to_string(last_login))
-
-
-class JSONOutput(object):
-    start = "["
-    stop = "]\n"
-    delimiter = ",\n"
-
-    @classmethod
-    def to_str(cls, profile):
-        return json.dumps(
-            OrderedDict(cls.extract_user_profile(profile)), **JSON_OPTS
-        )
-
-    @classmethod
-    def extract_user_profile(cls, profile):
-        for item in cls.extract_user(profile.user):
-            yield item
-        if profile.title:
-            yield ("title", profile.title)
-        if profile.institution:
-            yield ("institution", profile.institution)
-        if profile.country:
-            yield ("country", str(profile.country))
-        if profile.study_area:
-            yield ("study_area", profile.study_area)
-        if profile.executive_summary:
-            yield ("executive_summary", profile.executive_summary)
-
-    @classmethod
-    def extract_user(cls, user):
-        yield ("username", user.username)
-        if user.password:
-            yield ("password", user.password)
-        yield ("is_active", user.is_active)
-        yield ("date_joined", datetime_to_string(user.date_joined))
-        yield ("last_login", datetime_to_string(user.last_login))
-        if user.first_name:
-            yield ("first_name", user.first_name)
-        if user.last_name:
-            yield ("last_name", user.last_name)
-        #if user.email: # copy of the primary e-mail
-        #    yield ("email", user.email)
-        yield ("emails", [
-            OrderedDict(cls.extract_email_address(item))
-            for item in user.emailaddress_set.all()
-        ])
-        yield ("social_accounts", [
-            OrderedDict(cls.extract_social_account(item))
-            for item in user.socialaccount_set.all()
-        ])
-
-    @classmethod
-    def extract_email_address(cls, emailaddress):
-        yield ("email", emailaddress.email)
-        yield ("verified", emailaddress.verified)
-        if emailaddress.primary:
-            yield ("primary", emailaddress.primary)
-
-    @classmethod
-    def extract_social_account(cls, socialaccount):
-        #yield ("email", emailaddress.email)
-        #yield ("verified", emailaddress.verified)
-        #if emailaddress.primary:
-        #    yield ("primary", emailaddress.primary)
-        yield ("uid", socialaccount.uid)
-        yield ("provider", socialaccount.provider)
-        yield ("date_joined", datetime_to_string(socialaccount.date_joined))
-        yield ("last_login", datetime_to_string(socialaccount.last_login))
-        if socialaccount.extra_data:
-            yield ("extra_data", socialaccount.extra_data)
-
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')

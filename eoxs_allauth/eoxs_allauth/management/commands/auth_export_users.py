@@ -30,19 +30,17 @@ import sys
 import json
 from functools import partial
 from collections import OrderedDict
-from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, #nested_commit_on_success
 )
 from ...models import UserProfile
-
-JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
+from .common import JSON_OPTS, datetime_to_string
 
 
 class Command(CommandOutputMixIn, BaseCommand):
-    args = "<username> [<username> ...]"
+
     help = (
         "Print information about the AllAuth users. The users are selected "
         "either by the provided user names (no user name - no output) or "
@@ -51,22 +49,24 @@ class Command(CommandOutputMixIn, BaseCommand):
         "user can be obtained by '--info' option. The '--json' option produces "
         "full user profile dump in JSON format."
     )
-    option_list = BaseCommand.option_list + (
-        make_option(
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("username", nargs="*")
+        parser.add_argument(
             "-f", "--file-name", dest="file", default="-", help=(
                 "Optional file-name the output is written to. "
                 "By default it is written to the standard output."
             )
-        ),
-    )
+        )
 
     def handle(self, *args, **kwargs):
         query = User.objects
-
-        if not args:
+        usernames = kwargs['username']
+        if not usernames:
             query = query.all()
         else:
-            query = query.filter(username__in=args)
+            query = query.filter(username__in=usernames)
 
         data = [serialize_user(user) for user in query]
 
@@ -146,10 +146,6 @@ def serialize_social_account(object_):
         ("extra_data", object_.extra_data),
         ("provider", object_.provider),
     ])
-
-
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')
 
 
 def serialize_list(funct, objects):
