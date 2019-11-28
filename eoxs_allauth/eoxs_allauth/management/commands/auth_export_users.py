@@ -124,6 +124,10 @@ def serialize_user(object_):
             "social_accounts",
             serialize_social_accounts(object_.socialaccount_set.all())
         ),
+        (
+            "access_tokens",
+            serialize_access_tokens(object_.tokens.all())
+        ),
     ])
 
 
@@ -148,8 +152,21 @@ def serialize_social_account(object_):
     ])
 
 
+@strip_blanks
+def serialize_access_token(object_):
+    return OrderedDict([
+        ("identifier", object_.identifier),
+        ("token", object_.token),
+        ("purpose", object_.purpose),
+        ("expires", object_.expires and datetime_to_string(object_.expires)),
+        ("created", datetime_to_string(object_.created)),
+    ])
+
+
 def serialize_list(funct, objects):
     return [funct(object_) for object_ in objects]
 
+
 serialize_email_addresses = partial(serialize_list, serialize_email_address)
 serialize_social_accounts = partial(serialize_list, serialize_social_account)
+serialize_access_tokens = partial(serialize_list, serialize_access_token)
