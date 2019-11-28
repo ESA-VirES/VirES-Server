@@ -1,10 +1,12 @@
 #-------------------------------------------------------------------------------
 #
-# Load the social providers configuration
+# User management - activate one or more inactive users
 #
+# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
+#
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,47 +28,51 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-import sys
-import json
-from optparse import make_option
-from django.db import transaction
 from django.core.management.base import BaseCommand
-from django.conf import settings
-from django.contrib.sites.models import Site
-from allauth.socialaccount.models import SocialApp
+from django.contrib.auth.models import User
 from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn,
+    CommandOutputMixIn, #nested_commit_on_success
 )
 
 
 class Command(CommandOutputMixIn, BaseCommand):
-    help = "Load social network providers configuration in JSON format."
-    option_list = BaseCommand.option_list + (
-        make_option(
-            "-f", "--file", dest="filename", default="-",
-            help="Input filename."
-        ),
+
+    help = (
+        "Activate inactive users. The users are selected either by the "
+        "provided user names (no user name - no output) or by the '--all' "
+        "option. "
     )
 
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("username", nargs="*")
+        parser.add_argument(
+            "-a", "--all", dest="all_users", action="store_true", default=False,
+            help="Select all users."
+        )
+
     def handle(self, *args, **kwargs):
-        filename = kwargs['filename']
+        usernames = kwargs['username']
+        qset = User.objects
+        if kwargs['all_users']:
+            qset = qset.all()
+        else:
+            if not usernames:
+                self.print_wrn(
+                    "No username has provided! Use '--help' to get more "
+                    "information of the command usage."
+                )
+            qset = qset.filter(username__in=usernames)
 
-        with sys.stdin if filename == "-" else open(filename, "rb") as file_:
-            data = json.load(file_)
-
-        sites = list(Site.objects.filter(id=settings.SITE_ID))
-        with transaction.atomic():
-            for item in data:
-                try:
-                    app = SocialApp.objects.get(provider=item.get('provider'))
-                except SocialApp.DoesNotExist:
-                    app = SocialApp()
-                app.name = item.get('name')
-                app.provider = item.get('provider')
-                app.client_id = item.get('client_id')
-                app.secret = item.get('secret')
-                app.key = item.get('key') or ""
-                app.save()
-                app.sites.clear()
-                for site in sites:
-                    app.sites.add(site)
+        for user in qset:
+            if not user.is_active:
+                user.is_active = True
+                user.save()
+                self.print_msg(
+                    "User '%s' has been activated." % user.username
+                )
+            else:
+                self.print_msg(
+                    "User '%s' is already active. No change needed." %
+                    user.username
+                )

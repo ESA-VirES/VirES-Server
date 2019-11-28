@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Dump the social providers configuration
+# Common utilities
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,16 +24,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-few-public-methods
-
-import sys
-import json
-from optparse import make_option
-from django.core.management.base import BaseCommand
-from allauth.socialaccount.models import SocialApp
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn,
-)
 
 JSON_OPTS = {
     'sort_keys': False,
@@ -41,35 +31,5 @@ JSON_OPTS = {
     'separators': (',', ': '),
 }
 
-
-class Command(CommandOutputMixIn, BaseCommand):
-    args = "<provider> [<provider> ...]"
-    help = "Dump social network providers configuration in JSON format."
-    option_list = BaseCommand.option_list + (
-        make_option(
-            "-f", "--file", dest="filename", default="-",
-            help="Output filename."
-        ),
-    )
-
-    def handle(self, *args, **kwargs):
-        providers = args
-        filename = kwargs['filename']
-
-        # select user profile
-        query = SocialApp.objects
-        if not providers:
-            query = query.all()
-        else:
-            query = query.filter(provider__in=providers)
-
-        data = [{
-            "provider": app.provider,
-            "name": app.name,
-            "client_id": app.client_id,
-            "secret": app.secret,
-            "key": app.key,
-        } for app in query]
-
-        with sys.stdout if filename == "-" else open(filename, "w") as file_:
-            json.dump(data, file_, **JSON_OPTS)
+def datetime_to_string(dtobj):
+    return dtobj if dtobj is None else dtobj.isoformat('T')

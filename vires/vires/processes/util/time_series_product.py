@@ -37,6 +37,7 @@ from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
     timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
 )
+from vires.time_util import naive_to_utc
 from vires.models import Product, ProductCollection
 from vires.dataset import Dataset
 from .time_series import TimeSeries
@@ -354,8 +355,8 @@ class ProductTimeSeries(BaseProductTimeSeries):
         """ Subset Django query set. """
         return Product.objects.filter(
             collections=self.collection,
-            begin_time__lt=(stop + self.time_tolerance),
-            end_time__gte=(start - self.time_tolerance),
+            begin_time__lt=naive_to_utc(stop + self.time_tolerance),
+            end_time__gte=naive_to_utc(start - self.time_tolerance),
         )
 
     @staticmethod

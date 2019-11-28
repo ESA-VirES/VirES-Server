@@ -1,12 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# User management - deactivate one or more active users
+# Dump the social providers configuration
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,50 +26,46 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-from optparse import make_option
-from django.core.management.base import BaseCommand, CommandError
+import sys
+import json
+from django.core.management.base import BaseCommand
+from allauth.socialaccount.models import SocialApp
 from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, #nested_commit_on_success
+    CommandOutputMixIn,
 )
-from ...models import UserProfile
+from ._common import JSON_OPTS
 
 
 class Command(CommandOutputMixIn, BaseCommand):
-    args = "<username> [<username> ...]"
-    help = (
-        "Deactivate active users. The users are selected either by the "
-        "provided user names (no user name - no output) or by the '--all' "
-        "option. "
-    )
-    option_list = BaseCommand.option_list + (
-        make_option(
-            "-a", "--all", dest="all_users", action="store_true", default=False,
-            help="Select all users."
-        ),
-    )
+
+    help = "Dump social network providers configuration in JSON format."
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("provider", nargs="*")
+        parser.add_argument(
+            "-f", "--file", dest="filename", default="-",
+            help="Output filename."
+        )
 
     def handle(self, *args, **kwargs):
-        # select user profile
-        qset = UserProfile.objects.select_related('user')
-        if kwargs["all_users"]:
-            qset = qset.all()
-        else:
-            if not args:
-                self.print_wrn(
-                    "No user name has provided! Use '--help' to get more "
-                    "information of the command usage."
-                )
-            qset = qset.filter(user__username__in=args)
+        providers = kwargs['provider']
+        filename = kwargs['filename']
 
-        for profile in qset:
-            if profile.user.is_active:
-                profile.user.is_active = False
-                profile.user.save()
-                self.print_msg(
-                    "User '%s' has been deactivated." % profile.user.username
-                )
-            else:
-                self.print_msg(
-                    "User '%s' is already inactive. No change needed." %
-                    profile.user.username
-                )
+        # select user profile
+        query = SocialApp.objects
+        if not providers:
+            query = query.all()
+        else:
+            query = query.filter(provider__in=providers)
+
+        data = [{
+            "provider": app.provider,
+            "name": app.name,
+            "client_id": app.client_id,
+            "secret": app.secret,
+            "key": app.key,
+        } for app in query]
+
+        with sys.stdout if filename == "-" else open(filename, "w") as file_:
+            json.dump(data, file_, **JSON_OPTS)

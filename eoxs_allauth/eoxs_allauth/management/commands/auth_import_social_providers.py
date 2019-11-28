@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer <http://eoxserver.org>
-# Authors: Fabian Schindler <fabian.schindler@eox.at>
+# Load the social providers configuration
 #
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,44 +24,50 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-few-public-methods
 
-from django.core.management.base import BaseCommand, CommandError
+import sys
+import json
+from django.db import transaction
+from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.contrib.sites.models import Site
+from allauth.socialaccount.models import SocialApp
 from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, nested_commit_on_success
+    CommandOutputMixIn,
 )
-from eoxserver.resources.coverages.models import RangeType
-from vires.models import ProductCollection
 
 
 class Command(CommandOutputMixIn, BaseCommand):
 
+    help = "Load social network providers configuration in JSON format."
+
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
-        parser.add_argument("identifier", help="Collection identifier.")
-        parser.add_argument("range_type_name", help="Range type name.")
+        parser.add_argument(
+            "-f", "--file", dest="filename", default="-",
+            help="Input filename."
+        )
 
-    @nested_commit_on_success
     def handle(self, *args, **kwargs):
-        identifier = kwargs["identifier"]
-        range_type_name = kwargs["range_type_name"]
+        filename = kwargs['filename']
 
-        try:
-            range_type = RangeType.objects.get(name=range_type_name)
-        except RangeType.DoesNotExist:
-            raise CommandError("Invalid range-type '%s'!" % range_type_name)
+        with sys.stdin if filename == "-" else open(filename, "rb") as file_:
+            data = json.load(file_)
 
-        collection = ProductCollection()
-        collection.identifier = identifier
-        collection.range_type = range_type
-
-        collection.srid = 4326
-        collection.min_x = -180
-        collection.min_y = -90
-        collection.max_x = 180
-        collection.max_y = 90
-        collection.size_x = 0
-        collection.size_y = 1
-
-        collection.full_clean()
-        collection.save()
+        sites = list(Site.objects.filter(id=settings.SITE_ID))
+        with transaction.atomic():
+            for item in data:
+                try:
+                    app = SocialApp.objects.get(provider=item.get('provider'))
+                except SocialApp.DoesNotExist:
+                    app = SocialApp()
+                app.name = item.get('name')
+                app.provider = item.get('provider')
+                app.client_id = item.get('client_id')
+                app.secret = item.get('secret')
+                app.key = item.get('key') or ""
+                app.save()
+                app.sites.clear()
+                for site in sites:
+                    app.sites.add(site)

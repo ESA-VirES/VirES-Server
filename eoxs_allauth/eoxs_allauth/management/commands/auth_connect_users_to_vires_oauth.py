@@ -36,24 +36,25 @@ from eoxserver.resources.coverages.management.commands import (
 )
 from ...models import UserProfile
 
-JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
-
 
 class Command(CommandOutputMixIn, BaseCommand):
-    args = "<username> [<username> ...]"
+
     help = (
         "Connect existing users to the OAuth server. "
         "By default all users are connected."
     )
 
-    def handle(self, *args, **kwargs):
-        query = User.objects
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("username", nargs="*")
 
-        if not args:
+    def handle(self, *args, **kwargs):
+        usernames = kwargs["username"]
+        query = User.objects
+        if not usernames:
             query = query.all()
         else:
-            query = query.filter(username__in=args)
-
+            query = query.filter(username__in=usernames)
         for user in query:
             self.connect_user(user)
 
