@@ -31,9 +31,7 @@
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 # pylint: disable=too-few-public-methods
 
-from optparse import make_option
 import numpy as np
-
 from django.contrib.gis import geos
 from django.core.management import call_command
 from django.core.management.base import CommandError, BaseCommand
@@ -46,98 +44,87 @@ from eoxserver.backends.access import connect
 from eoxserver.resources.coverages import models
 from eoxserver.resources.coverages.metadata.component import MetadataComponent
 from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, _variable_args_cb, nested_commit_on_success
+    CommandOutputMixIn, nested_commit_on_success
 )
-
 from vires.models import Product
 from vires.cdf_util import cdf_open
 from vires.time_util import naive_to_utc
 
-def _variable_args_cb_list(option, opt_str, value, parser):
-    """ Helper function for optparse module. Allows variable number of option
-        values when used as a callback.
-    """
-    args = []
-    for arg in parser.rargs:
-        if not arg.startswith('-'):
-            args.append(arg)
-        else:
-            del parser.rargs[:len(args)]
-            break
-    if not getattr(parser.values, option.dest):
-        setattr(parser.values, option.dest, [])
-
-    getattr(parser.values, option.dest).append(args)
-
 
 class Command(CommandOutputMixIn, BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option(
+
+    help = """
+        Registers a Dataset.
+        A dataset is a collection of data and metadata items. When being
+        registered, as much metadata as possible is extracted from the supplied
+        (meta-)data items. If some metadata is still missing, it needs to be
+        supplied via the specific override options.
+
+        By default, datasets are not "visible" which means that they are not
+        advertised in the GetCapabilities sections of the various services.
+        This needs to be overruled via the `--visible` switch.
+
+        The registered dataset can optionally be directly inserted one or more
+        collections.
+    """
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument(
             "-i", "--identifier", "--coverage-id", dest="identifier",
-            action="store", default=None,
-            help=(
+            action="store", default=None, help=(
                 "Optional custom product identifier overriding the default "
                 " identifier of the dataset."
             )
-        ),
-        make_option(
-            "-d", "--data", dest="data",
-            action="callback", callback=_variable_args_cb_list, default=[],
-            help=(
+        )
+        parser.add_argument(
+            "-d", "--data", dest="data", required=True, action="append", help=(
                 "One or more data items of the dataset. The format is: "
                 "[storage_type:url] [package_type:location]* format:location"
             )
-        ),
-        make_option(
-            "-s", "--semantic", dest="semantics",
-            action="callback", callback=_variable_args_cb, default=None,
+        )
+        parser.add_argument(
+            "-s", "--semantic", dest="semantics", action="append",
             help=(
                 "Optional band semantics. If given, one band "
                 "semantics 'band[*]' must be present for each data item."
             )
-        ),
-        make_option(
-            "-m", "--meta-data", dest="metadata",
-            action="callback", callback=_variable_args_cb_list, default=[],
+        )
+        parser.add_argument(
+            "-m", "--meta-data", dest="metadata", default=[], action="append",
             help=(
                 "One or more metadata items of the dataset. The format is: "
                 "[storage_type:url] [package_type:location]* format:location"
             )
-        ),
-        make_option(
-            "-r", "--range-type", dest="range_type_name",
+        )
+        parser.add_argument(
+            "-r", "--range-type", dest="range_type_name", required=True,
             help="Mandatory range type name."
-        ),
-
-        make_option(
+        )
+        parser.add_argument(
             "--size", dest="size", action="store", default=None,
             help="Custom dataset size encoded as <size-x>,<size-y>"
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "--begin-time", dest="begin_time", action="store", default=None,
             help="Custom begin time encoded as ISO8601 datetime strings."
-        ),
-
-        make_option(
+        )
+        parser.add_argument(
             "--end-time", dest="end_time", action="store", default=None,
             help="Custom end time. Format is ISO8601 datetime strings."
-        ),
-
-        make_option(
+        )
+        parser.add_argument(
             "--visible", dest="visible", action="store_true", default=False,
             help=(
                 "Set the dataset to be 'visible', i.e, to be advertised "
                 "in OWS capabilities."
             )
-        ),
-
-        make_option(
-            "--collection", dest="collection_ids",
-            action='callback', callback=_variable_args_cb, default=None,
+        )
+        parser.add_argument(
+            "--collection", dest="collection_ids", action="append",
             help="Optional list of collection the dataset should be linked to."
-        ),
-
-        make_option(
+        )
+        parser.add_argument(
             '--ignore-missing-collection', dest='ignore_missing_collection',
             action="store_true", default=False,
             help=(
@@ -146,7 +133,6 @@ class Command(CommandOutputMixIn, BaseCommand):
                 "By default a missing collection will result in an error."
             )
         )
-    )
 
     args = (
         "-d [<storage>:][<package>:]<location> [-d ... ] "
@@ -164,21 +150,6 @@ class Command(CommandOutputMixIn, BaseCommand):
         "[--ignore-missing-collection]"
     )
 
-    help = """
-        Registers a Dataset.
-        A dataset is a collection of data and metadata items. When being
-        registered, as much metadata as possible is extracted from the supplied
-        (meta-)data items. If some metadata is still missing, it needs to be
-        supplied via the specific override options.
-
-        By default, datasets are not "visible" which means that they are not
-        advertised in the GetCapabilities sections of the various services.
-        This needs to be overruled via the `--visible` switch.
-
-        The registered dataset can optionally be directly inserted one or more
-        collections.
-    """
-
     @nested_commit_on_success
     def handle(self, *args, **kwargs):
         with CacheContext() as cache:
@@ -191,8 +162,6 @@ class Command(CommandOutputMixIn, BaseCommand):
         metadatas = kwargs["metadata"]
         range_type_name = kwargs["range_type_name"]
 
-        if range_type_name is None:
-            raise CommandError("No range type name specified.")
         range_type = models.RangeType.objects.get(name=range_type_name)
 
         metadata_keys = set((
@@ -236,9 +205,6 @@ class Command(CommandOutputMixIn, BaseCommand):
                     if key in metadata_keys:
                         retrieved_metadata.setdefault(key, value)
 
-        if len(datas) < 1:
-            raise CommandError("No data files specified.")
-
         if semantics is None:
             # TODO: check corner cases.
             # e.g: only one data item given but multiple bands in range type
@@ -274,7 +240,7 @@ class Command(CommandOutputMixIn, BaseCommand):
                     if key in metadata_keys:
                         retrieved_metadata.setdefault(key, value)
 
-        if len(metadata_keys - set(retrieved_metadata.keys())):
+        if metadata_keys - set(retrieved_metadata.keys()):
             raise CommandError(
                 "Missing metadata keys %s."
                 % ", ".join(metadata_keys - set(retrieved_metadata.keys()))

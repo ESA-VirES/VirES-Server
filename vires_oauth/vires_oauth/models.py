@@ -33,7 +33,6 @@ from django.db.models import (
 )
 from django.contrib.auth.models import User, Group
 from django_countries.fields import CountryField
-from .settings import PACKAGE_NAME
 
 
 class Permission(Model):
@@ -60,6 +59,11 @@ class UserProfile(Model):
     country = CountryField(blank=True, blank_label='(select country)')
     study_area = CharField(max_length=200, blank=True)
     executive_summary = CharField(max_length=3000, blank=True)
+    # The following filed contains the consented version of the Service Terms
+    # and related documents.
+    consented_service_terms_version = CharField(
+        max_length=32, default="", blank=True
+    )
 
     def __str__(self):
         return "<UserProfile: %s>" % self.user

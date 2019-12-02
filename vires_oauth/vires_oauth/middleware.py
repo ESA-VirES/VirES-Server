@@ -32,7 +32,8 @@ import time
 from logging import getLogger, INFO, WARNING, ERROR
 from django.conf import settings
 from django.contrib.auth import logout
-from django.contrib import messages
+#from django.contrib import messages
+from .utils import AccessLoggerAdapter
 from .models import Permission
 from .settings import (
     ACCESS_LOGGER_NAME, DEFAULT_SESSION_IDLE_TIMEOUT,
@@ -104,12 +105,11 @@ def access_logging_middleware(get_response):
         return ERROR
 
     def middleware(request):
-        is_authenticated = request.user.is_authenticated
         response = get_response(request)
-        logger.log(
+        is_authenticated = request.user.is_authenticated
+        AccessLoggerAdapter(logger, request).log(
             get_log_level(response.status_code, is_authenticated),
-            "%s %s %s %s %s ", "A" if is_authenticated else "N",
-            request.method, request.path, response.status_code,
+            "%s %s %s %s ", request.method, request.path, response.status_code,
             response.reason_phrase,
         )
         return response

@@ -3,10 +3,11 @@
 {% block head_title %}{% trans "Login Cancelled" %}{% endblock %}
 {% block content %}
   <h2>{% trans "Login Cancelled" %}</h2>
-  {% url 'account_login' as login_url %}
   <p>
-    {% blocktrans %}You decided to cancel logging in to our site using one of
-    your existing accounts. If this was a mistake, please proceed to
-    <a href="{{login_url}}">log in</a>.{% endblocktrans %}
+    You decided to cancel logging in to our site using one of
+    your existing accounts.
+  </p>
+  <p>
+    <a href="{% url 'vires_login' %}"  class="btn btn-primary">Retry to log in &raquo;</a>
   </p>
 {% endblock %}

@@ -104,7 +104,7 @@ def save_social_provider(data, sites):
         is_updated = True
     except SocialApp.DoesNotExist:
         app = SocialApp(provider=provider)
-        is_updated = True
+        is_updated = False
 
     for field in ['name', 'client_id', 'secret', 'key']:
         value = data.get(field)

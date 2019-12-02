@@ -1,0 +1,40 @@
+#cookie-law {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 5%;
+    background-color: #ccc;
+    z-index: 1015;
+}
+#cookie-law > div {
+
+}
+#cookie-law > .cookiebutton {
+    padding-left: 15px;
+}
+#cookie-law > .cookiebutton > a {
+    color: inherit;
+}
+#cookie-law > .cookiebutton {
+    vertical-align: middle;
+}
+#cookie-law > .cookiebutton.ok > a {
+    padding: 10px 20px;
+    background-color: #579459;
+    border-radius: 5px;
+    color: black;
+    text-decoration: none;
+}
+#cookie-law > .cookiebutton.notok > a {
+    padding: 10px 20px;
+    background-color: rgb(165, 165, 165);
+    border-radius: 5px;
+    color: black;
+    text-decoration: none;
+}
+#cookie-law > .cookiebutton > a > span {
+    white-space: nowrap;
+}

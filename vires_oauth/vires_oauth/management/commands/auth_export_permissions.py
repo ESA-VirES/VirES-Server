@@ -30,9 +30,7 @@ import sys
 import json
 from django.core.management.base import BaseCommand
 from ...models import Permission
-from ._common import ConsoleOutput
-
-JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
+from ._common import ConsoleOutput, JSON_OPTS
 
 
 class Command(ConsoleOutput, BaseCommand):

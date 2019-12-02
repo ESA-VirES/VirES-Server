@@ -28,8 +28,6 @@
 
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
-from django.contrib.auth.models import User
-from .models import UserProfile
 from . import signals # needed to initialize signal receivers
 
 
@@ -38,6 +36,8 @@ class EOxServerAllauthConfig(AppConfig):
     verbose_name = "EOxServer allauth"
 
     def ready(self):
+        from django.contrib.auth.models import User
+        from .models import UserProfile
 
         def create_profiles(sender, **kwargs):
             if sender.name == self.name:
