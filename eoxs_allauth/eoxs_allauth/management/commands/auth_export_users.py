@@ -80,7 +80,7 @@ def strip_blanks(func):
     def _strip_blanks_(*args, **kwargs):
         return OrderedDict(
             (key, value) for key, value in func(*args, **kwargs).items()
-            if value not in (None, "", [])
+            if value not in (None, "")
         )
     return _strip_blanks_
 

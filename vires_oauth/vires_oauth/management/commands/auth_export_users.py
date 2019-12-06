@@ -65,7 +65,7 @@ def strip_blanks(func):
         return {
             key: value
             for key, value in func(*args, **kwargs).items()
-            if value not in (None, "", [])
+            if value not in (None, "")
         }
     return _strip_blanks_
 

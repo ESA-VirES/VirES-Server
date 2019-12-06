@@ -141,10 +141,20 @@ def get_user(username):
 
 
 def set_groups(user, group_names):
-    groups = get_groups()
+    all_groups = get_groups()
+
+    for group in list(user.groups.exclude(name__in=group_names)):
+        try:
+            user.groups.remove(group)
+        except KeyError:
+            ConsoleOutput.warning(
+                "Failed to remove user %s from the group %s!"
+                % (user.username, group.name)
+            )
+
     for group_name in group_names:
         try:
-            user.groups.add(groups[group_name])
+            user.groups.add(all_groups[group_name])
         except KeyError:
             ConsoleOutput.warning(
                 "User %s cannot be assigned to a group %s. "
