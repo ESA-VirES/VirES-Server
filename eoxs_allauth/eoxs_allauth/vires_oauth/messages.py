@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django context processors
+# VirES permissions
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,13 +26,12 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from .permissions import get_user_permissions
+from django.contrib.messages import error as add_error_message
 
-def vires_oauth(request):
-    return {
-        "vires_permissions": (
-            request.user.vires_permissions
-            if hasattr(request.user, 'vires_permissions') else
-            get_user_permissions(request.user)
-        )
-    }
+
+def add_message_access_denied(request):
+    """ Add access denied message. """
+    add_error_message(request, (
+        "Access denied. Insufficient permission."
+        "Contact the service administrator to upgrade your account."
+    ))

@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django context processors
+# VirES permissions
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,13 +26,24 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from .permissions import get_user_permissions
+from allauth.socialaccount import app_settings
+from django.core.exceptions import ObjectDoesNotExist
+from .provider import ViresProvider
 
-def vires_oauth(request):
-    return {
-        "vires_permissions": (
-            request.user.vires_permissions
-            if hasattr(request.user, 'vires_permissions') else
-            get_user_permissions(request.user)
-        )
-    }
+
+def get_required_permission():
+    return app_settings.PROVIDERS.get(ViresProvider.id, {}).get('PERMISSION')
+
+
+def get_user_permissions(user):
+    if not user.is_authenticated():
+        return set()
+    try:
+        vires_account = user.socialaccount_set.get(provider=ViresProvider.id)
+    except ObjectDoesNotExist:
+        return set()
+    return get_account_permissions(vires_account)
+
+
+def get_account_permissions(account):
+    return set(account.extra_data.get("permissions", []))
