@@ -31,14 +31,11 @@
 import sys
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, #nested_commit_on_success
-)
 from ...models import UserProfile
-from ._common import datetime_to_string
+from ._common import ConsoleOutput, datetime_to_string
 
 
-class Command(CommandOutputMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
 
     help = (
         "Print information about the AllAuth users. The users are selected "

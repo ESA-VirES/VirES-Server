@@ -32,14 +32,11 @@ from functools import partial
 from collections import OrderedDict
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, #nested_commit_on_success
-)
 from ...models import UserProfile
-from ._common import JSON_OPTS, datetime_to_string
+from ._common import ConsoleOutput, JSON_OPTS, datetime_to_string
 
 
-class Command(CommandOutputMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
 
     help = (
         "Print information about the AllAuth users. The users are selected "

@@ -26,18 +26,18 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+from logging import getLogger
 from django.db import transaction
 from django.utils.timezone import now
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from allauth.socialaccount.models import SocialAccount
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, #nested_commit_on_success
-)
 from ...models import UserProfile
+from ._common import ConsoleOutput
 
 
-class Command(CommandOutputMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
 
     help = (
         "Connect existing users to the OAuth server. "
@@ -79,7 +79,7 @@ class Command(CommandOutputMixIn, BaseCommand):
                 account.delete()
 
         if has_vires_connection:
-            self.print_msg("User %s is already connected." % user.username)
+            self.info("User %s is already connected.", user.username)
             return
 
         try:
@@ -97,4 +97,4 @@ class Command(CommandOutputMixIn, BaseCommand):
                 extra_data={}
             ).save()
 
-        self.print_msg("User %s connected." % user.username)
+        self.info("User %s connected.", user.username, log=True)
