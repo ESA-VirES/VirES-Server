@@ -26,12 +26,15 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
+from logging import getLogger
 from django.core.management.base import BaseCommand
 from ...models import UserProfile
 from ._common import ConsoleOutput
 
 
 class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
+
     help = (
         "Activate inactive users. The users are selected either by the "
         "provided user names (no user name - no output) or by the '--all' "
@@ -62,10 +65,10 @@ class Command(ConsoleOutput, BaseCommand):
                 profile.user.is_active = True
                 profile.user.save()
                 self.info(
-                    "User '%s' has been activated." % profile.user.username
+                    "User %s has been activated." % profile.user.username, log=True
                 )
             else:
                 self.info(
-                    "User '%s' is already active. No change needed." %
+                    "User %s is already active. No change needed." %
                     profile.user.username
                 )
