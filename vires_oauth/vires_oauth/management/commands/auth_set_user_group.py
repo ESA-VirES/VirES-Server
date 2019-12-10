@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
+from logging import getLogger
 from django.db import transaction
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
@@ -34,6 +35,8 @@ from ._common import ConsoleOutput
 
 
 class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
+
     help = (
         "Insert selected users to a group. The users are selected either by the "
         "provided user names (no user name - no output) or by the '--all' "
@@ -84,4 +87,6 @@ class Command(ConsoleOutput, BaseCommand):
                     group_string, error
                 )
             else:
-                self.info("user %s added in %s", user.username, group_string)
+                self.info(
+                    "user %s added in %s", user.username, group_string, log=True
+                )

@@ -28,6 +28,7 @@
 
 import sys
 import json
+from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
 from django.core.management.base import BaseCommand
@@ -38,6 +39,8 @@ from ._common import ConsoleOutput
 
 
 class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
+
     help = "Import social network providers configuration from a JSON file."
 
     def add_arguments(self, parser):
@@ -72,10 +75,10 @@ class Command(ConsoleOutput, BaseCommand):
             else:
                 updated_count += is_updated
                 created_count += not is_updated
-                self.info((
+                self.info(
                     "Existing social provider %s updated." if is_updated else
-                    "New social provider %s created."
-                ), name)
+                    "New social provider %s created.", name, log=True
+                )
 
         if created_count:
             self.info(

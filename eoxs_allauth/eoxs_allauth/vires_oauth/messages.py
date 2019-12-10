@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Common utilities
+# VirES permissions
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,45 +26,12 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from __future__ import print_function
-import sys
-from logging import INFO, WARNING, ERROR
-
-_LABEL2LOGLEVEL = {
-    "INFO": INFO,
-    "WARNING": WARNING,
-    "ERROR": ERROR,
-}
+from django.contrib.messages import error as add_error_message
 
 
-JSON_OPTS = {
-    'sort_keys': False,
-    'indent': 2,
-    'separators': (',', ': '),
-}
-
-
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')
-
-
-class ConsoleOutput(object):
-    logger = None
-
-    @classmethod
-    def info(cls, message, *args, **kwargs):
-        cls.print_message("INFO", message, *args, **kwargs)
-
-    @classmethod
-    def warning(cls, message, *args, **kwargs):
-        cls.print_message("WARNING", message, *args, **kwargs)
-
-    @classmethod
-    def error(cls, message, *args, **kwargs):
-        cls.print_message("ERROR", message, *args, **kwargs)
-
-    @classmethod
-    def print_message(cls, label, message, *args, **kwargs):
-        print("%s: %s" % (label, message % args), file=sys.stderr)
-        if kwargs.get('log') and cls.logger:
-            cls.logger.log(_LABEL2LOGLEVEL[label], message, *args)
+def add_message_access_denied(request):
+    """ Add access denied message. """
+    add_error_message(request, (
+        "Access denied. Insufficient permission."
+        "Contact the service administrator to upgrade your account."
+    ))

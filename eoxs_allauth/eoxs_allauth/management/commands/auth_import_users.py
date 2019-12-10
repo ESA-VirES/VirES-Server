@@ -28,19 +28,20 @@
 
 import sys
 import json
+from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from django.utils.dateparse import parse_datetime
 from allauth.socialaccount.models import SocialAccount
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, #nested_commit_on_success
-)
 from ...models import AuthenticationToken
+from ._common import ConsoleOutput
 
 
-class Command(CommandOutputMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
+
     help = "Import users from a JSON file."
 
     def add_arguments(self, parser):
@@ -69,31 +70,32 @@ class Command(CommandOutputMixIn, BaseCommand):
                 failed_count += 1
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
-                self.print_err("Failed to create or update user %s! %s" % (
-                    name, error
-                ))
+                self.error("Failed to create or update user %s! %s", name, error)
             else:
                 updated_count += is_updated
                 created_count += not is_updated
-                self.print_msg((
+                self.info(
                     "Existing user %s updated." if is_updated else
-                    "New user %s created."
-                ) % name)
+                    "New user %s created.", name, log=True
+                )
 
         if created_count:
-            self.print_msg("%d of %d user%s updated." % (
-                created_count, len(data), "s" if created_count > 1 else ""
-            ))
+            self.info(
+                "%d of %d user%s updated.", created_count, len(data),
+                "s" if created_count > 1 else ""
+            )
 
         if updated_count:
-            self.print_msg("%d of %d user%s updated." % (
-                updated_count, len(data), "s" if updated_count > 1 else ""
-            ))
+            self.info(
+                "%d of %d user%s updated.", updated_count, len(data),
+                "s" if updated_count > 1 else ""
+            )
 
         if failed_count:
-            self.print_msg("%d of %d user%s failed " % (
-                failed_count, len(data), "s" if failed_count > 1 else ""
-            ))
+            self.info(
+                "%d of %d user%s failed ", failed_count, len(data),
+                "s" if failed_count > 1 else ""
+            )
 
 #-------------------------------------------------------------------------------
 
