@@ -32,7 +32,7 @@ from django.conf.urls import url, include
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 from django.contrib.staticfiles.templatetags.staticfiles import static
-from allauth.account.views import logout as account_logout
+from allauth.account.views import logout as account_logout, account_inactive
 from allauth.socialaccount.views import (
     login_cancelled as socialaccount_login_cancelled,
     login_error as socialaccount_login_error,
@@ -52,6 +52,7 @@ urlpatterns = [
     ),
     url(r'^', include('eoxs_allauth.vires_oauth.urls')),
     url(r"^logout/$", account_logout, name="account_logout"),
+    url(r"^inactive/$", account_inactive, name="account_inactive"),
     url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
 ]
 

@@ -27,6 +27,13 @@
 # pylint: disable=missing-docstring, too-few-public-methods
 
 import sys
+from logging import INFO, WARNING, ERROR
+
+_LABEL2LOGLEVEL = {
+    "INFO": INFO,
+    "WARNING": WARNING,
+    "ERROR": ERROR,
+}
 
 
 JSON_OPTS = {
@@ -42,18 +49,21 @@ def datetime_to_string(dtobj):
 
 
 class ConsoleOutput():
+    logger = None
     @classmethod
-    def info(cls, message, *args):
-        cls.print_message("INFO", message, *args)
+    def info(cls, message, *args, **kwargs):
+        cls.print_message("INFO", message, *args, **kwargs)
 
     @classmethod
-    def warning(cls, message, *args):
-        cls.print_message("WARNING", message, *args)
+    def warning(cls, message, *args, **kwargs):
+        cls.print_message("WARNING", message, *args, **kwargs)
 
     @classmethod
-    def error(cls, message, *args):
-        cls.print_message("ERROR", message, *args)
+    def error(cls, message, *args, **kwargs):
+        cls.print_message("ERROR", message, *args, **kwargs)
 
     @classmethod
-    def print_message(cls, label, message, *args):
+    def print_message(cls, label, message, *args, **kwargs):
         print("%s: %s" % (label, message % args), file=sys.stderr)
+        if kwargs.get('log') and cls.logger:
+            cls.logger.log(_LABEL2LOGLEVEL[label], message, *args)

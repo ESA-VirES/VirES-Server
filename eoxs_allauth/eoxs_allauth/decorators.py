@@ -95,7 +95,7 @@ def token_authentication(view_func):
     def _wrapper_(request, *args, **kwargs):
         if not request.user.is_authenticated():
             user = _get_user(_extract_token(request))
-            if user:
+            if user and user.is_active:
                 request.user = user
         return view_func(request, *args, **kwargs)
     return _wrapper_

@@ -26,23 +26,13 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from django.core.exceptions import ObjectDoesNotExist
-from .provider import ViresProvider
-
+from .permissions import get_user_permissions
 
 def vires_oauth(request):
     return {
-        "vires_permissions": set(_get_vires_permissions(request.user))
+        "vires_permissions": (
+            request.user.vires_permissions
+            if hasattr(request.user, 'vires_permissions') else
+            get_user_permissions(request.user)
+        )
     }
-
-
-def _get_vires_permissions(user):
-    if not user.is_authenticated():
-        return []
-
-    try:
-        vires_account = user.socialaccount_set.get(provider=ViresProvider.id)
-    except ObjectDoesNotExist:
-        return []
-
-    return vires_account.extra_data.get("permissions", [])

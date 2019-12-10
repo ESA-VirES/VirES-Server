@@ -28,14 +28,14 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
+from logging import getLogger
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, #nested_commit_on_success
-)
+from ._common import ConsoleOutput
 
 
-class Command(CommandOutputMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
 
     help = (
         "Activate inactive users. The users are selected either by the "
@@ -58,7 +58,7 @@ class Command(CommandOutputMixIn, BaseCommand):
             qset = qset.all()
         else:
             if not usernames:
-                self.print_wrn(
+                self.warning(
                     "No username has provided! Use '--help' to get more "
                     "information of the command usage."
                 )
@@ -68,11 +68,11 @@ class Command(CommandOutputMixIn, BaseCommand):
             if not user.is_active:
                 user.is_active = True
                 user.save()
-                self.print_msg(
-                    "User '%s' has been activated." % user.username
+                self.info(
+                    "User %s has been activated.", user.username, log=True
                 )
             else:
-                self.print_msg(
-                    "User '%s' is already active. No change needed." %
+                self.info(
+                    "User %s is already active. No change needed.",
                     user.username
                 )

@@ -33,12 +33,10 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.contrib.sites.models import Site
 from allauth.socialaccount.models import SocialApp
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn,
-)
+from ._common import ConsoleOutput
 
 
-class Command(CommandOutputMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
 
     help = "Load social network providers configuration in JSON format."
 

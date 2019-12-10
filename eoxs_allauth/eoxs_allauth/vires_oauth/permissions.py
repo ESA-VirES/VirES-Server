@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Common utilities
+# VirES permissions
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,45 +26,24 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from __future__ import print_function
-import sys
-from logging import INFO, WARNING, ERROR
-
-_LABEL2LOGLEVEL = {
-    "INFO": INFO,
-    "WARNING": WARNING,
-    "ERROR": ERROR,
-}
+from allauth.socialaccount import app_settings
+from django.core.exceptions import ObjectDoesNotExist
+from .provider import ViresProvider
 
 
-JSON_OPTS = {
-    'sort_keys': False,
-    'indent': 2,
-    'separators': (',', ': '),
-}
+def get_required_permission():
+    return app_settings.PROVIDERS.get(ViresProvider.id, {}).get('PERMISSION')
 
 
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')
+def get_user_permissions(user):
+    if not user.is_authenticated():
+        return set()
+    try:
+        vires_account = user.socialaccount_set.get(provider=ViresProvider.id)
+    except ObjectDoesNotExist:
+        return set()
+    return get_account_permissions(vires_account)
 
 
-class ConsoleOutput(object):
-    logger = None
-
-    @classmethod
-    def info(cls, message, *args, **kwargs):
-        cls.print_message("INFO", message, *args, **kwargs)
-
-    @classmethod
-    def warning(cls, message, *args, **kwargs):
-        cls.print_message("WARNING", message, *args, **kwargs)
-
-    @classmethod
-    def error(cls, message, *args, **kwargs):
-        cls.print_message("ERROR", message, *args, **kwargs)
-
-    @classmethod
-    def print_message(cls, label, message, *args, **kwargs):
-        print("%s: %s" % (label, message % args), file=sys.stderr)
-        if kwargs.get('log') and cls.logger:
-            cls.logger.log(_LABEL2LOGLEVEL[label], message, *args)
+def get_account_permissions(account):
+    return set(account.extra_data.get("permissions", []))

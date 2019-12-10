@@ -30,6 +30,9 @@
 
 from logging import getLogger
 from django.dispatch import receiver
+from django.urls import reverse
+from django.http import HttpResponseRedirect
+from allauth.exceptions import ImmediateHttpResponse
 from allauth.account.signals import (
     user_logged_in, user_signed_up, password_set, password_changed,
     password_reset, email_confirmed, email_confirmation_sent, email_changed,
@@ -104,9 +107,8 @@ def receive_email_confirmation_sent(confirmation, **kwargs):
 
 @receiver(pre_social_login)
 def receive_pre_social_login(request, sociallogin, **kwargs):
-    LOGGER.debug(
-        "%s: %s, %s", sociallogin, sociallogin.user, sociallogin.email_addresses
-    )
+    enforce_vires_authorization(request, sociallogin.account)
+
     # TODO: find a better way how to guess the user's identity
     user_id = str(sociallogin.user)
     emails = ", ".join(addr.email for addr in sociallogin.email_addresses)
@@ -118,6 +120,7 @@ def receive_pre_social_login(request, sociallogin, **kwargs):
             user_id = emails
         else:
             user_id = '<unknown>'
+
     LOGGER.info(
         "successful %s authentication of %s",
         sociallogin.account.provider, user_id
@@ -136,3 +139,23 @@ def receive_social_account_removed(request, socialaccount, **kwargs):
     LOGGER.info(
         "%s removed %s account", socialaccount.user, socialaccount.provider
     )
+
+
+def enforce_vires_authorization(request, account):
+    from .vires_oauth.messages import add_message_access_denied
+    from .vires_oauth.permissions import (
+        get_account_permissions,
+        get_required_permission,
+    )
+    from .vires_oauth.provider import ViresProvider
+    if account.provider != ViresProvider.id:
+        return
+    required_permission = get_required_permission()
+    granted_permissions = get_account_permissions(account)
+    if required_permission and required_permission not in granted_permissions:
+        LOGGER.info(
+            "access denied to %s user %s because of the missing %s permission",
+            account.provider, account.extra_data['username'], required_permission,
+        )
+        add_message_access_denied(request)
+        raise ImmediateHttpResponse(HttpResponseRedirect(reverse("workspace")))
