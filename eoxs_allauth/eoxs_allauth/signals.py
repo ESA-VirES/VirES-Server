@@ -142,6 +142,7 @@ def receive_social_account_removed(request, socialaccount, **kwargs):
 
 
 def enforce_vires_authorization(request, account):
+    #pylint: disable=import-outside-toplevel
     from .vires_oauth.messages import add_message_access_denied
     from .vires_oauth.permissions import (
         get_account_permissions,

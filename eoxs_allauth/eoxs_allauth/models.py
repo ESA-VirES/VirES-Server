@@ -31,14 +31,14 @@ import base64
 
 from django.db.models import (
     Model, OneToOneField, ForeignKey, CharField, DateTimeField,
-    BooleanField,
+    BooleanField, CASCADE,
 )
 from django.contrib.auth.models import User
 from django_countries.fields import CountryField
 
 
 class UserProfile(Model):
-    user = OneToOneField(User)
+    user = OneToOneField(User, on_delete=CASCADE)
     title = CharField(max_length=100, blank=True)
     institution = CharField(max_length=100, blank=True)
     country = CountryField(blank=True, blank_label='(select country)')
@@ -61,7 +61,9 @@ def get_default_token():
 
 
 class AuthenticationToken(Model):
-    owner = ForeignKey(User, related_name='tokens', null=False, blank=False)
+    owner = ForeignKey(
+        User, related_name='tokens', null=False, blank=False, on_delete=CASCADE
+    )
     token = CharField(
         max_length=32, blank=True, null=True,
         default=get_default_token, unique=True

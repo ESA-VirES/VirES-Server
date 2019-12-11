@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# VirES permissions
+#  Various utilities
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,24 +26,23 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from allauth.socialaccount import app_settings
-from django.core.exceptions import ObjectDoesNotExist
-from .provider import ViresProvider
+from logging import LoggerAdapter
 
 
-def get_required_permission():
-    return app_settings.PROVIDERS.get(ViresProvider.id, {}).get('PERMISSION')
+def get_remote_addr(request):
+    """ Extract remote address from a request. """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.partition(',')[0]
+    return request.META.get('REMOTE_ADDR')
 
 
-def get_user_permissions(user):
-    if not user.is_authenticated:
-        return set()
-    try:
-        vires_account = user.socialaccount_set.get(provider=ViresProvider.id)
-    except ObjectDoesNotExist:
-        return set()
-    return get_account_permissions(vires_account)
+class AccessLoggerAdapter(LoggerAdapter):
+    """ Logger adapter adding extra fields required by the access logger. """
 
-
-def get_account_permissions(account):
-    return set(account.extra_data.get("permissions", []))
+    def __init__(self, logger, request, user=None):
+        user = user or request.user
+        super(AccessLoggerAdapter, self).__init__(logger, {
+            "remote_addr": get_remote_addr(request) if request else "-",
+            "username": "-" if user.is_anonymous else user.username,
+        })
