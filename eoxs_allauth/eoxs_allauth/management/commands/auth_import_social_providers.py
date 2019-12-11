@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Export user permissions in JSON format.
+# Load the social providers configuration
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,42 +28,44 @@
 
 import sys
 import json
+from django.db import transaction
 from django.core.management.base import BaseCommand
-from ...models import Permission
-from ._common import ConsoleOutput, JSON_OPTS
+from django.conf import settings
+from django.contrib.sites.models import Site
+from allauth.socialaccount.models import SocialApp
+from ._common import ConsoleOutput
 
 
 class Command(ConsoleOutput, BaseCommand):
-    help = (
-        "Export user permissions in JSON format. The exported permissions "
-        "can be selected by names."
-    )
+
+    help = "Load social network providers configuration in JSON format."
 
     def add_arguments(self, parser):
-        parser.add_argument("permissions", nargs="*", help="Selected permissions.")
+        super(Command, self).add_arguments(parser)
         parser.add_argument(
-            "-f", "--file-name", dest="filename", default="-", help=(
-                "Optional output file-name. "
-                "By default it is written to the standard output."
-            )
+            "-f", "--file", dest="filename", default="-",
+            help="Input filename."
         )
 
-    def handle(self, permissions, filename, **kwargs):
-        query = Permission.objects
+    def handle(self, *args, **kwargs):
+        filename = kwargs['filename']
 
-        if not permissions:
-            query = query.all()
-        else:
-            query = query.filter(name__in=permissions)
+        with sys.stdin if filename == "-" else open(filename, "rb") as file_:
+            data = json.load(file_)
 
-        data = [extract_permission(item) for item in query]
-
-        with sys.stdout if filename == "-" else open(filename, "w") as file_:
-            json.dump(data, file_, **JSON_OPTS)
-
-
-def extract_permission(permission):
-    return {
-        "name": permission.name,
-        "description": permission.description,
-    }
+        sites = list(Site.objects.filter(id=settings.SITE_ID))
+        with transaction.atomic():
+            for item in data:
+                try:
+                    app = SocialApp.objects.get(provider=item.get('provider'))
+                except SocialApp.DoesNotExist:
+                    app = SocialApp()
+                app.name = item.get('name')
+                app.provider = item.get('provider')
+                app.client_id = item.get('client_id')
+                app.secret = item.get('secret')
+                app.key = item.get('key') or ""
+                app.save()
+                app.sites.clear()
+                for site in sites:
+                    app.sites.add(site)

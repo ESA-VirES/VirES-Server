@@ -40,7 +40,7 @@ setup(
     include_package_data=True,
     scripts=[],
     install_requires=[
-        'EOxServer', 'django-allauth',
+        'django-allauth',
     ],
     zip_safe=False,
 

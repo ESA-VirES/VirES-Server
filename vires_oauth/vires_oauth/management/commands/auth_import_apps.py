@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Import user groups from a JSON file
+# Import the social providers from a JSON file
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -30,111 +30,118 @@ import sys
 import json
 from logging import getLogger
 from traceback import print_exc
-from contextlib import suppress
 from django.db import transaction
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import Group
-from ...models import GroupInfo, Permission
-from ...data import DEFAULT_GROUPS
+from django.utils.dateparse import parse_datetime
+from django.contrib.auth.models import User
+from oauth2_provider.models import Application
 from ._common import ConsoleOutput
 
 
 class Command(ConsoleOutput, BaseCommand):
     logger = getLogger(__name__)
 
-    help = "Import groups from a JSON file."
+    help = "Import registered applications from a JSON file."
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "-f", "--file", dest="filename", default="-", help=(
-                "Optional input file-name. "
-                "By default it is read from the standard input."
-            )
-        )
-        parser.add_argument(
-            "-d", "--default", dest="load_defaults", action="store_true",
-            default=False, help="Re-load default set of groups."
+            "-f", "--file", dest="filename", default="-",
+            help="Input filename."
         )
 
-    def handle(self, filename, load_defaults, **kwargs):
-
-        if load_defaults:
-            filename = DEFAULT_GROUPS
+    def handle(self, filename, **kwargs):
 
         with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
             data = json.load(file_)
 
-        permissions = get_permissions()
-
         failed_count = 0
         created_count = 0
         updated_count = 0
+
         for item in data:
-            name = item['name']
+            name = item['client_id']
+            if item.get('name'):
+                name += " (%s)" % item['name']
+
             try:
-                is_updated = save_group(item, permissions)
+                is_updated = save_app(item)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
-                self.error("Failed to create or update a group! %s", error)
+                self.error(
+                    "Failed to create or update app %s! %s",
+                    name, error
+                )
             else:
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing user group %s updated." if is_updated else
-                    "New user group %s created.", name, log=True
+                    "Existing app %s updated." if is_updated else
+                    "New app %s created.", name, log=True
                 )
 
         if created_count:
             self.info(
-                "%d of %d user group%s updated.", created_count, len(data),
+                "%d of %d app%s updated.", created_count, len(data),
                 "s" if created_count > 1 else ""
             )
 
         if updated_count:
             self.info(
-                "%d of %d user group%s updated.", updated_count, len(data),
+                "%d of %d app%s updated.", updated_count, len(data),
                 "s" if updated_count > 1 else ""
             )
 
         if failed_count:
             self.info(
-                "%d of %d user group%s failed ", failed_count, len(data),
+                "%d of %d app%s failed ", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
 
+
+KEY_PARSERS = {
+    "created": parse_datetime,
+    "updated": parse_datetime,
+    "redirect_uris": lambda uris: " ".join(str(uri) for uri in uris),
+    "skip_authorization": bool,
+}
+
+APP_KEYS = [
+    "name",
+    "client_secret",
+    "client_type",
+    "authorization_grant_type",
+    "skip_authorization",
+    "created",
+    "updated",
+    "redirect_uris",
+]
+
+
 @transaction.atomic
-def save_group(item, permissions):
-    name = item['name']
+def save_app(item):
+    client_id = item['client_id']
+
     try:
-        group = Group.objects.get(name=name)
+        app = Application.objects.get(client_id=client_id)
         is_updated = True
-    except Group.DoesNotExist:
-        group = Group(name=name)
+    except Application.DoesNotExist:
+        app = Application(client_id=client_id)
         is_updated = False
 
-    group.save()
+    if 'owner' in item:
+        app.user = get_user(item['owner'])
 
-    group.permissions.clear()
-    for permission_name in item.get('permissions') or []:
-        with suppress(KeyError):
-            group.oauth_user_permissions.add(permissions[permission_name])
+    for key in APP_KEYS:
+        value = item.get(key)
+        if value is not None:
+            setattr(app, key, KEY_PARSERS.get(key, str)(value))
 
-    if 'title' in item:
-        try:
-            group_info = group.groupinfo
-        except GroupInfo.DoesNotExist:
-            group_info = GroupInfo()
-            group_info.group = group
-
-        group_info.title = item['title']
-        group_info.save()
+    app.save()
 
     return is_updated
 
-def get_permissions():
-    return {
-        permission.name: permission
-        for permission in Permission.objects.all()
-    }
+
+def get_user(username):
+    return None if username is None else User.objects.get(username=username)

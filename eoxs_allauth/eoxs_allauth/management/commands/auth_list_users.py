@@ -1,8 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# User management - print information about the users
+# User management - dump users' info
 #
+# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
+#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -27,22 +29,25 @@
 # pylint: disable=missing-docstring, too-few-public-methods
 
 import sys
-from collections import OrderedDict
 from django.core.management.base import BaseCommand
-from ...models import UserProfile, Permission
+from django.contrib.auth.models import User
+from ...models import UserProfile
 from ._common import ConsoleOutput, datetime_to_string
 
 
 class Command(ConsoleOutput, BaseCommand):
+
     help = (
-        "Print information about the users. The users can be selected "
-        "by the provided user names. By default, all users are printed."
+        "Print information about the AllAuth users. The users are selected "
+        "either by the provided user names (no user name - no output) or "
+        "by the '--all' option. "
         "By default, only the user names are listed. A brief summary for each "
         "user can be obtained by '--info' option."
     )
 
     def add_arguments(self, parser):
-        parser.add_argument("users", nargs="*", help="Selected users.")
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("username", nargs="*")
         parser.add_argument(
             "--info", dest="info_dump", action="store_true", default=False,
             help="Verbose text output."
@@ -54,13 +59,13 @@ class Command(ConsoleOutput, BaseCommand):
             )
         )
 
-    def handle(self, users, **kwargs):
-        # select user profile
-        qset = UserProfile.objects.select_related('user')
-        if not users:
-            qset = qset.all()
+    def handle(self, *args, **kwargs):
+        usernames = kwargs['username']
+        query = User.objects
+        if not usernames:
+            query = query.all()
         else:
-            qset = qset.filter(user__username__in=users)
+            query = query.filter(username__in=usernames)
         # select output class
         if kwargs["info_dump"]:
             output = VerboseOutput
@@ -71,85 +76,83 @@ class Command(ConsoleOutput, BaseCommand):
         with fout:
             fout.write(output.start)
             dlm = ""
-            for item in qset:
+            for item in query:
                 fout.write(dlm)
                 fout.write(output.to_str(item))
                 dlm = output.delimiter
             fout.write(output.stop)
 
 
-class BriefOutput():
+class BriefOutput(object):
     start = ""
     stop = ""
     delimiter = ""
 
     @staticmethod
-    def to_str(profile):
-        return profile.user.username + "\n"
+    def to_str(user):
+        return user.username + "\n"
 
 
-class VerboseOutput():
+class VerboseOutput(object):
     start = ""
     stop = ""
     delimiter = "\n"
 
     @classmethod
-    def to_str(cls, profile):
-        out = ["user: %s" % profile.user.username]
+    def to_str(cls, user):
+        out = ["user: %s" % user.username]
         out.extend(
             "%14s: %s" % (key, value)
-            for key, value in cls.extract_user_profile(profile)
+            for key, value in cls.extract_user_profile(user)
         )
         out.append("")
-        return "\n".join(out)
+        return ("\n".join(out)).encode('utf8')
 
     @classmethod
-    def extract_user_profile(cls, profile):
-        social_accounts = list(profile.user.socialaccount_set.all())
-        emails = list(profile.user.emailaddress_set.all())
+    def get_profile(cls, user):
+        try:
+            return user.userprofile
+        except UserProfile.DoesNotExist:
+            return None
+
+    @classmethod
+    def extract_user_profile(cls, user):
+        social_accounts = list(user.socialaccount_set.all())
+        emails = list(user.emailaddress_set.all())
 
         dates_joined = [
             item.date_joined for item in social_accounts
             if item.date_joined is not None
         ]
-        if profile.user.date_joined is not None:
-            dates_joined.append(profile.user.date_joined)
+        if user.date_joined is not None:
+            dates_joined.append(user.date_joined)
         date_joined = max(dates_joined) if dates_joined else None
 
         last_logins = [
             item.last_login for item in social_accounts
             if item.last_login is not None
         ]
-        if profile.user.last_login is not None:
-            last_logins.append(profile.user.last_login)
+        if user.last_login is not None:
+            last_logins.append(user.last_login)
         last_login = max(last_logins) if last_logins else None
 
         providers = [item.provider for item in social_accounts]
         primary_emails = [item.email for item in emails if item.primary]
         other_emails = [item.email for item in emails if not item.primary]
-        if profile.user.email and profile.user.email not in primary_emails:
-            primary_emails = [profile.user.email] + primary_emails
+        if user.email and user.email not in primary_emails:
+            primary_emails = [user.email] + primary_emails
 
-        yield ("groups", ", ".join(
-            group.name for group in profile.user.groups.all()
-        ))
+        profile = cls.get_profile(user) or ""
 
-        yield ("permissions", ", ".join(
-            list(Permission.get_user_permissions(profile.user))
-        ))
-        yield ("is active", profile.user.is_active)
-        yield ("first name", profile.user.first_name)
-        yield ("last name", profile.user.last_name)
-        yield ("title", profile.title)
-        yield ("institution", profile.institution)
-        yield ("country", profile.country)
-        yield ("study area", profile.study_area)
+        yield ("is active", user.is_active)
+        yield ("first name", user.first_name)
+        yield ("last name", user.last_name)
+        yield ("title", profile and profile.title)
+        yield ("institution", profile and profile.institution)
+        yield ("country", profile and profile.country)
+        yield ("study area", profile and profile.study_area)
         yield ("primary email", ", ".join(primary_emails))
         yield ("other emails", ", ".join(other_emails))
         yield ("social accts.", ", ".join(providers))
         yield ("date joined", datetime_to_string(date_joined))
         yield ("last login", datetime_to_string(last_login))
-        yield (
-            "consented service terms version",
-            profile.consented_service_terms_version
-        )

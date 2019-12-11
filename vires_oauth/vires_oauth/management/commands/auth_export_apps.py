@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Export user permissions in JSON format.
+# Export registered application in JSON format.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -29,41 +29,45 @@
 import sys
 import json
 from django.core.management.base import BaseCommand
-from ...models import Permission
-from ._common import ConsoleOutput, JSON_OPTS
+from oauth2_provider.models import Application
+from ._common import ConsoleOutput, datetime_to_string, JSON_OPTS
 
 
 class Command(ConsoleOutput, BaseCommand):
-    help = (
-        "Export user permissions in JSON format. The exported permissions "
-        "can be selected by names."
-    )
+    help = "Export registered applications in JSON format."
 
     def add_arguments(self, parser):
-        parser.add_argument("permissions", nargs="*", help="Selected permissions.")
+        parser.add_argument("apps", nargs="*", help="Selected applications.")
         parser.add_argument(
-            "-f", "--file-name", dest="filename", default="-", help=(
-                "Optional output file-name. "
-                "By default it is written to the standard output."
-            )
+            "-f", "--file", dest="filename", default="-",
+            help="Output filename."
         )
 
-    def handle(self, permissions, filename, **kwargs):
-        query = Permission.objects
-
-        if not permissions:
+    def handle(self, apps, filename, **kwargs):
+        query = Application.objects
+        if not apps:
             query = query.all()
         else:
-            query = query.filter(name__in=permissions)
+            query = (
+                query.filter(name__in=apps) | query.filter(client_id__in=apps)
+            )
 
-        data = [extract_permission(item) for item in query]
+        data = [extract_app(app) for app in query]
 
         with sys.stdout if filename == "-" else open(filename, "w") as file_:
             json.dump(data, file_, **JSON_OPTS)
 
 
-def extract_permission(permission):
+def extract_app(app):
     return {
-        "name": permission.name,
-        "description": permission.description,
+        "owner": None if app.user is None else app.user.username,
+        "name": app.name,
+        "client_id": app.client_id,
+        "client_secret": app.client_secret,
+        "client_type": app.client_type,
+        "authorization_grant_type": app.authorization_grant_type,
+        "skip_authorization": app.skip_authorization,
+        "created": datetime_to_string(app.created),
+        "updated": datetime_to_string(app.updated),
+        "redirect_uris": (app.redirect_uris or "").split(),
     }

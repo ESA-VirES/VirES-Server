@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# User management - deactivate one or more active users
+# User management - activate one or more inactive users
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -28,50 +28,51 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-from optparse import make_option
-from django.core.management.base import BaseCommand, CommandError
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, #nested_commit_on_success
-)
-from ...models import UserProfile
+from logging import getLogger
+from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
+from ._common import ConsoleOutput
 
 
-class Command(CommandOutputMixIn, BaseCommand):
-    args = "<username> [<username> ...]"
+class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
+
     help = (
-        "Deactivate active users. The users are selected either by the "
+        "Activate inactive users. The users are selected either by the "
         "provided user names (no user name - no output) or by the '--all' "
         "option. "
     )
-    option_list = BaseCommand.option_list + (
-        make_option(
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("username", nargs="*")
+        parser.add_argument(
             "-a", "--all", dest="all_users", action="store_true", default=False,
             help="Select all users."
-        ),
-    )
+        )
 
     def handle(self, *args, **kwargs):
-        # select user profile
-        qset = UserProfile.objects.select_related('user')
-        if kwargs["all_users"]:
+        usernames = kwargs['username']
+        qset = User.objects
+        if kwargs['all_users']:
             qset = qset.all()
         else:
-            if not args:
-                self.print_wrn(
-                    "No user name has provided! Use '--help' to get more "
+            if not usernames:
+                self.warning(
+                    "No username has provided! Use '--help' to get more "
                     "information of the command usage."
                 )
-            qset = qset.filter(user__username__in=args)
+            qset = qset.filter(username__in=usernames)
 
-        for profile in qset:
-            if profile.user.is_active:
-                profile.user.is_active = False
-                profile.user.save()
-                self.print_msg(
-                    "User '%s' has been deactivated." % profile.user.username
+        for user in qset:
+            if not user.is_active:
+                user.is_active = True
+                user.save()
+                self.info(
+                    "User %s has been activated.", user.username, log=True
                 )
             else:
-                self.print_msg(
-                    "User '%s' is already inactive. No change needed." %
-                    profile.user.username
+                self.info(
+                    "User %s is already active. No change needed.",
+                    user.username
                 )

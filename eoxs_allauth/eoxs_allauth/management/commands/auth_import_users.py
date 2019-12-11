@@ -31,13 +31,11 @@ import json
 from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
-from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.utils.dateparse import parse_datetime
-from allauth.account.models import EmailAddress
 from allauth.socialaccount.models import SocialAccount
-from ...models import UserProfile
+from ...models import AuthenticationToken
 from ._common import ConsoleOutput
 
 
@@ -47,6 +45,7 @@ class Command(ConsoleOutput, BaseCommand):
     help = "Import users from a JSON file."
 
     def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
         parser.add_argument(
             "-f", "--file", dest="filename", default="-", help=(
                 "Optional input file-name. "
@@ -54,9 +53,10 @@ class Command(ConsoleOutput, BaseCommand):
             )
         )
 
-    def handle(self, filename, **kwargs):
+    def handle(self, *args, **kwargs):
+        filename = kwargs['filename']
 
-        with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
+        with sys.stdin if filename == "-" else open(filename, "rb") as file_:
             data = json.load(file_)
 
         failed_count = 0
@@ -105,6 +105,8 @@ def _parse_datetime(value):
 PARSERS = {
     "date_joined": _parse_datetime,
     "last_login": _parse_datetime,
+    "created": _parse_datetime,
+    "expires": _parse_datetime,
 }
 
 USER_FIELDS = [
@@ -119,19 +121,8 @@ def save_user(data):
     set_model(user, USER_FIELDS, data, PARSERS)
     user.save()
 
-    set_user_profile(user, data.get("user_profile"))
-    set_email_addresses(user, data.get("email_addresses", []))
     set_social_accounts(user, data.get("social_accounts", []))
-
-    # set optional user groups
-    groups = data.get('groups')
-    if groups is None:
-        groups = []
-        # set the default groups for a new user
-        if not is_updated:
-            groups.extend(getattr(settings, "VIRES_OAUTH_DEFAULT_GROUPS", []))
-
-    set_groups(user, groups)
+    set_access_tokens(user, data.get("access_tokens", []))
 
     return is_updated
 
@@ -141,88 +132,6 @@ def get_user(username):
         return True, User.objects.get(username=username)
     except User.DoesNotExist:
         return False, User(username=username)
-
-
-def set_groups(user, group_names):
-    all_groups = get_groups()
-
-    for group in list(user.groups.exclude(name__in=group_names)):
-        try:
-            user.groups.remove(group)
-        except KeyError:
-            ConsoleOutput.warning(
-                "Failed to remove user %s from the group %s!"
-                % (user.username, group.name)
-            )
-
-    for group_name in group_names:
-        try:
-            user.groups.add(all_groups[group_name])
-        except KeyError:
-            ConsoleOutput.warning(
-                "User %s cannot be assigned to a group %s. "
-                "The group does not exist" % (user.username, group_name)
-            )
-
-def get_groups():
-    """ Get a dictionary of the existing user groups. """
-    return {group.name: group for group in Group.objects.all()}
-
-#-------------------------------------------------------------------------------
-
-USER_PROFILE_FIELDS = [
-    "title", "institution", "country", "study_area", "executive_summary",
-    "consented_service_terms_version",
-]
-
-
-def set_user_profile(user, data):
-    if data is None:
-        return
-    user_profile = get_user_profile(user)
-    set_model(user_profile, USER_PROFILE_FIELDS, data)
-    user_profile.save()
-
-
-def get_user_profile(user):
-    try:
-        return user.userprofile
-    except UserProfile.DoesNotExist:
-        return UserProfile(user=user)
-
-#-------------------------------------------------------------------------------
-
-EMAIL_ADDRESS_FIELDS = ["verified", "primary"]
-
-
-def set_email_addresses(user, data):
-    for item in data:
-        set_email_address(user, item)
-
-
-def set_email_address(user, data):
-    email_address = get_email_address(user, data['email'])
-    set_model(email_address, EMAIL_ADDRESS_FIELDS, data)
-    email_address.save()
-
-    if email_address.primary:
-        set_primary_email(user, email_address.email)
-
-
-def set_primary_email(user, email):
-    for item in user.emailaddress_set.all():
-        if item.primary and item.email != email:
-            item.primary = False
-            item.save()
-    user.email = email
-    user.save()
-
-
-def get_email_address(user, email):
-    try:
-        return user.emailaddress_set.get(email=email)
-    except EmailAddress.DoesNotExist:
-        return EmailAddress(user=user, email=email)
 
 #-------------------------------------------------------------------------------
 
@@ -245,6 +154,27 @@ def get_social_account(user, provider):
         return user.socialaccount_set.get(provider=provider)
     except SocialAccount.DoesNotExist:
         return SocialAccount(user=user, provider=provider)
+
+#-------------------------------------------------------------------------------
+
+ACCESS_TOKEN_FIELDS = ["token", "purpose", "expires", "created"]
+
+def set_access_tokens(user, data):
+    for item in data:
+        set_access_token(user, item)
+
+
+def set_access_token(user, data):
+    access_token = get_access_token(user, data['identifier'])
+    set_model(access_token, ACCESS_TOKEN_FIELDS, data, PARSERS)
+    access_token.save()
+
+
+def get_access_token(user, identifier):
+    try:
+        return user.tokens.get(identifier=identifier)
+    except AuthenticationToken.DoesNotExist:
+        return AuthenticationToken(owner=user, identifier=identifier)
 
 #-------------------------------------------------------------------------------
 
