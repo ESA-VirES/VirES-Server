@@ -42,7 +42,7 @@ from eoxmagmod import (
 )
 from eoxmagmod.time_util import decimal_year_to_mjd2000
 from eoxmagmod.magnetic_model.parser_shc import parse_shc_header
-
+from vires.amps import AmpsMagneticFieldModel
 from vires.util import cached_property
 from vires.file_util import FileChangeMonitor
 from .magnetic_model_file import (
@@ -224,6 +224,10 @@ MODEL_FACTORIES = {
     "CHAOS-MMA-Secondary": ModelFactory(
         load_model_swarm_mma_2c_internal,
         [CachedComposedModelFile("MMA_CHAOS6")]
+    ),
+    "AMPS": ModelFactory(
+        lambda _: AmpsMagneticFieldModel(),
+        [AmpsMagneticFieldModel]
     ),
 }
 

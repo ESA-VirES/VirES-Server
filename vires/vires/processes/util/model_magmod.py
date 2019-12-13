@@ -264,7 +264,11 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
         "time": ["Timestamp"],
         "location": ["Latitude", "Longitude", "Radius"],
         "f107": ["F107"],
-        "subsolar_point": ["SunDeclination", "SunLongitude"]
+        "subsolar_point": ["SunDeclination", "SunLongitude"],
+        "amps": [
+            "F10_INDEX", "IMF_BY_GSM", "IMF_BZ_GSM", "IMF_V",
+            "DipoleTiltAngle",
+        ]
     }
     BASE_VARIABLES = ["F", "B_NEC"]
 
@@ -322,6 +326,7 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
             "location": self._extract_location,
             "f107": self._extract_f107,
             "subsolar_point": self._extract_subsolar_point,
+            "amps": self._extract_amps_inputs,
         }
 
         self.data_extractors = [
@@ -416,4 +421,14 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
         return [
             ("lat_sol", dataset[lat_sol]),
             ("lon_sol", dataset[lon_sol]),
+        ]
+
+    def _extract_amps_inputs(self, dataset):
+        f107, imf_by, imf_bz, imf_v, tilt_anlge = self._source_variables["amps"]
+        return [
+            ("imf_f107", dataset[f107]),
+            ("imf_by", dataset[imf_by]),
+            ("imf_bz", dataset[imf_bz]),
+            ("imf_v", dataset[imf_v]),
+            ("tilt_angle", dataset[tilt_anlge]),
         ]

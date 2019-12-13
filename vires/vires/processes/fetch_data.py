@@ -61,7 +61,7 @@ from vires.processes.util import (
     VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
     Sat2SatResidual, group_residual_variables, get_residual_variables,
     MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
-    IonosphericCurrentModel, AssociatedMagneticModel,
+    IonosphericCurrentModel,
     extract_product_names, get_username, get_user,
     CustomDatasetTimeSeries,
 )
@@ -273,7 +273,6 @@ class FetchData(WPSProcess):
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
             model_amps_cur = IonosphericCurrentModel()
-            model_amps_mag = AssociatedMagneticModel()
 
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
@@ -349,7 +348,7 @@ class FetchData(WPSProcess):
                 aux_models = chain((
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
-                    model_amps_cur, model_amps_mag,
+                    model_amps_cur,
                 ), models_with_residuals)
                 for model in aux_models:
                     resolver.add_model(model)

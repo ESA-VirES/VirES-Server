@@ -51,7 +51,7 @@ from .model_magmod import (
 from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
 from .model_sunpos import SunPosition, SubSolarPoint
 from .model_dipole import MagneticDipole, DipoleTiltAngle
-from .model_pyamps import IonosphericCurrentModel, AssociatedMagneticModel
+from .model_pyamps import IonosphericCurrentModel
 from .label import Label, SpacecraftLabel
 from .input_parsers import (
     parse_style, parse_collections,
@@ -64,6 +64,7 @@ from .auth import get_username, get_user
 from .resolver import VariableResolver, extract_product_names
 from .residuals import group_residual_variables, Sat2SatResidual
 from .f107 import get_f107_value
+from .amps_inputs import get_amps_inputs
 from .model_renderer import render_model, ALLOWED_VARIABLES
 
 

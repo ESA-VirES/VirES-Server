@@ -42,6 +42,7 @@ from eoxmagmod import (
 from vires.config import SystemConfigReader
 from .png_output import data_to_png
 from .f107 import get_f107_value
+from .amps_inputs import get_amps_inputs
 
 
 DEG2RAD = pi / 180.0
@@ -125,13 +126,10 @@ def eval_model(model, variable, mjd2000, bbox, srid, elevation, size, **_):
     coord_gdt[:, :, 1] = lons
     coord_gdt[:, :, 2] = elevation
 
-    options = {}
-    if "f107" in model.model.parameters:
-        options["f107"] = get_f107_value(mjd2000)
-
     field_components = model.model.eval(
         mjd2000, coord_gdt, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
-        scale=[1, 1, -1], **options
+        scale=[1, 1, -1],
+        **get_extra_model_parameters(mjd2000, model.model.parameters)
     )
 
     try:
@@ -162,15 +160,13 @@ def eval_model_int(model, variable, mjd2000, bbox, srid, elevation, size,
     coord_gdt_int[:, :, 1] = lons_int
     coord_gdt_int[:, :, 2] = elevation
 
-    options = {}
-    if "f107" in model.model.parameters:
-        options["f107"] = get_f107_value(mjd2000)
 
     # Evaluate the magnetic field vector components
     # (northing, easting, up-pointing)
     field_components_int = model.model.eval(
         mjd2000, coord_gdt_int, GEODETIC_ABOVE_WGS84, GEODETIC_ABOVE_WGS84,
-        scale=[1, 1, -1], **options
+        scale=[1, 1, -1],
+        **get_extra_model_parameters(mjd2000, model.model.parameters)
     )
 
     # interpolation pixel grid
@@ -199,6 +195,16 @@ def eval_model_int(model, variable, mjd2000, bbox, srid, elevation, size,
         return EVAL_VARIABLE[variable](field_components, coord_gdt)
     except KeyError:
         raise Exception("Invalid variable '%s'." % variable)
+
+
+def get_extra_model_parameters(mjd2000, requirements):
+    """ Get additional model parameters. """
+    parameters = {}
+    if "f107" in requirements:
+        parameters["f107"] = get_f107_value(mjd2000)
+    elif "amps" in requirements:
+        parameters.update(get_amps_inputs(mjd2000))
+    return parameters
 
 
 def convert_to_png(data, value_range, colormap, is_transparent,
