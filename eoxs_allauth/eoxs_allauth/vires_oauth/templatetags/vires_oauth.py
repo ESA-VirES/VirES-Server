@@ -45,8 +45,8 @@ VIRES_OAUTH_URL_PATHS = {
 def vires_oauth_url(name):
     """ Resolve VirES OAuth server URL. """
     settings = app_settings.PROVIDERS.get(ViresProvider.id, {})
-    public_server_url = settings['SERVER_URL'].rstrip('/')
+    base_url = settings['SERVER_URL'].rstrip('/')
     try:
-        return '{0}{1}'.format(public_server_url, VIRES_OAUTH_URL_PATHS[name])
+        return '{0}{1}'.format(base_url, VIRES_OAUTH_URL_PATHS[name])
     except KeyError:
         raise ValueError("Unknown URL name '%s'!" % name)

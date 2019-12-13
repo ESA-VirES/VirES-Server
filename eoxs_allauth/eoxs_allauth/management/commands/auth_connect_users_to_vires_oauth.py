@@ -26,34 +26,35 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+from logging import getLogger
 from django.db import transaction
 from django.utils.timezone import now
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from allauth.socialaccount.models import SocialAccount
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, #nested_commit_on_success
-)
 from ...models import UserProfile
+from ._common import ConsoleOutput
 
-JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
 
+class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
 
-class Command(CommandOutputMixIn, BaseCommand):
-    args = "<username> [<username> ...]"
     help = (
         "Connect existing users to the OAuth server. "
         "By default all users are connected."
     )
 
-    def handle(self, *args, **kwargs):
-        query = User.objects
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("username", nargs="*")
 
-        if not args:
+    def handle(self, *args, **kwargs):
+        usernames = kwargs["username"]
+        query = User.objects
+        if not usernames:
             query = query.all()
         else:
-            query = query.filter(username__in=args)
-
+            query = query.filter(username__in=usernames)
         for user in query:
             self.connect_user(user)
 
@@ -78,7 +79,7 @@ class Command(CommandOutputMixIn, BaseCommand):
                 account.delete()
 
         if has_vires_connection:
-            self.print_msg("User %s is already connected." % user.username)
+            self.info("User %s is already connected.", user.username)
             return
 
         try:
@@ -96,4 +97,4 @@ class Command(CommandOutputMixIn, BaseCommand):
                 extra_data={}
             ).save()
 
-        self.print_msg("User %s connected." % user.username)
+        self.info("User %s connected.", user.username, log=True)

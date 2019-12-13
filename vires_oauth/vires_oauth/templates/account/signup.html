@@ -40,12 +40,10 @@
       {% endif %}
       <div class="checkbox">
           <label style="font-weight: bold;">
-              <input id="tosagree" style="width: auto;" type="checkbox" value="">
-              I read and accept the 
-              <a style="display:inline;" href="{% static 'other/T&C_for_ESA_Dataset-v1.pdf' %}" target="_blank_">ESA Data Terms</a>
-              <!--and the 
-              <a style="display:inline; margin-left:5px;" href="/accounts/servicetc" target="_blank_">VirES Service Terms</a>-->
-              *
+              <input id="mandatory_consent" style="width: auto;" type="checkbox" value="">
+              I have read and hereby accept the <a style="display:inline;" href="/data_terms" target="_blank">ESA Data Terms</a>,
+              <a style="display:inline;" href="/service_terms" target="_blank">VirES Service Terms</a>,
+              and <a style="display:inline;" href="/privacy_notice" target="_blank">VirES Privacy Notice</a>. *
           </label>
       </div>
       <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
@@ -55,7 +53,8 @@
   </form>
 
   <script type="text/javascript">
-    window.onload = function () {
+    onLoadCallbacks.push(function() {
+      // re-order form fields
       $('#id_password2').parent().prependTo("fieldset");
       $('#id_password1').parent().prependTo("fieldset");
       $('#id_email2').parent().prependTo("fieldset");
@@ -63,18 +62,16 @@
       $('#id_username').parent().prependTo("fieldset");
       $('#id_username').focus();
 
-      $('#tosagree').change(function () {
-          if ($('#tosagree')[0].checked) {
-              $('#formsubmit').prop('disabled', false);
-          } else {
-              $('#formsubmit').prop('disabled', true);
-          }
-      });
-      $('#tosagree').keypress(function(e){
-          if((e.keyCode ? e.keyCode : e.which) == 13){
+      $('#mandatory_consent').change(function () {
+        var enabled = $('#mandatory_consent')[0].checked;
+        $('#formsubmit').prop('disabled', !enabled);
+      })
+
+      $('#mandatory_consent').keypress(function (e) {
+          if((e.keyCode ? e.keyCode : e.which) == 13) {
               $(this).trigger('click');
           }
       });
-    }
+    });
   </script>
 {% endblock %}

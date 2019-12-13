@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>VirES for Swarm - Virtual Reaserch Environment</title>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ static_url("css/style.min.css") }}" type="text/css"/>
+    <link rel="stylesheet" href="{{ static_url("vires/css/login.css") }}"type="text/css"/>
+</head>
+<body>
+<noscript>
+  <div id='noscript'>
+    VirES VRE requires JavaScript.<br>
+    Please enable it to proceed.
+  </div>
+</noscript>
+<img src='{{base_url}}logo' alt='VirES-VRE' id="logo"/>
+<div class="row">
+<div class="body">
+  <h1 style="text-align:center;">VirES for Swarm</h1>
+  <h2 style="text-align:center;">Virtual Research Environment</h2>
+  <hr class="separator"> 
+  <a role="button" class='btn btn-jupyter btn-lg' href='{{authenticator_login_url}}'>
+    Log in
+  </a>
+  <!--
+  -->
+</div>
+</div>
+
+
+<div class="row">
+<div class="footer">
+  <div class="col-md-4 footer-title">
+    <a href="https://eox.at" target="_blank">
+      <img src="{{ static_url("vires/images/eox_logo_white.png") }}" class="footer-logo-eox"/>
+    </a>
+    service for
+    <a href="https://esa.int" target="_blank">
+      <img src="{{ static_url("vires/images/esa_logo_white.png") }}" class="footer-logo-esa"/>
+    </a>
+  </div>
+  <div class="col-md-2 footer-text">
+    <a href="https://swarm-vre.readthedocs.io" target="_blank">VRE Documentation</a>
+    <br>
+    <a href="{{ vires_url or "/" }}" target="_blank">VirES for Swarm</a>
+  </div>
+  <div class="col-md-2 footer-text">
+    <a href="https://earth.esa.int/swarm" target="_blank">Swarm Mission</a>
+    <br>
+    <a href="{{ vires_url }}/data_terms" target="_blank">ESA Data Terms</a>
+  </div>
+  <div class="col-md-2 footer-text">
+    <a href="{{ vires_url }}/service_terms" target="_blank">Service Terms</a>
+    <br>
+    <a href="{{ vires_url }}/privacy_notice" target="_blank">Privacy Notice</a>
+  </div>
+  <div class="col-md-2 footer-text">
+    Contact:
+    <a href="mailto:info@vires.services">info@vires.services</a>
+  </div>
+</div>
+</div>
+</body>
+</html>

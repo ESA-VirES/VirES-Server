@@ -27,5 +27,5 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, invalid-name
 
-__version__ = "0.1.0dev0"
+__version__ = "0.2.0"
 default_app_config = 'eoxs_allauth.apps.EOxServerAllauthConfig'

@@ -31,9 +31,7 @@ import json
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 from ...models import GroupInfo
-from ._common import ConsoleOutput
-
-JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
+from ._common import ConsoleOutput, JSON_OPTS
 
 
 class Command(ConsoleOutput, BaseCommand):

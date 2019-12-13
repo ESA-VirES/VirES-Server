@@ -1,5 +1,4 @@
 {% extends "oauth2_provider/base.html" %}
-{% block title %}<title>VirES OAuth2 - update registered application</title>{% endblock %}
 {% block content %}
   <h2>{% block app-form-title %}Update registered application{% endblock app-form-title %}</h2>
   <form class="form-horizontal inputwide" method="POST" action="{% block app-form-action-url %}{% url 'oauth2_provider:update' application.id %}{% endblock app-form-action-url %}">

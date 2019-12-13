@@ -31,12 +31,13 @@
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
-from numpy import searchsorted, broadcast_to
+from numpy import searchsorted, broadcast_to, asarray
 from eoxserver.backends.access import connect
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
     timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
 )
+from vires.time_util import naive_to_utc
 from vires.models import Product, ProductCollection
 from vires.dataset import Dataset
 from .time_series import TimeSeries
@@ -45,7 +46,7 @@ from .time_series import TimeSeries
 class SwarmDefaultParameters(object):
     """ Default SWARM product parameters. """
     TIME_VARIABLE = "Timestamp"
-    TIME_TOLERANCE = timedelta(microseconds=10) # time selection tolerance
+    TIME_TOLERANCE = timedelta(microseconds=0) # time selection tolerance
     TIME_OVERLAP = timedelta(seconds=60) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(seconds=30) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=0.5)
@@ -228,7 +229,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             if cdf_var.rv(): # regular record variable
                 data = cdf_var[idx_low:idx_high]
             else: # NRV variable
-                value = cdf_var[...]
+                value = asarray(cdf_var[...])
                 size = max(0, idx_high - idx_low)
                 data = broadcast_to(value, (size,) + value.shape[1:])
             dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
@@ -354,8 +355,8 @@ class ProductTimeSeries(BaseProductTimeSeries):
         """ Subset Django query set. """
         return Product.objects.filter(
             collections=self.collection,
-            begin_time__lt=(stop + self.time_tolerance),
-            end_time__gte=(start - self.time_tolerance),
+            begin_time__lt=naive_to_utc(stop + self.time_tolerance),
+            end_time__gte=naive_to_utc(start - self.time_tolerance),
         )
 
     @staticmethod

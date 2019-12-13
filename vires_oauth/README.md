@@ -61,7 +61,7 @@ OAUTH2_PROVIDER = {
 
 For the numerour possible Allauth options see the [package documentation](https://django-allauth.readthedocs.io/en/latest/installation.html)
 
-An optional default user group can set by the `VIRES_OAUTH_DEFAULT_GROUP`
+An optional default user groups can set by the `VIRES_OAUTH_DEFAULT_GROUPS`
 ```
-VIRES_OAUTH_DEFAULT_GROUP = "default"
+VIRES_OAUTH_DEFAULT_GROUPS = ["default"]
 ```
