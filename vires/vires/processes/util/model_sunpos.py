@@ -181,19 +181,19 @@ class SubSolarPoint(Model):
         longitude, declination, hour_angle = (
             self._extract_required_variables(dataset)
         )
-        subsolar_latitude = longitude - hour_angle
+        subsolar_longitude = longitude - hour_angle
 
         def _set_output(variable, data):
             output_ds.set(variable, data, *self.VARIABLES[variable])
 
-        subsolar_latitude_variable, earth_sun_vector_variable = self.variables
+        subsolar_longitude_variable, earth_sun_vector_variable = self.variables
 
-        if subsolar_latitude_variable in variables:
-            _set_output(subsolar_latitude_variable, subsolar_latitude)
+        if subsolar_longitude_variable in variables:
+            _set_output(subsolar_longitude_variable, subsolar_longitude)
 
         if earth_sun_vector_variable in variables:
             earth_sun_vector = self._eval_earth_sun_vector(
-                declination, subsolar_latitude
+                declination, subsolar_longitude
             )
             _set_output(earth_sun_vector_variable, earth_sun_vector)
 
