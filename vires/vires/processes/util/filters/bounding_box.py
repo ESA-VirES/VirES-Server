@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Data Source - model base class
+#  Data filters - bounding box filter
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,32 +24,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments,missing-docstring
 
-class Model(object):
-    """ Base model source class. """
+from .base import Filter
+from .range import ScalarRangeFilter
 
-    def __init__(self):
-        self.product_set = set() # stores all recorded source products
 
-    @property
-    def products(self):
-        """ Get list of all accessed products. """
-        return list(self.product_set)
+class BoundingBoxFilter(Filter):
+    """ Bounding box filter. """
 
-    @property
-    def variables(self):
-        """ Get list of the provided variables. """
-        raise NotImplementedError
+    def __init__(self, variables, bbox):
+        self._variables = tuple(variables)
+        self.filters = [
+            ScalarRangeFilter(variable, vmin, vmax)
+            for variable, (vmin, vmax) in zip(variables, zip(bbox[0], bbox[1]))
+        ]
 
     @property
     def required_variables(self):
-        """ Get list of the required input dataset variables. """
-        raise NotImplementedError
+        return self._variables
 
-    def eval(self, dataset, variables=None, **kwargs):
-        """ Evaluate model for the given dataset.
-        Optionally the content of the output dataset can be controlled
-        by the list of the output variables.
-        Specific models can define additional keyword parameters.
-        """
-        raise NotImplementedError
+    def filter(self, dataset, index=None):
+        for filter_ in self.filters:
+            index = filter_.filter(dataset, index)
+        return index
+
+    def __str__(self):
+        return ";".join(str(filter_) for filter_ in self.filters)

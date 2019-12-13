@@ -1,11 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Dataset Label - special "model" class adding constant label to all dataset
-#                 records.
+# Dataset Label - special model class adding label to all dataset records.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2017 EOX IT Services GmbH
 #
@@ -27,17 +24,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-arguments
+#pylint: disable=too-many-arguments,missing-docstring,unused-argument
 
 from logging import getLogger, LoggerAdapter
 from vires.cdf_util import CDF_CHAR_TYPE
 from vires.util import full
 from vires.dataset import Dataset
-from .model import Model
+from .base import Model
 
 
 class Label(Model):
-    """ Simple model-like class adding constant label to all dataset records."""
+    """ Simple no input model-like class adding constant label to all dataset
+    records.
+    """
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):

@@ -2,9 +2,7 @@
 #
 #  Scalar F107 value retrieval.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,10 +24,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-locals, too-many-arguments
+# pylint: disable=too-many-locals,too-many-arguments,missing-docstring
 
 from django.conf import settings
-from .time_series_aux import  IndexF107
+from .time_series import IndexF107
 
 F107_VARIABLE = "F107"
 F107_PRODUCT_TYPE = "AUX_F10_2_"
@@ -41,4 +39,6 @@ def get_f107_value(mjd2000):
     dataset = index_f10.interpolate(
         mjd2000, variables=[F107_VARIABLE], cdf_type=None
     )
-    return {"f107": dataset[F107_VARIABLE][0]}
+    return {
+        "f107": dataset[F107_VARIABLE][0],
+    }

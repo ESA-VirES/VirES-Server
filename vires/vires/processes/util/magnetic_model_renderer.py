@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  WMS model rendering
+#  Magnetic model rendering
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments,too-many-locals
+# pylint: disable=too-many-arguments,too-many-locals,missing-docstring
 
 from os import remove
 from os.path import join, exists

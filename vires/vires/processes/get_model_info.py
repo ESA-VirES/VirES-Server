@@ -1,8 +1,7 @@
 #-------------------------------------------------------------------------------
 #
-# WPS process fetching information about the provided models models.
+# WPS process fetching information about the provided magnetic models.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
@@ -25,6 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring,unused-argument
 
 from cStringIO import StringIO
 from itertools import chain

@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Data Source - solar position
+# Data Source - magnetic dipole and dipole tilt angle
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2018 EOX IT Services GmbH
 #
@@ -26,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals
+#pylint: disable=too-many-locals,missing-docstring
 
 from math import pi
 from logging import getLogger, LoggerAdapter
@@ -39,7 +37,7 @@ from vires.cdf_util import (
 from vires.dataset import Dataset
 from vires.time_util import mjd2000_to_datetime
 from vires.magnetic_models import MODEL_CACHE, DIPOLE_MODEL
-from .model import Model
+from .base import Model
 
 RAD2DEG = 180.0/pi
 

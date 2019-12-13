@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities - cache backend wrapper
+# Model base class - computed data sources
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2017 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
-from functools import wraps
-from eoxserver.backends.cache import setup_cache_session, shutdown_cache_session
+class Model(object):
+    """ Base model source class. """
 
-def with_cache_session(func):
-    """ Decorator setting up the EOxServer cache session. """
-    @wraps(func)
-    def __wrapper__(*args, **kwargs):
-        setup_cache_session()
-        try:
-            response = func(*args, **kwargs)
-        finally:
-            shutdown_cache_session()
-        return response
-    return __wrapper__
+    def __init__(self):
+        self.product_set = set() # stores all recorded source products
+
+    @property
+    def products(self):
+        """ Get list of all accessed products. """
+        return list(self.product_set)
+
+    @property
+    def variables(self):
+        """ Get list of the provided variables. """
+        raise NotImplementedError
+
+    @property
+    def required_variables(self):
+        """ Get list of the required input dataset variables. """
+        raise NotImplementedError
+
+    def eval(self, dataset, variables=None, **kwargs):
+        """ Evaluate model for the given dataset.
+        Optionally the content of the output dataset can be controlled
+        by the list of the output variables.
+        Specific models can define additional keyword parameters.
+        """
+        raise NotImplementedError

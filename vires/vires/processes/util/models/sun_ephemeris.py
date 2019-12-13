@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Data Source - solar position
+# Data Source - solar ephemeris
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2017 EOX IT Services GmbH
 #
@@ -26,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals
+#pylint: disable=too-many-locals,missing-docstring
 
 from logging import getLogger, LoggerAdapter
 from numpy import stack, ones
@@ -34,7 +32,7 @@ from eoxmagmod import sunpos, convert, GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIA
 from vires.util import include, unique
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
-from .model import Model
+from .base import Model
 
 
 class SunPosition(Model):

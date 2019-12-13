@@ -2,9 +2,7 @@
 #
 #  Process Utilities - Authentication
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2017 EOX IT Services GmbH
 #
