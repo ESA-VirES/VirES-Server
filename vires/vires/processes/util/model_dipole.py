@@ -38,8 +38,8 @@ from vires.cdf_util import (
 )
 from vires.dataset import Dataset
 from vires.time_util import mjd2000_to_datetime
+from vires.magnetic_models import MODEL_CACHE, DIPOLE_MODEL
 from .model import Model
-from .magnetic_models import MODEL_CACHE, DIPOLE_MODEL
 
 RAD2DEG = 180.0/pi
 

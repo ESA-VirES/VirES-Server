@@ -33,6 +33,7 @@ from eoxmagmod import load_model_shc
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.colormaps import get_colormap
 from vires.models import ProductCollection
+from vires.magnetic_models import MODEL_CACHE
 from vires.parsers.exceptions import ParserError
 from vires.parsers.model_list_parser import get_model_list_parser
 from vires.parsers.model_list_lexer import get_model_list_lexer
@@ -42,7 +43,6 @@ from .time_series_product import ProductTimeSeries
 from .time_series_custom_data import CustomDatasetTimeSeries
 from .model_magmod import SourceMagneticModel, ComposedMagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
-from .magnetic_models import MODEL_CACHE
 
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
@@ -123,7 +123,7 @@ def parse_collections(input_id, source, custom_dataset=None, user=None):
         # collect slave range-types
         slave_rtypes = []
 
-        # for one label multiple collections of the same renge-type not allowed
+        # for one label multiple collections of the same range-type not allowed
         for rtype in (collection.range_type for collection in collections[1:]):
             if rtype == master_rtype or rtype in slave_rtypes:
                 raise InvalidInputValueError(

@@ -33,9 +33,9 @@ from eoxserver.services.ows.wps.parameters import (
 )
 from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
 from vires.time_util import mjd2000_to_datetime, decimal_year_to_mjd2000
+from vires.magnetic_models import MODEL_LIST
 from vires.processes.base import WPSProcess
 from vires.processes.util import parse_model_list
-from vires.processes.util.magnetic_models import MODEL_LIST
 
 
 MIN_MJD2000 = decimal_year_to_mjd2000(1.0)
