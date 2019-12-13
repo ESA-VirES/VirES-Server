@@ -41,4 +41,4 @@ def get_f107_value(mjd2000):
     dataset = index_f10.interpolate(
         mjd2000, variables=[F107_VARIABLE], cdf_type=None
     )
-    return dataset[F107_VARIABLE][0]
+    return {"f107": dataset[F107_VARIABLE][0]}
