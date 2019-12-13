@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities - cache backend wrapper
+#  Data filters - base filter class
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2017 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
-from functools import wraps
-from eoxserver.backends.cache import setup_cache_session, shutdown_cache_session
 
-def with_cache_session(func):
-    """ Decorator setting up the EOxServer cache session. """
-    @wraps(func)
-    def __wrapper__(*args, **kwargs):
-        setup_cache_session()
-        try:
-            response = func(*args, **kwargs)
-        finally:
-            shutdown_cache_session()
-        return response
-    return __wrapper__
+class Filter(object):
+    """ Base filter class. """
+
+    @property
+    def required_variables(self):
+        """ Get a list of the dataset variables required by this filter.
+        """
+        raise NotImplementedError
+
+    def filter(self, dataset, index=None):
+        """ Filter dataset. Optionally a dataset subset index can be provided.
+        A new array of indices identifying the filtered data subset is returned.
+        """
+        raise NotImplementedError
+
+    def __str__(self):
+        raise NotImplementedError

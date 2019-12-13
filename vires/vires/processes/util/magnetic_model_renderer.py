@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  WMS model rendering
+#  Magnetic model rendering
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments,too-many-locals
+# pylint: disable=too-many-arguments,too-many-locals,missing-docstring
 
 from os import remove
 from os.path import join, exists
@@ -201,7 +201,7 @@ def get_extra_model_parameters(mjd2000, requirements):
     """ Get additional model parameters. """
     parameters = {}
     if "f107" in requirements:
-        parameters["f107"] = get_f107_value(mjd2000)
+        parameters.update(get_f107_value(mjd2000))
     elif "amps" in requirements:
         parameters.update(get_amps_inputs(mjd2000))
     return parameters

@@ -2,9 +2,7 @@
 #
 # Data Source - average magnetic field and polar current system
 #
-# Project: VirES
 # Authors: Mikael Toresen <mikael.toresen@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2018 EOX IT Services GmbH
 #
@@ -26,23 +24,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals
+#pylint: disable=too-many-locals,missing-docstring
 
 from logging import getLogger, LoggerAdapter
-from numpy import argsort, abs as aabs, sqrt, nan, stack, empty
-from eoxmagmod import (
-    GEOCENTRIC_SPHERICAL, GEODETIC_ABOVE_WGS84, convert, vrotate,
-)
-from pyamps import AMPS, get_B_space
+from numpy import argsort, abs as aabs, nan, stack
+from pyamps import AMPS
 from vires.util import include, unique
-from vires.cdf_util import (
-    CDF_DOUBLE_TYPE,
-    CDF_EPOCH_TYPE,
-    cdf_rawtime_to_datetime,
-    cdf_rawtime_to_decimal_year,
-)
+from vires.cdf_util import CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
-from .model import Model
+from .base import Model
 
 
 class IonosphericCurrentModel(Model):
@@ -150,118 +140,3 @@ class IonosphericCurrentModel(Model):
                 output_ds.set(var, values, cdf_type, cdf_attr)
 
         return output_ds
-
-
-#class AssociatedMagneticModel(Model):
-#    """ Associated magnetic field of AMPS model. """
-#    MODEL_PARAMETERS = ['IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F10_INDEX']
-#
-#    DEFAULT_REQUIRED_VARIABLES = [
-#        "Timestamp", "Latitude", "Longitude", "Radius"
-#    ] + MODEL_PARAMETERS
-#
-#    DEFAULT_OUTPUT_VARIABLES = ["F_AMPS", "B_NEC_AMPS"]
-#
-#    REFRE = 6371.2 # reference radius Earth(km)
-#
-#    class _LoggerAdapter(LoggerAdapter):
-#        def process(self, msg, kwargs):
-#            return 'AssociatedMagneticModel: %s' % msg, kwargs
-#
-#    def __init__(self, logger=None, varmap=None):
-#        super(AssociatedMagneticModel, self).__init__()
-#        varmap = varmap or {}
-#        self.f_variable, self.b_variable = self.DEFAULT_OUTPUT_VARIABLES
-#        self._required_variables = [
-#            varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
-#        ]
-#        self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
-#
-#    @property
-#    def variables(self):
-#        return self.DEFAULT_OUTPUT_VARIABLES
-#
-#    @property
-#    def required_variables(self):
-#        return self._required_variables
-#
-#    def eval(self, dataset, variables=None, **kwargs):
-#        req_var = self.required_variables
-#        variables = (
-#            self.variables if variables is None else
-#            list(include(unique(variables), self.variables))
-#        )
-#        output_ds = Dataset()
-#
-#        if variables:
-#            self.logger.debug("requested variables %s", variables)
-#            times, lats, lons, rads = (dataset[var] for var in req_var[:4])
-#
-#            if times.size > 0:
-#                self.logger.debug("requested dataset length %s", len(times))
-#
-#                cdf_type = dataset.cdf_type.get(req_var[0], None)
-#                if cdf_type != CDF_EPOCH_TYPE:
-#                    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-#
-#                v_imf, by_imf, bz_imf, tilt, f107 = (
-#                    dataset[var] for var in self.MODEL_PARAMETERS
-#                )
-#
-#                b_amps = self._eval_b_space(
-#                    times, lats, lons, rads,
-#                    v_imf, by_imf, bz_imf, tilt, f107
-#                )
-#            else:
-#                b_amps = empty((0, 3))
-#
-#            b_amps[..., 2] *= -1.0
-#
-#            if self.b_variable in variables:
-#                output_ds.set(
-#                    self.b_variable, b_amps, CDF_DOUBLE_TYPE, {
-#                        'DESCRIPTION': 'AMPS - Magnetic field vector',
-#                        'UNITS': 'nT'
-#                    },
-#                )
-#
-#            if self.f_variable in variables:
-#                output_ds.set(
-#                    self.f_variable, sqrt((b_amps**2).sum(axis=-1)), CDF_DOUBLE_TYPE, {
-#                        'DESCRIPTION': 'AMPS - Magnetic field intensity',
-#                        'UNITS': 'nT'
-#                    },
-#                )
-#        return output_ds
-#
-#    @staticmethod
-#    def _eval_b_space(times, lats, lons, rads, v_imf, by_imf, bz_imf, tilt, f107):
-#        median_time = times[times.size // 2]
-#        epoch = cdf_rawtime_to_decimal_year(median_time, CDF_EPOCH_TYPE)
-#        times_dt = cdf_rawtime_to_datetime(times, CDF_EPOCH_TYPE)
-#
-#        coords_sp = stack((lats, lons, 1e-3*rads), axis=-1)
-#        coords_gd = convert(
-#            coords_sp, GEOCENTRIC_SPHERICAL, GEODETIC_ABOVE_WGS84
-#        )
-#
-#        b_e, b_n, b_u = get_B_space(
-#            glat=coords_gd[..., 0],
-#            glon=coords_gd[..., 1],
-#            height=coords_gd[..., 2],
-#            time=times_dt,
-#            v=v_imf,
-#            By=by_imf,
-#            Bz=bz_imf,
-#            tilt=tilt,
-#            f107=f107,
-#            epoch=epoch
-#        )
-#
-#        b_nec = vrotate(
-#            stack((b_n, b_e, b_u), axis=-1), coords_gd, coords_sp,
-#            GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL
-#        )
-#        b_nec[..., 2] *= -1.0
-#
-#        return b_nec

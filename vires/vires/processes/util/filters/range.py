@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-#  Data filters.
+#  Data filters - scalar and vector component range filters
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,58 +24,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,missing-docstring
 
 from logging import getLogger, LoggerAdapter
-from numpy import array, concatenate, unique
 from vires.util import between
-
-
-def merge_indices(*indices):
-    """ Merge indices eliminating duplicate values. """
-    indices = [index for index in indices if index is not None]
-    if len(indices) > 1:
-        return unique(concatenate(indices))
-    elif len(indices) == 1:
-        return indices[0]
-    return array([], dtype='int64')
-
-
-class FilterError(Exception):
-    """ Base filter error exception. """
-
-
-class Filter(object):
-    """ Base filter class. """
-
-    @property
-    def required_variables(self):
-        """ Get a list of the dataset variables required by this filter.
-        """
-        raise NotImplementedError
-
-    def filter(self, dataset, index=None):
-        """ Filter dataset. Optionally a dataset subset index can be provided.
-        A new array of indices identifying the filtered data subset is returned.
-        """
-        raise NotImplementedError
-
-    def __str__(self):
-        raise NotImplementedError
-
-
-class RejectAll(Filter):
-    """ Filter rejecting all records. """
-
-    @property
-    def required_variables(self):
-        return ()
-
-    def filter(self, dataset, index=None):
-        return array([], dtype='int64')
-
-    def __str__(self):
-        return "RejectAll()"
+from .base import Filter
+from .exceptions import FilterError
 
 
 class BaseRangeFilter(Filter):
@@ -168,26 +120,3 @@ class VectorComponentRangeFilter(BaseRangeFilter):
             index = index[self._filter(data[index, self.component])]
         self.logger.debug("filtered size: %d", index.size)
         return index
-
-
-class BoundingBoxFilter(Filter):
-    """ Bounding box filter. """
-
-    def __init__(self, variables, bbox):
-        self._variables = tuple(variables)
-        self.filters = [
-            ScalarRangeFilter(variable, vmin, vmax)
-            for variable, (vmin, vmax) in zip(variables, zip(bbox[0], bbox[1]))
-        ]
-
-    @property
-    def required_variables(self):
-        return self._variables
-
-    def filter(self, dataset, index=None):
-        for filter_ in self.filters:
-            index = filter_.filter(dataset, index)
-        return index
-
-    def __str__(self):
-        return ";".join(str(filter_) for filter_ in self.filters)

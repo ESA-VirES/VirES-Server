@@ -29,9 +29,8 @@
 from django.conf import settings
 from vires.dataset import Dataset
 from vires.cdf_util import CDF_EPOCH_TYPE, mjd2000_to_cdf_rawtime
-from .model_sunpos import SunPosition, SubSolarPoint
-from .model_dipole import MagneticDipole, DipoleTiltAngle
-from .time_series_product import ProductTimeSeries
+from .models import SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle
+from .time_series import ProductTimeSeries
 
 F107_VARIABLE = "F10_INDEX"
 IMF_BY_VARIABLE = "IMF_BY_GSM"

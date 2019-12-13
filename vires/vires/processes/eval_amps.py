@@ -2,9 +2,7 @@
 #
 # Average magnetic field and polar current system evaluation
 #
-# Project: VirES
 # Authors: Mikael Toresen <mikael.toresen@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -53,8 +51,9 @@ from vires.processes.base import WPSProcess
 from vires.config import SystemConfigReader
 from vires.dataset import Dataset
 from vires.perf_util import ElapsedTimeLogger
-from vires.processes.util import (
-    parse_style, data_to_png, ProductTimeSeries,
+from vires.processes.util import parse_style, data_to_png
+from vires.processes.util.time_series import ProductTimeSeries
+from vires.processes.util.models import (
     SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle,
 )
 from vires.cdf_util import (

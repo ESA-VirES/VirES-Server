@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Data Source - magnetic model
+# Data Source - magnetic models and model residuals
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,7 +24,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals,too-many-arguments
+#pylint: disable=too-many-locals,too-many-arguments,missing-docstring
+#pylint: disable=too-few-public-methods
 
 from logging import getLogger, LoggerAdapter
 from itertools import chain
@@ -35,7 +34,7 @@ from eoxmagmod import vnorm, ComposedGeomagneticModel
 from vires.util import include, unique, cached_property
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
-from .model import Model
+from .base import Model
 
 
 class MagneticModelResidual(Model):

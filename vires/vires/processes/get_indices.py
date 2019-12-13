@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer <http://eoxserver.org>
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
+# WPS fetch index data subset for time-slider visualisation
 #
+# Authors: Daniel Santillan <daniel.santillan@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -24,7 +24,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-many-locals, too-few-public-methods
+# pylint: disable=missing-docstring,too-many-locals,too-few-public-methods
+# pylint: disable=too-many-arguments,unused-argument
+
 
 from datetime import datetime
 from itertools import izip
