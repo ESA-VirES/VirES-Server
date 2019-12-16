@@ -136,9 +136,11 @@ class Command(CommandOutputMixIn, BaseCommand):
 
         counter = Counter()
 
+        id_suffix = get_product_id_suffix(collection)
+
         for data_file in read_products(kwargs["input_file"], identifiers):
 
-            product_id = get_product_id(data_file)
+            product_id = get_product_id(data_file) + id_suffix
 
             try:
                 removed, inserted = self._register_product(
@@ -162,6 +164,7 @@ class Command(CommandOutputMixIn, BaseCommand):
                 counter.increment()
 
         counter.print_report(lambda msg: self.print_msg(msg, 1))
+
 
     @nested_commit_on_success
     def _register_product(self, collection, product_id, data_file,
@@ -333,15 +336,16 @@ def get_range_type(range_type_name):
     return range_type
 
 
-def get_product_id(data_file, collection):
-    """ Get the product identifier derived from the data filename and
-    collection range type name.
-    If the range type contains a colon (:) the part after the colon
-    is used as a products id suffix.
+def get_product_id(data_file):
+    """ Get the product identifier derived from the data filename. """
+    return basename(data_file).partition(".")[0]
+
+
+def get_product_id_suffix(collection):
+    """ Get product identifier suffix derived from the product type
+    (range-type name)
     """
-    base = basename(data_file).partition(".")[0]
-    suffix = "".join(collection.range_type.name.partition(":")[1:])
-    return base + suffix
+    return "".join(collection.range_type.name.partition(":")[1:])
 
 
 def collection_create(identifier, range_type):

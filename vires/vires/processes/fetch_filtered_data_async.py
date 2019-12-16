@@ -68,7 +68,7 @@ from vires.processes.util.models import (
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
     IndexKpFromKp10, IonosphericCurrentModel,
-
+    Identity,
 )
 from vires.processes.util.filters import (
     MinStepSampler, GroupingSampler, ExtraSampler,

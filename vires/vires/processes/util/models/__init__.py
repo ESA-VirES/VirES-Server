@@ -36,4 +36,5 @@ from .sun_ephemeris import SunPosition, SubSolarPoint
 from .label import Label, SpacecraftLabel
 from .spacecraft_subtraction import SatSatSubtraction
 from .indices import IndexKpFromKp10
+from .identity import Identity
 from .amps import IonosphericCurrentModel

@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 #
-# Dataset Variable Identity  - special "model" class creating a copy of a variable.
-
+# Variable Identity - special "model" class creating a copy of a variable.
+#
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
@@ -24,11 +24,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-arguments
+#pylint: disable=too-many-arguments,missing-docstring
 
 from logging import getLogger, LoggerAdapter
 from vires.dataset import Dataset
-from .model import Model
+from .base import Model
 
 
 class Identity(Model):
