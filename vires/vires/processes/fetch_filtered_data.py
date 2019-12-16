@@ -57,7 +57,6 @@ from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters2,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
     extract_product_names,
-    Identity,
 )
 from vires.processes.util.time_series import (
     ProductTimeSeries,
