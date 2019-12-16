@@ -1,11 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Data retrieval WPS process
+# WPS process fetching plasma bubbles time intervals.
 #
-# Project: VirES
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
 #          Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -27,8 +25,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments, too-many-locals, missing-docstring
-# pylint: disable=too-many-statements, no-self-use
+# pylint: disable=too-many-arguments,too-many-locals,missing-docstring
+# pylint: disable=too-many-statements,no-self-use,unused-argument
 
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -63,7 +61,7 @@ CDF_RAW_TIME_CONVERTOR = {
 
 
 class RetrieveBubbleIndex(WPSProcess):
-    """ Process for retriving information of timespans covered by bubbles
+    """ Process for retrieving information of time-spans covered by bubbles.
     """
     identifier = "retrieve_bubble_index"
     title = "Retrieve filtered Swarm data."

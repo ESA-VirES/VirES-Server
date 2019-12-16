@@ -28,7 +28,6 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-from optparse import make_option
 from django.core.management.base import BaseCommand
 from eoxserver.resources.coverages.management.commands import (
     eoxs_rangetype_load
@@ -40,26 +39,6 @@ from vires.data import RANGE_TYPES
 
 class Command(eoxs_rangetype_load.Command):
 
-    option_list = BaseCommand.option_list + (
-        make_option(
-            '-i', '--input', dest='filename', action='store', type='string',
-            default=RANGE_TYPES, help=(
-                "Optional. Read input from a given file or standard input "
-                "when dash (-) character is used. By default, the package's "
-                "are used."
-            )
-        ),
-        make_option(
-            '--do-not-update', dest='update',
-            action='store_false', default=True,
-            help=(
-                "This option prevents the script from updating the existing "
-                "range-types. By default the existing range-types get updated "
-                "automatically."
-            )
-        ),
-    )
-
     help = (
         "Load range-types stored in JSON file or from the default package's \n"
         "range type definitions stores in: \n    %s\n\n"
@@ -68,3 +47,30 @@ class Command(eoxs_rangetype_load.Command):
         "update can be prevented with the '--do-not-update' option."
         "" % RANGE_TYPES
     )
+
+    def add_arguments(self, parser):
+        BaseCommand.add_arguments(self, parser) # skipping the parent method
+        parser.add_argument(
+            '-i', '--input', dest='filename', action='store', type=str,
+            default=RANGE_TYPES, help=(
+                "Optional. Read input from a given file or standard input "
+                "when dash (-) character is used. By default, the package "
+                "predefined range-types are loaded."
+            )
+        )
+        parser.add_argument(
+            '--do-not-update', dest='update',
+            action='store_false', default=True,
+            help=(
+                "This option prevents the script from updating the existing "
+                "range-types. By default the existing range-types get updated "
+                "automatically."
+            )
+        )
+        parser.add_argument(
+            '-u', '--update', dest='update', action='store_true', default=False,
+            help=(
+                "Optional. Update the existing range-types. By default the "
+                "range type updates are not allowed."
+            )
+        )

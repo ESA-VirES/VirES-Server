@@ -28,6 +28,7 @@
 
 import sys
 import json
+from logging import getLogger
 from traceback import print_exc
 from contextlib import suppress
 from django.db import transaction
@@ -39,6 +40,8 @@ from ._common import ConsoleOutput
 
 
 class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
+
     help = "Import groups from a JSON file."
 
     def add_arguments(self, parser):
@@ -78,10 +81,10 @@ class Command(ConsoleOutput, BaseCommand):
             else:
                 updated_count += is_updated
                 created_count += not is_updated
-                self.info((
+                self.info(
                     "Existing user group %s updated." if is_updated else
-                    "New user group %s created."
-                ), name)
+                    "New user group %s created.", name, log=True
+                )
 
         if created_count:
             self.info(

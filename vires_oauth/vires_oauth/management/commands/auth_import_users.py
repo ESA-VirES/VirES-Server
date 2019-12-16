@@ -28,6 +28,7 @@
 
 import sys
 import json
+from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
 from django.conf import settings
@@ -41,6 +42,8 @@ from ._common import ConsoleOutput
 
 
 class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
+
     help = "Import users from a JSON file."
 
     def add_arguments(self, parser):
@@ -71,10 +74,10 @@ class Command(ConsoleOutput, BaseCommand):
             else:
                 updated_count += is_updated
                 created_count += not is_updated
-                self.info((
+                self.info(
                     "Existing user %s updated." if is_updated else
-                    "New user %s created."
-                ), name)
+                    "New user %s created.", name, log=True
+                )
 
         if created_count:
             self.info(
@@ -124,10 +127,9 @@ def save_user(data):
     groups = data.get('groups')
     if groups is None:
         groups = []
-        # set the default group for new
-        default_group = getattr(settings, "VIRES_OAUTH_DEFAULT_GROUP", None)
-        if not is_updated and default_group:
-            groups.append(default_group)
+        # set the default groups for a new user
+        if not is_updated:
+            groups.extend(getattr(settings, "VIRES_OAUTH_DEFAULT_GROUPS", []))
 
     set_groups(user, groups)
 
@@ -142,10 +144,20 @@ def get_user(username):
 
 
 def set_groups(user, group_names):
-    groups = get_groups()
+    all_groups = get_groups()
+
+    for group in list(user.groups.exclude(name__in=group_names)):
+        try:
+            user.groups.remove(group)
+        except KeyError:
+            ConsoleOutput.warning(
+                "Failed to remove user %s from the group %s!"
+                % (user.username, group.name)
+            )
+
     for group_name in group_names:
         try:
-            user.groups.add(groups[group_name])
+            user.groups.add(all_groups[group_name])
         except KeyError:
             ConsoleOutput.warning(
                 "User %s cannot be assigned to a group %s. "
@@ -160,6 +172,7 @@ def get_groups():
 
 USER_PROFILE_FIELDS = [
     "title", "institution", "country", "study_area", "executive_summary",
+    "consented_service_terms_version",
 ]
 
 

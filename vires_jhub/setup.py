@@ -25,11 +25,28 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+from os import walk
+from os.path import join, abspath, relpath, dirname
 from setuptools import setup, find_packages
 import vires_jhub
 
+
+def collect_data_files(path, base_dir):
+    def _pack_item(directory, filenames):
+        rdir = relpath(directory, base_dir)
+        return (rdir, [join(rdir, file_) for file_ in filenames])
+    return [
+        _pack_item(directory, filenames)
+        for directory, _, filenames in walk(path) if filenames
+    ]
+
+
 VERSION = vires_jhub.__version__
-DATA_FILES = []
+CURRENT_DIR = abspath(dirname(__file__))
+SHARE_DIR = join(CURRENT_DIR, 'share', 'vires_jhub')
+
+DATA_FILES = collect_data_files(SHARE_DIR, CURRENT_DIR)
+
 
 setup(
     name='vires-jhub',

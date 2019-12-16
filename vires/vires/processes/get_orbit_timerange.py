@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer <http://eoxserver.org>
-# Authors: Martin Paces <martin.paces@eox.at>
+# WPS process converting orbit numbers into time ranges
 #
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2018 EOX IT Services GmbH
 #
@@ -72,7 +72,7 @@ class GetOrbitTimeRange(WPSProcess):
         if end_orbit < start_orbit:
             start_orbit, end_orbit = end_orbit, start_orbit
 
-        orbit_counter_file = settings.VIRES_ORBIT_COUNTER_DB[spacecraft]
+        orbit_counter_file = settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
 
         start_orbit, end_orbit, start_time, end_time = get_orbit_timerange(
             orbit_counter_file, start_orbit, end_orbit

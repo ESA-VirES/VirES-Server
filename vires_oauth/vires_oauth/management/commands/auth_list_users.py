@@ -27,13 +27,10 @@
 # pylint: disable=missing-docstring, too-few-public-methods
 
 import sys
-import json
 from collections import OrderedDict
 from django.core.management.base import BaseCommand
 from ...models import UserProfile, Permission
-from ._common import ConsoleOutput
-
-JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
+from ._common import ConsoleOutput, datetime_to_string
 
 
 class Command(ConsoleOutput, BaseCommand):
@@ -41,8 +38,7 @@ class Command(ConsoleOutput, BaseCommand):
         "Print information about the users. The users can be selected "
         "by the provided user names. By default, all users are printed."
         "By default, only the user names are listed. A brief summary for each "
-        "user can be obtained by '--info' option. The '--json' option produces "
-        "full user profile dump in JSON format."
+        "user can be obtained by '--info' option."
     )
 
     def add_arguments(self, parser):
@@ -50,10 +46,6 @@ class Command(ConsoleOutput, BaseCommand):
         parser.add_argument(
             "--info", dest="info_dump", action="store_true", default=False,
             help="Verbose text output."
-        )
-        parser.add_argument(
-            "--json", dest="json_dump", action="store_true", default=False,
-            help="JSON dump."
         )
         parser.add_argument(
             "-f", "--file-name", dest="file", default="-", help=(
@@ -70,9 +62,7 @@ class Command(ConsoleOutput, BaseCommand):
         else:
             qset = qset.filter(user__username__in=users)
         # select output class
-        if kwargs["json_dump"]:
-            output = JSONOutput
-        elif kwargs["info_dump"]:
+        if kwargs["info_dump"]:
             output = VerboseOutput
         else:
             output = BriefOutput
@@ -159,80 +149,7 @@ class VerboseOutput():
         yield ("social accts.", ", ".join(providers))
         yield ("date joined", datetime_to_string(date_joined))
         yield ("last login", datetime_to_string(last_login))
-
-
-class JSONOutput():
-    start = "["
-    stop = "]\n"
-    delimiter = ",\n"
-
-    @classmethod
-    def to_str(cls, profile):
-        return json.dumps(
-            OrderedDict(cls.extract_user_profile(profile)), **JSON_OPTS
+        yield (
+            "consented service terms version",
+            profile.consented_service_terms_version
         )
-
-    @classmethod
-    def extract_user_profile(cls, profile):
-        for item in cls.extract_user(profile.user):
-            yield item
-        if profile.title:
-            yield ("title", profile.title)
-        if profile.institution:
-            yield ("institution", profile.institution)
-        if profile.country:
-            yield ("country", str(profile.country))
-        if profile.study_area:
-            yield ("study_area", profile.study_area)
-        if profile.executive_summary:
-            yield ("executive_summary", profile.executive_summary)
-
-    @classmethod
-    def extract_user(cls, user):
-        yield ("username", user.username)
-        if user.password:
-            yield ("password", user.password)
-
-        yield ("groups", [group.name for group in user.groups.all()])
-        yield ("permissions", list(Permission.get_user_permissions(user)))
-        yield ("is_active", user.is_active)
-        yield ("date_joined", datetime_to_string(user.date_joined))
-        yield ("last_login", datetime_to_string(user.last_login))
-        if user.first_name:
-            yield ("first_name", user.first_name)
-        if user.last_name:
-            yield ("last_name", user.last_name)
-        #if user.email: # copy of the primary e-mail
-        #    yield ("email", user.email)
-        yield ("emails", [
-            OrderedDict(cls.extract_email_address(item))
-            for item in user.emailaddress_set.all()
-        ])
-        yield ("social_accounts", [
-            OrderedDict(cls.extract_social_account(item))
-            for item in user.socialaccount_set.all()
-        ])
-
-    @classmethod
-    def extract_email_address(cls, emailaddress):
-        yield ("email", emailaddress.email)
-        yield ("verified", emailaddress.verified)
-        if emailaddress.primary:
-            yield ("primary", emailaddress.primary)
-
-    @classmethod
-    def extract_social_account(cls, socialaccount):
-        #yield ("email", emailaddress.email)
-        #yield ("verified", emailaddress.verified)
-        #if emailaddress.primary:
-        #    yield ("primary", emailaddress.primary)
-        yield ("uid", socialaccount.uid)
-        yield ("provider", socialaccount.provider)
-        yield ("date_joined", datetime_to_string(socialaccount.date_joined))
-        yield ("last_login", datetime_to_string(socialaccount.last_login))
-        if socialaccount.extra_data:
-            yield ("extra_data", socialaccount.extra_data)
-
-
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')

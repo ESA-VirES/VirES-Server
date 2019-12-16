@@ -30,19 +30,14 @@ import sys
 import json
 from functools import partial
 from collections import OrderedDict
-from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, #nested_commit_on_success
-)
 from ...models import UserProfile
+from ._common import ConsoleOutput, JSON_OPTS, datetime_to_string
 
-JSON_OPTS = {'sort_keys': False, 'indent': 2, 'separators': (',', ': ')}
 
+class Command(ConsoleOutput, BaseCommand):
 
-class Command(CommandOutputMixIn, BaseCommand):
-    args = "<username> [<username> ...]"
     help = (
         "Print information about the AllAuth users. The users are selected "
         "either by the provided user names (no user name - no output) or "
@@ -51,22 +46,24 @@ class Command(CommandOutputMixIn, BaseCommand):
         "user can be obtained by '--info' option. The '--json' option produces "
         "full user profile dump in JSON format."
     )
-    option_list = BaseCommand.option_list + (
-        make_option(
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("username", nargs="*")
+        parser.add_argument(
             "-f", "--file-name", dest="file", default="-", help=(
                 "Optional file-name the output is written to. "
                 "By default it is written to the standard output."
             )
-        ),
-    )
+        )
 
     def handle(self, *args, **kwargs):
         query = User.objects
-
-        if not args:
+        usernames = kwargs['username']
+        if not usernames:
             query = query.all()
         else:
-            query = query.filter(username__in=args)
+            query = query.filter(username__in=usernames)
 
         data = [serialize_user(user) for user in query]
 
@@ -80,7 +77,7 @@ def strip_blanks(func):
     def _strip_blanks_(*args, **kwargs):
         return OrderedDict(
             (key, value) for key, value in func(*args, **kwargs).items()
-            if value not in (None, "", [])
+            if value not in (None, "")
         )
     return _strip_blanks_
 
@@ -124,6 +121,10 @@ def serialize_user(object_):
             "social_accounts",
             serialize_social_accounts(object_.socialaccount_set.all())
         ),
+        (
+            "access_tokens",
+            serialize_access_tokens(object_.tokens.all())
+        ),
     ])
 
 
@@ -148,12 +149,21 @@ def serialize_social_account(object_):
     ])
 
 
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')
+@strip_blanks
+def serialize_access_token(object_):
+    return OrderedDict([
+        ("identifier", object_.identifier),
+        ("token", object_.token),
+        ("purpose", object_.purpose),
+        ("expires", object_.expires and datetime_to_string(object_.expires)),
+        ("created", datetime_to_string(object_.created)),
+    ])
 
 
 def serialize_list(funct, objects):
     return [funct(object_) for object_ in objects]
 
+
 serialize_email_addresses = partial(serialize_list, serialize_email_address)
 serialize_social_accounts = partial(serialize_list, serialize_social_account)
+serialize_access_tokens = partial(serialize_list, serialize_access_token)

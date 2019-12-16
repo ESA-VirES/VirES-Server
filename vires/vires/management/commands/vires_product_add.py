@@ -26,11 +26,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=fixme, import-error, no-self-use, broad-except
 # pylint: disable=missing-docstring, too-many-locals, too-many-branches
+# pylint: disable=too-many-arguments, broad-except
 
 import sys
-from optparse import make_option
 from os.path import basename
 from django.core.management.base import CommandError, BaseCommand
 from eoxserver.core import env
@@ -63,31 +62,33 @@ class Command(CommandOutputMixIn, BaseCommand):
         "products (different versions of the same product registered "
         "simultaneously)."
     )
-    args = "[<identifier> [<identifier> ...]]"
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("identifier", nargs="*")
+        parser.add_argument(
             "-f", "--file", dest="input_file", default=None,
             help=(
                 "Optional file from which the inputs are read rather "
                 "than form the command line arguments. Use dash to read "
                 "filenames from standard input."
             )
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "-r", "--range-type", dest="range_type_name", default=None,
             help=(
                 "Optional name of the model range type. "
                 "If not provided the range of the collection is used."
             )
-        ),
-        make_option(
-            "-c", "--collection", dest="collection_id", help=(
+        )
+        parser.add_argument(
+            "-c", "--collection", dest="collection_id", required=True,
+            help=(
                 "Mandatory name of the collection the product(s) should be "
                 "linked to."
             )
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "--conflict", dest="conflict", choices=("IGNORE", "REPLACE"),
             default="IGNORE", help=(
                 "Define how to resolve conflict when the product is already "
@@ -97,8 +98,8 @@ class Command(CommandOutputMixIn, BaseCommand):
                 "register the new one). In case of the REPLACE the collection "
                 "links are NOT preserved."
             )
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "--overlap", dest="overlap", choices=("IGNORE", "REPLACE"),
             default="REPLACE", help=(
                 "Define how to resolve registered overlapping products."
@@ -106,8 +107,64 @@ class Command(CommandOutputMixIn, BaseCommand):
                 "products to be de-registered to prevent duplicated data."
                 "Alternatively, the duplicated data can be IGNORED. "
             )
-        ),
-    )
+        )
+
+    @cache_session
+    def handle(self, *args, **kwargs):
+
+        identifiers = kwargs["identifier"]
+        ignore_registered = kwargs["conflict"] == "IGNORE"
+        ignore_overlaps = kwargs["overlap"] == "IGNORE"
+
+        range_type = get_range_type(kwargs["range_type_name"])
+        collection_id = kwargs["collection_id"]
+        collection = get_collection(collection_id)
+
+        if collection is None:
+            if range_type:
+                self.print_wrn(
+                    "The product collection '%s' does not exist! A new "
+                    "collection will be created ..." % collection_id
+                )
+                collection = collection_create(collection_id, range_type)
+            else:
+                raise CommandError(
+                    "The product collection '%s' does not exist! "
+                    "A range type must be specified to create a new one."
+                    % collection_id
+                )
+
+        counter = Counter()
+
+        id_suffix = get_product_id_suffix(collection)
+
+        for data_file in read_products(kwargs["input_file"], identifiers):
+
+            product_id = get_product_id(data_file) + id_suffix
+
+            try:
+                removed, inserted = self._register_product(
+                    collection, product_id, data_file, ignore_registered,
+                    ignore_overlaps,
+                )
+            except Exception as error:
+                self.print_traceback(error, kwargs)
+                self.print_err(
+                    "Registration of '%s' failed! Reason: %s"
+                    % (product_id, error)
+                )
+                counter.increment_failed()
+            else:
+                counter.increment_removed(len(removed))
+                if inserted:
+                    counter.increment_inserted()
+                else:
+                    counter.increment_skipped()
+            finally:
+                counter.increment()
+
+        counter.print_report(lambda msg: self.print_msg(msg, 1))
+
 
     @nested_commit_on_success
     def _register_product(self, collection, product_id, data_file,
@@ -170,59 +227,6 @@ class Command(CommandOutputMixIn, BaseCommand):
                 )
 
         return removed, inserted
-
-    @cache_session
-    def handle(self, *args, **kwargs):
-
-        ignore_registered = kwargs["conflict"] == "IGNORE"
-        ignore_overlaps = kwargs["overlap"] == "IGNORE"
-
-        range_type = get_range_type(kwargs["range_type_name"])
-        collection_id = kwargs["collection_id"]
-        collection = get_collection(collection_id)
-
-        if collection is None:
-            if range_type:
-                self.print_wrn(
-                    "The product collection '%s' does not exist! A new "
-                    "collection will be created ..." % collection_id
-                )
-                collection = collection_create(collection_id, range_type)
-            else:
-                raise CommandError(
-                    "The product collection '%s' does not exist! "
-                    "A range type must be specified to create a new one."
-                    % collection_id
-                )
-
-        counter = Counter()
-
-        for data_file in read_products(kwargs["input_file"], args):
-
-            product_id = get_product_id(data_file, collection)
-
-            try:
-                removed, inserted = self._register_product(
-                    collection, product_id, data_file, ignore_registered,
-                    ignore_overlaps,
-                )
-            except Exception as error:
-                self.print_traceback(error, kwargs)
-                self.print_err(
-                    "Registration of '%s' failed! Reason: %s"
-                    % (product_id, error)
-                )
-                counter.increment_failed()
-            else:
-                counter.increment_removed(len(removed))
-                if inserted:
-                    counter.increment_inserted()
-                else:
-                    counter.increment_skipped()
-            finally:
-                counter.increment()
-
-        counter.print_report(lambda msg: self.print_msg(msg, 1))
 
 
 class Counter(object):
@@ -332,15 +336,16 @@ def get_range_type(range_type_name):
     return range_type
 
 
-def get_product_id(data_file, collection):
-    """ Get the product identifier derived from the data filename and
-    collection range type name.
-    If the range type contains a colon (:) the part after the colon
-    is used as a products id suffix.
+def get_product_id(data_file):
+    """ Get the product identifier derived from the data filename. """
+    return basename(data_file).partition(".")[0]
+
+
+def get_product_id_suffix(collection):
+    """ Get product identifier suffix derived from the product type
+    (range-type name)
     """
-    base = basename(data_file).partition(".")[0]
-    suffix = "".join(collection.range_type.name.partition(":")[1:])
-    return base + suffix
+    return "".join(collection.range_type.name.partition(":")[1:])
 
 
 def collection_create(identifier, range_type):

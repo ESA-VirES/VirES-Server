@@ -26,11 +26,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=import-error,missing-docstring,broad-except
+# pylint: disable=missing-docstring,broad-except
 
 from os.path import exists
-from optparse import make_option
-from django.core.management.base import CommandError, BaseCommand
+from django.core.management.base import BaseCommand
 from eoxserver.backends.access import connect
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
@@ -41,37 +40,27 @@ from vires.models import ProductCollection
 
 class Command(CommandOutputMixIn, BaseCommand):
     help = "De-register all products from the selected collections."
-    args = "[<collection> [<collection> ...]]"
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("identifier", nargs="*")
+        parser.add_argument(
             "--invalid-only", dest="remove_invalid",
             action="store_true", default=False,
             help=(
                 "Remove only invalid product (product which are registered "
                 "but referring to an non-existent file."
             )
-        ),
-    )
-
-    @nested_commit_on_success
-    def _purge_collection(self, collection, remove_invalid):
-        count = 0
-        for product in list_collection(collection):
-            if remove_invalid and is_valid_product(product):
-                continue
-            delete_product(product)
-            self.print_msg("%s de-registered" % product.identifier)
-            count += 1
-        return count
+        )
 
     @cache_session
     def handle(self, *args, **kwargs):
-        remove_invalid = kwargs["remove_invalid"]
+        collection_ids = kwargs['identifier']
+        remove_invalid = kwargs['remove_invalid']
 
         counter = Counter()
 
-        for collection_id in args:
+        for collection_id in collection_ids:
             counter.increment()
 
             collection = get_collection(collection_id)
@@ -98,6 +87,17 @@ class Command(CommandOutputMixIn, BaseCommand):
                 counter.increment_success()
 
         counter.print_report(lambda msg: self.print_msg(msg, 1))
+
+    @nested_commit_on_success
+    def _purge_collection(self, collection, remove_invalid):
+        count = 0
+        for product in list_collection(collection):
+            if remove_invalid and is_valid_product(product):
+                continue
+            delete_product(product)
+            self.print_msg("%s de-registered" % product.identifier)
+            count += 1
+        return count
 
 
 class Counter(object):

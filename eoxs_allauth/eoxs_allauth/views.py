@@ -32,6 +32,7 @@ from time import sleep
 from logging import INFO, WARNING
 from datetime import datetime
 from django.conf import settings
+from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -44,39 +45,49 @@ from django.forms.models import modelform_factory
 from django.utils.timezone import now, is_aware, utc
 from django.utils.dateparse import parse_datetime
 from django_countries.widgets import CountrySelectWidget
-from allauth.account.forms import LoginForm, SignupForm
-from eoxserver.services.views import ows
 from .models import UserProfile, AuthenticationToken
 from .decorators import log_access, authenticated_only, token_authentication
-
-@token_authentication
-@log_access(INFO, WARNING)
-@authenticated_only
-@csrf_exempt
-def wrapped_ows(request):
-    """The EOxServer's OWS end-point view wrapped with the necessary decorators.
-    """
-    return ows(request)
+from .vires_oauth.decorators import (
+    authorized_only, logout_unauthorized, redirect_unauthorized,
+)
 
 
-@log_access(INFO, WARNING)
-@csrf_exempt
-def open_ows(request):
-    """The EOxServer's OWS end-point view as non auth wrapped version
-    with the necessary decorators.
-    """
-    return ows(request)
+def wrap_protected_api(view):
+    """ Decorate protected API view. """
+    return _decorate(
+        view,
+        token_authentication,
+        log_access(INFO, WARNING),
+        authenticated_only,
+        authorized_only,
+        csrf_exempt,
+    )
+
+
+def wrap_open_api(view):
+    """ Decorate protected API view. """
+    return _decorate(
+        view,
+        log_access(INFO, WARNING),
+        csrf_exempt,
+    )
+
+
+def _decorate(view, *decorators):
+    for decorator in reversed(decorators):
+        view = decorator(view)
+    return view
 
 
 def workspace(parse_client_state=None):
     """ EOxServer/allauth workspace.
     Note that the work space is used as the actual landing page.
     """
-
     allowed_methods = ["GET", "POST"] if parse_client_state else ["GET"]
 
     @log_access(INFO, INFO)
     @require_http_methods(allowed_methods)
+    @logout_unauthorized
     @csrf_exempt
     def _workspace_view(request):
         if request.method == "POST" and parse_client_state:
@@ -90,8 +101,6 @@ def workspace(parse_client_state=None):
         else:
             client_state = None
 
-        login_form = LoginForm()
-        del login_form.fields["login"].widget.attrs["autofocus"]
         return render(
             request, getattr(
                 settings, "WORKSPACE_TEMPLATE", "eoxs_allauth/workspace.html"
@@ -99,8 +108,6 @@ def workspace(parse_client_state=None):
                 "client_state": (
                     None if client_state is None else json.dumps(client_state)
                 ),
-                "login_form": login_form,
-                "signup_form": SignupForm(),
             }
         )
 
@@ -142,12 +149,14 @@ class ProfileUpdate(SuccessMessageMixin, UpdateView):
         return UserProfile.objects.get(user=self.request.user)
 
     @classmethod
-    def as_view(cls, *args, **kwargs):
-        """ Return the actual Djnago view. """
-        view = super(ProfileUpdate, cls).as_view(*args, **kwargs)
-        view = login_required(view)
-        view = log_access(INFO, WARNING)(view)
-        return view
+    def as_view(cls, **kwargs):
+        """ Return the actual Django view. """
+        return _decorate(
+            super(ProfileUpdate, cls).as_view(**kwargs),
+            log_access(INFO, WARNING),
+            login_required,
+            redirect_unauthorized(reverse_lazy('workspace')),
+        )
 
 
 class AccessTokenManagerView(View):
@@ -159,12 +168,14 @@ class AccessTokenManagerView(View):
     )
 
     @classmethod
-    def as_view(cls, *args, **kwargs):
-        """ Return the actual Djnago view. """
-        view = super(AccessTokenManagerView, cls).as_view(*args, **kwargs)
-        view = login_required(view)
-        view = log_access(INFO, WARNING)(view)
-        return view
+    def as_view(cls, **kwargs):
+        """ Return the actual Django view. """
+        return _decorate(
+            super(AccessTokenManagerView, cls).as_view(**kwargs),
+            log_access(INFO, WARNING),
+            login_required,
+            redirect_unauthorized(reverse_lazy('workspace')),
+        )
 
     def get(self, request):
         tokens = self._get_all_valid(request.user)

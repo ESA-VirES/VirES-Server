@@ -2,9 +2,7 @@
 #
 # Base VirES WPS process class
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -32,6 +30,7 @@ from logging import getLogger
 from eoxserver.core import Component, implements
 from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from vires.util import cached_property
+
 
 class WPSProcess(Component):
     """ Process retrieving registered Swarm data based on collection, time

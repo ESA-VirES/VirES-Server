@@ -2,10 +2,8 @@
 #
 # WPS fetch filtered download data
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #          Daniel Santillan <daniel.santillan@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -27,9 +25,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments, too-many-locals, too-many-branches,
-# pylint: disable=too-many-branches, too-many-statements
-# pylint: disable=missing-docstring, unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-branches,
+# pylint: disable=too-many-branches,too-many-statements
+# pylint: disable=missing-docstring,unused-argument
 
 from os import remove
 from os.path import exists
@@ -57,16 +55,23 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters2,
-    IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
-    OrbitCounter, ProductTimeSeries,
-    MinStepSampler, GroupingSampler, ExtraSampler,
+    VariableResolver, group_subtracted_variables, get_subtracted_variables,
+    extract_product_names, get_username, get_user, with_cache_session,
+)
+from vires.processes.util.time_series import (
+    ProductTimeSeries,
+    IndexKp10, IndexDst, IndexF107,
+    OrbitCounter, OrbitDirection, QDOrbitDirection,
+)
+from vires.processes.util.models import (
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    with_cache_session, get_username, get_user,
-    VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
-    Sat2SatResidual, group_residual_variables, get_residual_variables,
-    MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
-    extract_product_names,
+    SpacecraftLabel, SunPosition, SubSolarPoint,
+    SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
+    IndexKpFromKp10,
     Identity,
+)
+from vires.processes.util.filters import (
+    MinStepSampler, GroupingSampler, ExtraSampler,
 )
 
 # TODO: Make the limits configurable.
@@ -184,14 +189,14 @@ class FetchFilteredDataAsync(WPSProcess):
         )),
     ]
 
-
     @staticmethod
     def on_started(context, progress, message):
         """ Callback executed when an asynchronous Job gets started. """
-        job = Job.objects.get(identifier=context.identifier)
-        job.status = Job.STARTED
-        job.started = datetime.now(utc)
-        job.save()
+        job = update_job(
+            get_job_by_id(context.identifier),
+            status=Job.STARTED,
+            started=datetime.now(utc),
+        )
         context.logger.info(
             "Job started after %.3gs waiting.",
             (job.started - job.created).total_seconds()
@@ -200,10 +205,11 @@ class FetchFilteredDataAsync(WPSProcess):
     @staticmethod
     def on_succeeded(context, outputs):
         """ Callback executed when an asynchronous Job finishes. """
-        job = Job.objects.get(identifier=context.identifier)
-        job.status = Job.SUCCEEDED
-        job.stopped = datetime.now(utc)
-        job.save()
+        job = update_job(
+            get_job_by_id(context.identifier),
+            status=Job.SUCCEEDED,
+            stopped=datetime.now(utc),
+        )
         context.logger.info(
             "Job finished after %.3gs running.",
             (job.stopped - job.started).total_seconds()
@@ -212,10 +218,11 @@ class FetchFilteredDataAsync(WPSProcess):
     @staticmethod
     def on_failed(context, exception):
         """ Callback executed when an asynchronous Job fails. """
-        job = Job.objects.get(identifier=context.identifier)
-        job.status = Job.FAILED
-        job.stopped = datetime.now(utc)
-        job.save()
+        job = update_job(
+            get_job_by_id(context.identifier),
+            status=Job.FAILED,
+            stopped=datetime.now(utc),
+        )
         context.logger.info(
             "Job failed after %.3gs running.",
             (job.stopped - job.started).total_seconds()
@@ -229,34 +236,30 @@ class FetchFilteredDataAsync(WPSProcess):
         )
 
         user = get_user(inputs['\\username'])
-        active_jobs_count = Job.objects.filter(
-            owner=user, status__in=(Job.ACCEPTED, Job.STARTED)
-        ).count()
 
-        if active_jobs_count >= MAX_ACTIVE_JOBS:
+        if count_active_jobs(user) >= MAX_ACTIVE_JOBS:
             raise ServerBusy(
                 "Maximum number of allowed active asynchronous download "
                 "requests exceeded!"
             )
 
         # create DB record for this WPS job
-        job = Job()
-        job.status = Job.ACCEPTED
-        job.owner = user
-        job.process_id = self.identifier
-        job.identifier = context.identifier
-        job.response_url = context.status_location
-        job.save()
+        update_job(
+            Job(),
+            status=Job.ACCEPTED,
+            owner=user,
+            process_id=self.identifier,
+            identifier=context.identifier,
+            response_url=context.status_location,
+        )
 
 
-    def discard(self, context):
+    @staticmethod
+    def discard(context):
         """ Asynchronous process removal. """
         context.logger.info("removing %s" % context.identifier)
-        try:
-            job = Job.objects.get(identifier=context.identifier)
-        except Job.DoesNotExist:
-            pass
-        else:
+        job = get_job_by_id(context.identifier, raise_exception=False)
+        if job:
             job.delete()
             context.logger.info("Job removed.")
 
@@ -411,19 +414,19 @@ class FetchFilteredDataAsync(WPSProcess):
                     resolver.add_slave(item, 'Timestamp')
 
                 # prepare spacecraft to spacecraft differences
-                residual_variables = get_residual_variables(unique(chain(
+                subtracted_variables = get_subtracted_variables(unique(chain(
                     requested_variables, chain.from_iterable(
                         filter_.required_variables for filter_ in filters
                     )
                 )))
                 self.logger.debug("residual variables: %s", ", ".join(
-                    var for var, _ in residual_variables
+                    var for var, _ in subtracted_variables
                 ))
-                grouped_res_vars = group_residual_variables(
-                    product_sources, residual_variables
+                grouped_diff_vars = group_subtracted_variables(
+                    product_sources, subtracted_variables
                 )
-                for (msc, ssc), cols in grouped_res_vars.items():
-                    resolver.add_model(Sat2SatResidual(msc, ssc, cols))
+                for (msc, ssc), cols in grouped_diff_vars.items():
+                    resolver.add_model(SatSatSubtraction(msc, ssc, cols))
 
                 # models
                 aux_models = chain((
@@ -702,3 +705,28 @@ class FetchFilteredDataAsync(WPSProcess):
                 *context.publish(source_products_filename), **source_products
             ),
         }
+
+
+def get_job_by_id(identifier, raise_exception=True):
+    """ Get job for the given job identifier. """
+    try:
+        return Job.objects.get(identifier=identifier)
+    except Job.DoesNotExist:
+        if raise_exception:
+            raise
+    return None
+
+
+def count_active_jobs(user):
+    """ Get number of active jobs owned by the given user. """
+    return Job.objects.filter(
+        owner=user, status__in=(Job.ACCEPTED, Job.STARTED)
+    ).count()
+
+
+def update_job(job, **kwargs):
+    """ Update given job object. """
+    for key, value in kwargs.items():
+        setattr(job, key, value)
+    job.save()
+    return job

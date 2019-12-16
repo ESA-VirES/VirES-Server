@@ -1,5 +1,4 @@
 #-------------------------------------------------------------------------------
-# $Id$
 #
 # Project: EOxServer <http://eoxserver.org>
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
@@ -25,40 +24,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
-from optparse import make_option
-
-from django.core.management.base import CommandError, BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
 )
-from eoxserver.resources.coverages import models
-
+from eoxserver.resources.coverages.models import RangeType
 from vires.models import ProductCollection
 
 
 class Command(CommandOutputMixIn, BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option("-i", "--identifier", "--coverage-id", dest="identifier",
-            action="store", default=None,
-            help=("Mandatory. Collection identifier.")
-        ),
-        make_option("-r", "--range-type", dest="range_type_name",
-            help=("Mandatory. Name of the stored range type. ")
-        ),
-    )
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("identifier", help="Collection identifier.")
+        parser.add_argument("range_type_name", help="Range type name.")
 
     @nested_commit_on_success
     def handle(self, *args, **kwargs):
         identifier = kwargs["identifier"]
         range_type_name = kwargs["range_type_name"]
 
-        if not identifier:
-            raise CommandError("No identifier specified.")
-
-        if range_type_name is None:
-            raise CommandError("No range type name specified.")
-        range_type = models.RangeType.objects.get(name=range_type_name)
+        try:
+            range_type = RangeType.objects.get(name=range_type_name)
+        except RangeType.DoesNotExist:
+            raise CommandError("Invalid range-type '%s'!" % range_type_name)
 
         collection = ProductCollection()
         collection.identifier = identifier

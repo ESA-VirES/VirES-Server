@@ -1,9 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Update orbit tables for given MAGx_LR product.
+# Update orbit tables from MAGx_LR products.
 #
 # Authors: Martin Paces martin.paces@eox.at
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -25,17 +24,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=missing-docstring
+#pylint: disable=missing-docstring,broad-except
 
 import re
 from logging import getLogger
-from optparse import make_option
 from datetime import timedelta
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from eoxserver.backends.access import connect
 from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
 from vires.cdf_util import cdf_open
+from vires.time_util import naive_to_utc
 from vires.models import ProductCollection, Product
 from vires.management.commands import cache_session
 from vires.orbit_direction_update import (
@@ -50,33 +49,32 @@ RE_MAG_LR_COLLECTION = re.compile(r"^(SW_OPER_MAG([A-Z])_LR_1B)$")
 
 
 class Command(CommandOutputMixIn, BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option(
-            "-c", "--collection", dest="collection_id",
+
+    help = """ Update orbit direction lookup tables. """
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument("product_id", nargs="*")
+        parser.add_argument(
+            "-c", "--collection", dest="collection_id", required=True,
             help="Mandatory collection identifier."
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "-r", "--rebuild", dest="rebuild_collection",
             action="store_true", default=False, help=(
                 "Force re-processing of the whole collection. "
             )
-        ),
-        make_option(
+        )
+        parser.add_argument(
             "-u", "--update", dest="update_collection",
             action="store_true", default=False, help=(
                 "Update lookup tables for the given collection."
             )
-        ),
-    )
-    args = "[<product_id> [<product_id> ...]]"
-    help = """ Update orbit direction lookup tables. """
+        )
 
     @cache_session
     def handle(self, *args, **kwargs):
         print_command = lambda msg: self.print_msg(msg, 1)
-
-        if not kwargs.get('collection_id'):
-            raise CommandError("Missing the mandatory collection identifier!")
 
         collection_id = kwargs['collection_id']
         collection = get_collection(collection_id)
@@ -89,11 +87,13 @@ class Command(CommandOutputMixIn, BaseCommand):
         if kwargs.get('update_collection', False):
             self.update_collection(counter, collection)
         else:
-            self.update_from_products(counter, collection, *args, **kwargs)
+            self.update_from_products(
+                counter, collection, kwargs['product_id'], **kwargs
+            )
 
         counter.print_report(print_command)
 
-    def update_from_products(self, counter, collection, *args, **kwargs):
+    def update_from_products(self, counter, collection, product_ids, **kwargs):
         """ update orbit direction table from a list of products. """
 
         def _update_from_product(product_id):
@@ -102,7 +102,7 @@ class Command(CommandOutputMixIn, BaseCommand):
                 raise ValueError("%s not found!" % product_id)
             return update_orbit_direction_tables(collection, product)
 
-        for product_id in args:
+        for product_id in product_ids:
             try:
                 processed = _update_from_product(product_id)
             except DataIntegrityError as error:
@@ -340,7 +340,9 @@ def collection_to_spacecraft(collection_id):
 def find_product_by_time_interval(collection, begin_time, end_time):
     """ Locate product matched by the given time interval. """
     return _find_product(
-        collection.eo_objects, begin_time__lte=end_time, end_time__gte=begin_time
+        collection.eo_objects,
+        begin_time__lte=naive_to_utc(end_time),
+        end_time__gte=naive_to_utc(begin_time)
     )
 
 

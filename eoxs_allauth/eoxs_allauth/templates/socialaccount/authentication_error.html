@@ -1,7 +1,10 @@
 {% extends "socialaccount/base.html" %}
 {% load i18n %}
-{% block head_title %}{% trans "Social Network Login Failure" %}{% endblock %}
+{% block head_title %}{% trans "Login Failure" %}{% endblock %}
 {% block content %}
-  <h2>{% trans "Social Network Login Failure" %}</h2>
-  <p>{% trans "An error occurred while attempting to log in via your social network account." %}</p>
+  <h2>{% trans "Login Failure" %}</h2>
+  <p>An error occurred while attempting to log in via your VirES account.<br>
+  <p>
+    <a href="{% url 'vires_login' %}"  class="btn btn-primary">Retry to log in &raquo;</a>
+  </p>
 {% endblock %}
