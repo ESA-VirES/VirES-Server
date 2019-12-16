@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-#  Sub-sampling data filter.
+# Data filters - temporal sampling
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,11 +24,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
 from logging import getLogger, LoggerAdapter
 from numpy import empty, diff, concatenate, in1d, arange, inf
 from vires.interpolate import Interp1D
-from .filters import Filter, merge_indices
+from .base import Filter
+from .utils import merge_indices
 
 
 class MinStepSampler(Filter):

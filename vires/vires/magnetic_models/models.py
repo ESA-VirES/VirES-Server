@@ -1,9 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Process Utilities - Load Magnetic Model
+# Magnetic models - definition of all available magnetic models
 #
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2018 EOX IT Services GmbH
 #
@@ -43,9 +42,9 @@ from eoxmagmod import (
 from eoxmagmod.time_util import decimal_year_to_mjd2000
 from eoxmagmod.magnetic_model.parser_shc import parse_shc_header
 
-from vires.util import cached_property
-from vires.file_util import FileChangeMonitor
-from .magnetic_model_file import (
+from ..util import cached_property
+from ..file_util import FileChangeMonitor
+from .files import (
     ModelFileWithLiteralSource,
     CachedModelFileWithSourceFile,
     CachedComposedModelFile,

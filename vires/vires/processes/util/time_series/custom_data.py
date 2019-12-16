@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Data Source - custom dataset
+# Data Source - custom dataset time-series class
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -26,6 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
 import json
 from ctypes import c_long
@@ -39,10 +38,7 @@ from vires.models import CustomDataset
 from vires.dataset import Dataset
 from vires.util import cached_property
 from vires.views.custom_data import sanitize_info
-from .time_series_product import (
-    BaseProductTimeSeries,
-    DEFAULT_PRODUCT_TYPE_PARAMETERS,
-)
+from .product import BaseProductTimeSeries, DEFAULT_PRODUCT_TYPE_PARAMETERS
 
 
 class CustomDatasetTimeSeries(BaseProductTimeSeries):
@@ -185,7 +181,8 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
 
         return dataset
 
-    def _extract_dataset(self, cdf, extracted_variables, idx):
+    @staticmethod
+    def _extract_dataset(cdf, extracted_variables, idx):
         """ Extract dataset from a product. """
         if idx.size == 0:
             idx_low, idx_high = 0, 0

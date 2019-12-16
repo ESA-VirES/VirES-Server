@@ -2,9 +2,7 @@
 #
 # WPS process listing all asynchronous jobs of a user.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2017 EOX IT Services GmbH
 #
@@ -26,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=no-self-use,missing-docstring, too-few-public-methods
+# pylint: disable=no-self-use,missing-docstring,too-few-public-methods
 
 from eoxserver.core import Component, implements
 from eoxserver.services.ows.wps.interfaces import ProcessInterface

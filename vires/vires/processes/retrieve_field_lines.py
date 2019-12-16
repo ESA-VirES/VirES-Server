@@ -1,11 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Magnetic model field lines retrieval.
+# WPS process calculating magnetic field-lines from models.
 #
-# Project: VirES
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
 #          Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -27,8 +25,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-many-arguments, too-many-locals
-# pylint: disable=too-few-public-methods, no-self-use
+# pylint: disable=missing-docstring,too-many-arguments,too-many-locals
+# pylint: disable=too-few-public-methods,no-self-use,unused-argument
 
 from collections import defaultdict
 from cStringIO import StringIO
@@ -47,7 +45,7 @@ from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_model_list, get_f107_value
+from vires.processes.util import parse_model_list, get_extra_model_parameters
 
 EARTH_RADIUS_M = EARTH_RADIUS * 1e3 # mean Earth radius in meters
 TRACE_OPTIONS = {'max_radius': 25 * EARTH_RADIUS}
@@ -154,9 +152,9 @@ class RetrieveFieldLines(WPSProcess):
             for model in models:
                 model_count = 0
 
-                options = {}
-                if "f107" in model.model.parameters:
-                    options["f107"] = get_f107_value(mjd2000)
+                options = get_extra_model_parameters(
+                    mjd2000, model.model.parameters
+                )
 
                 self.logger.debug(
                     "%s=%s model options: %s",

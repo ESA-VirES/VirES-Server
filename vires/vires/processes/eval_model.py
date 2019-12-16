@@ -2,10 +2,8 @@
 #
 # Magnetic model evaluation
 #
-# Project: VirES
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
 #          Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #

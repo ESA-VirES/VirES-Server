@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Inter-spacecraft difference calculation
+# Special data source subtracting data acquired by different satellites.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2017 EOX IT Services GmbH
 #
@@ -26,14 +24,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments, too-many-locals, too-many-branches
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-locals,too-many-instance-attributes,missing-docstring
 
 from logging import LoggerAdapter, getLogger
 from itertools import chain
 from numpy import searchsorted, zeros
 from django.conf import settings
-from vires.models import ProductCollection
 from vires.orbit_counter import OrbitCounterReader
 from vires.cdf_util import (
     CDF_DOUBLE_TYPE, CDF_EPOCH_TYPE,
@@ -41,71 +37,11 @@ from vires.cdf_util import (
 )
 from vires.util import include
 from vires.dataset import Dataset
-from .time_series_product import ProductTimeSeries
-from .model import Model
+from .base import Model
 
 
-def group_residual_variables(sources, residual_variables):
-    """ Group residual variables by the spacecraft and collection. """
-    result = {}
-
-    for output_variable, item in residual_variables:
-        source_variable, master_spacecraft, slave_spacecraft = item
-
-        if master_spacecraft == slave_spacecraft:
-            continue # equal spacecrafts are not allowed
-
-        # find the master product collection providing the source variable
-        for source in sources:
-            if source_variable in source.variables:
-                break
-        else:
-            source = None
-            continue # no source found
-
-        # check the spacecraft
-        spacecraft = settings.VIRES_COL2SAT.get(source.collection.identifier)
-        if master_spacecraft != spacecraft:
-            continue # master spacecraft mismatch
-
-        # find the slave collection
-        try:
-            slave_collection_id = settings.VIRES_TYPE2COL[
-                source.collection.range_type.name
-            ][slave_spacecraft]
-        except KeyError:
-            continue # no reference collection found
-
-        result_collection = result.setdefault(
-            (master_spacecraft, slave_spacecraft), {}
-        ).get(slave_collection_id)
-
-        if result_collection is None:
-            # find the slave data source
-            try:
-                slave_source = ProductTimeSeries(
-                    ProductCollection.objects.get(
-                        identifier=slave_collection_id
-                    )
-                )
-            except ProductCollection.DoesNotExist:
-                continue # slave collection does not exist
-
-            # create a new collection entry
-            result[
-                (master_spacecraft, slave_spacecraft)
-            ][slave_collection_id] = result_collection = (slave_source, [])
-
-        # add new variable entry
-        result_collection[1].append(
-            (output_variable, source_variable)
-        )
-
-    return result
-
-
-class Sat2SatResidual(Model):
-    """ Calculation of the inter-spacecraft residuals. """
+class SatSatSubtraction(Model):
+    """ Calculation of the inter-spacecraft difference. """
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -113,7 +49,7 @@ class Sat2SatResidual(Model):
 
     def __init__(self, master_spacecraft, slave_spacecraft,
                  grouped_collections, logger=None):
-        super(Sat2SatResidual, self).__init__()
+        super(SatSatSubtraction, self).__init__()
 
         if master_spacecraft not in settings.VIRES_ORBIT_COUNTER_FILE:
             raise ValueError("Invalid master spacecraft %s!" % master_spacecraft)

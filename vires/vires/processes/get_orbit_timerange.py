@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer <http://eoxserver.org>
-# Authors: Martin Paces <martin.paces@eox.at>
+# WPS process converting orbit numbers into time ranges
 #
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2018 EOX IT Services GmbH
 #

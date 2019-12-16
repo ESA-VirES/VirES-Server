@@ -1,9 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Process Utilities - Load Magnetic Model File
+# Magnetic models - model file adapters
 #
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #

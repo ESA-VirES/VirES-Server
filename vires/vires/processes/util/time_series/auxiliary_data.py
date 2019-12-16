@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Data Source - auxiliary indices time-series class
+# Data Source - base auxiliary data time-series class
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,21 +24,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-arguments
+#pylint: disable=too-many-arguments,missing-docstring
 
 from logging import getLogger, LoggerAdapter
 from numpy import array, empty
 from vires.util import include
 from vires.cdf_util import (
     mjd2000_to_cdf_rawtime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_datetime,
-    CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDF_UINT2_TYPE,
+    CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE,
 )
-from vires.aux_kp import KpReader
-from vires.aux_dst import DstReader
-from vires.aux_f107 import F10_2_Reader
 from vires.dataset import Dataset
-from .time_series import TimeSeries
-from .model import Model
+from .base import TimeSeries
 
 
 class AuxiliaryDataTimeSeries(TimeSeries):
@@ -154,124 +148,3 @@ class AuxiliaryDataTimeSeries(TimeSeries):
                 )
         self.logger.debug("interpolated dataset length: %s ", dataset.length)
         return dataset
-
-
-class IndexKp10(AuxiliaryDataTimeSeries):
-    """ Kp10 index time-series source class. """
-    CDF_TYPE = {
-        'Timestamp': CDF_EPOCH_TYPE,
-        'Kp10': CDF_UINT2_TYPE,
-    }
-    CDF_INTERP_TYPE = {'Kp': CDF_DOUBLE_TYPE}
-    CDF_ATTR = {
-        'Timestamp': {
-            'DESCRIPTION': 'Time stamp',
-            'UNITS': '-',
-        },
-        'Kp10': {
-            'DESCRIPTION': 'Global geo-magnetic storm index multiplied by 10.',
-            'UNITS': '-',
-        },
-    }
-
-    def __init__(self, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, "Kp10", filename, KpReader,
-            {'time': 'Timestamp', 'kp': 'Kp10'}, logger
-        )
-
-
-class IndexKpFromKp10(Model):
-    """ Conversion of Kp10 to Kp.
-    """
-    REQUIRED_VARIABLE = "Kp10"
-    PROVIDED_VARIABLE = "Kp"
-    CDF_VARIABLE = (
-        CDF_DOUBLE_TYPE, {
-            'DESCRIPTION': 'Global geo-magnetic storm index.',
-            'UNITS': '-',
-        }
-    )
-
-    @property
-    def variables(self):
-        return [self.PROVIDED_VARIABLE]
-
-    @property
-    def required_variables(self):
-        return [self._required_variable]
-
-    class _LoggerAdapter(LoggerAdapter):
-        def process(self, msg, kwargs):
-            return 'KpFromKp10: %s' % msg, kwargs
-
-    def __init__(self, logger=None, varmap=None):
-        super(IndexKpFromKp10, self).__init__()
-        varmap = varmap or {}
-        self._required_variable = varmap.get(
-            self.REQUIRED_VARIABLE, self.REQUIRED_VARIABLE
-        )
-        self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
-
-    def eval(self, dataset, variables=None, **kwargs):
-        output_ds = Dataset()
-        required_variable = self._required_variable
-        provided_variable = self.PROVIDED_VARIABLE
-
-        eval_kp = variables is None or provided_variable in variables
-
-        self.logger.debug(
-            "requested variables: %s", required_variable if eval_kp else ""
-        )
-
-        if eval_kp:
-            output_ds.set(
-                provided_variable, 0.1*dataset[required_variable],
-                *self.CDF_VARIABLE
-            )
-
-        return output_ds
-
-
-class IndexDst(AuxiliaryDataTimeSeries):
-    """ Dst index time-series source class. """
-    CDF_TYPE = {'Timestamp': CDF_EPOCH_TYPE, 'Dst': CDF_DOUBLE_TYPE}
-    CDF_INTERP_TYPE = {'Dst': CDF_DOUBLE_TYPE}
-    CDF_ATTR = {
-        'Timestamp': {
-            'DESCRIPTION': 'Time stamp',
-            'UNITS': '-',
-        },
-        'Dst': {
-            'DESCRIPTION': 'Disturbance storm time index',
-            'UNITS': 'nT',
-        },
-    }
-
-    def __init__(self, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, "Dst", filename, DstReader,
-            {'time': 'Timestamp', 'dst': 'Dst'}, logger
-        )
-
-
-class IndexF107(AuxiliaryDataTimeSeries):
-    """ F10.7 index (AUX_F10_2_) time-series source class. """
-    CDF_TYPE = {'Timestamp': CDF_EPOCH_TYPE, 'F107': CDF_DOUBLE_TYPE}
-    CDF_INTERP_TYPE = {'F107': CDF_DOUBLE_TYPE}
-    CDF_ATTR = {
-        'Timestamp': {
-            'DESCRIPTION': 'Time stamp',
-            'UNITS': '-',
-        },
-        'F107': {
-            'DESCRIPTION': 'Assembled daily observed values of solar flux F10.7',
-            'UNITS': '10e-22 W m^-2 Hz^-1',
-        },
-    }
-
-    def __init__(self, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, "F107", filename, F10_2_Reader,
-            {"MJD2000": 'Timestamp', "F10.7": 'F107'}, logger
-        )

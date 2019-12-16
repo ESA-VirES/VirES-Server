@@ -2,9 +2,7 @@
 #
 # Data Source - base time-series class
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,missing-docstring
 
 from numpy import asarray
 from vires.cdf_util import CDF_EPOCH_TYPE, mjd2000_to_cdf_rawtime
