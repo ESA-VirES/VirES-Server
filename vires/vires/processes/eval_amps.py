@@ -2,9 +2,7 @@
 #
 # Average magnetic field and polar current system evaluation
 #
-# Project: VirES
 # Authors: Mikael Toresen <mikael.toresen@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -53,9 +51,10 @@ from vires.processes.base import WPSProcess
 from vires.config import SystemConfigReader
 from vires.dataset import Dataset
 from vires.perf_util import ElapsedTimeLogger
-from vires.processes.util import (
-    parse_style, data_to_png, ProductTimeSeries,
-    SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle, IndexF107,
+from vires.processes.util import parse_style, data_to_png
+from vires.processes.util.time_series import ProductTimeSeries
+from vires.processes.util.models import (
+    SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle,
 )
 from vires.cdf_util import (
     datetime_to_cdf_rawtime,
@@ -169,7 +168,6 @@ class EvalAMPS(WPSProcess):
         dataset.set('Radius', array([0.0]))
 
         product_aux_imf2 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
-        index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
         model_sun = SunPosition()
         model_subsol = SubSolarPoint()
         model_dipole = MagneticDipole()
@@ -178,11 +176,9 @@ class EvalAMPS(WPSProcess):
         # get AUX_IMF2_ variables
         dataset.update(
             product_aux_imf2.interpolate(dataset['Timestamp'], [
-                "IMF_V", "IMF_BY_GSM", "IMF_BZ_GSM",
+                "IMF_V", "IMF_BY_GSM", "IMF_BZ_GSM", "F10_INDEX",
             ])
         )
-        # get AUX_F10_2_ variables
-        dataset.update(index_f10.interpolate(dataset['Timestamp'], ["F107"]))
         # get sun position needed by the tilt angle
         dataset.update(
             model_sun.eval(dataset, ["SunDeclination", "SunHourAngle"])
@@ -195,7 +191,7 @@ class EvalAMPS(WPSProcess):
         dataset.update(model_tilt_angle.eval(dataset, ["DipoleTiltAngle"]))
         # extract scalars from the dataset
         amps_parameters = (dataset[key][0] for key in [
-            "IMF_V", "IMF_BY_GSM", "IMF_BZ_GSM", "F107", "DipoleTiltAngle"
+            "IMF_V", "IMF_BY_GSM", "IMF_BZ_GSM", "F10_INDEX", "DipoleTiltAngle"
         ])
         return amps_parameters
 
@@ -249,6 +245,7 @@ class EvalAMPS(WPSProcess):
 
         imf_v, imf_by, imf_bz, f107, tilt = self.model_parameters(mean_dt)
 
+
         (y_min, x_min), (y_max, x_max) = bbox
         hd_x = (0.5 / width) * (x_max - x_min)
         hd_y = (0.5 / height) * (y_min - y_max)
@@ -263,29 +260,41 @@ class EvalAMPS(WPSProcess):
         ), self.logger):
             if variable in self.EVAL_CURR_VARIABLE:
                 qdlats, mlts = self.gcoor2qdlatmlt(lats, lons, elevations, mean_dt)
-                model = AMPS(
-                    v=imf_v, By=imf_by, Bz=imf_bz,
-                    tilt=tilt, f107=f107,
-                    height=elevation,
-                    resolution=0, dr=90,
-                )
-                eval_func = self.EVAL_CURR_VARIABLE[variable]
-                pixel_array = eval_func(model, [qdlats, mlts])
-                if variable == "Ju":
-                    pixel_array[np_abs(qdlats) < 45] = nan
+                try:
+                    model = AMPS(
+                        v=imf_v, By=imf_by, Bz=imf_bz,
+                        tilt=tilt, f107=f107,
+                        height=elevation,
+                        resolution=0, dr=90,
+                    )
+                except IndexError:
+                    self.logger.debug(
+                        "Cannot evaluate model at IMF_V: %s, "
+                        "IMF_BY_GSM: %s, IMF_BZ_GSM: %s, "
+                        "F10_INDEX: %s, DipoleTiltAngle: %s",
+                        imf_v, imf_by, imf_bz, f107, tilt
+                    )
+                    pixel_array = full((height, width), nan)
+                else:
+                    eval_func = self.EVAL_CURR_VARIABLE[variable]
+                    pixel_array = eval_func(model, [qdlats, mlts])
+                    if variable == "Ju":
+                        pixel_array[np_abs(qdlats) < 45] = nan
             elif variable in self.EVAL_MAG_VARIABLE:
-                b_nec = array(get_B_space(
-                    glat=lats.flatten(),
-                    glon=lons.flatten(),
-                    height=elevations.flatten(),
-                    time=full(lons.size, mean_dt, dtype=object),
-                    v=full(lons.size, imf_v),
-                    By=full(lons.size, imf_by),
-                    Bz=full(lons.size, imf_bz),
-                    tilt=full(lons.size, tilt),
-                    f107=full(lons.size, f107),
-                    epoch=datetime_to_decimal_year(mean_dt),
-                )).reshape(3, height, width)
+                b_nec = array(
+                    get_B_space(
+                        glat=lats.flatten(),
+                        glon=lons.flatten(),
+                        height=elevations.flatten(),
+                        time=full(lons.size, mean_dt, dtype=object),
+                        v=full(lons.size, imf_v),
+                        By=full(lons.size, imf_by),
+                        Bz=full(lons.size, imf_bz),
+                        tilt=full(lons.size, tilt),
+                        f107=full(lons.size, f107),
+                        epoch=datetime_to_decimal_year(mean_dt),
+                    )
+                ).reshape(3, height, width)
                 pixel_array = self.EVAL_MAG_VARIABLE[variable](b_nec)
 
         range_min = nanmin(pixel_array) if range_min is None else range_min

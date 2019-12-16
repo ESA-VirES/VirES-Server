@@ -67,7 +67,8 @@ from vires.processes.util.models import (
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
-    IndexKpFromKp10,
+    IndexKpFromKp10, IonosphericCurrentModel,
+
 )
 from vires.processes.util.filters import (
     MinStepSampler, GroupingSampler, ExtraSampler,
@@ -349,7 +350,6 @@ class FetchFilteredDataAsync(WPSProcess):
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
             model_amps_cur = IonosphericCurrentModel()
-            model_amps_mag = AssociatedMagneticModel()
             copied_variables = [
                 Identity("MLT_QD", "MLT"),
                 Identity("Latitude_QD", "QDLat"),
@@ -433,7 +433,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 aux_models = chain((
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
-                    model_amps_cur, model_amps_mag,
+                    model_amps_cur,
                 ), models_with_residuals, copied_variables)
                 for model in aux_models:
                     resolver.add_model(model)
