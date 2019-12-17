@@ -202,7 +202,7 @@ def get_extra_model_parameters(mjd2000, requirements):
     parameters = {}
     if "f107" in requirements:
         parameters.update(get_f107_value(mjd2000))
-    elif "amps" in requirements:
+    if "amps" in requirements:
         parameters.update(get_amps_inputs(mjd2000))
     return parameters
 

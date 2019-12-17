@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-locals, too-many-arguments
+# pylint: disable=too-many-locals,too-many-arguments,missing-docstring
 
 from django.conf import settings
 from vires.dataset import Dataset
@@ -32,7 +32,6 @@ from vires.cdf_util import CDF_EPOCH_TYPE, mjd2000_to_cdf_rawtime
 from .models import SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle
 from .time_series import ProductTimeSeries
 
-F107_VARIABLE = "F10_INDEX"
 IMF_BY_VARIABLE = "IMF_BY_GSM"
 IMF_BZ_VARIABLE = "IMF_BZ_GSM"
 IMF_V_VARIABLE = "IMF_V"
@@ -55,7 +54,7 @@ def get_amps_inputs(mjd2000):
     dataset.set("Radius", [0.0])
 
     dataset.merge(index_imf.interpolate(dataset['Timestamp'], variables=[
-        F107_VARIABLE, IMF_BY_VARIABLE, IMF_BZ_VARIABLE, IMF_V_VARIABLE
+        IMF_BY_VARIABLE, IMF_BZ_VARIABLE, IMF_V_VARIABLE
     ]))
     dataset.merge(model_sun.eval(dataset, ["SunDeclination", "SunHourAngle"]))
     dataset.merge(model_subsol.eval(dataset, ["SunVector"]))
@@ -63,7 +62,6 @@ def get_amps_inputs(mjd2000):
     dataset.merge(model_tilt_angle.eval(dataset, ["DipoleTiltAngle"]))
 
     return {
-        "imf_f107": dataset[F107_VARIABLE][0],
         "imf_by": dataset[IMF_BY_VARIABLE][0],
         "imf_bz": dataset[IMF_BZ_VARIABLE][0],
         "imf_v": dataset[IMF_V_VARIABLE][0],

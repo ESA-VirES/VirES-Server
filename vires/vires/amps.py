@@ -52,7 +52,7 @@ def mjd2000_to_dt64ms(mjd2000):
 
 class AmpsMagneticFieldModel(GeomagneticModel):
     """ Abstract base class of the Earth magnetic field model. """
-    parameters = ("time", "location", "amps") # FIXME
+    parameters = ("time", "location", "f107", "amps") # FIXME
     CHUNK_SIZE = 1200
     DEFAULT_EPOCH = 2015.0
     REFERENCE_HEIGHT = 110.0
@@ -83,7 +83,7 @@ class AmpsMagneticFieldModel(GeomagneticModel):
 
     def _eval_reshaped(self, time, location,
                        input_coordinate_system, output_coordinate_system,
-                       imf_f107, imf_v, imf_by, imf_bz, tilt_angle, **options):
+                       f107, imf_v, imf_by, imf_bz, tilt_angle, **options):
         """ Reshape inputs to and output from the pyAMPS compatible dimensions.
         """
 
@@ -104,7 +104,7 @@ class AmpsMagneticFieldModel(GeomagneticModel):
             location = location.reshape((size, shape[-1]))
 
             time = _broadcast_or_reshape(time, size)
-            imf_f107 = _broadcast_or_reshape(imf_f107, size)
+            f107 = _broadcast_or_reshape(f107, size)
             imf_v = _broadcast_or_reshape(imf_v, size)
             imf_by = _broadcast_or_reshape(imf_by, size)
             imf_bz = _broadcast_or_reshape(imf_bz, size)
@@ -112,12 +112,12 @@ class AmpsMagneticFieldModel(GeomagneticModel):
 
         return self._eval(
             time, location, input_coordinate_system, output_coordinate_system,
-            imf_f107, imf_v, imf_by, imf_bz, tilt_angle, **options
+            f107, imf_v, imf_by, imf_bz, tilt_angle, **options
         ).reshape(shape)
 
     def _eval(self, time, location,
               input_coordinate_system, output_coordinate_system,
-              imf_f107, imf_v, imf_by, imf_bz, tilt_angle, **options):
+              f107, imf_v, imf_by, imf_bz, tilt_angle, **options):
         """ Evaluate AMPS magnetic field model for the given MJD2000 times and
         coordinates.
         """
@@ -134,7 +134,7 @@ class AmpsMagneticFieldModel(GeomagneticModel):
             By=imf_by,
             Bz=imf_bz,
             tilt=tilt_angle,
-            f107=imf_f107,
+            f107=f107,
             epoch=float(self._get_epoch(time)),
             h_R=self.REFERENCE_HEIGHT,
             chunksize=self.CHUNK_SIZE,

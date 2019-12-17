@@ -52,7 +52,7 @@ from vires.config import SystemConfigReader
 from vires.dataset import Dataset
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.util import parse_style, data_to_png
-from vires.processes.util.time_series import ProductTimeSeries
+from vires.processes.util.time_series import ProductTimeSeries, IndexF107
 from vires.processes.util.models import (
     SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle,
 )
@@ -66,6 +66,7 @@ from vires.time_util import (
     datetime_to_decimal_year,
     datetime_to_mjd2000,
 )
+
 
 class EvalAMPS(WPSProcess):
     """ Calculate current and magnetic field of AMPS model on a grid"""
@@ -167,6 +168,7 @@ class EvalAMPS(WPSProcess):
         dataset.set('Latitude', array([0.0]))
         dataset.set('Radius', array([0.0]))
 
+        index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
         product_aux_imf2 = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
         model_sun = SunPosition()
         model_subsol = SubSolarPoint()
@@ -174,6 +176,7 @@ class EvalAMPS(WPSProcess):
         model_tilt_angle = DipoleTiltAngle()
 
         # get AUX_IMF2_ variables
+        dataset.update(index_f10.interpolate(dataset['Timestamp'], ["F107"]))
         dataset.update(
             product_aux_imf2.interpolate(dataset['Timestamp'], [
                 "IMF_V", "IMF_BY_GSM", "IMF_BZ_GSM", "F10_INDEX",

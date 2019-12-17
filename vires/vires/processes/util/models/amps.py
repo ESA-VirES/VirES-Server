@@ -42,7 +42,7 @@ class IonosphericCurrentModel(Model):
     FILTER45_MODE = 2
 
     MODEL_PARAMETERS = [
-        'IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F10_INDEX'
+        'IMF_V', 'IMF_BY_GSM', 'IMF_BZ_GSM', 'DipoleTiltAngle', 'F10'
     ]
 
     DEFAULT_REQUIRED_VARIABLES = [
