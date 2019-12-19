@@ -27,7 +27,6 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments
 
-from os.path import basename, splitext
 from numpy import asarray, prod, empty, broadcast_to, stack, datetime64, inf
 from eoxmagmod import (
     convert, vrotate, GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL,
@@ -35,7 +34,6 @@ from eoxmagmod import (
 )
 from eoxmagmod.magnetic_model.model import GeomagneticModel
 from pyamps import get_B_space
-from pyamps.model_utils import coeff_fn as AMPS_MODEL_COEFFICIENTS_FILE
 
 DT64_2000 = datetime64('2000-01-01', 'ms')
 
@@ -58,9 +56,9 @@ class AmpsMagneticFieldModel(GeomagneticModel):
     REFERENCE_HEIGHT = 110.0
 
     validity = (-inf, +inf)
-    filename = AMPS_MODEL_COEFFICIENTS_FILE
-    source = basename(splitext(filename)[0])
-    sources = ([source], asarray([validity]))
+
+    def __init__(self, filename):
+        self.filename = filename
 
     @property
     def degree(self): # FIXME
@@ -138,6 +136,7 @@ class AmpsMagneticFieldModel(GeomagneticModel):
             epoch=float(self._get_epoch(time)),
             h_R=self.REFERENCE_HEIGHT,
             chunksize=self.CHUNK_SIZE,
+            coeff_fn=self.filename,
         )
 
         return vrotate(

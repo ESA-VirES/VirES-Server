@@ -26,9 +26,10 @@
 #-------------------------------------------------------------------------------
 #pylint: disable=too-few-public-methods, missing-docstring
 
-from os.path import basename
+from os.path import basename, splitext
 from logging import getLogger
 from numpy import inf
+from pyamps.model_utils import default_coeff_fn as AMPS
 from eoxmagmod.data import CHAOS_STATIC_LATEST, IGRF12, LCS1, MF7
 from eoxmagmod import (
     load_model_shc,
@@ -56,6 +57,7 @@ IGRF12_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20191231T235959_0102"
 CHAOS_STATIC_SOURCE = basename(CHAOS_STATIC_LATEST)
 LCS1_SOURCE = basename(LCS1)
 MF7_SOURCE = basename(MF7)
+AMPS_SOURCE = basename(splitext(AMPS)[0])
 
 
 class ModelFactory(object):
@@ -225,8 +227,10 @@ MODEL_FACTORIES = {
         [CachedComposedModelFile("MMA_CHAOS6")]
     ),
     "AMPS": ModelFactory(
-        lambda _: AmpsMagneticFieldModel(),
-        [AmpsMagneticFieldModel]
+        AmpsMagneticFieldModel,
+        [ModelFileWithLiteralSource(
+            AMPS, AMPS_SOURCE, lambda _: AmpsMagneticFieldModel.validity
+        )]
     ),
 }
 
