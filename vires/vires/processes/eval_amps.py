@@ -37,6 +37,7 @@ from numpy import (
     sqrt, nan, abs as np_abs, meshgrid, nanmin, nanmax
 )
 from pyamps import AMPS, get_B_space
+from pyamps.model_utils import default_coeff_fn as AMPS_MODEL_COEFFICIENTS_FILE
 from eoxmagmod import (
     convert, eval_mlt, eval_qdlatlon,
     GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL,
@@ -269,6 +270,7 @@ class EvalAMPS(WPSProcess):
                         tilt=tilt, f107=f107,
                         height=elevation,
                         resolution=0, dr=90,
+                        coeff_fn=AMPS_MODEL_COEFFICIENTS_FILE,
                     )
                 except IndexError:
                     self.logger.debug(

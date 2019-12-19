@@ -29,6 +29,7 @@
 from logging import getLogger, LoggerAdapter
 from numpy import argsort, abs as aabs, nan, stack
 from pyamps import AMPS
+from pyamps.model_utils import default_coeff_fn as AMPS_MODEL_COEFFICIENTS_FILE
 from vires.util import include, unique
 from vires.cdf_util import CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
@@ -121,6 +122,7 @@ class IonosphericCurrentModel(Model):
                 v=v_imf, By=by_imf, Bz=bz_imf,
                 tilt=tilt, f107=f107,
                 resolution=0, dr=90,
+                coeff_fn=AMPS_MODEL_COEFFICIENTS_FILE,
             )
 
             for var in variables:
