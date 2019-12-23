@@ -227,6 +227,171 @@
     "bands": [
         {
             "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Time of observation",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
+            "nil_values": [],
+            "uom": "s"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "UInt16",
+            "definition": "",
+            "description": "On-board time-synchronization status",
+            "identifier": "SyncStatus",
+            "name": "SyncStatus",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
+            "nil_values": [],
+            "uom": "deg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Position in ITRF ... Radius",
+            "identifier": "Radius",
+            "name": "Radius",
+            "nil_values": [],
+            "uom": "m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic field vector, VFM frame",
+            "identifier": "B_VFM",
+            "name": "B_VFM",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic field vector, NEC frame",
+            "identifier": "B_NEC",
+            "name": "B_NEC",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Sun induced stray magnetic field correction vector subtracted from measurements, VFM frame",
+            "identifier": "dB_Sun",
+            "name": "dB_Sun",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Magnetic stray field correction vector of AOCS magneto-torquer coils, VFM frame",
+            "identifier": "dB_AOCS",
+            "name": "dB_AOCS",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Magnetic stray field correction vector of all other sources, VFM frame",
+            "identifier": "dB_other",
+            "name": "dB_other",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Error estimates on magnetic field, VFM frame",
+            "identifier": "B_error",
+            "name": "B_error",
+            "nil_values": [],
+            "uom": "nT"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "CFloat64",
+            "definition": "",
+            "description": "Quaternion, transformation: NEC ... CRF",
+            "identifier": "q_NEC_CRF",
+            "name": "q_NEC_CRF",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Error estimates on attitude information",
+            "identifier": "Att_error",
+            "name": "Att_error",
+            "nil_values": [],
+            "uom": "mdeg"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the magnetic field measurement",
+            "identifier": "Flags_B",
+            "name": "Flags_B",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the attitude information",
+            "identifier": "Flags_q",
+            "name": "Flags_q",
+            "nil_values": [],
+            "uom": ""
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Byte",
+            "definition": "",
+            "description": "Flags characterizing the S/C platform information",
+            "identifier": "Flags_Platform",
+            "name": "Flags_Platform",
+            "nil_values": [],
+            "uom": ""
+        }
+    ],
+    "name": "SWARM_MAG_HR"
+},
+{
+    "bands": [
+        {
+            "color_interpretation": "Undefined",
             "data_type": "Float32",
             "definition": "F",
             "description": "Total magnetic field strength",

@@ -38,3 +38,4 @@ from .spacecraft_subtraction import SatSatSubtraction
 from .indices import IndexKpFromKp10
 from .identity import Identity
 from .amps import IonosphericCurrentModel
+from .vector_intensity import VectorIntensity, BnecToF
