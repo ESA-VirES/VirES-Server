@@ -68,6 +68,7 @@ from vires.processes.util.models import (
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
     IndexKpFromKp10,
+    BnecToF,
 )
 from vires.processes.util.filters import (
     MinStepSampler, GroupingSampler, ExtraSampler,
@@ -341,6 +342,7 @@ class FetchFilteredDataAsync(WPSProcess):
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
             index_imf = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+            model_bnec_intensity = BnecToF()
             model_kp = IndexKpFromKp10()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
@@ -424,6 +426,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
                 # models
                 aux_models = chain((
+                    model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals)
