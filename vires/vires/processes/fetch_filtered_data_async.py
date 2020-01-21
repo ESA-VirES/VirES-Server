@@ -498,13 +498,17 @@ class FetchFilteredDataAsync(WPSProcess):
                 )
 
                 for product_idx, dataset in enumerate(dataset_iterator, 1):
-                    context.update_progress(
-                        (product_count * 100) // total_product_count,
-                        "Filtering collection %s, product %d of %d." % (
-                            label, product_idx, collection_product_counts[label]
+                    # In case of no product selected the iterator yields one
+                    # empty dataset which should not be counted as a product.
+                    if collection_product_counts[label] > 0:
+                        context.update_progress(
+                            (product_count * 100) // total_product_count,
+                            "Filtering collection %s, product %d of %d." % (
+                                label, product_idx,
+                                collection_product_counts[label]
+                            )
                         )
-                    )
-                    product_count += 1
+                        product_count += 1
 
 
                     self.logger.debug(
