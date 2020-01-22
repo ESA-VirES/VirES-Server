@@ -46,7 +46,7 @@ setup(
     },
     scripts=[],
     install_requires=[
-        'EOxServer', 'eoxmagmod>=0.9.6',
+        'EOxServer', 'eoxmagmod>=0.9.7',
     ],
     zip_safe=False,
 
