@@ -2,9 +2,7 @@
 #
 #  Process Utilities
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,50 +24,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
 from .cache import with_cache_session
-from .filters import (
-    Filter, ScalarRangeFilter, VectorComponentRangeFilter,
-    BoundingBoxFilter,
-    merge_indices,
-)
-from .filters_subsampling import (
-    MinStepSampler, GroupingSampler, ExtraSampler,
-)
-from .time_series import TimeSeries
-from .time_series_product import ProductTimeSeries
-from .time_series_custom_data import CustomDatasetTimeSeries
-from .time_series_aux import (
-    IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
-)
-from .time_series_orbit_counter import OrbitCounter
-from .time_series_orbit_direction import OrbitDirection, QDOrbitDirection
-from .model import Model
-from .model_magmod import (
-    MagneticModelResidual, SourceMagneticModel, ComposedMagneticModel,
-)
-from .model_qd_mlt import QuasiDipoleCoordinates, MagneticLocalTime
-from .model_sunpos import SunPosition, SubSolarPoint
-from .model_dipole import MagneticDipole, DipoleTiltAngle
-from .label import Label, SpacecraftLabel
 from .input_parsers import (
     parse_style, parse_collections,
     parse_model_expression, parse_model_list,
     parse_filters, parse_filters2,
-    parse_variables, get_residual_variables,
+    parse_variables, get_subtracted_variables,
 )
 from .png_output import data_to_png, array_to_png
 from .auth import get_username, get_user
 from .resolver import VariableResolver, extract_product_names
-from .residuals import group_residual_variables, Sat2SatResidual
-from .f107 import get_f107_value
-from .model_renderer import render_model, ALLOWED_VARIABLES
-
-
-# other miscellaneous utilities
-def format_filters(filters):
-    """ Convert filters to string. """
-    return "; ".join(
-        "%s: %g,%g" % (key, vmin, vmax)
-        for key, (vmin, vmax) in filters.iteritems()
-    )
+from .spacecraft_subtraction import group_subtracted_variables
+from .magnetic_model_renderer import (
+    get_extra_model_parameters, render_model, ALLOWED_VARIABLES,
+)

@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities - cache backend wrapper
+#  Data filters - common utilities
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2017 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
-from functools import wraps
-from eoxserver.backends.cache import setup_cache_session, shutdown_cache_session
+from numpy import empty, concatenate, unique
 
-def with_cache_session(func):
-    """ Decorator setting up the EOxServer cache session. """
-    @wraps(func)
-    def __wrapper__(*args, **kwargs):
-        setup_cache_session()
-        try:
-            response = func(*args, **kwargs)
-        finally:
-            shutdown_cache_session()
-        return response
-    return __wrapper__
+
+def merge_indices(*indices):
+    """ Merge indices eliminating duplicate values. """
+    indices = [index for index in indices if index is not None]
+    if len(indices) > 1:
+        return unique(concatenate(indices))
+    elif len(indices) == 1:
+        return indices[0]
+    return empty(0, dtype='int64')

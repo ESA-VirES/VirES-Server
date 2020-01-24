@@ -1,8 +1,7 @@
 #-------------------------------------------------------------------------------
 #
-# WPS process fetching information about the provided models models.
+# WPS process fetching information about the provided magnetic models.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
@@ -25,6 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring,unused-argument
 
 from cStringIO import StringIO
 from itertools import chain
@@ -33,9 +33,9 @@ from eoxserver.services.ows.wps.parameters import (
 )
 from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
 from vires.time_util import mjd2000_to_datetime, decimal_year_to_mjd2000
+from vires.magnetic_models import MODEL_LIST
 from vires.processes.base import WPSProcess
 from vires.processes.util import parse_model_list
-from vires.processes.util.magnetic_models import MODEL_LIST
 
 
 MIN_MJD2000 = decimal_year_to_mjd2000(1.0)

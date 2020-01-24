@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Data Source - solar position
+# Data Source - solar ephemeris
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2017 EOX IT Services GmbH
 #
@@ -26,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals
+#pylint: disable=too-many-locals,missing-docstring
 
 from logging import getLogger, LoggerAdapter
 from numpy import stack, ones
@@ -34,7 +32,7 @@ from eoxmagmod import sunpos, convert, GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIA
 from vires.util import include, unique
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
-from .model import Model
+from .base import Model
 
 
 class SunPosition(Model):
@@ -181,19 +179,19 @@ class SubSolarPoint(Model):
         longitude, declination, hour_angle = (
             self._extract_required_variables(dataset)
         )
-        subsolar_latitude = longitude - hour_angle
+        subsolar_longitude = longitude - hour_angle
 
         def _set_output(variable, data):
             output_ds.set(variable, data, *self.VARIABLES[variable])
 
-        subsolar_latitude_variable, earth_sun_vector_variable = self.variables
+        subsolar_longitude_variable, earth_sun_vector_variable = self.variables
 
-        if subsolar_latitude_variable in variables:
-            _set_output(subsolar_latitude_variable, subsolar_latitude)
+        if subsolar_longitude_variable in variables:
+            _set_output(subsolar_longitude_variable, subsolar_longitude)
 
         if earth_sun_vector_variable in variables:
             earth_sun_vector = self._eval_earth_sun_vector(
-                declination, subsolar_latitude
+                declination, subsolar_longitude
             )
             _set_output(earth_sun_vector_variable, earth_sun_vector)
 

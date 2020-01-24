@@ -2,10 +2,8 @@
 #
 # WPS process fetching data from multiple collection to the client.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #          Daniel Santillan <daniel.santillan@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -27,7 +25,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments, too-many-locals, too-many-branches
+# pylint: disable=too-many-arguments,too-many-locals,too-many-branches
+# pylint: disable=too-many-statements,unused-argument,missing-docstring
 
 from itertools import chain, izip
 from datetime import datetime, timedelta
@@ -54,18 +53,25 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables,
-    IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
-    OrbitCounter, ProductTimeSeries,
-    MinStepSampler, GroupingSampler, ExtraSampler, BoundingBoxFilter,
-    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
-    Sat2SatResidual, group_residual_variables, get_residual_variables,
-    MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
+    VariableResolver, group_subtracted_variables, get_subtracted_variables,
     extract_product_names, get_username, get_user,
-    CustomDatasetTimeSeries,
+)
+from vires.processes.util.time_series import (
+    ProductTimeSeries, CustomDatasetTimeSeries,
+    IndexKp10, IndexDst, IndexF107,
+    OrbitCounter, OrbitDirection, QDOrbitDirection,
+)
+from vires.processes.util.models import (
+    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
+    SpacecraftLabel, SunPosition, SubSolarPoint,
+    SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
+    IndexKpFromKp10,
+)
+from vires.processes.util.filters import (
+    MinStepSampler, GroupingSampler, ExtraSampler, BoundingBoxFilter,
 )
 
-# TODO: Make following parameters configurable.
+# TODO: Make the following parameters configurable.
 # Limit response size (equivalent to 1/2 daily SWARM MAG LR product).
 MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
 
@@ -331,15 +337,15 @@ class FetchData(WPSProcess):
 
                     # prepare spacecraft to spacecraft differences
                     # NOTE: No residual variables required by the filters.
-                    residual_variables = get_residual_variables(requested_variables)
+                    subtracted_variables = get_subtracted_variables(requested_variables)
                     self.logger.debug("residual variables: %s", ", ".join(
-                        var for var, _ in residual_variables
+                        var for var, _ in subtracted_variables
                     ))
-                    grouped_res_vars = group_residual_variables(
-                        product_sources, residual_variables
+                    grouped_diff_vars = group_subtracted_variables(
+                        product_sources, subtracted_variables
                     )
-                    for (msc, ssc), cols in grouped_res_vars.items():
-                        resolver.add_model(Sat2SatResidual(msc, ssc, cols))
+                    for (msc, ssc), cols in grouped_diff_vars.items():
+                        resolver.add_model(SatSatSubtraction(msc, ssc, cols))
 
                 # models
                 aux_models = chain((
