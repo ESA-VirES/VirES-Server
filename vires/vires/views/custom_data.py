@@ -93,7 +93,7 @@ def custom_data_collection(request, **kwargs):
     """ Custom data collection view. """
     if request.method == "GET":
         return list_collection(request, **kwargs)
-    elif request.method == "POST":
+    if request.method == "POST":
         return post_item(request, **kwargs)
     raise HttpError405
 
@@ -103,9 +103,9 @@ def custom_data_item(request, identifier, **kwargs):
     """ Custom data item view. """
     if request.method == "GET":
         return get_item(request, identifier, **kwargs)
-    elif request.method in ("PUT", "PATCH"):
+    if request.method in ("PUT", "PATCH"):
         return update_item(request, identifier, **kwargs)
-    elif request.method == "DELETE":
+    if request.method == "DELETE":
         return delete_item(request, identifier, **kwargs)
     raise HttpError405
 
@@ -138,7 +138,7 @@ def sanitize_info(info):
         # old info version
         info = {
             "size": info["Timestamp"]["shape"][0],
-            "source_fields": [name for name in info],
+            "source_fields": list(info),
             "fields": {
                 name: {
                     "shape": field["shape"][1:],
@@ -160,7 +160,7 @@ def sanitize_info(info):
 @reject_content
 def list_collection(request, **kwargs):
     """ List custom data collection. """
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     data = json.dumps([
         model_to_infodict(dataset) for dataset in _get_models(owner)
     ])
@@ -170,7 +170,7 @@ def list_collection(request, **kwargs):
 @reject_content
 def get_item(request, identifier, **kwargs):
     """ Get info about the custom data."""
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     dataset = _get_model(owner, identifier)
     data = json.dumps(model_to_infodict(dataset))
     return HttpResponse(data, "application/json")
@@ -198,7 +198,7 @@ def post_item(request, **kwargs):
     size = uploaded_file.size
 
     # create upload directory and save the uploaded file
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     upload_dir = join(get_upload_dir(), identifier)
     filename = join(upload_dir, base_name)
     makedirs(upload_dir)
@@ -240,7 +240,7 @@ def post_item(request, **kwargs):
 
         data = json.dumps(model_to_infodict(dataset))
 
-        with open(join(upload_dir, "info.json"), "wb") as file_:
+        with open(join(upload_dir, "info.json"), "w") as file_:
             file_.write(data)
 
         update_change_log("CREATED", identifier, timestamp)
@@ -262,7 +262,7 @@ def post_item(request, **kwargs):
 @allow_content_length(MAX_UPDATE_PAYLOAD_SIZE)
 def update_item(request, identifier, **kwargs):
     """ Update custom dataset. """
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     dataset = _get_model(owner, identifier)
 
     fields_info = json.loads(dataset.info)
@@ -295,7 +295,7 @@ def update_item(request, identifier, **kwargs):
 @reject_content
 def delete_item(request, identifier, **kwargs):
     """ Delete custom data."""
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     dataset = _get_model(owner, identifier)
     _delete_item(owner, dataset, kwargs["logger"])
 
@@ -464,7 +464,7 @@ def process_input_cdf(path):
     if size == 0:
         raise InvalidFileFormat("Empty dataset!")
 
-    for name, field in fields.items():
+    for name, field in list(fields.items()):
         shape = field["shape"]
         if name in EXCLUDED_FIELDS:
             del fields[name]
@@ -482,7 +482,7 @@ def process_input_cdf(path):
     return start, end, {
         "size": size,
         "fields": fields,
-        "source_fields": [name for name in fields],
+        "source_fields": list(fields),
         "missing_fields": _get_missing_fields(fields),
         "constant_fields": {},
     }

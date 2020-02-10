@@ -2,10 +2,8 @@
 #
 # CDF file-format utilities
 #
-# Project: VirES-Server
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #          Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -27,13 +25,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments
 
 from os.path import exists
 from datetime import timedelta
 import ctypes
 from numpy import (
     nan, vectorize, object as dt_object, float64 as dt_float64,
-    ndarray, searchsorted,
+    ndarray, searchsorted, asarray, full,
 )
 import scipy
 from scipy.interpolate import interp1d
@@ -41,7 +40,6 @@ import spacepy
 from spacepy import pycdf
 from spacepy.pycdf import CDFError, lib
 from . import FULL_PACKAGE_NAME
-from .util import full
 from .time_util import (
     mjd2000_to_decimal_year, year_to_day2k, days_per_year,
     datetime, naive_to_utc,
@@ -128,14 +126,16 @@ def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
                     value_formater(value) for value in arr
                 )
             return formater
-        elif cdf_type == CDF_DOUBLE_TYPE:
+        if cdf_type == CDF_DOUBLE_TYPE:
             return lambda v: "%.9g" % v
-        elif cdf_type == CDF_EPOCH_TYPE:
+        if cdf_type == CDF_EPOCH_TYPE:
             if dtype == dt_float64:
                 return lambda v: "%.14g" % v
-            elif dtype == dt_object:
+            if dtype == dt_object:
                 return lambda v: v.isoformat("T") + "Z"
             return str
+        if cdf_type == CDF_CHAR_TYPE:
+            return lambda v: v.decode('utf-8')
         return str
     return _get_formater(data.shape, data.dtype, cdf_type)
 
@@ -186,8 +186,7 @@ def cdf_rawtime_to_seconds(raw_time_delta, cdf_type):
     if cdf_type == CDF_EPOCH_TYPE:
         # TODO: handle vectors
         return raw_time_delta * 1e-3
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def seconds_to_cdf_rawtime(time_seconds, cdf_type):
@@ -196,8 +195,7 @@ def seconds_to_cdf_rawtime(time_seconds, cdf_type):
     if cdf_type == CDF_EPOCH_TYPE:
         # TODO: handle vectors
         return time_seconds * 1e3
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def cdf_rawtime_to_timedelta(raw_time_delta, cdf_type):
@@ -206,8 +204,7 @@ def cdf_rawtime_to_timedelta(raw_time_delta, cdf_type):
     if cdf_type == CDF_EPOCH_TYPE:
         # TODO: handle vectors
         return timedelta(seconds=raw_time_delta*1e-3)
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def timedelta_to_cdf_rawtime(time_delta, cdf_type):

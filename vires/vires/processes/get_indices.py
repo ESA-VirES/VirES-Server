@@ -3,6 +3,7 @@
 # WPS fetch index data subset for time-slider visualisation
 #
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
+#          Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -24,15 +25,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,too-many-locals,too-few-public-methods
+# pylint: disable=too-many-locals,too-few-public-methods
 # pylint: disable=too-many-arguments,unused-argument
 
 
 from datetime import datetime
-from itertools import izip
-from cStringIO import StringIO
-from numpy import amax, amin, vectorize, choose
-from django.conf import settings
+from io import StringIO
+from numpy import vectorize, choose
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, CDFileWrapper,
 )
@@ -43,25 +42,32 @@ from vires.time_util import (
     mjd2000_to_datetime, mjd2000_to_unix_epoch, naive_to_utc,
 )
 from vires.processes.base import WPSProcess
+from vires.cache_util import cache_path
+from vires.data.vires_settings import AUX_DB_KP, AUX_DB_DST, CACHED_PRODUCT_FILE
+
+
+def amax(arr, axis):
+    """ Get largest value along the given axis. """
+    return arr.max(axis)
 
 
 def abs_amax(arr, axis):
-    """ Get the elements with largest absolute values along the given axis."""
-    arr_min = amin(arr, axis)
-    arr_max = amax(arr, axis)
+    """ Get the elements with largest absolute values along the given axis. """
+    arr_min = arr.min(axis)
+    arr_max = arr.max(axis)
     return choose(abs(arr_max) > abs(arr_min), (arr_min, arr_max))
 
 
 # Auxiliary data query function and file sources
 AUX_INDEX = {
     "kp": (
-        KpReader(settings.VIRES_AUX_DB_KP), ("time", "kp"), amax, "%.1f"
+        KpReader(cache_path(AUX_DB_KP)), ("time", "kp"), amax, "%.1f"
     ),
     "dst": (
-        DstReader(settings.VIRES_AUX_DB_DST), ("time", "dst"), abs_amax, "%.6g"
+        DstReader(cache_path(AUX_DB_DST)), ("time", "dst"), abs_amax, "%.6g"
     ),
     "f107": (
-        F10_2_Reader(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"]),
+        F10_2_Reader(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"])),
         ("MJD2000", "F10.7"), amax, "%.6g"
     ),
 }
@@ -109,6 +115,8 @@ class GetIndices(WPSProcess):
 
     def execute(self, index_id, begin_time, end_time, csv_time_format,
                 output, **kwarg):
+        """ Execute process. """
+
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
@@ -127,8 +135,9 @@ class GetIndices(WPSProcess):
         if index_id == 'kp':
             data = self._kp10_to_kp(data)
 
-        output_fobj = self._write_csv(
-            StringIO(), index_id, time, data, time_format, data_format
+        output_fobj = StringIO(newline="\r\n")
+        self._write_csv(
+            output_fobj, index_id, time, data, time_format, data_format
         )
 
         self.access_logger.info(
@@ -173,9 +182,8 @@ class GetIndices(WPSProcess):
 
     @staticmethod
     def _write_csv(file_out, index_id, time, data, time_format, data_format):
-        line_format = "%s,%s,%s\r\n"
+        line_format = "%s,%s,%s"
         row_format = line_format % (index_id, data_format, time_format)
-        file_out.write(line_format % ("id", "value", "time"))
-        for row in izip(data, time):
-            file_out.write(row_format % row)
-        return file_out
+        print(line_format % ("id", "value", "time"), file=file_out)
+        for row in zip(data, time):
+            print(row_format % row, file=file_out)

@@ -24,9 +24,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,unused-argument
+# pylint: disable=unused-argument
 
-from cStringIO import StringIO
+from io import StringIO
 from itertools import chain
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, FormatJSON, CDFileWrapper, CDObject,
@@ -92,7 +92,7 @@ class GetModelInfo(WPSProcess):
 
         if output['mime_type'] == "text/csv":
             return self._csv_output(models, output)
-        elif output['mime_type'] == "application/json":
+        if output['mime_type'] == "application/json":
             return self._json_output(models, output)
 
         raise InvalidOutputDefError(

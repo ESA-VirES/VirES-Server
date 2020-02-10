@@ -93,7 +93,7 @@ def custom_model_collection(request, **kwargs):
     """ Custom model collection view. """
     if request.method == "GET":
         return list_collection(request, **kwargs)
-    elif request.method == "POST":
+    if request.method == "POST":
         return post_item(request, **kwargs)
     raise HttpError405
 
@@ -103,7 +103,7 @@ def custom_model_item(request, identifier, **kwargs):
     """ Custom model item view. """
     if request.method == "GET":
         return get_item(request, identifier, **kwargs)
-    elif request.method == "DELETE":
+    if request.method == "DELETE":
         return delete_item(request, identifier, **kwargs)
     raise HttpError405
 
@@ -150,7 +150,7 @@ def check_input_file(path):
 @reject_content
 def list_collection(request, **kwargs):
     """ List custom model collection. """
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     data = json.dumps([
         model_to_infodict(model) for model in _get_models(owner)
     ])
@@ -160,7 +160,7 @@ def list_collection(request, **kwargs):
 @reject_content
 def get_item(request, identifier, **kwargs):
     """ Get info about the custom model."""
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     model = _get_model(owner, identifier)
     data = json.dumps(model_to_infodict(model))
     return HttpResponse(data, "application/json")
@@ -187,7 +187,7 @@ def post_item(request, **kwargs):
     size = uploaded_file.size
 
     # create upload directory and save the uploaded file
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     upload_dir = join(get_upload_dir(), identifier)
     filename = join(upload_dir, basename)
     makedirs(upload_dir)
@@ -240,7 +240,7 @@ def post_item(request, **kwargs):
 @reject_content
 def delete_item(request, identifier, **kwargs):
     """ Delete custom model."""
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     model = _get_model(owner, identifier)
 
     _delete_item(owner, model, kwargs["logger"])

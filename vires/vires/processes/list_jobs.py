@@ -24,10 +24,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=no-self-use,missing-docstring,too-few-public-methods
+# pylint: disable=no-self-use,too-few-public-methods
 
-from eoxserver.core import Component, implements
-from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.parameters import (
     RequestParameter, ComplexData, FormatJSON, CDObject,
 )
@@ -36,14 +34,12 @@ from vires.models import Job
 STATUS_TO_STRING = dict(Job.STATUS_CHOICES)
 
 
-class ListJobs(Component):
+class ListJobs():
     """ This utility process lists all asynchronous WPS jobs owned by
     the current user.
     The jobs are grouped by the process identifier and ordered by the creation
     time.
     """
-    implements(ProcessInterface)
-
     identifier = "listJobs"
     metadata = {}
     profiles = ["vires-util"]
@@ -60,7 +56,8 @@ class ListJobs(Component):
     ]
 
     def execute(self, user, **kwargs):
-        owner = user if user.is_authenticated() else None
+        """ Execute process. """
+        owner = user if user.is_authenticated else None
         job_list = {}
         for job in Job.objects.filter(owner=owner).order_by("created"):
             job_list.setdefault(job.process_id, []).append({

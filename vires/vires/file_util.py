@@ -24,12 +24,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-few-public-methods
 
 from errno import ENOENT
 from os.path import getmtime
 
 
-class FileChangeMonitor(object):
+class FileChangeMonitor():
     """ File change monitor keeps track of the files' last modification times
     and can be queried if a file has been modified or not.
     """

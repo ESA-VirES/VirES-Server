@@ -24,15 +24,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,import-error,no-self-use
+# pylint: disable=import-error,no-self-use
 
-from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, AllowedRange, FormatJSON, CDObject,
 )
 from vires.time_util import mjd2000_to_datetime
 from vires.orbit_counter import get_orbit_timerange
 from vires.processes.base import WPSProcess
+from vires.cache_util import cache_path
+from vires.data.vires_settings import ORBIT_COUNTER_FILE
 
 
 class GetOrbitTimeRange(WPSProcess):
@@ -47,7 +48,7 @@ class GetOrbitTimeRange(WPSProcess):
         ("spacecraft", LiteralData(
             'spacecraft', str, optional=False,
             abstract="Spacecraft identifier",
-            allowed_values=('A', 'B', 'C'),
+            allowed_values=list(ORBIT_COUNTER_FILE),
         )),
         ("start_orbit", LiteralData(
             'start_orbit', int, optional=False,
@@ -69,10 +70,11 @@ class GetOrbitTimeRange(WPSProcess):
     ]
 
     def execute(self, spacecraft, start_orbit, end_orbit, **kwargs):
+        """ Execute process. """
         if end_orbit < start_orbit:
             start_orbit, end_orbit = end_orbit, start_orbit
 
-        orbit_counter_file = settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
+        orbit_counter_file = cache_path(ORBIT_COUNTER_FILE[spacecraft])
 
         start_orbit, end_orbit, start_time, end_time = get_orbit_timerange(
             orbit_counter_file, start_orbit, end_orbit

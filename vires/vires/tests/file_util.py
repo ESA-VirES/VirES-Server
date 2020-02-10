@@ -140,7 +140,7 @@ class TempFilename(object):
 
 
 def change_file(filename):
-    with open(filename, "wb") as file_:
+    with open(filename, "w") as file_:
         file_.write(str(uuid4()))
 
 

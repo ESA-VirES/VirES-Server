@@ -24,12 +24,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=no-self-use,missing-docstring,too-few-public-methods
+# pylint: disable=no-self-use,too-few-public-methods
 
-from eoxserver.core import Component, implements, ExtensionPoint, env
-from eoxserver.services.ows.wps.interfaces import (
-    ProcessInterface, AsyncBackendInterface
-)
+#from eoxserver.core import Component, implements, ExtensionPoint, env
+#from eoxserver.services.ows.wps.interfaces import (
+#    ProcessInterface, AsyncBackendInterface
+#)
 from eoxserver.services.ows.wps.parameters import (
     RequestParameter, LiteralData,
 )
@@ -37,24 +37,23 @@ from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import Job
 
 
-class _AsyncBackendProvider(Component):
-    """ Component providing list of WPS AsyncBackend components. """
-    async_backends = ExtensionPoint(AsyncBackendInterface)
+#class _AsyncBackendProvider(Component):
+#    """ Component providing list of WPS AsyncBackend components. """
+#    async_backends = ExtensionPoint(AsyncBackendInterface)
 
 
 def get_wps_async_backend():
     """ Get the asynchronous WPS back-end. """
-    for async_backend in _AsyncBackendProvider(env).async_backends:
-        return async_backend
-    return None
+    raise NotImplementedError
+    #for async_backend in _AsyncBackendProvider(env).async_backends:
+    #    return async_backend
+    #return None
 
 
-class RemoveJob(Component):
+class RemoveJob():
     """ This utility process removes an asynchronous WPS  job owned
     by the current user.
     """
-    implements(ProcessInterface)
-
     identifier = "removeJob"
     metadata = {}
     profiles = ["vires-util"]
@@ -67,8 +66,9 @@ class RemoveJob(Component):
     outputs = [('is_removed', bool)]
 
     def execute(self, user, job_id, **kwargs):
+        """ Execute process. """
         # find job removal candidates
-        owner = user if user.is_authenticated() else None
+        owner = user if user.is_authenticated else None
         try:
             job = Job.objects.get(owner=owner, identifier=job_id)
         except Job.DoesNotExist:

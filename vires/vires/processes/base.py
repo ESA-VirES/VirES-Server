@@ -24,21 +24,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
 from logging import getLogger
-from eoxserver.core import Component, implements
-from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from vires.util import cached_property
 
 
-class WPSProcess(Component):
+class WPSProcess():
     """ Process retrieving registered Swarm data based on collection, time
     interval and additional optional parameters.
     This precess is designed to be used by the web-client.
     """
-    implements(ProcessInterface)
-    abstract = True
 
     @cached_property
     def access_logger(self):

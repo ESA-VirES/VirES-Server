@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Products management - fast registration
+# Bulk product registration.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -30,29 +28,23 @@
 # pylint: disable=too-many-arguments, broad-except
 
 import sys
-from os.path import basename
+from os.path import basename, splitext
+from logging import getLogger
+from traceback import print_exc
+from django.db import transaction
 from django.core.management.base import CommandError, BaseCommand
-from eoxserver.core import env
-from eoxserver.backends.models import Storage, Package, DataItem
-from eoxserver.backends.component import BackendComponent
-from eoxserver.resources.coverages.models import RangeType
-from eoxserver.resources.coverages.management.commands import (
-    CommandOutputMixIn, nested_commit_on_success
-)
+from vires.swarm import SwarmProductMetadataReader
 from vires.models import Product, ProductCollection
-from vires.management.commands import cache_session
-from vires.management.commands.vires_dataset_register import (
-    VirESMetadataReader
-)
 from vires.management.commands.vires_update_orbit_directions import (
-    RE_MAG_LR_PRODUCT, update_orbit_direction_tables,
-    sync_orbit_direction_tables,
+    update_orbit_direction_tables, sync_orbit_direction_tables,
 )
 from vires.orbit_direction_update import DataIntegrityError
 from vires.cdf_util import cdf_open
+from ._common import ConsoleOutput
 
 
-class Command(CommandOutputMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
 
     help = (
         "Register one or more products to a collection. "
@@ -64,7 +56,7 @@ class Command(CommandOutputMixIn, BaseCommand):
     )
 
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
+        super().add_arguments(parser)
         parser.add_argument("identifier", nargs="*")
         parser.add_argument(
             "-f", "--file", dest="input_file", default=None,
@@ -75,17 +67,10 @@ class Command(CommandOutputMixIn, BaseCommand):
             )
         )
         parser.add_argument(
-            "-r", "--range-type", dest="range_type_name", default=None,
-            help=(
-                "Optional name of the model range type. "
-                "If not provided the range of the collection is used."
-            )
-        )
-        parser.add_argument(
             "-c", "--collection", dest="collection_id", required=True,
             help=(
-                "Mandatory name of the collection the product(s) should be "
-                "linked to."
+                "Mandatory name of the product collection the product(s) "
+                "should be placed in."
             )
         )
         parser.add_argument(
@@ -109,35 +94,22 @@ class Command(CommandOutputMixIn, BaseCommand):
             )
         )
 
-    @cache_session
     def handle(self, *args, **kwargs):
-
         identifiers = kwargs["identifier"]
         ignore_registered = kwargs["conflict"] == "IGNORE"
         ignore_overlaps = kwargs["overlap"] == "IGNORE"
-
-        range_type = get_range_type(kwargs["range_type_name"])
         collection_id = kwargs["collection_id"]
+
         collection = get_collection(collection_id)
 
         if collection is None:
-            if range_type:
-                self.print_wrn(
-                    "The product collection '%s' does not exist! A new "
-                    "collection will be created ..." % collection_id
-                )
-                collection = collection_create(collection_id, range_type)
-            else:
-                raise CommandError(
-                    "The product collection '%s' does not exist! "
-                    "A range type must be specified to create a new one."
-                    % collection_id
-                )
+            raise CommandError(
+                "The product collection '%s' does not exist!" % collection_id
+            )
 
         counter = Counter()
 
         for data_file in read_products(kwargs["input_file"], identifiers):
-
             product_id = get_product_id(data_file)
 
             try:
@@ -146,10 +118,11 @@ class Command(CommandOutputMixIn, BaseCommand):
                     ignore_overlaps,
                 )
             except Exception as error:
-                self.print_traceback(error, kwargs)
-                self.print_err(
-                    "Registration of '%s' failed! Reason: %s"
-                    % (product_id, error)
+                if kwargs.get('traceback'):
+                    print_exc(file=sys.stderr)
+                self.error(
+                    "Registration of '%s' failed! Reason: %s",
+                    product_id, error
                 )
                 counter.increment_failed()
             else:
@@ -161,28 +134,27 @@ class Command(CommandOutputMixIn, BaseCommand):
             finally:
                 counter.increment()
 
-        counter.print_report(lambda msg: self.print_msg(msg, 1))
+        counter.print_report(lambda msg: print(msg, file=sys.stderr))
 
-    @nested_commit_on_success
+    @transaction.atomic
     def _register_product(self, collection, product_id, data_file,
                           ignore_registered, ignore_overlaps):
         removed, inserted = [], []
         metadata = read_metadata(data_file)
 
-        is_in_collection = False
-
         products = find_time_overlaps(
             collection, metadata["begin_time"], metadata["end_time"]
         )
+        is_in_collection = False
         for product in products:
             if product.identifier == product_id and ignore_registered:
                 is_in_collection = True
             else:
                 if ignore_overlaps and product.identifier != product_id:
-                    self.print_msg("%s ignored" % product.identifier)
+                    self.info("%s ignored", product.identifier)
                 else:
                     delete_product(product)
-                    self.print_msg("%s de-registered" % product.identifier)
+                    self.info("%s de-registered", product.identifier)
                     removed.append(product.identifier)
 
         if not is_in_collection:
@@ -191,42 +163,40 @@ class Command(CommandOutputMixIn, BaseCommand):
 
             if product and not ignore_registered:
                 delete_product(product)
-                self.print_msg("%s de-registered" % product.identifier)
+                self.info("%s de-registered" % product.identifier)
                 removed.append(product.identifier)
                 product = None
 
             if not product:
                 product = register_product(
-                    collection.range_type, product_id, data_file, metadata
+                    collection, product_id, data_file, metadata
                 )
 
-                # update orbit direction tables
-                if RE_MAG_LR_PRODUCT.match(product_id):
+                if collection.metadata.get("calculateOrbitDirection"):
                     try:
                         update_orbit_direction_tables(collection, product)
                     except DataIntegrityError:
-                        self.print_wrn(
+                        self.warning(
                             "Synchronizing orbit direction lookup tables ..."
                         )
                         sync_orbit_direction_tables(collection)
 
-                collection.insert(product)
-                self.print_msg(
+                self.info(
                     "%s registered and inserted in %s"
-                    % (product.identifier, collection.identifier)
+                    % (product_id, collection.identifier)
                 )
                 inserted.append(product_id)
             else:
-                collection.insert(product)
-                self.print_msg(
+                set_product_collection(product, collection)
+                self.info(
                     "%s inserted in %s"
-                    % (product.identifier, collection.identifier)
+                    % (product_id, collection.identifier)
                 )
 
         return removed, inserted
 
 
-class Counter(object):
+class Counter():
 
     def __init__(self):
         self._total = 0
@@ -279,9 +249,8 @@ class Counter(object):
 
 def read_metadata(data_file):
     """ Read metadata from product. """
-    with cdf_open(data_file) as dataset:
-        metadata = VirESMetadataReader.read(dataset)
-    return metadata
+    with cdf_open(data_file) as cdf:
+        return SwarmProductMetadataReader.read(cdf)
 
 
 def read_products(filename, args):
@@ -295,158 +264,67 @@ def read_products(filename, args):
                 yield line
 
     if filename is None:
-        products = iter(args)
-    elif filename == "-":
-        products = _read_lines(sys.stdin)
-    else:
-        with open(filename) as file_:
-            products = _read_lines(file_)
+        return iter(args)
 
-    return products
+    if filename == "-":
+        return _read_lines(sys.stdin)
+
+    with open(filename) as file_:
+        return _read_lines(file_)
 
 
-def get_collection(collection_id):
+def get_collection(identifier):
     """ Get collection for the given collection identifier.
     Return None if no collection matched.
     """
     try:
-        return ProductCollection.objects.get(
-            identifier=collection_id
+        return ProductCollection.objects.select_related('type').get(
+            identifier=identifier
         )
     except ProductCollection.DoesNotExist:
         return None
 
 
-def get_range_type(range_type_name):
-    """ Get range type for the given collection name.
-    When no range-type is given returns None.
-    """
-    if range_type_name:
-        try:
-            range_type = RangeType.objects.get(name=range_type_name)
-        except RangeType.DoesNotExist:
-            raise CommandError(
-                "Invalid range type name '%s'!" % range_type_name
-            )
-    else:
-        range_type = None
-    return range_type
-
-
 def get_product_id(data_file):
     """ Get the product identifier. """
-    return basename(data_file).partition(".")[0]
-
-
-def collection_create(identifier, range_type):
-    """ Create a new product collection. """
-    collection = ProductCollection()
-    collection.identifier = identifier
-    collection.range_type = range_type
-    collection.srid = 4326
-    collection.min_x = -180
-    collection.min_y = -90
-    collection.max_x = 180
-    collection.max_y = 90
-    collection.size_x = 0
-    collection.size_y = 1
-    collection.full_clean()
-    collection.save()
-    return collection
+    return splitext(basename(data_file))[0]
 
 
 def find_product(product_id):
     """ Return True if the product is already registered. """
     try:
-        item = Product.objects.get(identifier=product_id)
+        return Product.objects.get(identifier=product_id)
     except Product.DoesNotExist:
         return None
-    return item.cast() if item.iscoverage else None
 
 
 def find_time_overlaps(collection, begin_time, end_time):
     """ Lookup products with the same temporal overlap."""
-    return (
-        item.cast() for item in collection.eo_objects.filter(
-            begin_time__lte=end_time, end_time__gte=begin_time
-        ) if item.iscoverage
+    return collection.products.filter(
+        begin_time__lte=end_time, end_time__gte=begin_time
     )
 
 
-def register_product(range_type, product_id, data_file, metadata):
-    """ Register product. """
-    semantic = ["bands[1:%d]" % len(range_type)]
-    data_format = metadata.pop("format", None)
-
-    product = Product()
-    product.identifier = product_id
-    product.visible = False
-    product.range_type = range_type
-    product.srid = 4326
-    product.extent = (-180, -90, 180, 90)
-    for key, value in metadata.iteritems():
-        setattr(product, key, value)
-
-    product.full_clean()
+def set_product_collection(product, collection):
+    """ Set product collection. """
+    product.collection = collection
     product.save()
 
-    storage, package, format_, location = _get_location_chain([data_file])
-    format_ = data_format
-    data_item = DataItem(
-        location=location, format=format_ or "", semantic=semantic,
-        storage=storage, package=package,
-    )
-    data_item.dataset = product
-    data_item.full_clean()
-    data_item.save()
 
+def register_product(collection, identifier, data_file, metadata):
+    """ Register product. """
+    product = Product(identifier=identifier)
+    product.begin_time = metadata['begin_time']
+    product.end_time = metadata['end_time']
+    product.collection = collection
+    product.datasets = {
+        name: {"location": data_file}
+        for name in collection.type.definition['datasets']
+    }
+    product.save()
     return product
 
 
 def delete_product(product):
     """ Delete product object. """
     product.delete()
-
-
-def _get_location_chain(items):
-    component = BackendComponent(env)
-    storage = None
-    package = None
-
-    storage_type, url = _split_location(items[0])
-    if storage_type:
-        storage_component = component.get_storage_component(storage_type)
-    else:
-        storage_component = None
-
-    if storage_component:
-        storage, _ = Storage.objects.get_or_create(
-            url=url, storage_type=storage_type
-        )
-
-    # packages
-    for item in items[1 if storage else 0:-1]:
-        type_or_format, location = _split_location(item)
-        package_component = component.get_package_component(type_or_format)
-        if package_component:
-            package, _ = Package.objects.get_or_create(
-                location=location, format=format,
-                storage=storage, package=package
-            )
-            storage = None  # override here
-        else:
-            raise Exception(
-                "Could not find package component for format '%s'"
-                % type_or_format
-            )
-
-    format_, location = _split_location(items[-1])
-    return storage, package, format_, location
-
-
-def _split_location(item):
-    """ Splits string as follows: <format>:<location> where format can be
-        None.
-    """
-    idx = item.find(":")
-    return (None, item) if idx == -1 else (item[:idx], item[idx + 1:])

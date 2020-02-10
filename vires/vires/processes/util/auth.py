@@ -32,7 +32,7 @@ def get_username(request):
     or return None for unauthenticated user.
     """
     user = request.user
-    return user.username if user.is_authenticated() else None
+    return user.username if user.is_authenticated else None
 
 
 def get_user(username):

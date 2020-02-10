@@ -2,9 +2,7 @@
 #
 # Testing Auxiliary Data Handling
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,16 +24,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, invalid-name
+# pylint: disable=missing-docstring, invalid-name, too-many-arguments
 
 import unittest
 from os import remove
 from os.path import exists
-from StringIO import StringIO
+from io import StringIO
 from datetime import datetime, timedelta
-from numpy import (
-    arange, linspace, vectorize, isnan, logical_not, float64, array,
-)
+from numpy import arange, linspace, vectorize, isnan, logical_not, array
 from scipy.interpolate import interp1d
 from spacepy import pycdf
 

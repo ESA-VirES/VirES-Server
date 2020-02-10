@@ -25,7 +25,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,too-many-arguments,too-many-locals
+# pylint: disable=too-many-arguments,too-many-locals
 # pylint: disable=unused-argument,no-self-use,too-few-public-methods
 
 from datetime import datetime
@@ -122,7 +122,7 @@ class EvalModel(WPSProcess):
     def execute(self, model_expression, shc, variable, begin_time, end_time,
                 elevation, range_max, range_min, bbox, width, height,
                 style, output, **kwarg):
-        # get configurations
+        """ Execute process """
 
         # parse models and styles
         color_map = parse_style("style", style)

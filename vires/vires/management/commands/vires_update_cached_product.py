@@ -26,10 +26,8 @@
 #-------------------------------------------------------------------------------
 #pylint: disable=missing-docstring
 
-from logging import getLogger
-from django.conf import settings
+from logging import getLogger, DEBUG, Formatter, StreamHandler
 from django.core.management.base import BaseCommand, CommandError
-from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
 from vires.aux_kp import update_kp
 from vires.aux_dst import update_dst
 from vires.aux_f107 import update_aux_f107_2_
@@ -37,18 +35,21 @@ from vires.orbit_counter import update_orbit_counter_file
 from vires.model_mma import (
     merge_mma_sha_2f, filter_mma_sha_2f, merge_mma_sha_2c, filter_mma_sha_2c,
 )
+from vires.cache_util import cache_path
+from vires.data.vires_settings import (
+    SPACECRAFTS, AUX_DB_DST, AUX_DB_KP, CACHED_PRODUCT_FILE,
+)
 from vires.cached_products import (
     copy_file, update_cached_product, simple_cached_product_updater,
     InvalidSourcesError,
 )
 
 
-class Command(CommandOutputMixIn, BaseCommand):
-
+class Command(BaseCommand):
     help = """ Update cached product. """
 
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
+        super().add_arguments(parser)
         parser.add_argument(
             "product_type", help="Product type",
             choices=list(sorted(CACHED_PRODUCTS)),
@@ -58,6 +59,8 @@ class Command(CommandOutputMixIn, BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
+        logger = getLogger(__name__)
+        self._set_stream_handler(logger, level=DEBUG)
         product_type = kwargs['product_type']
         source = kwargs['source']
         product_info = CACHED_PRODUCTS[product_type]
@@ -68,10 +71,20 @@ class Command(CommandOutputMixIn, BaseCommand):
                 updater=product_info.get("updater", copy_file),
                 filter_=product_info.get("filter"),
                 tmp_extension=product_info.get("tmp_extension"),
-                logger=getLogger(__name__)
+                logger=logger,
             )
         except InvalidSourcesError as exc:
             raise CommandError(str(exc))
+
+    @staticmethod
+    def _set_stream_handler(logger, level=DEBUG):
+        """ Set stream handler to the logger. """
+        formatter = Formatter('%(levelname)s: %(module)s: %(message)s')
+        handler = StreamHandler()
+        handler.setLevel(level)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(min(level, logger.level))
 
 
 def configure_cached_product(product_type, **kwargs):
@@ -82,9 +95,8 @@ def configure_cached_product(product_type, **kwargs):
 
 # load the default cached products
 CACHED_PRODUCTS = {
-    product_type: {"filename": filename}
-    for product_type, filename
-    in getattr(settings, "VIRES_CACHED_PRODUCTS", {}).iteritems()
+    product_type: {"filename": cache_path(filename)}
+    for product_type, filename in CACHED_PRODUCT_FILE.items()
 }
 
 configure_cached_product(
@@ -114,7 +126,7 @@ configure_cached_product(
     tmp_extension=".tmp.cdf"
 )
 
-for spacecraft in getattr(settings, "VIRES_SPACECRAFTS", []):
+for spacecraft in SPACECRAFTS:
     configure_cached_product(
         "AUX%sORBCNT" % spacecraft,
         label="Swarm %s orbit counter" % spacecraft,
@@ -143,13 +155,13 @@ for spacecraft in getattr(settings, "VIRES_SPACECRAFTS", []):
 
 CACHED_PRODUCTS.update({
     "GFZ_AUX_DST": {
-        "filename": settings.VIRES_AUX_DB_DST,
+        "filename": cache_path(AUX_DB_DST),
         "label": 'Dst-index',
         "updater": simple_cached_product_updater(update_dst),
         "tmp_extension": ".tmp.cdf",
     },
     "GFZ_AUX_KP": {
-        "filename": settings.VIRES_AUX_DB_KP,
+        "filename": cache_path(AUX_DB_KP),
         "label": 'Kp-index',
         "updater": simple_cached_product_updater(update_kp),
         "tmp_extension": ".tmp.cdf",

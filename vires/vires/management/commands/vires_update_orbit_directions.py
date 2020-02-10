@@ -26,34 +26,38 @@
 #-------------------------------------------------------------------------------
 #pylint: disable=missing-docstring,broad-except
 
-import re
+import sys
+#import re
 from logging import getLogger
+from traceback import print_exc
 from datetime import timedelta
-from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
-from eoxserver.backends.access import connect
-from eoxserver.resources.coverages.management.commands import CommandOutputMixIn
+from django.core.management.base import BaseCommand
 from vires.cdf_util import cdf_open
 from vires.time_util import naive_to_utc
 from vires.models import ProductCollection, Product
-from vires.management.commands import cache_session
 from vires.orbit_direction_update import (
     OrbitDirectionTables, DataIntegrityError,
 )
+from vires.cache_util import cache_path
+from vires.data.vires_settings import (
+    ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
+)
+from ._common import ConsoleOutput
 
 
 TIMEDELTA_MAX = timedelta(seconds=1.5)
 TIMEDELTA_MIN = timedelta(seconds=0.5)
-RE_MAG_LR_PRODUCT = re.compile(r"^(SW_OPER_MAG([A-Z])_LR_1B)_.*_MDR_MAG_LR$")
-RE_MAG_LR_COLLECTION = re.compile(r"^(SW_OPER_MAG([A-Z])_LR_1B)$")
+#RE_MAG_LR_PRODUCT = re.compile(r"^(SW_OPER_MAG([A-Z])_LR_1B)_.*_MDR_MAG_LR$")
+#RE_MAG_LR_COLLECTION = re.compile(r"^(SW_OPER_MAG([A-Z])_LR_1B)$")
 
 
-class Command(CommandOutputMixIn, BaseCommand):
+class Command(ConsoleOutput, BaseCommand):
+    logger = getLogger(__name__)
 
     help = """ Update orbit direction lookup tables. """
 
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
+        super().add_arguments(parser)
         parser.add_argument("product_id", nargs="*")
         parser.add_argument(
             "-c", "--collection", dest="collection_id", required=True,
@@ -72,9 +76,8 @@ class Command(CommandOutputMixIn, BaseCommand):
             )
         )
 
-    @cache_session
     def handle(self, *args, **kwargs):
-        print_command = lambda msg: self.print_msg(msg, 1)
+        #print_command = lambda msg: self.info(msg)
 
         collection_id = kwargs['collection_id']
         collection = get_collection(collection_id)
@@ -91,7 +94,7 @@ class Command(CommandOutputMixIn, BaseCommand):
                 counter, collection, kwargs['product_id'], **kwargs
             )
 
-        counter.print_report(print_command)
+        counter.print_report(lambda msg: print(msg, file=sys.stderr))
 
     def update_from_products(self, counter, collection, product_ids, **kwargs):
         """ update orbit direction table from a list of products. """
@@ -106,25 +109,26 @@ class Command(CommandOutputMixIn, BaseCommand):
             try:
                 processed = _update_from_product(product_id)
             except DataIntegrityError as error:
-                self.print_wrn(str(error))
+                self.warning(str(error))
                 self.update_collection(counter, collection)
             except Exception as error:
-                self.print_traceback(error, kwargs)
-                self.print_err(
-                    "Processing of %s failed! Reason: %s" % (product_id, error)
+                if kwargs.get('traceback'):
+                    print_exc(file=sys.stderr)
+                self.error(
+                    "Processing of %s failed! Reason: %s", product_id, error
                 )
                 counter.increment_failed()
             else:
                 if processed:
                     counter.increment_processed()
-                    self.print_msg(
-                        "%s orbit direction lookup table extracted" % product_id
+                    self.info(
+                        "%s orbit direction lookup table extracted", product_id
                     )
                 else:
                     counter.increment_skipped()
-                    self.print_msg(
-                        "%s orbit direction lookup table extraction skipped"
-                        "" % product_id
+                    self.info(
+                        "%s orbit direction lookup table extraction skipped",
+                        product_id
                     )
             finally:
                 counter.increment()
@@ -139,15 +143,6 @@ class Command(CommandOutputMixIn, BaseCommand):
         """
         rebuild_orbit_direction_tables(collection, logger=self, counter=counter)
 
-    def info(self, format_, *args):
-        self.print_msg(format_ % args)
-
-    def warn(self, format_, *args):
-        self.print_msg(format_ % args)
-
-    def error(self, format_, *args):
-        self.print_msg(format_ % args)
-
 
 def sync_orbit_direction_tables(collection, logger=None, counter=None):
     """ Sync orbit direction lookup tables for the given collection. """
@@ -159,9 +154,8 @@ def sync_orbit_direction_tables(collection, logger=None, counter=None):
         counter = Counter()
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(
-            collection_to_spacecraft(collection.identifier)
-        ), logger=logger
+        *get_orbit_direction_tables(collection.metadata.get('spacecraft', '-')),
+        logger=logger
     )
 
     logger.info(
@@ -202,14 +196,13 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
         counter = Counter()
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(
-            collection_to_spacecraft(collection.identifier)
-        ), reset=True, logger=logger
+        *get_orbit_direction_tables(collection.metadata.get('spacecraft', '-')),
+        reset=True, logger=logger
     )
 
     collection = get_collection(collection.identifier)
     if collection is None:
-        logger.warn(
+        logger.warning(
             "Collection %s does not exist! Blank orbit "
             "direction lookup tables will be saved.", collection.identifier
         )
@@ -242,7 +235,7 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
             last_end_time = end_time
             counter.increment_processed()
         else:
-            logger.warn(
+            logger.warning(
                 "%s orbit direction lookup table extraction skipped",
                 product.identifier
             )
@@ -255,15 +248,10 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
 
 def update_orbit_direction_tables(collection, product):
     """ Update orbit direction tables from product and collection. """
-    if collection.range_type != product.range_type:
-        raise ValueError(
-            "The product range type does not match the collection range type!"
-        )
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(
-            collection_to_spacecraft(collection.identifier)
-        ), logger=getLogger(__name__)
+        *get_orbit_direction_tables(collection.metadata.get('spacecraft', '-')),
+        logger=getLogger(__name__)
     )
 
     def _check_neighbour_product(product):
@@ -321,26 +309,17 @@ def get_orbit_direction_tables(spacecraft):
     """ Get orbit direction tables for the given spacecraft identifier. """
     try:
         return (
-            settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft],
-            settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft],
+            cache_path(ORBIT_DIRECTION_GEO_FILE[spacecraft]),
+            cache_path(ORBIT_DIRECTION_MAG_FILE[spacecraft]),
         )
     except KeyError:
         raise ValueError("Invalid spacecraft identifier %s!" % spacecraft)
 
 
-def collection_to_spacecraft(collection_id):
-    try:
-        return settings.VIRES_COL2SAT[collection_id]
-    except KeyError:
-        raise ValueError(
-            "Cannot determine spacecraft for collection %s" % collection_id
-        )
-
-
 def find_product_by_time_interval(collection, begin_time, end_time):
     """ Locate product matched by the given time interval. """
     return _find_product(
-        collection.eo_objects,
+        collection.products,
         begin_time__lte=naive_to_utc(end_time),
         end_time__gte=naive_to_utc(begin_time)
     )
@@ -352,24 +331,20 @@ def find_product_by_id(product_id):
 
 
 def _find_product(query_set, **filters):
-    products = [
-        item.cast() for item in query_set.filter(**filters)[:1]
-        if item.iscoverage
-    ]
+    products = list(
+        query_set.prefetch_related('collection__type').filter(**filters)[:1]
+    )
     return products[0] if products else None
 
 
 def list_collection(collection):
     """ Locate product matched by the given time interval. """
-    return (
-        item.cast() for item in collection.eo_objects.order_by("begin_time")
-        if item.iscoverage
-    )
+    return collection.products.order_by("begin_time")
 
 
 def get_data_file(product):
     """ Get product data file. """
-    return connect(product.data_items.all()[0])
+    return product.get_location()
 
 
 def get_collection(collection_id):
@@ -389,7 +364,7 @@ def get_product_id_and_time_range(data_file):
         return str(cdf.attrs['TITLE']), cdf['Timestamp'][0], cdf['Timestamp'][-1]
 
 
-class Counter(object):
+class Counter():
 
     def __init__(self):
         self._total = 0

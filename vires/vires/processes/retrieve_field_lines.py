@@ -25,11 +25,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,too-many-arguments,too-many-locals
+# pylint: disable=too-many-arguments,too-many-locals
 # pylint: disable=too-few-public-methods,no-self-use,unused-argument
 
 from collections import defaultdict
-from cStringIO import StringIO
+from io import BytesIO
 from datetime import datetime
 import msgpack
 from numpy import empty, linspace, meshgrid, asarray
@@ -121,6 +121,7 @@ class RetrieveFieldLines(WPSProcess):
 
     def execute(self, model_ids, shc, time, height, bbox, lines_per_col,
                 lines_per_row, output, **kwarg):
+        """ Execute process. """
         # parse model and style
         models, _ = parse_model_list("model_ids", model_ids, shc)
 
@@ -164,9 +165,9 @@ class RetrieveFieldLines(WPSProcess):
                 for point in coord_geo.reshape((n_lines, 3)):
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
-                        "%s=%s field line " % (model.name, model.full_expression),
-                        self.logger
-                    ) as etl:
+                            "%s=%s field line " % (model.name, model.full_expression),
+                            self.logger
+                        ) as etl:
                         line_coords, line_field = trace_field_line(
                             model.model, mjd2000, point,
                             GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN,
@@ -204,13 +205,12 @@ class RetrieveFieldLines(WPSProcess):
 
         if output['mime_type'] == "application/json":
             return self._write_json(field_lines, info, output)
-        elif output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
+        if output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
             return self._write_msgpack(field_lines, info, output)
-        else:
-            raise InvalidOutputDefError(
-                'output',
-                "Unexpected output format %r requested!" % output['mime_type']
-            )
+        raise InvalidOutputDefError(
+            'output',
+            "Unexpected output format %r requested!" % output['mime_type']
+        )
 
     @classmethod
     def _write_json(cls, field_lines, info, output):
@@ -220,7 +220,7 @@ class RetrieveFieldLines(WPSProcess):
     @classmethod
     def _write_msgpack(cls, field_lines, info, output):
         result = cls._serialize(field_lines, info)
-        output_fobj = StringIO()
+        output_fobj = BytesIO()
         msgpack.pack(result, output_fobj)
         return CDFileWrapper(output_fobj, **output)
 

@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-few-public-methods, missing-docstring
+#pylint: disable=too-few-public-methods
 
 from os.path import basename
 from logging import getLogger
@@ -59,7 +59,7 @@ LCS1_SOURCE = basename(LCS1)
 MF7_SOURCE = basename(MF7)
 
 
-class ModelFactory(object):
+class ModelFactory():
     """ Model factory class. """
     def __init__(self, loader, model_files):
         self.loader = loader
@@ -86,7 +86,7 @@ class ModelFactory(object):
         return [model_file.sources for model_file in self.model_files]
 
 
-class ModelCache(object):
+class ModelCache():
     """ Model cache class. """
     def __init__(self, model_factories, model_aliases=None, logger=None):
         self.logger = logger or getLogger(__name__)
@@ -135,7 +135,7 @@ def shc_validity_reader(filename):
 
 def _shc_validity_reader(filename, to_mjd2000):
     """ Low-level SHC model validity reader. """
-    with open(filename, "rb") as file_in:
+    with open(filename) as file_in:
         header = parse_shc_header(file_in)
     return (
         to_mjd2000(header["validity_start"]), to_mjd2000(header["validity_end"])

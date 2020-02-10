@@ -24,15 +24,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-few-public-methods, missing-docstring
+#pylint: disable=too-few-public-methods
 
 from numpy import asarray
-from django.conf import settings
 from vires.util import cached_property
 from vires.cdf_util import cdf_open, cdf_rawtime_to_mjd2000, CDF_EPOCH_TYPE
+from vires.cache_util import cache_path
+from vires.data.vires_settings import CACHED_PRODUCT_FILE
 
 
-class BaseModelFile(object):
+class BaseModelFile():
     """ Base model file object. """
     @property
     def filename(self):
@@ -59,10 +60,10 @@ class ModelFileCached(BaseModelFile):
 
     @cached_property
     def filename(self):
-        return settings.VIRES_CACHED_PRODUCTS[self._cache_id]
+        return cache_path(CACHED_PRODUCT_FILE[self._cache_id])
 
 
-class BaseModelSource(object):
+class BaseModelSource():
     """ Base model source class. """
     @property
     def sources(self):

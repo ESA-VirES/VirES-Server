@@ -26,14 +26,13 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments,too-many-locals,too-many-branches
-# pylint: disable=too-many-statements,unused-argument,missing-docstring
+# pylint: disable=too-many-statements,unused-argument
 
-from itertools import chain, izip
+from itertools import chain
 from datetime import datetime, timedelta
-from cStringIO import StringIO
-from numpy import full, nan
+from io import StringIO, BytesIO
+from numpy import nan, full
 import msgpack
-from django.conf import settings
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, BoundingBoxData, ComplexData, FormatText, FormatJSON,
     CDFileWrapper, FormatBinaryRaw, CDObject, RequestParameter,
@@ -41,14 +40,19 @@ from eoxserver.services.ows.wps.parameters import (
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
 )
+from vires.models import ProductCollection
 from vires.util import unique, exclude
 from vires.time_util import (
-    naive_to_utc,
-    timedelta_to_iso_duration,
+    naive_to_utc, timedelta_to_iso_duration,
 )
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
     timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE,
+)
+from vires.cache_util import cache_path
+from vires.data.vires_settings import (
+    CACHED_PRODUCT_FILE, AUX_DB_KP, AUX_DB_DST, SPACECRAFTS,
+    ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
@@ -253,23 +257,25 @@ class FetchData(WPSProcess):
                 spacecraft: [
                     OrbitCounter(
                         "OrbitCounter" + spacecraft,
-                        settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
+                        cache_path(ORBIT_COUNTER_FILE[spacecraft])
                     ),
                     OrbitDirection(
                         "OrbitDirection" + spacecraft,
-                        settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
+                        cache_path(ORBIT_DIRECTION_GEO_FILE[spacecraft])
                     ),
                     QDOrbitDirection(
                         "QDOrbitDirection" + spacecraft,
-                        settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft]
+                        cache_path(ORBIT_DIRECTION_MAG_FILE[spacecraft])
                     ),
                 ]
-                for spacecraft in settings.VIRES_SPACECRAFTS
+                for spacecraft in SPACECRAFTS
             }
-            index_kp10 = IndexKp10(settings.VIRES_AUX_DB_KP)
-            index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
-            index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
-            index_imf = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+            index_kp10 = IndexKp10(cache_path(AUX_DB_KP))
+            index_dst = IndexDst(cache_path(AUX_DB_DST))
+            index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
+            index_imf = ProductTimeSeries(
+                ProductCollection.objects.get(type__identifier="SW_AUX_IMF_2_")
+            )
             model_kp = IndexKpFromKp10()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
@@ -297,7 +303,7 @@ class FetchData(WPSProcess):
                     )
 
             # resolving variable dependencies for each label separately
-            for label, product_sources in sources.iteritems():
+            for label, product_sources in sources.items():
                 resolvers[label] = resolver = VariableResolver()
 
                 # master
@@ -312,13 +318,13 @@ class FetchData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                     # extra sampling for selected collections
-                    if slave.collection_identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
+                    if slave.metadata.get('extraSampled'):
                         resolver.add_filter(ExtraSampler(
                             'Timestamp', slave.collection_identifier, slave
                         ))
 
                 # optional sample grouping
-                if master.collection_identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
+                if master.metadata.get('groupSamples'):
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
@@ -326,9 +332,7 @@ class FetchData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
-                spacecraft = settings.VIRES_COL2SAT.get(
-                    master.collection_identifier
-                )
+                spacecraft = master.metadata.get('spacecraft')
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
 
                 if spacecraft and spacecraft != "U":
@@ -401,7 +405,7 @@ class FetchData(WPSProcess):
         def _generate_data_():
             total_count = 0
 
-            for label, resolver in resolvers.iteritems():
+            for label, resolver in resolvers.items():
                 collection_count = 0
 
                 all_variables = resolver.required
@@ -464,14 +468,12 @@ class FetchData(WPSProcess):
 
         if output['mime_type'] == "text/csv":
             # write the output
-            output_fobj = StringIO()
+            output_fobj = StringIO(newline="\r\n")
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
             if sources:
                 # write CSV header
-                output_fobj.write("id,")
-                output_fobj.write(",".join(output_variables))
-                output_fobj.write("\r\n")
+                print("id,%s" % ",".join(output_variables), file=output_fobj)
 
             for label, dataset in _generate_data_():
                 formatters = []
@@ -491,19 +493,18 @@ class FetchData(WPSProcess):
                 format_ = ",".join(
                     "nan" if item is None else "%s" for item in data
                 )
+                format_ = "%s,%s" % (label, format_)
                 # iterate the rows and write the CSV records
-                label_prefix = "%s," % label
-                for row in izip(*(item for item in data if item is not None)):
-                    output_fobj.write(label_prefix)
-                    output_fobj.write(
-                        format_ % tuple(f(v) for f, v in zip(formatters, row))
+                for row in zip(*(item for item in data if item is not None)):
+                    print(
+                        format_ % tuple(f(v) for f, v in zip(formatters, row)),
+                        file=output_fobj
                     )
-                    output_fobj.write("\r\n")
 
             http_headers = ()
             return CDFileWrapper(output_fobj, headers=http_headers, **output)
 
-        elif output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
+        if output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
 
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
@@ -547,13 +548,13 @@ class FetchData(WPSProcess):
                 },
             }
             # encode as messagepack
-            encoded = StringIO(msgpack.dumps(output_dict))
+            encoded = BytesIO(msgpack.dumps(output_dict))
 
             return CDObject(
                 encoded, filename="swarm_data.mp", **output
             )
-        else:
-            raise InvalidOutputDefError(
-                'output',
-                "Unexpected output format %r requested!" % output['mime_type']
-            )
+
+        raise InvalidOutputDefError(
+            'output',
+            "Unexpected output format %r requested!" % output['mime_type']
+        )
