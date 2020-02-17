@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Variable Dependency Resolver
+# Variable dependency resolver
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2017 EOX IT Services GmbH
 #
@@ -27,14 +25,14 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes, missing-docstring
 
 from collections import OrderedDict, defaultdict
 from itertools import chain
 from vires.util import unique
 from .filters import RejectAll
-from .model import Model
 from .time_series import TimeSeries
+from .models import Model
 
 
 def extract_product_names(resolvers):

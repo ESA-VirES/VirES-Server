@@ -2,9 +2,7 @@
 #
 # Process Utilities - Input Parsers
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,27 +24,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,import-error
+# pylint: disable=missing-docstring,too-many-branches,unused-argument
+
 import re
 from collections import OrderedDict
 from eoxmagmod import load_model_shc
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.colormaps import get_colormap
 from vires.models import ProductCollection
+from vires.magnetic_models import MODEL_CACHE
 from vires.parsers.exceptions import ParserError
 from vires.parsers.model_list_parser import get_model_list_parser
 from vires.parsers.model_list_lexer import get_model_list_lexer
 from vires.parsers.model_expression_parser import get_model_expression_parser
 from vires.parsers.model_expression_lexer import get_model_expression_lexer
-from .time_series_product import ProductTimeSeries
-from .time_series_custom_data import CustomDatasetTimeSeries
-from .model_magmod import SourceMagneticModel, ComposedMagneticModel
+from .time_series import ProductTimeSeries, CustomDatasetTimeSeries
+from .models import SourceMagneticModel, ComposedMagneticModel
 from .filters import ScalarRangeFilter, VectorComponentRangeFilter
-from .magnetic_models import MODEL_CACHE
 
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
-RE_RESIDUAL_VARIABLE = re.compile(r'(.+)_res([ABC])([ABC])')
+RE_SUBTRACTED_VARIABLE = re.compile(r'(.+)_(?:res|diff)([ABC])([ABC])')
 
 
 def parse_style(input_id, style):
@@ -123,7 +121,7 @@ def parse_collections(input_id, source, custom_dataset=None, user=None):
         # collect slave range-types
         slave_rtypes = []
 
-        # for one label multiple collections of the same renge-type not allowed
+        # for one label multiple collections of the same range-type not allowed
         for rtype in (collection.range_type for collection in collections[1:]):
             if rtype == master_rtype or rtype in slave_rtypes:
                 raise InvalidInputValueError(
@@ -337,10 +335,10 @@ def parse_variables(input_id, variables_strings):
     ] if variables_strings else []
 
 
-def get_residual_variables(variables):
-    """ Extract residual variables from a list of all variables. """
+def get_subtracted_variables(variables):
+    """ Extract subtracted variables from a list of all variables. """
     return [
         (variable, match.groups()) for variable, match in (
-            (var, RE_RESIDUAL_VARIABLE.match(var)) for var in variables
+            (var, RE_SUBTRACTED_VARIABLE.match(var)) for var in variables
         ) if match
     ]

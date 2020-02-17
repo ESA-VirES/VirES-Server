@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Data Source - SWARM Orbit Counter time-series class
+# Data Source - Swarm orbit counter time-series class
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -26,10 +24,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring,too-few-public-methods
 
 from vires.cdf_util import CDF_INT1_TYPE, CDF_EPOCH_TYPE
 from vires.orbit_direction import OrbitDirectionReader
-from .time_series_aux import AuxiliaryDataTimeSeries
+from .auxiliary_data import AuxiliaryDataTimeSeries
 
 
 class OrbitDirection(AuxiliaryDataTimeSeries):

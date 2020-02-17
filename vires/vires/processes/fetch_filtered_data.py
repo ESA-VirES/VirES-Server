@@ -2,10 +2,8 @@
 #
 # WPS fetch filtered download data
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #          Daniel Santillan <daniel.santillan@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -27,8 +25,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments, too-many-locals, too-many-branches,
-# pylint: disable=too-many-branches, too-many-statements
+# pylint: disable=too-many-arguments,too-many-locals,too-many-branches,
+# pylint: disable=too-many-statements,unused-argument,missing-docstring
 
 from os import remove
 from os.path import join, exists
@@ -57,14 +55,23 @@ from vires.cdf_util import (
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters2,
-    IndexKp10, IndexKpFromKp10, IndexDst, IndexF107,
-    OrbitCounter, ProductTimeSeries,
-    MinStepSampler, GroupingSampler, ExtraSampler,
-    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
-    VariableResolver, SpacecraftLabel, SunPosition, SubSolarPoint,
-    Sat2SatResidual, group_residual_variables, get_residual_variables,
-    MagneticDipole, DipoleTiltAngle, OrbitDirection, QDOrbitDirection,
+    VariableResolver, group_subtracted_variables, get_subtracted_variables,
     extract_product_names,
+)
+from vires.processes.util.time_series import (
+    ProductTimeSeries,
+    IndexKp10, IndexDst, IndexF107,
+    OrbitCounter, OrbitDirection, QDOrbitDirection,
+)
+from vires.processes.util.models import (
+    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
+    SpacecraftLabel, SunPosition, SubSolarPoint,
+    SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
+    IndexKpFromKp10,
+    BnecToF,
+)
+from vires.processes.util.filters import (
+    MinStepSampler, GroupingSampler, ExtraSampler,
 )
 
 # TODO: Make the limits configurable.
@@ -252,6 +259,7 @@ class FetchFilteredData(WPSProcess):
             index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
             index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
             index_imf = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+            model_bnec_intensity = BnecToF()
             model_kp = IndexKpFromKp10()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
@@ -319,22 +327,23 @@ class FetchFilteredData(WPSProcess):
                     resolver.add_slave(item, 'Timestamp')
 
                 # prepare spacecraft to spacecraft differences
-                residual_variables = get_residual_variables(unique(chain(
+                subtracted_variables = get_subtracted_variables(unique(chain(
                     requested_variables, chain.from_iterable(
                         filter_.required_variables for filter_ in filters
                     )
                 )))
                 self.logger.debug("residual variables: %s", ", ".join(
-                    var for var, _ in residual_variables
+                    var for var, _ in subtracted_variables
                 ))
-                grouped_res_vars = group_residual_variables(
-                    product_sources, residual_variables
+                grouped_diff_vars = group_subtracted_variables(
+                    product_sources, subtracted_variables
                 )
-                for (msc, ssc), cols in grouped_res_vars.items():
-                    resolver.add_model(Sat2SatResidual(msc, ssc, cols))
+                for (msc, ssc), cols in grouped_diff_vars.items():
+                    resolver.add_model(SatSatSubtraction(msc, ssc, cols))
 
                 # models
                 aux_models = chain((
+                    model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals)

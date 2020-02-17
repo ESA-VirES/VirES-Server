@@ -1,11 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# Data retrieval WPS process
+# WPS process fetching plasma bubbles time intervals.
 #
-# Project: VirES
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
 #          Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -27,43 +25,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments, too-many-locals, missing-docstring
-# pylint: disable=too-many-statements, no-self-use
+# pylint: disable=no-self-use,unused-argument
 
-from collections import OrderedDict
-from datetime import datetime, timedelta
-from itertools import izip
-from cStringIO import StringIO
-from numpy import arange
+
+import csv
+import re
+from datetime import datetime
+from numpy import concatenate
+from eoxserver.core.util.timetools import isoformat
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData, FormatText, CDFileWrapper,
+    LiteralData, ComplexData, CDTextBuffer, FormatText
 )
-from eoxserver.backends.access import connect
-from vires.util import datetime_array_slice
-from vires.time_util import naive_to_utc
-from vires.cdf_util import (
-    cdf_open, cdf_rawtime_to_mjd2000,
-    cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
-)
-from vires.models import ProductCollection, Product
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from vires.models import ProductCollection
+from vires.cdf_util import cdf_rawtime_to_datetime
 from vires.processes.base import WPSProcess
+from vires.processes.util.time_series import ProductTimeSeries
 
-REQUIRED_FIELDS = [
-    "Timestamp", "Bubble_Probability",
-]
-
-# time selection tolerance
-TIME_TOLERANCE = timedelta(microseconds=10)
-
-CDF_RAW_TIME_CONVERTOR = {
-    "ISO date-time": cdf_rawtime_to_datetime,
-    "MJD2000": cdf_rawtime_to_mjd2000,
-    "Unix epoch": cdf_rawtime_to_unix_epoch,
-}
+TIME_VARIABLE = "Timestamp"
+DATA_VARIABLE = "Bubble_Probability"
+BUBBLE_PROBABILITY_THRESHOLD = 0.1
+RE_COLLECTION_ID = re.compile("SW_OPER_IBI[ABC]TMS_2F")
 
 
 class RetrieveBubbleIndex(WPSProcess):
-    """ Process for retriving information of timespans covered by bubbles
+    """ Process for retrieving information of time-spans covered by bubbles.
     """
     identifier = "retrieve_bubble_index"
     title = "Retrieve filtered Swarm data."
@@ -94,126 +80,54 @@ class RetrieveBubbleIndex(WPSProcess):
     ]
 
     def execute(self, collection_id, begin_time, end_time, output, **kwarg):
+        """ Execute process. """
 
-        # fix the time-zone of the naive date-time
-        begin_time = naive_to_utc(begin_time)
-        end_time = naive_to_utc(end_time)
+        try:
+            if not RE_COLLECTION_ID.match(collection_id):
+                raise ProductCollection.DoesNotExist
 
-        output_fobj = StringIO()
-
-        collection = ProductCollection.objects.filter(
-            identifier=collection_id
-        )
-
-        # TODO: assert that the range_type is equal for collection
-        # prepare fields
-        data_fields = [
-            field.identifier for field in collection[0].range_type
-            if field.identifier in REQUIRED_FIELDS
-        ]
-
-        # write CSV header flag
-        initialize = True
-
-        products_qs = Product.objects.filter(
-            collections__identifier=collection_id,
-            begin_time__lte=(end_time + TIME_TOLERANCE),
-            end_time__gte=(begin_time - TIME_TOLERANCE),
-        ).order_by('begin_time')
-
-        for product in (item.cast() for item in products_qs):
-
-            time_first, time_last = product.time_extent
-            low, high = datetime_array_slice(
-                begin_time, end_time, time_first, time_last,
-                product.sampling_period, TIME_TOLERANCE
+            time_series = ProductTimeSeries(
+                ProductCollection.objects.get(identifier=collection_id)
+            )
+        except ProductCollection.DoesNotExist:
+            raise InvalidInputValueError(
+                "collection_id",
+                "Invalid collection identifier %r!" % collection_id
             )
 
-            data, _, cdf_type = self.handle(
-                product, data_fields, low, high, 1
-            )
+        def _generate_pairs():
+            variables = [TIME_VARIABLE, DATA_VARIABLE]
+            for dataset in time_series.subset(begin_time, end_time, variables):
+                if dataset.length == 0:
+                    continue
+                cdf_type = dataset.cdf_type[TIME_VARIABLE]
+                time = dataset[TIME_VARIABLE]
+                data = dataset[DATA_VARIABLE]
 
-            # convert the time format
-            data['Timestamp'] = (
-                CDF_RAW_TIME_CONVERTOR["ISO date-time"](
-                    data['Timestamp'], cdf_type['Timestamp']
-                )
-            )
+                flag = (data > BUBBLE_PROBABILITY_THRESHOLD).astype('int')
+                change = flag[1:] - flag[:-1]
+                starts = (change == +1).nonzero()[0] + 1
+                ends = (change == -1).nonzero()[0]
 
-            if initialize:
-                output_fobj.write(','.join(
-                    '"{0}"'.format(w)
-                    for w in ["starttime", "endtime", "bbox", "identifier"]
-                ))
-                output_fobj.write("\r\n")
-                initialize = False
+                if flag[0] == 1:
+                    starts = concatenate(([0], starts))
+                if flag[-1] == 1:
+                    ends = concatenate((ends, [flag.size - 1]))
 
-            start = False
-            previoustime = 0
-
-            for row in izip(*data.itervalues()):
-
-                if not start:
-                    start = row[0]
-                    dif = timedelta(seconds=1)
-                else:
-                    dif = row[0]-previoustime
-
-                if dif != timedelta(seconds=1):
-                    output_fobj.write(
-                        ','.join('"{0}"'.format(w) for w in [
-                            (start.isoformat("T") + "Z"),
-                            (previoustime.isoformat("T") + "Z"),
-                            "(0,0,0,0)", collection_id
-                        ])
+                for start, end in zip(starts, ends):
+                    yield (
+                        cdf_rawtime_to_datetime(time[start], cdf_type),
+                        cdf_rawtime_to_datetime(time[end], cdf_type),
+                        dataset.source
                     )
-                    output_fobj.write("\r\n")
-                    start = row[0]
 
-                previoustime = row[0]
+        output = CDTextBuffer()
+        writer = csv.writer(output, quoting=csv.QUOTE_ALL)
+        writer.writerow(["starttime", "endtime", "bbox", "identifier"])
 
-            # Write last "saved" time into response if product contained data,
-            # meaning start is not a boolean
-            if start:
-                output_fobj.write(
-                    ','.join('"{0}"'.format(w) for w in [
-                        (start.isoformat("T") + "Z"),
-                        (previoustime.isoformat("T") + "Z"),
-                        "(0,0,0,0)", collection_id
-                    ])
-                )
-                output_fobj.write("\r\n")
+        envelope = "(-90,-180,90,180)"
 
+        for start, end, id_ in _generate_pairs():
+            writer.writerow([isoformat(start), isoformat(end), envelope, id_])
 
-        return CDFileWrapper(output_fobj, **output)
-
-    def handle(self, product, fields, low, high, step):
-        """ Single product retrieval. """
-
-        # read initial subset of the CDF data
-        cdf_type = {}
-        data = OrderedDict()
-
-        with cdf_open(connect(product.data_items.all()[0])) as cdf:
-            for field in fields:
-                cdf_var = cdf.raw_var(field)
-                cdf_type[field] = cdf_var.type()
-
-                if "Bubble_Probability" in fields:
-                    step = 1
-
-                data[field] = cdf_var[low:high:step]
-
-
-            # Some tests filtering out data not flagged with bubble index
-            if "Bubble_Probability" in fields:
-                # initialize indices
-                index = arange(len(data['Bubble_Probability']))
-                # filter the indices
-                index = index[data["Bubble_Probability"][index] >= 0.1]
-                # data update
-                data = OrderedDict(
-                    (field, values[index]) for field, values in data.iteritems()
-                )
-
-        return data, len(data['Timestamp']), cdf_type
+        return output

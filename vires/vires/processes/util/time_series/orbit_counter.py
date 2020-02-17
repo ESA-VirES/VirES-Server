@@ -2,9 +2,7 @@
 #
 # Data Source - SWARM Orbit Counter time-series class
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,13 +24,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring,too-few-public-methods
 
 from vires.cdf_util import (
     CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDF_INT1_TYPE, CDF_INT4_TYPE,
 )
 from vires.cdf_util import mjd2000_to_cdf_rawtime
 from vires.orbit_counter import OrbitCounterReader
-from .time_series_aux import AuxiliaryDataTimeSeries
+from .auxiliary_data import AuxiliaryDataTimeSeries
 
 
 class OrbitCounter(AuxiliaryDataTimeSeries):

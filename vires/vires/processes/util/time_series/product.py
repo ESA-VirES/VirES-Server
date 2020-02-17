@@ -2,9 +2,7 @@
 #
 # Data Source - product time-series class
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -27,7 +25,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-locals, too-many-arguments, too-few-public-methods
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes,missing-docstring
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
@@ -40,7 +38,7 @@ from vires.cdf_util import (
 from vires.time_util import naive_to_utc
 from vires.models import Product, ProductCollection
 from vires.dataset import Dataset
-from .time_series import TimeSeries
+from .base import TimeSeries
 
 
 class SwarmDefaultParameters(object):
@@ -341,6 +339,8 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 dataset = self._extract_dataset(cdf, variables, low, high)
 
             self.logger.debug("dataset length: %s ", dataset.length)
+
+            dataset.source = product.identifier # record source product
 
             yield dataset
             counter += 1
