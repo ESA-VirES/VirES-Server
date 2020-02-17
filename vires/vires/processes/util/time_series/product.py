@@ -370,6 +370,8 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
             self.logger.debug("dataset length: %s ", dataset.length)
 
+            dataset.source = product.identifier # record source product
+
             yield dataset
             counter += 1
 
