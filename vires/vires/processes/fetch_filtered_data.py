@@ -579,7 +579,7 @@ class FetchFilteredData(WPSProcess):
                         "%s = %s" % (model.name, model.full_expression)
                         for model in requested_models
                     ],
-                    "SOURCES": sources.keys(),
+                    "SOURCES": list(sources.keys()),
                     "ORIGINAL_PRODUCT_NAMES": product_names,
                 })
 
