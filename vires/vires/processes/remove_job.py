@@ -30,6 +30,7 @@ from eoxserver.services.ows.wps.parameters import RequestParameter, LiteralData
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from eoxserver.services.ows.wps.v10.execute import WPS10ExecuteHandler
 from vires.models import Job
+from vires.processes.base import WPSProcess
 
 
 def get_wps_async_backend():
@@ -37,7 +38,7 @@ def get_wps_async_backend():
     return WPS10ExecuteHandler().get_async_backend()
 
 
-class RemoveJob():
+class RemoveJob(WPSProcess):
     """ This utility process removes an asynchronous WPS  job owned
     by the current user.
     """
@@ -45,7 +46,7 @@ class RemoveJob():
     metadata = {}
     profiles = ["vires-util"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ('user', RequestParameter(lambda request: request.user)),
         ('job_id', LiteralData('job_id', str, title="Job Identifier")),
     ]
@@ -54,12 +55,16 @@ class RemoveJob():
 
     def execute(self, user, job_id, **kwargs):
         """ Execute process. """
+        access_logger = self.get_access_logger(**kwargs)
+
         # find job removal candidates
         owner = user if user.is_authenticated else None
         try:
             job = Job.objects.get(owner=owner, identifier=job_id)
         except Job.DoesNotExist:
             raise InvalidInputValueError('job_id')
+
+        access_logger.info("request: job: %s", job_id)
 
         get_wps_async_backend().purge(job.identifier)
         job.delete()

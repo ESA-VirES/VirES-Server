@@ -52,7 +52,7 @@ class GetModelInfo(WPSProcess):
     metadata = {}
     profiles = ["vires"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ("model_ids", LiteralData(
             'model_ids', str, optional=True, default=None,
             title="Model identifiers",
@@ -82,13 +82,17 @@ class GetModelInfo(WPSProcess):
         )),
     ]
 
-    def execute(self, model_ids, shc, output, **kwarg):
+    def execute(self, model_ids, shc, output, **kwargs):
         """ Execute process """
+        access_logger = self.get_access_logger(**kwargs)
+
         # parse inputs
         if model_ids is None:
             model_ids = DEFAULT_MODEL_IDS
 
         models, _ = parse_model_list("model_ids", model_ids, shc)
+
+        access_logger.info("request: models: (%s), ", model_ids)
 
         if output['mime_type'] == "text/csv":
             return self._csv_output(models, output)

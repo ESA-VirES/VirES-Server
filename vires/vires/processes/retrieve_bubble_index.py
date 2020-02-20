@@ -37,6 +37,7 @@ from eoxserver.services.ows.wps.parameters import (
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
+from vires.time_util import naive_to_utc
 from vires.cdf_util import cdf_rawtime_to_datetime
 from vires.processes.base import WPSProcess
 from vires.processes.util.time_series import ProductTimeSeries
@@ -54,7 +55,7 @@ class RetrieveBubbleIndex(WPSProcess):
     metadata = {}
     profiles = ["vires"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ("collection_id", LiteralData(
             'collection_id', str, optional=False,
             title="Bubble index collection identifier",
@@ -77,8 +78,9 @@ class RetrieveBubbleIndex(WPSProcess):
         )),
     ]
 
-    def execute(self, collection_id, begin_time, end_time, output, **kwarg):
+    def execute(self, collection_id, begin_time, end_time, output, **kwargs):
         """ Execute process. """
+        access_logger = self.get_access_logger(**kwargs)
 
         try:
             time_series = ProductTimeSeries(
@@ -92,6 +94,13 @@ class RetrieveBubbleIndex(WPSProcess):
                 "collection_id",
                 "Invalid collection identifier %r!" % collection_id
             )
+
+        access_logger.info(
+            "request: collection: %s, toi: (%s, %s)",
+            collection_id,
+            naive_to_utc(begin_time).isotime("T") if begin_time else "-",
+            naive_to_utc(end_time) if end_time else "-",
+        )
 
         def _generate_pairs():
             variables = [TIME_VARIABLE, DATA_VARIABLE]

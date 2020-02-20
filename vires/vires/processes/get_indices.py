@@ -82,7 +82,7 @@ class GetIndices(WPSProcess):
     metadata = {}
     profiles = ["vires"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ("index_id", LiteralData(
             'index_id', str, optional=False,
             abstract="Identifier of the queried auxiliary index.",
@@ -114,14 +114,15 @@ class GetIndices(WPSProcess):
     ]
 
     def execute(self, index_id, begin_time, end_time, csv_time_format,
-                output, **kwarg):
+                output, **kwargs):
         """ Execute process. """
+        access_logger = self.get_access_logger(**kwargs)
 
         # fix the time-zone of the naive date-time
         begin_time = naive_to_utc(begin_time)
         end_time = naive_to_utc(end_time)
 
-        self.access_logger.info(
+        access_logger.info(
             "request: index: %s, toi: (%s, %s)",
             index_id, begin_time.isoformat("T"), end_time.isoformat("T"),
         )
@@ -140,7 +141,7 @@ class GetIndices(WPSProcess):
             output_fobj, index_id, time, data, time_format, data_format
         )
 
-        self.access_logger.info(
+        access_logger.info(
             "response: index: %s, count: %s values, mime-type: %s",
             index_id, len(time), output['mime_type'],
         )

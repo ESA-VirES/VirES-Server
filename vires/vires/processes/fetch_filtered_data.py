@@ -61,7 +61,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters2,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names, get_username, get_user,
+    extract_product_names
 )
 from vires.processes.util.time_series import (
     ProductTimeSeries,
@@ -109,7 +109,7 @@ class FetchFilteredData(WPSProcess):
     metadata = {}
     profiles = ["vires"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -189,8 +189,9 @@ class FetchFilteredData(WPSProcess):
 
     def execute(self, collection_ids, begin_time, end_time, filters,
                 sampling_step, requested_variables, model_ids, shc,
-                csv_time_format, output, source_products, **kwarg):
+                csv_time_format, output, source_products, **kwargs):
         """ Execute process """
+        access_logger = self.get_access_logger(**kwargs)
         workspace_dir = SystemConfigReader().path_temp
         # parse inputs
         sources = parse_collections('collection_ids', collection_ids.data)
@@ -215,11 +216,11 @@ class FetchFilteredData(WPSProcess):
                 "Time selection limit (%s) has been exceeded!" %
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
-            self.access_logger.error(message)
+            access_logger.error(message)
             raise InvalidInputValueError('end_time', message)
 
         # log the request
-        self.access_logger.info(
+        access_logger.info(
             "request parameters: toi: (%s, %s), collections: (%s), "
             "models: (%s), filters: {%s}",
             begin_time.isoformat("T"), end_time.isoformat("T"),
@@ -452,7 +453,7 @@ class FetchFilteredData(WPSProcess):
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     if total_count > MAX_SAMPLES_COUNT:
-                        self.access_logger.error(
+                        access_logger.error(
                             "The sample count %d exceeds the maximum allowed "
                             "count of %d samples!",
                             total_count, MAX_SAMPLES_COUNT,
@@ -465,7 +466,7 @@ class FetchFilteredData(WPSProcess):
 
                     yield label, dataset
 
-            self.access_logger.info(
+            access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
                 total_count, output['mime_type'], ", ".join(output_variables)
             )

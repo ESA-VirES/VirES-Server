@@ -44,7 +44,7 @@ class GetOrbitTimeRange(WPSProcess):
     metadata = {}
     profiles = ["vires"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ("spacecraft", LiteralData(
             'spacecraft', str, optional=False,
             abstract="Spacecraft identifier",
@@ -71,10 +71,17 @@ class GetOrbitTimeRange(WPSProcess):
 
     def execute(self, spacecraft, start_orbit, end_orbit, **kwargs):
         """ Execute process. """
+        access_logger = self.get_access_logger(**kwargs)
+
         if end_orbit < start_orbit:
             start_orbit, end_orbit = end_orbit, start_orbit
 
         orbit_counter_file = cache_path(ORBIT_COUNTER_FILE[spacecraft])
+
+        access_logger.info(
+            "request: spacecraft: %s, start_orbit: %s, end_orbit %s",
+            spacecraft, start_orbit, end_orbit,
+        )
 
         start_orbit, end_orbit, start_time, end_time = get_orbit_timerange(
             orbit_counter_file, start_orbit, end_orbit

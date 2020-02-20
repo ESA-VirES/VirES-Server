@@ -60,7 +60,7 @@ class RetrieveFieldLines(WPSProcess):
     metadata = {}
     profiles = ["vires"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ("model_ids", LiteralData(
             'model_ids', str, optional=False,
             abstract="String input for model identifiers (comma separator)",
@@ -120,15 +120,17 @@ class RetrieveFieldLines(WPSProcess):
     ]
 
     def execute(self, model_ids, shc, time, height, bbox, lines_per_col,
-                lines_per_row, output, **kwarg):
+                lines_per_row, output, **kwargs):
         """ Execute process. """
+        access_logger = self.get_access_logger(**kwargs)
+
         # parse model and style
         models, _ = parse_model_list("model_ids", model_ids, shc)
 
         # fix the time-zone of the naive date-time
         mjd2000 = datetime_to_mjd2000(naive_to_utc(time))
 
-        self.access_logger.info(
+        access_logger.info(
             "request: toi: %s, aoi: %s, elevation: %g, "
             "models: (%s), grid: (%d, %d)",
             time.isoformat("T"),
@@ -181,13 +183,13 @@ class RetrieveFieldLines(WPSProcess):
                     yield (model.name, point, 1e3*line_coords, vnorm(line_field))
                     model_count += line_coords.shape[0]
 
-                self.access_logger.info(
+                access_logger.info(
                     "model: %s=%s, lines: %d, points: %d",
                     model.name, model.full_expression, n_lines, model_count,
                 )
                 total_count += model_count
 
-            self.access_logger.info(
+            access_logger.info(
                 "response: lines: %d, points: %d, mime-type: %s",
                 n_lines * len(models), total_count, output['mime_type'],
             )

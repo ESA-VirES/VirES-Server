@@ -30,11 +30,12 @@ from eoxserver.services.ows.wps.parameters import (
     RequestParameter, ComplexData, FormatJSON, CDObject,
 )
 from vires.models import Job
+from vires.processes.base import WPSProcess
 
 STATUS_TO_STRING = dict(Job.STATUS_CHOICES)
 
 
-class ListJobs():
+class ListJobs(WPSProcess):
     """ This utility process lists all asynchronous WPS jobs owned by
     the current user.
     The jobs are grouped by the process identifier and ordered by the creation
@@ -44,7 +45,7 @@ class ListJobs():
     metadata = {}
     profiles = ["vires-util"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ('user', RequestParameter(lambda request: request.user)),
     ]
 
@@ -57,6 +58,8 @@ class ListJobs():
 
     def execute(self, user, **kwargs):
         """ Execute process. """
+        access_logger = self.get_access_logger(**kwargs)
+
         owner = user if user.is_authenticated else None
         job_list = {}
         for job in Job.objects.filter(owner=owner).order_by("created"):
@@ -68,6 +71,9 @@ class ListJobs():
                 "stopped": job.stopped.isoformat("T") if job.stopped else None,
                 "status": STATUS_TO_STRING[job.status],
             })
+
+        access_logger.info("request:")
+
         return CDObject(
             job_list, format=FormatJSON(), filename="job_list.json",
             **kwargs['job_list']

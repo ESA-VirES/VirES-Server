@@ -35,9 +35,10 @@ from eoxserver.services.ows.wps.parameters import (
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
 from vires.time_util import naive_to_utc
+from vires.processes.base import WPSProcess
 
 
-class GetTimeDataProcess():
+class GetTimeDataProcess(WPSProcess):
     """ Simple catalogue-like query WPS process. """
     identifier = "getTimeData"
     title = "Get times of collection coverages."
@@ -50,20 +51,20 @@ class GetTimeDataProcess():
     metadata = {}
     profiles = ['EOxServer:GetTimeData']
 
-    inputs = {
-        "collection_id": LiteralData(
+    inputs = WPSProcess.inputs + [
+        ("collection_id", LiteralData(
             "collection",
             title="Collection name."
-        ),
-        "begin_time": LiteralData(
+        )),
+        ("begin_time", LiteralData(
             "begin_time", datetime, optional=True,
             title="Optional start of the queried time interval."
-        ),
-        "end_time": LiteralData(
+        )),
+        ("end_time", LiteralData(
             "end_time", datetime, optional=True,
             title="Optional end of the queried time interval."
-        ),
-    }
+        )),
+    ]
 
     outputs = {
         "times": ComplexData(
@@ -72,16 +73,24 @@ class GetTimeDataProcess():
         )
     }
 
-    @staticmethod
-    def execute(collection_id, begin_time, end_time, **kwarg):
+    def execute(self, collection_id, begin_time, end_time, **kwargs):
         """ The main execution function for the process.
         """
+        access_logger = self.get_access_logger(**kwargs)
+
         try:
             collection = ProductCollection.objects.get(identifier=collection_id)
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
                 "collection", "Invalid collection name '%s'!" % collection_id
             )
+
+        access_logger.info(
+            "request: collection: %s, toi: (%s, %s)",
+            collection_id,
+            naive_to_utc(begin_time).isoformat("T") if begin_time else "-",
+            naive_to_utc(end_time) if end_time else "-",
+        )
 
         query = collection.products.order_by('begin_time')
         if end_time:

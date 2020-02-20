@@ -35,12 +35,12 @@ from numpy import nan, full
 import msgpack
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, BoundingBoxData, ComplexData, FormatText, FormatJSON,
-    CDFileWrapper, FormatBinaryRaw, CDObject, RequestParameter,
+    CDFileWrapper, FormatBinaryRaw, CDObject,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
 )
-from vires.models import ProductCollection
+from vires.models import ProductCollection, get_user
 from vires.util import unique, exclude
 from vires.time_util import (
     naive_to_utc, timedelta_to_iso_duration,
@@ -58,7 +58,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names, get_username, get_user,
+    extract_product_names,
 )
 from vires.processes.util.time_series import (
     ProductTimeSeries, CustomDatasetTimeSeries,
@@ -111,8 +111,7 @@ class FetchData(WPSProcess):
     metadata = {}
     profiles = ["vires"]
 
-    inputs = [
-        ("username", RequestParameter(get_username)),
+    inputs = WPSProcess.inputs + [
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -177,13 +176,15 @@ class FetchData(WPSProcess):
 
     def execute(self, username, collection_ids, begin_time, end_time, bbox,
                 requested_variables, model_ids, shc,
-                csv_time_format, output, **kwarg):
+                csv_time_format, output, **kwargs):
         """ Execute process """
+        access_logger = self.get_access_logger(**kwargs)
+
         # parse inputs
         sources = parse_collections(
             'collection_ids', collection_ids.data,
             custom_dataset=CustomDatasetTimeSeries.COLLECTION_IDENTIFIER,
-            user=get_user(username)
+            user=get_user(kwargs.get('username'))
         )
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
@@ -205,11 +206,11 @@ class FetchData(WPSProcess):
                 "Time selection limit (%s) has been exceeded!" %
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
-            self.access_logger.error(message)
+            access_logger.error(message)
             raise InvalidInputValueError('end_time', message)
 
         # log the request
-        self.access_logger.info(
+        access_logger.info(
             "request: toi: (%s, %s), aoi: %s, collections: (%s), "
             "models: (%s), ",
             begin_time.isoformat("T"), end_time.isoformat("T"),
@@ -430,7 +431,7 @@ class FetchData(WPSProcess):
                     total_count += dataset.length
                     collection_count += dataset.length
                     if collection_count > MAX_SAMPLES_COUNT_PER_COLLECTION:
-                        self.access_logger.error(
+                        access_logger.error(
                             "The sample count %d exceeds the maximum allowed "
                             "count of %d samples per collection!",
                             collection_count, MAX_SAMPLES_COUNT_PER_COLLECTION
@@ -461,7 +462,7 @@ class FetchData(WPSProcess):
 
                     yield label, dataset
 
-            self.access_logger.info(
+            access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
                 total_count, output['mime_type'], ", ".join(output_variables)
             )

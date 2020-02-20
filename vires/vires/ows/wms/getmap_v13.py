@@ -31,8 +31,8 @@ from eoxserver.resources.coverages import crss
 from eoxserver.services.ows.wms.parsing import parse_bbox, parse_time, int_or_str
 from eoxserver.services.result import to_http_response
 from eoxserver.services.ows.wms.exceptions import InvalidCRS
-from vires.ows.wms.renderer import render_wms_response, SUPPORTED_SRIDS
-from vires.ows.wms.parsers import get_mean_time
+from .renderer import render_wms_response, SUPPORTED_SRIDS, get_access_logger
+from .parsers import get_mean_time
 
 
 class WMS13GetMapHandler():
@@ -65,6 +65,7 @@ class WMS13GetMapHandler():
             height=int(decoder.height),
             response_format=decoder.format,
             query=dict(request.GET),
+            logger=get_access_logger(request),
         ))
 
 

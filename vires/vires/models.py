@@ -55,6 +55,13 @@ CASCADE = dict(on_delete=ON_DELETE_CASCADE)
 PROTECT = dict(on_delete=ON_DELETE_PROTECT)
 
 
+def get_user(username):
+    """ Get the User object for the given username.
+    Returns None if the username is None.
+    """
+    return None if username is None else User.objects.get(username=username)
+
+
 class Job(Model):
     """ VirES WPS asynchronous job.
     """

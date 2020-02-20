@@ -34,7 +34,7 @@ from eoxserver.services.ows.wps.parameters import (
     FormatText, FormatBinaryRaw, FormatBinaryBase64,
     LiteralData, AllowedRange
 )
-from vires.time_util import datetime_to_mjd2000, naive_to_utc
+from vires.time_util import datetime_to_mjd2000, mjd2000_to_datetime, naive_to_utc
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_model_expression, parse_style,
@@ -50,7 +50,7 @@ class EvalModel(WPSProcess):
     metadata = {}
     profiles = ["vires"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ("bbox", BoundingBoxData(
             "bbox", crss=(4326,), optional=True, title="Area of interest",
             abstract="Optional area of interest encoded ",
@@ -121,8 +121,9 @@ class EvalModel(WPSProcess):
 
     def execute(self, model_expression, shc, variable, begin_time, end_time,
                 elevation, range_max, range_min, bbox, width, height,
-                style, output, **kwarg):
+                style, output, **kwargs):
         """ Execute process """
+        access_logger = self.get_access_logger(**kwargs)
 
         # parse models and styles
         color_map = parse_style("style", style)
@@ -135,10 +136,10 @@ class EvalModel(WPSProcess):
             datetime_to_mjd2000(end_time) + datetime_to_mjd2000(begin_time)
         )
 
-        self.access_logger.info(
-            "request: toi: (%s, %s), aoi: %s, elevation: %g, "
+        access_logger.info(
+            "request: time: %s, aoi: %s, elevation: %g, "
             "model: %s, variable: %s, image-size: (%d, %d), mime-type: %s",
-            begin_time.isoformat("T"), end_time.isoformat("T"),
+            naive_to_utc(mjd2000_to_datetime(mean_time)).isoformat("T"),
             bbox[0] + bbox[1], elevation, model.full_expression,
             variable, width, height, output['mime_type'],
         )
@@ -155,7 +156,7 @@ class EvalModel(WPSProcess):
             size=(width, height),
             value_range=(range_min, range_max),
             colormap=color_map,
-            response_format="image/png",
+            response_format=output['mime_type'],
             is_transparent=True,
             grid_step=(1, 1), # no interpolation
             wps_output_def=output,

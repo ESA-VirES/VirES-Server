@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities - Authentication
+#  Access logging Utilities
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -25,7 +25,26 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from django.contrib.auth.models import User
+from logging import LoggerAdapter
+
+
+class AccessLoggerAdapter(LoggerAdapter):
+    """ Logger adapter adding extra fields required by the access logger. """
+
+    def __init__(self, logger, username=None, remote_addr=None, **kwargs):
+        super().__init__(logger, {
+            "remote_addr": remote_addr if remote_addr else "-",
+            "username": username if username else "-",
+        })
+
+
+def get_remote_addr(request):
+    """ Extract remote address from the Django HttpRequest """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.partition(',')[0]
+    return request.META.get('REMOTE_ADDR')
+
 
 def get_username(request):
     """ Extract username of the authenticated user from the Django HttpRequest
@@ -33,10 +52,3 @@ def get_username(request):
     """
     user = request.user
     return user.username if user.is_authenticated else None
-
-
-def get_user(username):
-    """ Get the User object for the given username.
-    Returns None if the username is None.
-    """
-    return None if username is None else User.objects.get(username=username)

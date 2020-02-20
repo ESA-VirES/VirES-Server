@@ -35,13 +35,13 @@ from datetime import datetime, timedelta
 from numpy import nan, full
 from django.utils.timezone import utc
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData, AllowedRange, RequestParameter, Reference,
+    LiteralData, ComplexData, AllowedRange, Reference,
     FormatText, FormatJSON, FormatBinaryRaw,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError, ServerBusy,
 )
-from vires.models import ProductCollection, Job
+from vires.models import ProductCollection, Job, get_user
 from vires.util import unique, exclude, include
 from vires.time_util import (
     naive_to_utc, timedelta_to_iso_duration,
@@ -59,7 +59,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters2,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names, get_username, get_user,
+    extract_product_names,
 )
 from vires.processes.util.time_series import (
     ProductTimeSeries,
@@ -112,8 +112,7 @@ class FetchFilteredDataAsync(WPSProcess):
     synchronous = False
     asynchronous = True
 
-    inputs = [
-        ("username", RequestParameter(get_username)),
+    inputs = WPSProcess.inputs + [
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -268,8 +267,9 @@ class FetchFilteredDataAsync(WPSProcess):
 
     def execute(self, collection_ids, begin_time, end_time, filters,
                 sampling_step, requested_variables, model_ids, shc,
-                csv_time_format, output, source_products, context, **kwarg):
+                csv_time_format, output, source_products, context, **kwargs):
         """ Execute process """
+        access_logger = self.get_access_logger(**kwargs)
         #workspace_dir = ""
 
         # parse inputs
@@ -295,11 +295,11 @@ class FetchFilteredDataAsync(WPSProcess):
                 "Time selection limit (%s) has been exceeded!" %
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
-            self.access_logger.error(message)
+            access_logger.error(message)
             raise InvalidInputValueError('end_time', message)
 
         # log the request
-        self.access_logger.info(
+        access_logger.info(
             "request parameters: toi: (%s, %s), collections: (%s), "
             "models: (%s), filters: {%s}",
             begin_time.isoformat("T"), end_time.isoformat("T"),
@@ -554,7 +554,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     if total_count > MAX_SAMPLES_COUNT:
-                        self.access_logger.error(
+                        access_logger.error(
                             "The sample count %d exceeds the maximum allowed "
                             "count of %d samples!",
                             total_count, MAX_SAMPLES_COUNT,
@@ -567,7 +567,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
                     yield label, dataset
 
-            self.access_logger.info(
+            access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
                 total_count, output['mime_type'], ", ".join(output_variables)
             )
