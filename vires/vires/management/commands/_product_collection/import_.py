@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Load and update VirES product types.
+# Load and update VirES product collections.
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -29,36 +29,32 @@
 
 import sys
 import json
-from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
-from django.core.management.base import BaseCommand
-from vires.data import PRODUCT_TYPES
-from vires.models import ProductType
-from ._common import ConsoleOutput
+from vires.data import PRODUCT_COLLECTIONS
+from vires.models import ProductCollection, ProductType
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
-
-    help = "Import product type definitions from a JSON file."
+class ImportProductCollectionSubcommand(Subcommand):
+    name = "import"
+    help = "Import product collection definitions from a JSON file."
 
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
         parser.add_argument(
-            "-f", "--file", dest="filename", default=PRODUCT_TYPES, help=(
+            "-f", "--file", dest="filename", default=PRODUCT_COLLECTIONS, help=(
                 "Optional input JSON file-name. "
-                "Defaults to the definition of the standard product types. "
+                "Defaults to the definition of the standard product collections. "
             )
         )
 
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs):
         filename = kwargs['filename']
 
         with sys.stdin if filename == "-" else open(filename, "rb") as file_:
-            self.load_product_types(json.load(file_), **kwargs)
+            self.load_product_collections(json.load(file_), **kwargs)
 
-    def load_product_types(self, data, **kwargs):
+    def load_product_collections(self, data, **kwargs):
         failed_count = 0
         created_count = 0
         updated_count = 0
@@ -66,53 +62,60 @@ class Command(ConsoleOutput, BaseCommand):
         for item in data:
             identifier = item.get("name")
             try:
-                is_updated = save_product_type(item)
+                is_updated = save_product_collection(item)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
                 self.error(
-                    "Failed to create or update product type %s! %s",
+                    "Failed to create or update product collection %s! %s",
                     identifier, error
                 )
             else:
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing product type %s updated." if is_updated else
-                    "New product type %s created.", identifier, log=True
+                    "Existing product collection %s updated." if is_updated else
+                    "New product collection %s created.", identifier, log=True
                 )
 
         if created_count:
             self.info(
-                "%d of %d product type%s updated.", created_count, len(data),
+                "%d of %d product collection%s updated.", created_count, len(data),
                 "s" if created_count > 1 else ""
             )
 
         if updated_count:
             self.info(
-                "%d of %d product type%s updated.", updated_count, len(data),
+                "%d of %d product collection%s updated.", updated_count, len(data),
                 "s" if updated_count > 1 else ""
             )
 
         if failed_count:
             self.info(
-                "%d of %d product type%s failed ", failed_count, len(data),
+                "%d of %d product collection%s failed ", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
 
 
 @transaction.atomic
-def save_product_type(data):
+def save_product_collection(data):
     identifier = data.pop("name")
-    is_updated, product_type = get_product_type(identifier)
-    product_type.definition = data
-    product_type.save()
+    for key in ["updated", "removed"]:
+        data.pop(key, None)
+    is_updated, product_collection = get_product_collection(identifier)
+    product_collection.type = get_product_type(data.pop("productType"))
+    product_collection.metadata = data
+    product_collection.save()
     return is_updated
 
 
-def get_product_type(identifier):
+def get_product_collection(identifier):
     try:
-        return True, ProductType.objects.get(identifier=identifier)
-    except ProductType.DoesNotExist:
-        return False, ProductType(identifier=identifier)
+        return True, ProductCollection.objects.get(identifier=identifier)
+    except ProductCollection.DoesNotExist:
+        return False, ProductCollection(identifier=identifier)
+
+
+def get_product_type(identifier):
+    return ProductType.objects.get(identifier=identifier)

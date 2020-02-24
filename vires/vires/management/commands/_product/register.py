@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Bulk product registration.
+# Product registration
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -29,10 +29,9 @@
 
 import sys
 from os.path import basename, splitext
-from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
-from django.core.management.base import CommandError, BaseCommand
+from django.core.management.base import CommandError
 from vires.swarm import SwarmProductMetadataReader
 from vires.models import Product, ProductCollection
 from vires.management.commands.vires_update_orbit_directions import (
@@ -40,24 +39,20 @@ from vires.management.commands.vires_update_orbit_directions import (
 )
 from vires.orbit_direction_update import DataIntegrityError
 from vires.cdf_util import cdf_open
-from ._common import ConsoleOutput
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
-
+class RegisterProductSubcommand(Subcommand):
+    name = "register"
     help = (
         "Register one or more products to a collection. "
-        "This is a high-level convenience command with a minimal set of "
-        "parameters which registers multiple products, links them to "
-        "a collection, resolves already registered and duplicated "
-        "products (different versions of the same product registered "
-        "simultaneously)."
+        "The already registered or duplicated (different versions "
+        "of the same product registered simultaneously) products "
+        "are detected resolved."
     )
 
     def add_arguments(self, parser):
-        super().add_arguments(parser)
-        parser.add_argument("identifier", nargs="*")
+        parser.add_argument("product-file", nargs="*")
         parser.add_argument(
             "-f", "--file", dest="input_file", default=None,
             help=(
@@ -67,8 +62,8 @@ class Command(ConsoleOutput, BaseCommand):
             )
         )
         parser.add_argument(
-            "-c", "--collection", dest="collection_id", required=True,
-            help=(
+            "-c", "--collection", "--product-collection",
+            dest="collection_id", required=True, help=(
                 "Mandatory name of the product collection the product(s) "
                 "should be placed in."
             )
@@ -78,7 +73,7 @@ class Command(ConsoleOutput, BaseCommand):
             default="IGNORE", help=(
                 "Define how to resolve conflict when the product is already "
                 "registered. By default the registration is skipped and the "
-                "the passed product is IGNORED. An alternative is to REPLACE "
+                "the new product is IGNORED. An alternative is to REPLACE "
                 "the old product, i.e., to de-register the old one and "
                 "register the new one). In case of the REPLACE the collection "
                 "links are NOT preserved."
@@ -94,8 +89,8 @@ class Command(ConsoleOutput, BaseCommand):
             )
         )
 
-    def handle(self, *args, **kwargs):
-        identifiers = kwargs["identifier"]
+    def handle(self, **kwargs):
+        data_files = kwargs["product-file"]
         ignore_registered = kwargs["conflict"] == "IGNORE"
         ignore_overlaps = kwargs["overlap"] == "IGNORE"
         collection_id = kwargs["collection_id"]
@@ -109,7 +104,7 @@ class Command(ConsoleOutput, BaseCommand):
 
         counter = Counter()
 
-        for data_file in read_products(kwargs["input_file"], identifiers):
+        for data_file in read_products(kwargs["input_file"], data_files):
             product_id = get_product_id(data_file)
 
             try:
@@ -154,16 +149,21 @@ class Command(ConsoleOutput, BaseCommand):
                     self.info("%s ignored", product.identifier)
                 else:
                     delete_product(product)
-                    self.info("%s de-registered", product.identifier)
+                    self.info(
+                        "%s deregistered from %s",
+                        product.identifier, collection.identifier
+                    )
                     removed.append(product.identifier)
 
         if not is_in_collection:
-            # The product may be registered but not inserted in the collection.
-            product = find_product(product_id)
+            product = find_product(collection, product_id)
 
             if product and not ignore_registered:
                 delete_product(product)
-                self.info("%s de-registered" % product.identifier)
+                self.info(
+                    "%s deregistered from %s",
+                    product.identifier, collection.identifier
+                )
                 removed.append(product.identifier)
                 product = None
 
@@ -182,16 +182,10 @@ class Command(ConsoleOutput, BaseCommand):
                         sync_orbit_direction_tables(collection)
 
                 self.info(
-                    "%s registered and inserted in %s"
+                    "%s registered in %s"
                     % (product_id, collection.identifier)
                 )
                 inserted.append(product_id)
-            else:
-                set_product_collection(product, collection)
-                self.info(
-                    "%s inserted in %s"
-                    % (product_id, collection.identifier)
-                )
 
         return removed, inserted
 
@@ -290,10 +284,10 @@ def get_product_id(data_file):
     return splitext(basename(data_file))[0]
 
 
-def find_product(product_id):
+def find_product(collection, product_id):
     """ Return True if the product is already registered. """
     try:
-        return Product.objects.get(identifier=product_id)
+        return collection.products.get(identifier=product_id)
     except Product.DoesNotExist:
         return None
 
@@ -303,12 +297,6 @@ def find_time_overlaps(collection, begin_time, end_time):
     return collection.products.filter(
         begin_time__lte=end_time, end_time__gte=begin_time
     )
-
-
-def set_product_collection(product, collection):
-    """ Set product collection. """
-    product.collection = collection
-    product.save()
 
 
 def register_product(collection, identifier, data_file, metadata):

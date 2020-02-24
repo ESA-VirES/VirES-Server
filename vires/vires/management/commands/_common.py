@@ -27,7 +27,8 @@
 # pylint: disable=missing-docstring
 
 import sys
-from logging import INFO, WARNING, ERROR
+from logging import LoggerAdapter, INFO, WARNING, ERROR
+from django.core.management.base import BaseCommand
 
 _LABEL2LOGLEVEL = {
     "INFO": INFO,
@@ -50,20 +51,54 @@ def datetime_to_string(dtobj):
 class ConsoleOutput():
     logger = None
 
-    @classmethod
-    def info(cls, message, *args, **kwargs):
-        cls.print_message("INFO", message, *args, **kwargs)
+    def info(self, message, *args, **kwargs):
+        self.print_message("INFO", message, *args, **kwargs)
 
-    @classmethod
-    def warning(cls, message, *args, **kwargs):
-        cls.print_message("WARNING", message, *args, **kwargs)
+    def warning(self, message, *args, **kwargs):
+        self.print_message("WARNING", message, *args, **kwargs)
 
-    @classmethod
-    def error(cls, message, *args, **kwargs):
-        cls.print_message("ERROR", message, *args, **kwargs)
+    def error(self, message, *args, **kwargs):
+        self.print_message("ERROR", message, *args, **kwargs)
 
-    @classmethod
-    def print_message(cls, label, message, *args, **kwargs):
+    def print_message(self, label, message, *args, **kwargs):
         print("%s: %s" % (label, message % args), file=sys.stderr)
-        if kwargs.get('log') and cls.logger:
-            cls.logger.log(_LABEL2LOGLEVEL[label], message, *args)
+        if self.logger and(getattr(self, 'log', False) or kwargs.get('log')):
+            self.logger.log(_LABEL2LOGLEVEL[label], message, *args)
+
+
+class Subcommand(ConsoleOutput):
+    """ Base subcommand class """
+    def __init__(self, logger=None):
+        self.logger = logger
+
+    def add_arguments(self, parser):
+        """ Add CLI arguments. """
+        raise NotImplementedError
+
+    def handle(self, **kwargs):
+        """ Handle subcommand. """
+        raise NotImplementedError
+
+
+class Supercommand(ConsoleOutput, BaseCommand):
+    """ Base class for Django command with subcommands. """
+
+    commands = {}
+
+    def add_arguments(self, parser):
+        super().add_arguments(parser)
+
+        subparsers = parser.add_subparsers(
+            dest="command", metavar="<command>", #required=True,
+        )
+
+        for name, command in self.commands.items():
+            subparser = subparsers.add_parser(name, help=command.help)
+            command.add_arguments(subparser)
+
+        # .add_subparsers() in Python < 3.7 does not support required parameter
+        # and the attribute has to be set as an object property.
+        subparsers.required = True
+
+    def handle(self, *arg, **kwargs):
+        return self.commands[kwargs.pop('command')].handle(**kwargs)

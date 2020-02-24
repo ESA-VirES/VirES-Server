@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Export product collections in JSON format.
+# Dump products in JSON format.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,17 +28,15 @@
 
 import sys
 import json
-from django.core.management.base import BaseCommand
-from vires.models import ProductCollection
-from ._common import ConsoleOutput, JSON_OPTS
+from vires.models import Product
+from .._common import Subcommand, JSON_OPTS, datetime_to_string
 
 
-class Command(ConsoleOutput, BaseCommand):
-
-    help = "Export product collection definitions as a JSON file."
+class DumpProductSubcommand(Subcommand):
+    name = "dump"
+    help = "Dump products in JSON format."
 
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
         parser.add_argument("identifier", nargs="*")
         parser.add_argument(
             "-f", "--file-name", dest="file", default="-", help=(
@@ -46,25 +44,53 @@ class Command(ConsoleOutput, BaseCommand):
                 "By default it is written to the standard output."
             )
         )
+        parser.add_argument(
+            "-t", "--product-type", dest="product_type", action='append', help=(
+                "Optional filter on the collection product type. "
+                "Multiple product types are allowed."
+            )
+        )
+        parser.add_argument(
+            "-c", "--collection", "--product-collection",
+            dest="product_collection", action="append",
+            help=(
+                "Optional filter on the product collection. "
+                "Multiple product collection are allowed."
+            )
+        )
 
-    def handle(self, *args, **kwargs):
-        query = ProductCollection.objects.prefetch_related('type')
-        identifiers = kwargs['identifier']
-        if not identifiers:
-            query = query.all()
-        else:
+    def handle(self, **kwargs):
+        query = Product.objects.order_by("identifier")
+        query = query.prefetch_related('collection', 'collection__type')
+
+        product_types = set(kwargs['product_type'] or [])
+        if product_types:
+            query = query.filter(collection__type__identifier__in=product_types)
+
+        product_collections = set(kwargs['product_collection'] or [])
+        if product_collections:
+            query = query.filter(collection__identifier__in=product_collections)
+
+        identifiers = set(kwargs['identifier'])
+        if identifiers:
             query = query.filter(identifier__in=identifiers)
 
-        data = [serialize_collection(collection) for collection in query]
+        data = [serialize_product(product) for product in query.all()]
 
         filename = kwargs["file"]
         with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
             json.dump(data, file_, **JSON_OPTS)
 
 
-def serialize_collection(object_):
+def serialize_product(object_):
     return {
-        "name": object_.identifier,
-        "productType": object_.type.identifier,
-        **object_.metadata
+        "identifier": object_.identifier,
+        "beginTime": datetime_to_string(object_.begin_time),
+        "endTime": datetime_to_string(object_.end_time),
+        "created": datetime_to_string(object_.created),
+        "updated": datetime_to_string(object_.updated),
+        "collection": object_.collection.identifier,
+        "productType": object_.collection.type.identifier,
+        "metadata": object_.metadata,
+        "datasets": object_.datasets,
     }

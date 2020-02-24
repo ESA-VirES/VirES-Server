@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Cached product management command.
+# Update cached product
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,8 +26,8 @@
 #-------------------------------------------------------------------------------
 #pylint: disable=missing-docstring
 
-from logging import getLogger, DEBUG, Formatter, StreamHandler
-from django.core.management.base import BaseCommand, CommandError
+from logging import DEBUG, Formatter, StreamHandler
+from django.core.management.base import CommandError
 from vires.aux_kp import update_kp
 from vires.aux_dst import update_dst
 from vires.aux_f107 import update_aux_f107_2_
@@ -43,13 +43,14 @@ from vires.cached_products import (
     copy_file, update_cached_product, simple_cached_product_updater,
     InvalidSourcesError,
 )
+from .._common import Subcommand
 
 
-class Command(BaseCommand):
+class UpdateCachedProductSubcommand(Subcommand):
+    name = "update"
     help = """ Update cached product. """
 
     def add_arguments(self, parser):
-        super().add_arguments(parser)
         parser.add_argument(
             "product_type", help="Product type",
             choices=list(sorted(CACHED_PRODUCTS)),
@@ -58,9 +59,8 @@ class Command(BaseCommand):
             "source", nargs="+", help="Source filename or URL."
         )
 
-    def handle(self, *args, **kwargs):
-        logger = getLogger(__name__)
-        self._set_stream_handler(logger, level=DEBUG)
+    def handle(self, **kwargs):
+        self._set_stream_handler(self.logger, level=DEBUG)
         product_type = kwargs['product_type']
         source = kwargs['source']
         product_info = CACHED_PRODUCTS[product_type]
@@ -71,7 +71,7 @@ class Command(BaseCommand):
                 updater=product_info.get("updater", copy_file),
                 filter_=product_info.get("filter"),
                 tmp_extension=product_info.get("tmp_extension"),
-                logger=logger,
+                logger=self.logger,
             )
         except InvalidSourcesError as exc:
             raise CommandError(str(exc))
@@ -133,6 +133,8 @@ for spacecraft in SPACECRAFTS:
         updater=simple_cached_product_updater(update_orbit_counter_file),
         tmp_extension=".tmp.cdf"
     )
+    CACHED_PRODUCTS.pop("AUX%sODBGEO" % spacecraft)
+    CACHED_PRODUCTS.pop("AUX%sODBMAG" % spacecraft)
 
     #configure_cached_product(
     #    "AUX%sODBGEO" % spacecraft,
