@@ -27,8 +27,13 @@
 # pylint: disable=missing-docstring
 
 import sys
-from logging import LoggerAdapter, INFO, WARNING, ERROR
+from logging import INFO, WARNING, ERROR
+from datetime import datetime, time
 from django.core.management.base import BaseCommand
+from django.utils.dateparse import parse_date, parse_datetime
+from eoxserver.core.util.timetools import parse_duration
+from vires.time_util import naive_to_utc
+
 
 _LABEL2LOGLEVEL = {
     "INFO": INFO,
@@ -46,6 +51,21 @@ JSON_OPTS = {
 
 def datetime_to_string(dtobj):
     return dtobj if dtobj is None else dtobj.isoformat('T')
+
+
+def time_spec(value):
+    """ CLI time specification parser. """
+    date_ = parse_date(value)
+    if date_ is not None:
+        return naive_to_utc(datetime.combine(date_, time()))
+    datetime_ = parse_datetime(value)
+    if datetime_ is not None:
+        return naive_to_utc(datetime_)
+    try:
+        return naive_to_utc(datetime.utcnow() + parse_duration(value))
+    except ValueError:
+        pass
+    raise ValueError("Invalid time specification '%s'." % value)
 
 
 class ConsoleOutput():
@@ -70,6 +90,7 @@ class Subcommand(ConsoleOutput):
     """ Base subcommand class """
     def __init__(self, logger=None):
         self.logger = logger
+        self.log = False
 
     def add_arguments(self, parser):
         """ Add CLI arguments. """

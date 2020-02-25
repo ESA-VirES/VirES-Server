@@ -59,7 +59,7 @@ class ExportProductTypeSubcommand(Subcommand):
             json.dump(data, file_, **JSON_OPTS)
 
 
-def serialize_product_type(object_):
+def serialize_type(object_):
     return {
         "name": object_.identifier,
         "created": datetime_to_string(object_.created),

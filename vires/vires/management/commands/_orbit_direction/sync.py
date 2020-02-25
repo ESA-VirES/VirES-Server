@@ -50,8 +50,8 @@ class SyncOrbitDirectionSubcommand(Subcommand):
             query = query.filter(identifier__in=collection_ids)
 
         counter = Counter()
-        self.log=True
+        self.log = True
         for collection in query:
             sync_orbit_direction_tables(collection, logger=self, counter=counter)
-        self.log=False
+        self.log = False
         counter.print_report(self.info)

@@ -29,7 +29,6 @@
 
 import sys
 import json
-from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
 from vires.data import PRODUCT_TYPES

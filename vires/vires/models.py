@@ -163,7 +163,7 @@ class ProductCollection(Model):
 
 
 class Product(Model):
-    identifier = CharField(max_length=256, **MANDATORY, **UNIQUE)
+    identifier = CharField(max_length=256, **MANDATORY)
     collection = ForeignKey(ProductCollection, related_name='products', **MANDATORY, **PROTECT)
     begin_time = DateTimeField(**MANDATORY)
     end_time = DateTimeField(**MANDATORY)
@@ -171,6 +171,9 @@ class Product(Model):
     updated = DateTimeField(auto_now=True)
     metadata = JSONField(default=dict, **MANDATORY)
     datasets = JSONField(default=dict, **MANDATORY)
+
+    class Meta:
+        unique_together = ('collection', 'identifier')
 
     def set_location(self, dataset_id, location):
         _datasets = self.datasets or {}

@@ -72,7 +72,7 @@ class DumpCachedProductSubcommand(Subcommand):
             json.dump(data, file_, **JSON_OPTS)
 
 
-def serialize_cache_item(identifier, filename, info_reader, **kwargs):
+def serialize_cache_item(identifier, filename, info_reader):
     info = info_reader(filename)
     return {
         "identifier": identifier,

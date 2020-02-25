@@ -29,7 +29,7 @@
 import sys
 import json
 from vires.models import Product
-from .._common import Subcommand, JSON_OPTS, datetime_to_string
+from .._common import Subcommand, JSON_OPTS, datetime_to_string, time_spec
 
 
 class DumpProductSubcommand(Subcommand):
@@ -58,10 +58,24 @@ class DumpProductSubcommand(Subcommand):
                 "Multiple product collection are allowed."
             )
         )
+        parser.add_argument(
+            "--after", type=time_spec, required=False,
+            help="Select products after the given date."
+        )
+        parser.add_argument(
+            "--before", type=time_spec, required=False,
+            help="Select products before the given date."
+        )
 
     def handle(self, **kwargs):
         query = Product.objects.order_by("identifier")
         query = query.prefetch_related('collection', 'collection__type')
+
+        if kwargs['after']:
+            query = query.filter(begin_time__gte=kwargs['after'])
+
+        if kwargs['before']:
+            query = query.filter(end_time__lt=kwargs['before'])
 
         product_types = set(kwargs['product_type'] or [])
         if product_types:

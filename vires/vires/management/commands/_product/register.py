@@ -28,18 +28,18 @@
 # pylint: disable=too-many-arguments, broad-except
 
 import sys
-from os.path import basename, splitext
+from os.path import abspath, basename, splitext
 from traceback import print_exc
 from django.db import transaction
 from django.core.management.base import CommandError
 from vires.swarm import SwarmProductMetadataReader
 from vires.models import Product, ProductCollection
-from vires.management.commands.vires_update_orbit_directions import (
-    update_orbit_direction_tables, sync_orbit_direction_tables,
-)
 from vires.orbit_direction_update import DataIntegrityError
 from vires.cdf_util import cdf_open
 from .._common import Subcommand
+from .._orbit_direction.common import (
+    update_orbit_direction_tables, sync_orbit_direction_tables,
+)
 
 
 class RegisterProductSubcommand(Subcommand):
@@ -83,9 +83,9 @@ class RegisterProductSubcommand(Subcommand):
             "--overlap", dest="overlap", choices=("IGNORE", "REPLACE"),
             default="REPLACE", help=(
                 "Define how to resolve registered overlapping products."
-                "By default, the REPLACE option causes the overlapping "
+                "The default REPLACE option causes the overlapping "
                 "products to be de-registered to prevent duplicated data."
-                "Alternatively, the duplicated data can be IGNORED. "
+                "Alternatively, the overlapping data can be IGNORED. "
             )
         )
 
@@ -108,7 +108,7 @@ class RegisterProductSubcommand(Subcommand):
             product_id = get_product_id(data_file)
 
             try:
-                removed, inserted = self._register_product(
+                removed, inserted, updated = self._register_product(
                     collection, product_id, data_file, ignore_registered,
                     ignore_overlaps,
                 )
@@ -122,7 +122,9 @@ class RegisterProductSubcommand(Subcommand):
                 counter.increment_failed()
             else:
                 counter.increment_removed(len(removed))
-                if inserted:
+                if updated:
+                    counter.increment_updated()
+                elif inserted:
                     counter.increment_inserted()
                 else:
                     counter.increment_skipped()
@@ -134,60 +136,49 @@ class RegisterProductSubcommand(Subcommand):
     @transaction.atomic
     def _register_product(self, collection, product_id, data_file,
                           ignore_registered, ignore_overlaps):
-        removed, inserted = [], []
+        removed, inserted, updated = [], [], []
         metadata = read_metadata(data_file)
 
         products = find_time_overlaps(
             collection, metadata["begin_time"], metadata["end_time"]
         )
-        is_in_collection = False
+        old_product = None
         for product in products:
-            if product.identifier == product_id and ignore_registered:
-                is_in_collection = True
+            if product.identifier == product_id:
+                old_product = product
             else:
                 if ignore_overlaps and product.identifier != product_id:
                     self.info("%s ignored", product.identifier)
                 else:
                     delete_product(product)
                     self.info(
-                        "%s deregistered from %s",
+                        "%s in %s deregistered",
                         product.identifier, collection.identifier
                     )
                     removed.append(product.identifier)
 
-        if not is_in_collection:
-            product = find_product(collection, product_id)
+        if not old_product:
+            product = register_product(collection, product_id, data_file, metadata)
+            self.info("%s in %s registered", product_id, collection.identifier)
+            inserted.append(product_id)
+        elif not ignore_registered:
+            product = update_product(old_product, data_file, metadata)
+            self.info("%s in %s updated", product_id, collection.identifier)
+            updated.append(product_id)
+        else:
+            product = None
+            self.info("%s in %s ignored", product_id, collection.identifier)
 
-            if product and not ignore_registered:
-                delete_product(product)
-                self.info(
-                    "%s deregistered from %s",
-                    product.identifier, collection.identifier
+        if old_product and collection.metadata.get("calculateOrbitDirection"):
+            try:
+                update_orbit_direction_tables(product)
+            except DataIntegrityError:
+                self.warning(
+                    "Synchronizing orbit direction lookup tables ..."
                 )
-                removed.append(product.identifier)
-                product = None
+                sync_orbit_direction_tables(collection)
 
-            if not product:
-                product = register_product(
-                    collection, product_id, data_file, metadata
-                )
-
-                if collection.metadata.get("calculateOrbitDirection"):
-                    try:
-                        update_orbit_direction_tables(collection, product)
-                    except DataIntegrityError:
-                        self.warning(
-                            "Synchronizing orbit direction lookup tables ..."
-                        )
-                        sync_orbit_direction_tables(collection)
-
-                self.info(
-                    "%s registered in %s"
-                    % (product_id, collection.identifier)
-                )
-                inserted.append(product_id)
-
-        return removed, inserted
+        return removed, inserted, updated
 
 
 class Counter():
@@ -195,6 +186,7 @@ class Counter():
     def __init__(self):
         self._total = 0
         self._inserted = 0
+        self._updated = 0
         self._removed = 0
         self._skipped = 0
         self._failed = 0
@@ -204,6 +196,9 @@ class Counter():
 
     def increment_inserted(self, count=1):
         self._inserted += count
+
+    def increment_updated(self, count=1):
+        self._updated += count
 
     def increment_removed(self, count=1):
         self._removed += count
@@ -219,6 +214,12 @@ class Counter():
             print_fcn(
                 "%d of %d product(s) registered."
                 % (self._inserted, self._total)
+            )
+
+        if self._updated > 0:
+            print_fcn(
+                "%d of %d product(s) updated."
+                % (self._updated, self._total)
             )
 
         if self._skipped > 0:
@@ -301,13 +302,19 @@ def find_time_overlaps(collection, begin_time, end_time):
 
 def register_product(collection, identifier, data_file, metadata):
     """ Register product. """
-    product = Product(identifier=identifier)
+    return update_product(
+        Product(identifier=identifier, collection=collection),
+        data_file, metadata
+    )
+
+
+def update_product(product, data_file, metadata):
+    """ Update and save product. """
     product.begin_time = metadata['begin_time']
     product.end_time = metadata['end_time']
-    product.collection = collection
     product.datasets = {
-        name: {"location": data_file}
-        for name in collection.type.definition['datasets']
+        name: {"location": abspath(data_file)}
+        for name in product.collection.type.definition['datasets']
     }
     product.save()
     return product
