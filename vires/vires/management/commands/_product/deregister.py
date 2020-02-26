@@ -30,7 +30,8 @@ import sys
 from traceback import print_exc
 from django.db import transaction
 from vires.models import Product
-from .._common import Subcommand
+from .._common import Subcommand, time_spec
+from .common import filter_invalid
 
 
 class DeregisterProductSubcommand(Subcommand):
@@ -57,9 +58,27 @@ class DeregisterProductSubcommand(Subcommand):
                 "Multiple product collection are allowed."
             )
         )
+        parser.add_argument(
+            "--after", type=time_spec, required=False,
+            help="Select products after the given date."
+        )
+        parser.add_argument(
+            "--before", type=time_spec, required=False,
+            help="Select products before the given date."
+        )
+        parser.add_argument(
+            "--invalid-only", dest="invalid_only", action="store_true",
+            default=False, help="Select invalid products missing a data-file."
+        )
 
     def handle(self, **kwargs):
         query = Product.objects.prefetch_related('collection').order_by("identifier")
+
+        if kwargs['after']:
+            query = query.filter(begin_time__gte=kwargs['after'])
+
+        if kwargs['before']:
+            query = query.filter(end_time__lt=kwargs['before'])
 
         product_types = set(kwargs['product_type'] or [])
         if product_types:
@@ -70,16 +89,20 @@ class DeregisterProductSubcommand(Subcommand):
             query = query.filter(collection__identifier__in=product_collections)
 
         identifiers = set(kwargs['identifier'])
-        if identifiers or not kwargs['select_all']:
-            query = query.filter(identifier__in=identifiers)
 
-        if not identifiers and not kwargs['select_all']:
-            self.warning(
-                "No identifier selected and no product will be removed. "
-                "Use the --all option to remove all matched items."
-            )
+        if not (kwargs['select_all'] or kwargs['invalid_only']):
+            if identifiers:
+                query = query.filter(identifier__in=identifiers)
+            else:
+                self.warning(
+                    "No identifier selected and no product will be removed. "
+                    "Use the --all option to remove all matched items."
+                )
 
-        self.deregister_products(query.all(), **kwargs)
+        if kwargs['invalid_only']:
+            query = filter_invalid(query, self.logger)
+
+        self.deregister_products(query, **kwargs)
 
     def deregister_products(self, products, **kwargs):
         total_count = 0
@@ -114,6 +137,12 @@ class DeregisterProductSubcommand(Subcommand):
             self.info(
                 "%d of %d matched product%s deregistered.",
                 removed_count, total_count, "s" if removed_count > 1 else ""
+            )
+
+        if failed_count:
+            self.info(
+                "%d of %d matched product%s failed to be deregistered.",
+                failed_count, total_count, "s" if failed_count > 1 else ""
             )
 
         if failed_count:

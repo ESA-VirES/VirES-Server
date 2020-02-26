@@ -30,6 +30,7 @@ import sys
 import json
 from vires.models import Product
 from .._common import Subcommand, JSON_OPTS, datetime_to_string, time_spec
+from .common import filter_invalid
 
 
 class DumpProductSubcommand(Subcommand):
@@ -66,6 +67,10 @@ class DumpProductSubcommand(Subcommand):
             "--before", type=time_spec, required=False,
             help="Select products before the given date."
         )
+        parser.add_argument(
+            "--invalid-only", dest="invalid_only", action="store_true",
+            default=False, help="Select invalid products missing a data-file."
+        )
 
     def handle(self, **kwargs):
         query = Product.objects.order_by("identifier")
@@ -89,7 +94,10 @@ class DumpProductSubcommand(Subcommand):
         if identifiers:
             query = query.filter(identifier__in=identifiers)
 
-        data = [serialize_product(product) for product in query.all()]
+        if kwargs['invalid_only']:
+            query = filter_invalid(query, self.logger)
+
+        data = [serialize_product(product) for product in query]
 
         filename = kwargs["file"]
         with (sys.stdout if filename == "-" else open(filename, "w")) as file_:

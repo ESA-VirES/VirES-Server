@@ -164,7 +164,7 @@ MODEL_FACTORIES = {
     ),
     "CHAOS-Core": ModelFactory(
         load_model_shc,
-        [CachedModelFileWithSourceFile("MCO_CHAOS6", shc_validity_reader)]
+        [CachedModelFileWithSourceFile("MCO_SHA_2X", shc_validity_reader)]
     ),
     "LCS-1": ModelFactory(
         load_model_shc,
@@ -224,11 +224,11 @@ MODEL_FACTORIES = {
     ),
     "CHAOS-MMA-Primary": ModelFactory(
         load_model_swarm_mma_2c_external,
-        [CachedComposedModelFile("MMA_CHAOS6")]
+        [CachedComposedModelFile("MMA_CHAOS_")]
     ),
     "CHAOS-MMA-Secondary": ModelFactory(
         load_model_swarm_mma_2c_internal,
-        [CachedComposedModelFile("MMA_CHAOS6")]
+        [CachedComposedModelFile("MMA_CHAOS_")]
     ),
 }
 

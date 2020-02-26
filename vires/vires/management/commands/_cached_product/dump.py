@@ -135,7 +135,7 @@ CACHED_PRODUCTS = {
     for product_type, filename in CACHED_PRODUCT_FILE.items()
 }
 
-configure_cached_product("MMA_CHAOS6", info_reader=read_info_cdf)
+configure_cached_product("MMA_CHAOS_", info_reader=read_info_cdf)
 configure_cached_product("MMA_SHA_2C", info_reader=read_info_cdf)
 configure_cached_product("MMA_SHA_2F", info_reader=read_info_cdf)
 configure_cached_product("AUX_F10_2_", info_reader=read_info_cdf)

@@ -100,7 +100,7 @@ CACHED_PRODUCTS = {
 }
 
 configure_cached_product(
-    "MMA_CHAOS6",
+    "MMA_CHAOS_",
     updater=merge_mma_sha_2c,
     filter=filter_mma_sha_2c,
     tmp_extension=".tmp.cdf"

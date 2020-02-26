@@ -28,6 +28,7 @@
 
 from vires.models import Product
 from .._common import Subcommand, time_spec
+from .common import filter_invalid
 
 
 class ListProductSubcommand(Subcommand):
@@ -58,6 +59,10 @@ class ListProductSubcommand(Subcommand):
             "--before", type=time_spec, required=False,
             help="Select products before the given date."
         )
+        parser.add_argument(
+            "--invalid-only", dest="invalid_only", action="store_true",
+            default=False, help="Select invalid products missing a data-file."
+        )
 
     def handle(self, **kwargs):
         query = Product.objects.order_by("identifier")
@@ -80,5 +85,8 @@ class ListProductSubcommand(Subcommand):
         if identifiers:
             query = query.filter(identifier__in=identifiers)
 
-        for product in query.all():
+        if kwargs['invalid_only']:
+            query = filter_invalid(query, self.logger)
+
+        for product in query:
             print(product.identifier)

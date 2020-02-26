@@ -69,14 +69,12 @@ class RegisterProductSubcommand(Subcommand):
             )
         )
         parser.add_argument(
-            "--conflict", dest="conflict", choices=("IGNORE", "REPLACE"),
+            "--conflict", dest="conflict", choices=("IGNORE", "UPDATE"),
             default="IGNORE", help=(
                 "Define how to resolve conflict when the product is already "
                 "registered. By default the registration is skipped and the "
-                "the new product is IGNORED. An alternative is to REPLACE "
-                "the old product, i.e., to de-register the old one and "
-                "register the new one). In case of the REPLACE the collection "
-                "links are NOT preserved."
+                "the new product is IGNORED. An alternative is to UPDATE "
+                "the product record."
             )
         )
         parser.add_argument(
@@ -159,17 +157,17 @@ class RegisterProductSubcommand(Subcommand):
 
         if not old_product:
             product = register_product(collection, product_id, data_file, metadata)
-            self.info("%s in %s registered", product_id, collection.identifier)
+            self.info("%s in %s registered", product_id, collection.identifier, log=True)
             inserted.append(product_id)
         elif not ignore_registered:
             product = update_product(old_product, data_file, metadata)
-            self.info("%s in %s updated", product_id, collection.identifier)
+            self.info("%s in %s updated", product_id, collection.identifier, log=True)
             updated.append(product_id)
         else:
             product = None
             self.info("%s in %s ignored", product_id, collection.identifier)
 
-        if old_product and collection.metadata.get("calculateOrbitDirection"):
+        if product and collection.metadata.get("calculateOrbitDirection"):
             try:
                 update_orbit_direction_tables(product)
             except DataIntegrityError:
