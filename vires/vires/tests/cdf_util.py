@@ -50,6 +50,73 @@ from vires.tests.aux_dst import TEST_DST, DATA_DST
 from vires.tests import ArrayMixIn
 
 
+class TestCDFEpochTimeBaseline(ArrayMixIn, unittest.TestCase):
+
+    def test_cdf_rawtime_to_datetime_subms_scalar(self):
+        self.assertEqual(
+            cdf_rawtime_to_datetime(63570441599979.984, CDF_EPOCH_TYPE),
+            datetime(2014, 6, 19, 23, 59, 59, 979984)
+        )
+
+    def test_cdf_rawtime_to_datetime_subms_midnight_scalar(self):
+        self.assertEqual(
+            cdf_rawtime_to_datetime(63570441599999.984, CDF_EPOCH_TYPE),
+            datetime(2014, 6, 19, 23, 59, 59, 999984)
+        )
+
+    def test_cdf_rawtime_to_datetime_subms_array(self):
+        input_ = array([
+            [63570441599939.984, 63570441599959.984],
+            [63570441599979.984, 63570441599999.984],
+        ])
+        expected = array([
+            [
+                datetime(2014, 6, 19, 23, 59, 59, 939984),
+                datetime(2014, 6, 19, 23, 59, 59, 959984),
+            ],
+            [
+                datetime(2014, 6, 19, 23, 59, 59, 979984),
+                datetime(2014, 6, 19, 23, 59, 59, 999984),
+            ],
+        ])
+        self.assertAllEqual(
+            cdf_rawtime_to_datetime(input_, CDF_EPOCH_TYPE), expected
+        )
+
+    def test_datetime_to_cdf_rawtime_subms_scalar(self):
+        self.assertEqual(
+            datetime_to_cdf_rawtime(
+                datetime(2014, 6, 19, 23, 59, 59, 979984), CDF_EPOCH_TYPE
+            ), 63570441599979.984
+        )
+
+    def test_datetime_to_cdf_rawtime_subms_midnight_scalar(self):
+        self.assertEqual(
+            datetime_to_cdf_rawtime(
+                datetime(2014, 6, 19, 23, 59, 59, 999984), CDF_EPOCH_TYPE
+            ), 63570441599999.984
+        )
+
+    def test_datetime_to_cdf_rawtime_subms_array(self):
+        input_ = array([
+            [
+                datetime(2014, 6, 19, 23, 59, 59, 939984),
+                datetime(2014, 6, 19, 23, 59, 59, 959984),
+            ],
+            [
+                datetime(2014, 6, 19, 23, 59, 59, 979984),
+                datetime(2014, 6, 19, 23, 59, 59, 999984),
+            ],
+        ])
+        expected = array([
+            [63570441599939.984, 63570441599959.984],
+            [63570441599979.984, 63570441599999.984],
+        ])
+        self.assertAllEqual(
+            datetime_to_cdf_rawtime(input_, CDF_EPOCH_TYPE), expected
+        )
+
+
 class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):
     FILE = "./test_tmp_cdf_epoch2.cdf"
     START = datetime(1980, 1, 1, 0, 0, 0)

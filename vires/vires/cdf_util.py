@@ -28,7 +28,7 @@
 # pylint: disable=too-many-arguments
 
 from os.path import exists
-from datetime import timedelta
+from datetime import datetime, timedelta
 import ctypes
 from numpy import (
     nan, vectorize, object as dt_object, float64 as dt_float64,
@@ -102,6 +102,7 @@ CDF_TYPE_TO_DTYPE = {
     CDF_CHAR_TYPE: "S",
 }
 
+DATETIME_1970 = datetime(1970, 1, 1)
 CDF_EPOCH_1970 = 62167219200000.0
 CDF_EPOCH_2000 = 63113904000000.0
 
@@ -220,9 +221,14 @@ def datetime_to_cdf_rawtime(time, cdf_type):
     """ Convert `datetime.datetime` object to CDF raw time. """
     if cdf_type == CDF_EPOCH_TYPE:
         if isinstance(time, ndarray):
-            return pycdf.lib.v_datetime_to_epoch(time)
-        return pycdf.lib.datetime_to_epoch(time)
+            return vectorize(datetime_to_cdf_epoch)(time)
+        return datetime_to_cdf_epoch(time)
     raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def datetime_to_cdf_epoch(dtobj):
+    """ Convert raw CDF_EPOCH values to datetime.datetime object. """
+    return (dtobj - DATETIME_1970).total_seconds()*1e3  + CDF_EPOCH_1970
 
 
 def cdf_rawtime_to_datetime(raw_time, cdf_type):
@@ -231,9 +237,14 @@ def cdf_rawtime_to_datetime(raw_time, cdf_type):
     """
     if cdf_type == CDF_EPOCH_TYPE:
         if isinstance(raw_time, ndarray):
-            return pycdf.lib.v_epoch_to_datetime(raw_time)
-        return pycdf.lib.epoch_to_datetime(raw_time)
+            return vectorize(cdf_epoch_to_datetime)(raw_time)
+        return cdf_epoch_to_datetime(raw_time)
     raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def cdf_epoch_to_datetime(cdf_epoch):
+    """ Convert raw CDF_EPOCH values to datetime.datetime object. """
+    return DATETIME_1970 + timedelta(milliseconds=(cdf_epoch - CDF_EPOCH_1970))
 
 
 def cdf_rawtime_to_unix_epoch(raw_time, cdf_type):

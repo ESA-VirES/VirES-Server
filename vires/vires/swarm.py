@@ -30,6 +30,7 @@
 from numpy import array, empty, isnan, floor, ceil
 from django.contrib.gis.geos import Polygon, MultiPolygon
 from vires.time_util import naive_to_utc
+from vires.cdf_util import cdf_rawtime_to_datetime
 
 
 class SwarmProductMetadataReader():
@@ -50,7 +51,7 @@ class SwarmProductMetadataReader():
         # iterate possible time keys and try to extract the values
         for time_key in cls.TIME_KEYS:
             try:
-                times = data[time_key]
+                times = data.raw_var(time_key)
             except KeyError:
                 continue
             else:
@@ -58,7 +59,14 @@ class SwarmProductMetadataReader():
         else:
             raise KeyError("Temporal variable not found!")
 
-        return (naive_to_utc(times[0]), naive_to_utc(times[-1]), times.shape[0])
+        if len(times.shape) != 1:
+            raise ValueError("Incorrect dimension of the time-stamp array!")
+
+        return (
+            naive_to_utc(cdf_rawtime_to_datetime(times[0], times.type())),
+            naive_to_utc(cdf_rawtime_to_datetime(times[-1], times.type())),
+            times.shape[0]
+        )
 
     @classmethod
     def get_coords(cls, data):
