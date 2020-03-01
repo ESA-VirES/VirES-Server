@@ -44,7 +44,7 @@ from . import FULL_PACKAGE_NAME
 from .util import full
 from .time_util import (
     mjd2000_to_decimal_year, year_to_day2k, days_per_year,
-    datetime, naive_to_utc,
+    datetime, naive_to_utc, utc_to_naive,
 )
 
 GZIP_COMPRESSION = pycdf.const.GZIP_COMPRESSION
@@ -231,7 +231,7 @@ def datetime_to_cdf_rawtime(time, cdf_type):
 
 def datetime_to_cdf_epoch(dtobj):
     """ Convert raw CDF_EPOCH values to datetime.datetime object. """
-    return (dtobj - DATETIME_1970).total_seconds()*1e3  + CDF_EPOCH_1970
+    return (utc_to_naive(dtobj) - DATETIME_1970).total_seconds()*1e3  + CDF_EPOCH_1970
 
 
 def cdf_rawtime_to_datetime(raw_time, cdf_type):
