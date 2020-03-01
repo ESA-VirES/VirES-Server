@@ -31,7 +31,7 @@ import re
 import math
 import time
 from datetime import datetime, timedelta
-from django.utils.dateparse import utc
+from django.utils.timezone import utc
 
 DT_1970 = datetime(1970, 1, 1)
 DT_2000 = datetime(2000, 1, 1)

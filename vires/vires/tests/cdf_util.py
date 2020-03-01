@@ -34,7 +34,7 @@ from datetime import datetime, timedelta
 from numpy import arange, linspace, vectorize, isnan, logical_not, array
 from scipy.interpolate import interp1d
 from spacepy import pycdf
-
+from django.utils.timezone import get_fixed_timezone, utc
 from vires.time_util import (
     datetime_to_mjd2000, datetime_to_unix_epoch, datetime_to_decimal_year,
 )
@@ -116,7 +116,42 @@ class TestCDFEpochTimeBaseline(ArrayMixIn, unittest.TestCase):
             datetime_to_cdf_rawtime(input_, CDF_EPOCH_TYPE), expected
         )
 
+    def test_datetime_tzaware_to_cdf_rawtime_subms_scalar(self):
+        self.assertEqual(
+            datetime_to_cdf_rawtime(
+                datetime(2014, 6, 19, 23, 59, 59, 979984, utc), CDF_EPOCH_TYPE
+            ), 63570441599979.984
+        )
 
+    def test_datetime_tzaware_to_cdf_rawtime_subms_midnight_scalar(self):
+        self.assertEqual(
+            datetime_to_cdf_rawtime(
+                datetime(2014, 6, 19, 22, 59, 59, 999984, get_fixed_timezone(-60)),
+                CDF_EPOCH_TYPE
+            ), 63570441599999.984
+        )
+
+    def test_datetime_tzaware_to_cdf_rawtime_subms_array(self):
+        input_ = array([
+            [
+                datetime(2014, 6, 19, 23, 59, 59, 939984, utc),
+                datetime(2014, 6, 19, 23, 59, 59, 959984, utc),
+            ],
+            [
+                datetime(2014, 6, 19, 22, 59, 59, 979984, get_fixed_timezone(-60)),
+                datetime(2014, 6, 20, 0, 59, 59, 999984, get_fixed_timezone(+60)),
+            ],
+        ])
+        expected = array([
+            [63570441599939.984, 63570441599959.984],
+            [63570441599979.984, 63570441599999.984],
+        ])
+        self.assertAllEqual(
+            datetime_to_cdf_rawtime(input_, CDF_EPOCH_TYPE), expected
+        )
+
+
+from django.utils.timezone import get_fixed_timezone, utc
 class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):
     FILE = "./test_tmp_cdf_epoch2.cdf"
     START = datetime(1980, 1, 1, 0, 0, 0)
