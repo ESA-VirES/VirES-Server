@@ -29,6 +29,7 @@
 
 import sys
 from os.path import abspath, basename, splitext
+from datetime import timedelta
 from traceback import print_exc
 from django.db import transaction
 from django.core.management.base import CommandError
@@ -38,7 +39,9 @@ from vires.orbit_direction_update import DataIntegrityError
 from vires.cdf_util import cdf_open
 from .._common import Subcommand
 from .._orbit_direction.common import (
-    update_orbit_direction_tables, sync_orbit_direction_tables,
+    update_orbit_direction_tables,
+    sync_orbit_direction_tables,
+    rebuild_orbit_direction_tables,
 )
 
 
@@ -104,13 +107,15 @@ class RegisterProductSubcommand(Subcommand):
 
         for data_file in read_products(kwargs["input_file"], data_files):
             product_id = get_product_id(data_file)
+            max_product_duration = collection.max_product_duration
 
             try:
-                removed, inserted, updated = self._register_product(
+                removed, inserted, updated, product = self._register_product(
                     collection, product_id, data_file, ignore_registered,
                     ignore_overlaps,
                 )
             except Exception as error:
+                collection.max_product_duration = max_product_duration
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
                 self.error(
@@ -118,6 +123,7 @@ class RegisterProductSubcommand(Subcommand):
                     collection.identifier, product_id, error
                 )
                 counter.increment_failed()
+                product = None
             else:
                 counter.increment_removed(len(removed))
                 if updated:
@@ -128,6 +134,12 @@ class RegisterProductSubcommand(Subcommand):
                     counter.increment_skipped()
             finally:
                 counter.increment()
+
+            if product:
+                if collection.metadata.get("calculateOrbitDirection"):
+                    self._update_orbit_direction(product)
+
+
 
         counter.print_report(lambda msg: print(msg, file=sys.stderr))
 
@@ -141,6 +153,7 @@ class RegisterProductSubcommand(Subcommand):
             collection, metadata["begin_time"], metadata["end_time"]
         )
         old_product = None
+
         for product in products:
             if product.identifier == product_id:
                 old_product = product
@@ -164,16 +177,18 @@ class RegisterProductSubcommand(Subcommand):
             product = None
             self.info("%s/%s ignored", collection.identifier, product_id)
 
-        if product and collection.metadata.get("calculateOrbitDirection"):
-            try:
-                update_orbit_direction_tables(product)
-            except DataIntegrityError:
-                self.warning(
-                    "Synchronizing orbit direction lookup tables ..."
-                )
-                sync_orbit_direction_tables(collection)
+        return removed, inserted, updated, product
 
-        return removed, inserted, updated
+    def _update_orbit_direction(self, product):
+        try:
+            update_orbit_direction_tables(product)
+        except DataIntegrityError:
+            self.warning("Synchronizing orbit direction lookup tables ...")
+            try:
+                sync_orbit_direction_tables(product.collection, logger=self.logger)
+            except DataIntegrityError:
+                self.warning("Rebuilding orbit direction lookup tables ...")
+                rebuild_orbit_direction_tables(product.collection, logger=self.logger)
 
 
 class Counter():
@@ -291,7 +306,9 @@ def find_product(collection, product_id):
 def find_time_overlaps(collection, begin_time, end_time):
     """ Lookup products with the same temporal overlap."""
     return collection.products.filter(
-        begin_time__lte=end_time, end_time__gte=begin_time
+        begin_time__lte=end_time,
+        begin_time__gte=(begin_time - collection.max_product_duration),
+        end_time__gte=begin_time
     )
 
 
@@ -312,7 +329,21 @@ def update_product(product, data_file, metadata):
         for name in product.collection.type.definition['datasets']
     }
     product.save()
+    update_max_product_duration(
+        product.collection, product.end_time - product.begin_time
+    )
     return product
+
+
+def update_max_product_duration(collection, duration):
+    # round the duration up to whole second + add one extra second buffer
+    duration = timedelta(
+        days=duration.days,
+        seconds=(duration.seconds + (2 if duration.microseconds > 0 else 1))
+    )
+    if duration > collection.max_product_duration:
+        collection.max_product_duration = duration
+        collection.save()
 
 
 def delete_product(product):

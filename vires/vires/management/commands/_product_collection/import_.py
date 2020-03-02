@@ -101,7 +101,7 @@ class ImportProductCollectionSubcommand(Subcommand):
 @transaction.atomic
 def save_product_collection(data):
     identifier = data.pop("name")
-    for key in ["updated", "removed"]:
+    for key in ["updated", "removed", "maxProductDuration"]:
         data.pop(key, None)
     is_updated, product_collection = get_product_collection(identifier)
     product_collection.type = get_product_type(data.pop("productType"))

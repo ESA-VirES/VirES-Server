@@ -359,10 +359,13 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
     def _subset_qs(self, start, stop):
         """ Subset Django query set. """
+        _start = naive_to_utc(start) - self.time_tolerance
+        _stop = naive_to_utc(stop) + self.time_tolerance
         return Product.objects.prefetch_related('collection__type').filter(
             collection=self.collection,
-            begin_time__lt=naive_to_utc(stop + self.time_tolerance),
-            end_time__gte=naive_to_utc(start - self.time_tolerance),
+            begin_time__lt=_stop,
+            end_time__gte=_start,
+            begin_time__gte=(_start - self.collection.max_product_duration),
         )
 
     @staticmethod

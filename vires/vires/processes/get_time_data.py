@@ -96,7 +96,10 @@ class GetTimeDataProcess(WPSProcess):
         if end_time:
             query = query.filter(begin_time__lte=naive_to_utc(end_time))
         if begin_time:
-            query = query.filter(end_time__gte=naive_to_utc(begin_time))
+            query = query.filter(
+                end_time__gte=naive_to_utc(begin_time),
+                begin_time__gte=(begin_time - collection.max_product_duration),
+            )
         query = query.values_list("begin_time", "end_time", "identifier")
 
         output = CDTextBuffer()

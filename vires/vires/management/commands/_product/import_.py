@@ -35,6 +35,7 @@ from django.utils.dateparse import parse_datetime
 from vires.time_util import naive_to_utc
 from vires.models import ProductCollection, Product
 from .._common import Subcommand
+from .register import update_max_product_duration
 
 
 class ImportProductSubcommand(Subcommand):
@@ -114,6 +115,7 @@ def save_product(data):
     product.datasets = data['datasets']
     product.metadata = data.get('meatadata') or {}
     product.save()
+    update_max_product_duration(collection, product.end_time - product.begin_time)
     return is_updated
 
 

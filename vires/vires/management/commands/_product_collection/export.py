@@ -29,6 +29,7 @@
 import sys
 import json
 from vires.models import ProductCollection
+from vires.time_util import timedelta_to_iso_duration
 from .._common import Subcommand, JSON_OPTS, datetime_to_string
 
 
@@ -75,5 +76,6 @@ def serialize_collection(object_):
         "productType": object_.type.identifier,
         "created": datetime_to_string(object_.created),
         "updated": datetime_to_string(object_.updated),
+        "maxProductDuration": timedelta_to_iso_duration(object_.max_product_duration),
         **object_.metadata
     }

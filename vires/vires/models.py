@@ -29,10 +29,11 @@
 #pylint: disable=no-init,too-few-public-methods,too-many-ancestors
 
 import re
+from datetime import timedelta
 from django.core.validators import RegexValidator
 from django.db.models import (
     Model, ForeignKey, BooleanField, CharField, DateTimeField, BigIntegerField,
-    TextField,
+    TextField, Index, DurationField,
     CASCADE as ON_DELETE_CASCADE,
     PROTECT as ON_DELETE_PROTECT,
 )
@@ -155,6 +156,7 @@ class ProductCollection(Model):
     type = ForeignKey(ProductType, related_name='collections', **MANDATORY, **PROTECT)
     created = DateTimeField(auto_now_add=True)
     updated = DateTimeField(auto_now=True)
+    max_product_duration = DurationField(default=timedelta(0), **MANDATORY)
     metadata = JSONField(default=dict, **MANDATORY)
 
     class Meta:
@@ -174,6 +176,10 @@ class Product(Model):
 
     class Meta:
         unique_together = ('collection', 'identifier')
+        indexes = [
+            Index(fields=['collection', 'begin_time']),
+            Index(fields=['collection', 'end_time']),
+        ]
 
     def set_location(self, dataset_id, location):
         _datasets = self.datasets or {}
