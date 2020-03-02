@@ -51,7 +51,7 @@ class UserProfile(Model):
 
 
 def get_random_token(lenght):
-    return base64.urlsafe_b64encode(os.urandom(lenght))
+    return base64.urlsafe_b64encode(os.urandom(lenght)).decode('ascii')
 
 def get_default_identifier():
     return get_random_token(12)
