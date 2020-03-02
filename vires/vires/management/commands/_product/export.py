@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Dump products in JSON format.
+# Export product records in JSON format.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -29,75 +29,30 @@
 import sys
 import json
 from vires.models import Product
-from .._common import Subcommand, JSON_OPTS, datetime_to_string, time_spec
-from .common import filter_invalid
+from .._common import JSON_OPTS, datetime_to_string
+from .common import ProductSelectionSubcommand
 
 
-class DumpProductSubcommand(Subcommand):
-    name = "dump"
-    help = "Dump products in JSON format."
+class ExportProductSubcommand(ProductSelectionSubcommand):
+    name = "export"
+    help = "Export product records in JSON format."
 
     def add_arguments(self, parser):
-        parser.add_argument("identifier", nargs="*")
+        super().add_arguments(parser)
         parser.add_argument(
             "-f", "--file-name", dest="file", default="-", help=(
                 "Optional file-name the output is written to. "
                 "By default it is written to the standard output."
             )
         )
-        parser.add_argument(
-            "-t", "--product-type", dest="product_type", action='append', help=(
-                "Optional filter on the collection product type. "
-                "Multiple product types are allowed."
-            )
-        )
-        parser.add_argument(
-            "-c", "--collection", "--product-collection",
-            dest="product_collection", action="append",
-            help=(
-                "Optional filter on the product collection. "
-                "Multiple product collection are allowed."
-            )
-        )
-        parser.add_argument(
-            "--after", type=time_spec, required=False,
-            help="Select products after the given date."
-        )
-        parser.add_argument(
-            "--before", type=time_spec, required=False,
-            help="Select products before the given date."
-        )
-        parser.add_argument(
-            "--invalid-only", dest="invalid_only", action="store_true",
-            default=False, help="Select invalid products missing a data-file."
-        )
 
     def handle(self, **kwargs):
-        query = Product.objects.order_by("identifier")
-        query = query.prefetch_related('collection', 'collection__type')
+        products = self.select_products(
+            Product.objects.prefetch_related('collection', 'collection__type'),
+            **kwargs
+        )
 
-        if kwargs['after']:
-            query = query.filter(begin_time__gte=kwargs['after'])
-
-        if kwargs['before']:
-            query = query.filter(end_time__lt=kwargs['before'])
-
-        product_types = set(kwargs['product_type'] or [])
-        if product_types:
-            query = query.filter(collection__type__identifier__in=product_types)
-
-        product_collections = set(kwargs['product_collection'] or [])
-        if product_collections:
-            query = query.filter(collection__identifier__in=product_collections)
-
-        identifiers = set(kwargs['identifier'])
-        if identifiers:
-            query = query.filter(identifier__in=identifiers)
-
-        if kwargs['invalid_only']:
-            query = filter_invalid(query, self.logger)
-
-        data = [serialize_product(product) for product in query]
+        data = [serialize_product(product) for product in products]
 
         filename = kwargs["file"]
         with (sys.stdout if filename == "-" else open(filename, "w")) as file_:

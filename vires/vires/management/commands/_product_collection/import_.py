@@ -52,9 +52,9 @@ class ImportProductCollectionSubcommand(Subcommand):
         filename = kwargs['filename']
 
         with sys.stdin if filename == "-" else open(filename, "rb") as file_:
-            self.load_product_collections(json.load(file_), **kwargs)
+            self.save_product_collections(json.load(file_), **kwargs)
 
-    def load_product_collections(self, data, **kwargs):
+    def save_product_collections(self, data, **kwargs):
         failed_count = 0
         created_count = 0
         updated_count = 0
@@ -81,7 +81,7 @@ class ImportProductCollectionSubcommand(Subcommand):
 
         if created_count:
             self.info(
-                "%d of %d product collection%s updated.", created_count, len(data),
+                "%d of %d product collection%s created.", created_count, len(data),
                 "s" if created_count > 1 else ""
             )
 

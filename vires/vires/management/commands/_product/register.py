@@ -97,7 +97,7 @@ class RegisterProductSubcommand(Subcommand):
 
         if collection is None:
             raise CommandError(
-                "The product collection '%s' does not exist!" % collection_id
+                "The product collection %s does not exist!" % collection_id
             )
 
         counter = Counter()
@@ -114,8 +114,8 @@ class RegisterProductSubcommand(Subcommand):
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
                 self.error(
-                    "Registration of '%s' failed! Reason: %s",
-                    product_id, error
+                    "Registration of %s/%s failed! Reason: %s",
+                    collection.identifier, product_id, error
                 )
                 counter.increment_failed()
             else:
@@ -146,26 +146,23 @@ class RegisterProductSubcommand(Subcommand):
                 old_product = product
             else:
                 if ignore_overlaps and product.identifier != product_id:
-                    self.info("%s ignored", product.identifier)
+                    self.info("%s/%s ignored", collection.identifier, product.identifier)
                 else:
                     delete_product(product)
-                    self.info(
-                        "%s in %s deregistered",
-                        product.identifier, collection.identifier
-                    )
+                    self.info("%s/%s de-registered", collection.identifier, product.identifier)
                     removed.append(product.identifier)
 
         if not old_product:
             product = register_product(collection, product_id, data_file, metadata)
-            self.info("%s in %s registered", product_id, collection.identifier, log=True)
+            self.info("%s/%s registered", collection.identifier, product_id, log=True)
             inserted.append(product_id)
         elif not ignore_registered:
             product = update_product(old_product, data_file, metadata)
-            self.info("%s in %s updated", product_id, collection.identifier, log=True)
+            self.info("%s/%s updated", collection.identifier, product_id, log=True)
             updated.append(product_id)
         else:
             product = None
-            self.info("%s in %s ignored", product_id, collection.identifier)
+            self.info("%s/%s ignored", collection.identifier, product_id)
 
         if product and collection.metadata.get("calculateOrbitDirection"):
             try:

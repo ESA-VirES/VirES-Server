@@ -27,66 +27,20 @@
 # pylint: disable=missing-docstring
 
 from vires.models import Product
-from .._common import Subcommand, time_spec
-from .common import filter_invalid
+from .common import ProductSelectionSubcommand
 
 
-class ListProductSubcommand(Subcommand):
+class ListProductSubcommand(ProductSelectionSubcommand):
     name = "list"
     help = "List product identifiers."
 
-    def add_arguments(self, parser):
-        parser.add_argument("identifier", nargs="*")
-        parser.add_argument(
-            "-t", "--product-type", dest="product_type", action='append', help=(
-                "Optional filter on the collection product type. "
-                "Multiple product types are allowed."
-            )
-        )
-        parser.add_argument(
-            "-c", "--collection", "--product-collection",
-            dest="product_collection", action="append",
-            help=(
-                "Optional filter on the product collection. "
-                "Multiple product collection are allowed."
-            )
-        )
-        parser.add_argument(
-            "--after", type=time_spec, required=False,
-            help="Select products after the given date."
-        )
-        parser.add_argument(
-            "--before", type=time_spec, required=False,
-            help="Select products before the given date."
-        )
-        parser.add_argument(
-            "--invalid-only", dest="invalid_only", action="store_true",
-            default=False, help="Select invalid products missing a data-file."
-        )
+    #def add_arguments(self, parser):
+    #    super().add_arguments(parser)
 
     def handle(self, **kwargs):
-        query = Product.objects.order_by("identifier")
+        products = self.select_products(
+            Product.objects.prefetch_related("collection"), **kwargs
+        )
 
-        if kwargs['after']:
-            query = query.filter(begin_time__gte=kwargs['after'])
-
-        if kwargs['before']:
-            query = query.filter(end_time__lt=kwargs['before'])
-
-        product_types = set(kwargs['product_type'] or [])
-        if product_types:
-            query = query.filter(collection__type__identifier__in=product_types)
-
-        product_collections = set(kwargs['product_collection'] or [])
-        if product_collections:
-            query = query.filter(collection__identifier__in=product_collections)
-
-        identifiers = set(kwargs['identifier'])
-        if identifiers:
-            query = query.filter(identifier__in=identifiers)
-
-        if kwargs['invalid_only']:
-            query = filter_invalid(query, self.logger)
-
-        for product in query:
-            print(product.identifier)
+        for product in products:
+            print("%s/%s" % (product.collection.identifier, product.identifier))
