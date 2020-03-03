@@ -29,20 +29,25 @@
 from logging import LoggerAdapter
 
 
+class AccessLoggerAdapter(LoggerAdapter):
+    """ Logger adapter adding extra fields required by the access logger. """
+
+    def __init__(self, logger, username=None, remote_addr=None, **kwargs):
+        super().__init__(logger, {
+            "remote_addr": remote_addr if remote_addr else "-",
+            "username": username if username else "-",
+        })
+
+
 def get_remote_addr(request):
-    """ Extract remote address from a request. """
+    """ Extract remote address from the Django HttpRequest """
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         return x_forwarded_for.partition(',')[0]
     return request.META.get('REMOTE_ADDR')
 
 
-class AccessLoggerAdapter(LoggerAdapter):
-    """ Logger adapter adding extra fields required by the access logger. """
-
-    def __init__(self, logger, request, user=None):
-        user = user or request.user
-        super(AccessLoggerAdapter, self).__init__(logger, {
-            "remote_addr": get_remote_addr(request) if request else "-",
-            "username": "-" if user.is_anonymous else user.username,
-        })
+def get_username(user):
+    """ Extract username of the authenticated user or return None
+    """
+    return user.username if user and user.is_authenticated else None

@@ -30,12 +30,10 @@
 
 import re
 from functools import wraps
-from logging import getLogger, NOTSET
+from logging import NOTSET
 from django.utils.timezone import now
 from django.core.exceptions import PermissionDenied
 from .models import AuthenticationToken
-
-LOGGER = getLogger("eoxs_allauth.access")
 
 
 def log_access(level_authenticated=NOTSET, level_unauthenticated=NOTSET):

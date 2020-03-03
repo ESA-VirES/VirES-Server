@@ -30,50 +30,13 @@
 
 from logging import getLogger, INFO, WARNING, ERROR
 from django.contrib.auth import logout
-from .utils import AccessLoggerAdapter
+from .utils import AccessLoggerAdapter, get_remote_addr, get_username
 
-ACCESS_LOGGER_NAME = "eoxs_allauth.access"
-
-
-#class AccessLoggingMiddleware(object):
-#    """ Middleware that logs access to the service.
-#
-#    This middleware makes use of the view attributes to decide the logging
-#    level of the authenticated and non-authenticated requests.
-#    """
-#
-#    def process_view(self, request, view_func, view_args, view_kwargs):
-#        """ Access logging. """
-#        if request.user.is_authenticated:
-#            type_, level = "A", getattr(view_func, 'log_level_auth', INFO)
-#        else:
-#            type_, level = "N", getattr(view_func, 'log_level_unauth', INFO)
-#        LOGGER.log(level, "%s %s %s", type_, request.method, request.path)
-#
-#    def process_response(self, request, response):
-#        """ Log response status. """
-#        # Warn in case of an error.
-#        level = WARNING if response.status_code >= 400 else INFO
-#        LOGGER.log(
-#            level, "R %s %s %s %s ", request.method, request.path,
-#            response.status_code, response.reason_phrase,
-#        )
-#        return response
-#
-#
-#class InactiveUserLogoutMiddleware(object):
-#    """ Middleware that terminates sessions for authenticated but inactive
-#    users.
-#    """
-#
-#    def process_request(self, request):
-#        """ Log out inactive users. """
-#        if request.user.is_authenticated and not request.user.is_active:
-#            logout(request)
+ACCESS_LOGGER_NAME = "access.http"
 
 
 def access_logging_middleware(get_response):
-    logger = getLogger(ACCESS_LOGGER_NAME)
+    base_logger = getLogger(ACCESS_LOGGER_NAME)
 
     # log levels are set via the  `log_access` decorator
     log_level_authenticated = getattr(
@@ -93,10 +56,14 @@ def access_logging_middleware(get_response):
         return ERROR
 
     def middleware(request):
+        logger = AccessLoggerAdapter(
+            logger=base_logger,
+            username=get_username(request.user),
+            remote_addr=get_remote_addr(request),
+        )
         response = get_response(request)
-        is_authenticated = request.user.is_authenticated
-        AccessLoggerAdapter(logger, request).log(
-            get_log_level(response.status_code, is_authenticated),
+        logger.log(
+            get_log_level(response.status_code, request.user.is_authenticated),
             "%s %s %s %s ", request.method, request.path, response.status_code,
             response.reason_phrase,
         )

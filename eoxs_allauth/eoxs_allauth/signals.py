@@ -33,6 +33,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from allauth.exceptions import ImmediateHttpResponse
+from allauth.socialaccount import providers
 from allauth.account.signals import (
     user_logged_in, user_signed_up, password_set, password_changed,
     password_reset, email_confirmed, email_confirmation_sent, email_changed,
@@ -41,103 +42,101 @@ from allauth.account.signals import (
 from allauth.socialaccount.signals import (
     pre_social_login, social_account_added, social_account_removed,
 )
+from .utils import AccessLoggerAdapter, get_remote_addr, get_username
 
-LOGGER = getLogger("eoxs_allauth.allauth")
+ACCESS_LOGGER_NAME = "access.auth"
 
 
 @receiver(user_logged_in)
 def receive_user_logged_in(request, user, **kwargs):
-    LOGGER.info("%s logged in", user)
-
+    provider = getattr(user, 'provider', None)
+    socialaccount = user.socialaccount_set.get(provider=provider) if provider else None
+    _get_access_logger(request, user).info(
+        "user logged in %s", _extract_login_info(socialaccount)
+    )
 
 @receiver(user_signed_up)
 def receive_user_signed_up(request, user, **kwargs):
-    LOGGER.info("%s signed up", user)
+    socialaccounts = list(user.socialaccount_set.all())
+    socialaccount = socialaccounts[0] if socialaccounts else None
+    _get_access_logger(request, user).info(
+        "user signed up %s", _extract_login_info(socialaccount)
+    )
 
 
 @receiver(password_set)
 def receive_password_set(request, user, **kwargs):
-    LOGGER.info("%s set password ", user)
+    _get_access_logger(request, user).info("password set")
 
 
 @receiver(password_changed)
 def receive_password_changed(request, user, **kwargs):
-    LOGGER.info("%s changed password", user)
+    _get_access_logger(request, user).info("password changed")
 
 
 @receiver(password_reset)
 def receive_password_reset(request, user, **kwargs):
-    LOGGER.info("%s reset password", user)
+    _get_access_logger(request, user).info("password reset")
 
 
 @receiver(email_changed)
 def receive_email_changed(request, user, from_email_address, to_email_address,
                           **kwargs):
-    LOGGER.info(
-        "%s changed primary e-mail address from %s to %s",
-        user, from_email_address.email, to_email_address.email
+    _get_access_logger(request, user).info(
+        "primary e-mail changed from %s to %s",
+        from_email_address.email, to_email_address.email
     )
 
 
 @receiver(email_added)
 def receive_email_added(request, user, email_address, **kwargs):
-    LOGGER.info("%s added e-mail address %s", user, email_address.email)
+    _get_access_logger(request, user).info(
+        "new e-mail %s added", email_address.email
+    )
 
 
 @receiver(email_removed)
 def receive_email_removed(request, user, email_address, **kwargs):
-    LOGGER.info("%s removed e-mail address %s", user, email_address.email)
+    _get_access_logger(request, user).info(
+        "e-mail %s removed", email_address.email
+    )
 
 
 @receiver(email_confirmed)
 def receive_email_confirmed(email_address, **kwargs):
-    LOGGER.info(
-        "%s confirmed e-mail address %s",
-        email_address.user, email_address.email
+    _get_access_logger(None, email_address.user).info(
+        "e-mail %s confirmed", email_address.email
     )
 
 
 @receiver(email_confirmation_sent)
 def receive_email_confirmation_sent(confirmation, **kwargs):
-    LOGGER.info(
-        "%s was sent a request to confirm e-mail address %s",
-        confirmation.email_address.user, confirmation.email_address.email
+    _get_access_logger(None, confirmation.email_address.user).info(
+        "e-mail confirmation request sent to %s",
+        confirmation.email_address.email
     )
 
 
 @receiver(pre_social_login)
 def receive_pre_social_login(request, sociallogin, **kwargs):
     enforce_vires_authorization(request, sociallogin.account)
-
-    # TODO: find a better way how to guess the user's identity
-    user_id = str(sociallogin.user)
-    emails = ", ".join(addr.email for addr in sociallogin.email_addresses)
-    if user_id:
-        if emails:
-            user_id += ", %s" % emails
-    else:
-        if emails:
-            user_id = emails
-        else:
-            user_id = '<unknown>'
-
-    LOGGER.info(
-        "successful %s authentication of %s",
-        sociallogin.account.provider, user_id
-    )
+    if sociallogin.is_existing:
+        sociallogin.user.provider = sociallogin.account.provider
 
 
 @receiver(social_account_added)
 def receive_social_account_added(request, sociallogin, **kwargs):
-    LOGGER.info(
-        "%s added %s account", sociallogin.user, sociallogin.account.provider
+    _get_access_logger(request, sociallogin.user).info(
+        "%s social account added %s", sociallogin.account.provider,
+        _extract_user_info(sociallogin.account)
     )
 
 
 @receiver(social_account_removed)
 def receive_social_account_removed(request, socialaccount, **kwargs):
-    LOGGER.info(
-        "%s removed %s account", socialaccount.user, socialaccount.provider
+    _get_access_logger(request, socialaccount.user).info(
+        "%s social account removed %s", socialaccount.provider,
+        _extract_user_info(socialaccount)
     )
 
 
@@ -154,9 +153,48 @@ def enforce_vires_authorization(request, account):
     required_permission = get_required_permission()
     granted_permissions = get_account_permissions(account)
     if required_permission and required_permission not in granted_permissions:
-        LOGGER.info(
+        AccessLoggerAdapter(
+            getLogger(ACCESS_LOGGER_NAME),
+            username=None,
+            remote_addr=get_remote_addr(request),
+        ).info(
             "access denied to %s user %s because of the missing %s permission",
             account.provider, account.extra_data['username'], required_permission,
         )
         add_message_access_denied(request)
         raise ImmediateHttpResponse(HttpResponseRedirect(reverse("workspace")))
+
+
+
+def _extract_login_info(social_account):
+    if social_account:
+        return "via %s social account %s" % (
+            social_account.provider, _extract_user_info(social_account)
+        )
+    return "directly"
+
+
+def _extract_user_info(social_account):
+    social_provider = providers.registry.by_id(social_account.provider)
+    data = social_provider.extract_common_fields(social_account.extra_data)
+
+    first_name = data.pop('first_name', None)
+    last_name = data.pop('last_name', None)
+    if first_name and last_name:
+        data['name'] = "%s %s" % (first_name, last_name)
+
+    return "(%s)" % _items2str(
+        (key, data.get(key)) for key in ['name', 'username', 'email']
+    )
+
+
+def _items2str(data):
+    return ", ".join("%s: %s" % (key, value) for key, value in data if value)
+
+
+def _get_access_logger(request, user):
+    return AccessLoggerAdapter(
+        getLogger(ACCESS_LOGGER_NAME),
+        username=get_username(user),
+        remote_addr=get_remote_addr(request),
+    )
