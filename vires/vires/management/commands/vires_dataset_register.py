@@ -47,7 +47,7 @@ from eoxserver.resources.coverages.management.commands import (
     CommandOutputMixIn, nested_commit_on_success
 )
 from vires.models import Product
-from vires.cdf_util import cdf_open
+from vires.cdf_util import cdf_open, cdf_rawtime_to_datetime
 from vires.time_util import naive_to_utc
 
 
@@ -401,7 +401,7 @@ class VirESMetadataReader(object):
         # iterate possible time keys and try to extract the values
         for time_key in cls.TIME_KEYS:
             try:
-                times = data[time_key]
+                times = data.raw_var(time_key)
             except KeyError:
                 continue
             else:
@@ -409,7 +409,14 @@ class VirESMetadataReader(object):
         else:
             raise KeyError("Temporal variable not found!")
 
-        return (naive_to_utc(times[0]), naive_to_utc(times[-1]), times.shape[0])
+        if len(times.shape) != 1:
+            raise ValueError("Incorrect dimension of the time-stamp array!")
+
+        return (
+            naive_to_utc(cdf_rawtime_to_datetime(times[0], times.type())),
+            naive_to_utc(cdf_rawtime_to_datetime(times[-1], times.type())),
+            times.shape[0]
+        )
 
     @classmethod
     def get_coords(cls, data):
