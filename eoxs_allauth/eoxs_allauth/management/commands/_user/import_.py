@@ -28,37 +28,36 @@
 
 import sys
 import json
-from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from django.utils.dateparse import parse_datetime
 from allauth.socialaccount.models import SocialAccount
-from ...models import AuthenticationToken
-from ._common import ConsoleOutput
+from eoxs_allauth.models import AuthenticationToken
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
-
+class ImportUserSubcommand(Subcommand):
+    name = "import"
     help = "Import users from a JSON file."
 
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
         parser.add_argument(
             "-f", "--file", dest="filename", default="-", help=(
-                "Optional input file-name. "
-                "By default it is read from the standard input."
+                "Optional input JSON file-name. "
+                "By default, the users' definitions are read from standard "
+                "input."
             )
         )
 
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs):
         filename = kwargs['filename']
 
         with sys.stdin if filename == "-" else open(filename, "rb") as file_:
-            data = json.load(file_)
+            self.save_users(json.load(file_), **kwargs)
 
+
+    def save_users(self, data, **kwargs):
         failed_count = 0
         created_count = 0
         updated_count = 0
@@ -75,29 +74,28 @@ class Command(ConsoleOutput, BaseCommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing user %s updated." if is_updated else
-                    "New user %s created.", name, log=True
+                    "%s updated" if is_updated else "%s created",
+                    name, log=True
                 )
 
         if created_count:
             self.info(
-                "%d of %d user%s updated.", created_count, len(data),
+                "%d of %d user%s created", created_count, len(data),
                 "s" if created_count > 1 else ""
             )
 
         if updated_count:
             self.info(
-                "%d of %d user%s updated.", updated_count, len(data),
+                "%d of %d user%s updated", updated_count, len(data),
                 "s" if updated_count > 1 else ""
             )
 
         if failed_count:
             self.info(
-                "%d of %d user%s failed ", failed_count, len(data),
+                "%d of %d user%s failed to be imported", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
 
-#-------------------------------------------------------------------------------
 
 def _parse_datetime(value):
     return None if value is None else parse_datetime(value)

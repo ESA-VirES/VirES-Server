@@ -24,32 +24,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,unused-import
+# pylint: disable=missing-docstring
 
 import sys
 import json
 from functools import partial
 from collections import OrderedDict
-from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
-from ...models import UserProfile
-from ._common import ConsoleOutput, JSON_OPTS, datetime_to_string
+from eoxs_allauth.models import UserProfile
+from .._common import JSON_OPTS, datetime_to_string
+from .common import UserSelectionSubcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-
-    help = (
-        "Print information about the AllAuth users. The users are selected "
-        "either by the provided user names (no user name - no output) or "
-        "by the '--all' option. "
-        "By default, only the user names are listed. A brief summary for each "
-        "user can be obtained by '--info' option. The '--json' option produces "
-        "full user profile dump in JSON format."
-    )
+class ExportUserSubcommand(UserSelectionSubcommand):
+    name = "export"
+    help = "Export users in JSON format."
 
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
-        parser.add_argument("username", nargs="*")
+        super().add_arguments(parser)
         parser.add_argument(
             "-f", "--file-name", dest="file", default="-", help=(
                 "Optional file-name the output is written to. "
@@ -57,18 +49,13 @@ class Command(ConsoleOutput, BaseCommand):
             )
         )
 
-    def handle(self, *args, **kwargs):
-        query = User.objects
-        usernames = kwargs['username']
-        if not usernames:
-            query = query.all()
-        else:
-            query = query.filter(username__in=usernames)
+    def handle(self, **kwargs):
+        users = self.select_users(User.objects.all(), **kwargs)
 
-        data = [serialize_user(user) for user in query]
+        data = [serialize_user(user) for user in users]
 
         filename = kwargs["file"]
-        with (sys.stdout if filename == "-" else open(filename, "wb")) as file_:
+        with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
             json.dump(data, file_, **JSON_OPTS)
 
 

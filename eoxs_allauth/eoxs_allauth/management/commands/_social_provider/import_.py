@@ -28,44 +28,67 @@
 
 import sys
 import json
+from traceback import print_exc
 from django.db import transaction
-from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.contrib.sites.models import Site
 from allauth.socialaccount.models import SocialApp
-from ._common import ConsoleOutput
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-
+class ImportSocialProviderSubcommand(Subcommand):
+    name = "import"
     help = "Load social network providers configuration in JSON format."
 
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
         parser.add_argument(
-            "-f", "--file", dest="filename", default="-",
-            help="Input filename."
+            "-f", "--file", dest="filename", default="-", help=(
+                "Optional input JSON file-name. "
+                "By default, the configuration is read from standard input."
+            )
         )
 
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs):
         filename = kwargs['filename']
 
         with sys.stdin if filename == "-" else open(filename, "rb") as file_:
-            data = json.load(file_)
+            self.save_providers(json.load(file_), **kwargs)
 
+    def save_providers(self, data, **kwargs):
         sites = list(Site.objects.filter(id=settings.SITE_ID))
-        with transaction.atomic():
-            for item in data:
-                try:
-                    app = SocialApp.objects.get(provider=item.get('provider'))
-                except SocialApp.DoesNotExist:
-                    app = SocialApp()
-                app.name = item.get('name')
-                app.provider = item.get('provider')
-                app.client_id = item.get('client_id')
-                app.secret = item.get('secret')
-                app.key = item.get('key') or ""
-                app.save()
-                app.sites.clear()
-                for site in sites:
-                    app.sites.add(site)
+        for item in data:
+            name = item.get("provider")
+            try:
+                is_updated = save_provider(item, sites)
+            except Exception as error:
+                if kwargs.get('traceback'):
+                    print_exc(file=sys.stderr)
+                self.error(
+                    "Failed to create or update social provider %s! %s",
+                    name, error
+                )
+            else:
+                self.info(
+                    "%s updated" if is_updated else "%s created",
+                    name, log=True
+                )
+
+
+@transaction.atomic
+def save_provider(item, sites):
+    provider = item['provider']
+    try:
+        app = SocialApp.objects.get(provider=provider)
+        id_updated = True
+    except SocialApp.DoesNotExist:
+        app = SocialApp(provider=provider)
+        id_updated = False
+    app.name = item.get('name')
+    app.client_id = item.get('client_id')
+    app.secret = item.get('secret')
+    app.key = item.get('key') or ""
+    app.save()
+    app.sites.clear()
+    for site in sites:
+        app.sites.add(site)
+    return id_updated

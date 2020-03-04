@@ -1,10 +1,11 @@
 #-------------------------------------------------------------------------------
 #
-# Dump the social providers configuration
+# Social provider management command
 #
+# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,43 +27,20 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-import sys
-import json
-from django.core.management.base import BaseCommand
-from allauth.socialaccount.models import SocialApp
-from ._common import ConsoleOutput, JSON_OPTS
+from logging import getLogger
+from ._common import Supercommand
+from ._social_provider.export import ExportSocialProviderSubcommand
+from ._social_provider.import_ import ImportSocialProviderSubcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
+class Command(Supercommand):
 
-    help = "Dump social network providers configuration in JSON format."
+    help = "Social provider management command."
 
-    def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
-        parser.add_argument("provider", nargs="*")
-        parser.add_argument(
-            "-f", "--file", dest="filename", default="-",
-            help="Output filename."
-        )
-
-    def handle(self, *args, **kwargs):
-        providers = kwargs['provider']
-        filename = kwargs['filename']
-
-        # select user profile
-        query = SocialApp.objects
-        if not providers:
-            query = query.all()
-        else:
-            query = query.filter(provider__in=providers)
-
-        data = [{
-            "provider": app.provider,
-            "name": app.name,
-            "client_id": app.client_id,
-            "secret": app.secret,
-            "key": app.key,
-        } for app in query]
-
-        with sys.stdout if filename == "-" else open(filename, "w") as file_:
-            json.dump(data, file_, **JSON_OPTS)
+    commands = {
+        command.name: command(getLogger("%s.%s" % (__name__, command.name)))
+        for command in [
+            ImportSocialProviderSubcommand,
+            ExportSocialProviderSubcommand,
+        ]
+    }

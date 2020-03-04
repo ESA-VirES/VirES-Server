@@ -26,36 +26,27 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from logging import getLogger
 from django.db import transaction
 from django.utils.timezone import now
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from allauth.socialaccount.models import SocialAccount
-from ...models import UserProfile
-from ._common import ConsoleOutput
+from eoxs_allauth.models import UserProfile
+
+from .common import UserSelectionSubcommandProtected
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
-
+class ConnectVirsOauthSubcommand(UserSelectionSubcommandProtected):
+    name = "connect_to_vires_oauth"
     help = (
-        "Connect existing users to the OAuth server. "
-        "By default all users are connected."
+        "Connect users to the VirES OAuth server. "
+        "To be executed when migrating from the local user DB "
+        "to the remote identity server."
     )
 
-    def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
-        parser.add_argument("username", nargs="*")
+    def handle(self, **kwargs):
+        users = self.select_users(User.objects.all(), **kwargs)
 
-    def handle(self, *args, **kwargs):
-        usernames = kwargs["username"]
-        query = User.objects
-        if not usernames:
-            query = query.all()
-        else:
-            query = query.filter(username__in=usernames)
-        for user in query:
+        for user in users:
             self.connect_user(user)
 
     @transaction.atomic
@@ -70,7 +61,7 @@ class Command(ConsoleOutput, BaseCommand):
         except UserProfile.DoesNotExist:
             pass
 
-        # wipe out social accounts
+        # wipe out all existing social accounts except the VirES identity service
         has_vires_connection = False
         for account in user.socialaccount_set.all():
             if account.provider == "vires" and account.uid == user.username:
@@ -79,7 +70,7 @@ class Command(ConsoleOutput, BaseCommand):
                 account.delete()
 
         if has_vires_connection:
-            self.info("User %s is already connected.", user.username)
+            self.info("%s already connected", user.username)
             return
 
         try:
@@ -97,4 +88,4 @@ class Command(ConsoleOutput, BaseCommand):
                 extra_data={}
             ).save()
 
-        self.info("User %s connected.", user.username, log=True)
+        self.info("%s connected", user.username, log=True)

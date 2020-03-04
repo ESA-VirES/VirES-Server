@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# User management - deactivate one or more active users
+# User management - activate one or more inactive users
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
@@ -28,51 +28,21 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-from logging import getLogger
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from ._common import ConsoleOutput
+from .common import UserSelectionSubcommandProtected
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
+class DeactivateUserSubcommand(UserSelectionSubcommandProtected):
+    name = "deactivate"
+    help = "Deactivate active users."
 
-    help = (
-        "Deactivate active users. The users are selected either by the "
-        "provided user names (no user name - no output) or by the '--all' "
-        "option. "
-    )
+    def handle(self, **kwargs):
+        users = self.select_users(User.objects.all(), **kwargs)
 
-    def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
-        parser.add_argument("username", nargs="*")
-        parser.add_argument(
-            "-a", "--all", dest="all_users", action="store_true", default=False,
-            help="Select all users."
-        )
-
-    def handle(self, *args, **kwargs):
-        usernames = kwargs['username']
-        qset = User.objects
-        if kwargs['all_users']:
-            qset = qset.all()
-        else:
-            if not usernames:
-                self.warning(
-                    "No username has provided! Use '--help' to get more "
-                    "information of the command usage."
-                )
-            qset = qset.filter(username__in=usernames)
-
-        for user in qset:
+        for user in users:
             if user.is_active:
                 user.is_active = False
                 user.save()
-                self.info(
-                    "User %s has been deactivated.", user.username, log=True
-                )
+                self.info("%s deactivated", user.username, log=True)
             else:
-                self.info(
-                    "User %s is already inactive. No change needed.",
-                    user.username
-                )
+                self.info("%s is already inactive", user.username)
