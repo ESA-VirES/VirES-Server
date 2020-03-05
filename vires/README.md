@@ -226,16 +226,16 @@ $ find /mnt/data -name SW_OPER_MAGA_LR_1B\*MDR_MAG_LR.cdf | <instance>/manage.py
 
 The product identifier is inferred from the product filename. Products in one collection must be unique. Registering the same product file in two different collections is possible but it is treated as two independent products.
 
-By default, an attempts to register the same product in one collection again is **ignored**, this can be changed by setting the `--conflict` option to `UPDATE` which updates the original product record:
+By default, an attempts to register the same product in one collection again is **ignored**, this can be changed by the `--update` option:
 
 ```
-$ <instance>/manage.py product register -c SW_OPER_MAGA_LR_1B --conflict=UPDATE -f product_list.txt
+$ <instance>/manage.py product register -c SW_OPER_MAGA_LR_1B --update -f product_list.txt
 ```
 
-By default the registration does not allow time overlapping products to prevent accidental registration of different versions of the same product. The registration detects time-overlaps and **replaces** the old products by the new one. If this behavior is not desired (e.g., the registered products' times naturally overlap) set the `--overlap` option to `IGNORE`:
+By default the registration does not allow time overlapping products to prevent accidental registration of different versions of the same product. The registration detects time-overlaps and **replaces** the old products by the new one. If this behavior is not desired (e.g., the registered products' times naturally overlap) use the `--ignore-overlaps` option:
 
 ```
-$ <instance>/manage.py product register -c SW_OPER_MAGA_LR_1B --overlap=IGNORE -f product_list.txt
+$ <instance>/manage.py product register -c SW_OPER_MAGA_LR_1B --ignore-overlaps -f product_list.txt
 ```
 
 #### Product Listing
@@ -298,7 +298,35 @@ The JSON product definition exported by the export command can be imported to th
 $ <instance>/manage.py product product import < products_dump.json
 $ <instance>/manage.py product product import -f products_dump.json
 ```
-The import command is significantly faster then the regular product registration command, though, it might produce invalid product records and should be used with caution.
+The import command is very powerful and significantly faster then the regular product registration command due to the skipped metadata extraction from the data files. This might, on the other hand, easily produce undesired result and should be used with caution.
+
+By default, the `import` command imports only new product records. To modify the existing records use the `--update` options.
+```
+$ <instance>/manage.py product product import --update < products_dump.json
+```
+
+By default, the `import` command imports only new product records. To fully synchronize the existing product records (i.e, also remove the records not present in the imported JSON) use the `--sync` options.
+```
+$ <instance>/manage.py product product import --sync < products_dump.json
+```
+
+By default, the `import` command imports only new product records. To fully synchronize the existing product records (i.e, also remove the records not present in the imported JSON) use the `--sync` options.
+```
+$ <instance>/manage.py product product import --sync < products_dump.json
+```
+
+The imported product records can be limited by the product type (`-t` option), collection name (`-c` option) or acquisition, creation and last update times (`--after`, `--before`, `--created-after`, `--created-before`, `--updated-after`, and `--updated-before` options accepting ISO-8601 timestamps or duration relative to the current time), e.g.:
+
+```
+$ <instance>/manage.py product import -t SW_MAGx_HR_1B -t SW_MAGx_LR_1B --after=2016-01-01 --before=2016-01-02 < products_dump.json
+$ <instance>/manage.py product import -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=-P31D < products_dump.json
+```
+
+This selection can be combined with the `--sync` and `--update` options to limit, e.g., the synchronization to one or more selected collections:
+
+```
+$ <instance>/manage.py product import -c SW_OPER_MAGA_HR_1B --sync --update < products_dump.json
+```
 
 #### Product De-registration
 
@@ -338,6 +366,11 @@ The `--invalid-only` option is also accepted by the `list` and `dump` commands a
 $ <instance>/manage.py product list --invalid-only
 $ <instance>/manage.py product dump --invalid-only
 ```
+
+The `--invalid-only` command is also accepted by the `import` command, though, in this case it is only applied when the products are removed with the `--sync` option:
+```
+$ <instance>/manage.py product import -t SW_MAGx_LR_1B --sync --invalid-only < products_dump.json
+
 
 ### Cached Products
 

@@ -72,28 +72,24 @@ class RegisterProductSubcommand(Subcommand):
             )
         )
         parser.add_argument(
-            "--conflict", dest="conflict", choices=("IGNORE", "UPDATE"),
-            default="IGNORE", help=(
-                "Define how to resolve conflict when the product is already "
-                "registered. By default the registration is skipped and the "
-                "the new product is IGNORED. An alternative is to UPDATE "
-                "the product record."
+            "--update", "--re-register", dest="ignore_registered",
+            action="store_false", default=True, help=(
+                "Update product record when the product is already registered.  "
+                "By default, the registration is skipped."
             )
         )
         parser.add_argument(
-            "--overlap", dest="overlap", choices=("IGNORE", "REPLACE"),
-            default="REPLACE", help=(
-                "Define how to resolve registered overlapping products."
-                "The default REPLACE option causes the overlapping "
-                "products to be de-registered to prevent duplicated data."
-                "Alternatively, the overlapping data can be IGNORED. "
+            "--ignore-overlaps", action="store_true", default=False, help=(
+                "Ignore time-overlapping products. "
+                "By default, the registration de-registers existing products "
+                "overlapping time extent of the new product."
             )
         )
 
     def handle(self, **kwargs):
         data_files = kwargs["product-file"]
-        ignore_registered = kwargs["conflict"] == "IGNORE"
-        ignore_overlaps = kwargs["overlap"] == "IGNORE"
+        ignore_registered = kwargs["ignore_registered"]
+        ignore_overlaps = kwargs["ignore_overlaps"]
         collection_id = kwargs["collection_id"]
 
         collection = get_collection(collection_id)
