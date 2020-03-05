@@ -1,6 +1,6 @@
 # VirES-Server - VirES for Swarm Server
 
-The VirES-Server is a a [Django](https://www.djangoproject.com/) app tailored to serve Swarm mission data by the [VirES for Swarm](https://vires.services) service.
+The VirES-Server is a [Django](https://www.djangoproject.com/) app tailored to serve Swarm mission data by the [VirES for Swarm](https://vires.services) service.
 
 The VirES server makes use of parts of the generic [EOxServer](https://github.com/EOxServer/eoxserver).
 
