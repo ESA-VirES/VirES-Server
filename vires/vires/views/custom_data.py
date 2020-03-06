@@ -43,7 +43,7 @@ from ..time_util import datetime, naive_to_utc, format_datetime, Timer
 from ..cdf_util import (
     is_cdf_file, cdf_open, cdf_epoch16_to_epoch, cdf_tt2000_to_epoch, CDFError,
     CDF_EPOCH_TYPE, CDF_EPOCH16_TYPE, CDF_TIME_TT2000_TYPE, CDF_DOUBLE_TYPE,
-    CDF_TYPE_TO_LABEL, LABEL_TO_CDF_TYPE, CDF_TYPE_TO_DTYPE,
+    CDF_REAL8_TYPE, CDF_TYPE_TO_LABEL, LABEL_TO_CDF_TYPE, CDF_TYPE_TO_DTYPE,
 )
 from ..cdf_write_util import (
     cdf_add_variable, cdf_assert_backward_compatible_dtype
@@ -73,9 +73,14 @@ CHANGE_LOG_FILENAME = "change.log"
 
 EXCLUDED_FIELDS = {'Spacecraft'}
 MANDATORY_FIELDS = [
-    ("Timestamp", CDF_EPOCH_TYPE, ()),
-    ("Latitude", CDF_DOUBLE_TYPE, ()),
-    ("Longitude", CDF_DOUBLE_TYPE, ()),
+    ("Timestamp", (CDF_EPOCH_TYPE,), ()),
+    ("Latitude", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), ()),
+    ("Longitude", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), ()),
+]
+EXPECTED_FIELDS = [
+    ("Radius", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), ()),
+    ("F", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), ()),
+    ("B_NEC", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), (3,)),
 ]
 
 
@@ -459,7 +464,11 @@ def process_input_cdf(path):
     if "Timestamp" not in fields:
         raise InvalidFileFormat("Missing mandatory Timestamp field!")
 
-    size = fields["Timestamp"]["shape"][0]
+    timestamp_shape = fields["Timestamp"]["shape"]
+    size = timestamp_shape[0]
+
+    if len(timestamp_shape) != 1:
+        raise InvalidFileFormat("Invalid dimension of Timestamp field!")
 
     if size == 0:
         raise InvalidFileFormat("Empty dataset!")
@@ -490,17 +499,20 @@ def process_input_cdf(path):
 
 def _get_missing_fields(fields):
     missing_fields = {}
-    for name, type_, shape in MANDATORY_FIELDS:
+
+    def _check_field(name, types, shape, is_mandatory):
+        types = map(int, types)
         field = fields.get(name)
         if not field:
-            missing_fields[name] = {
-                "shape": shape,
-                "cdf_type": int(type_),
-                "data_type": CDF_TYPE_TO_LABEL[type_],
-            }
-            continue
+            if is_mandatory:
+                missing_fields[name] = {
+                    "shape": shape,
+                    "cdf_type": types[0],
+                    "data_type": CDF_TYPE_TO_LABEL[types[0]],
+                }
+            return
 
-        if field["cdf_type"] != int(type_):
+        if field["cdf_type"] not in types:
             raise InvalidFileFormat("Invalid type of %s field!" % name)
 
         if len(field["shape"]) != len(shape):
@@ -508,6 +520,13 @@ def _get_missing_fields(fields):
 
         if tuple(field["shape"]) != shape:
             raise InvalidFileFormat("Invalid shape of %s field!" % name)
+
+
+    for name, types, shape in MANDATORY_FIELDS:
+        _check_field(name, types, shape, True)
+
+    for name, types, shape in EXPECTED_FIELDS:
+        _check_field(name, types, shape, False)
 
     return missing_fields
 

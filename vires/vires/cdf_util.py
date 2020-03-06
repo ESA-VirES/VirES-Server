@@ -224,7 +224,7 @@ def datetime_to_cdf_rawtime(time, cdf_type):
     """ Convert `datetime.datetime` object to CDF raw time. """
     if cdf_type == CDF_EPOCH_TYPE:
         if isinstance(time, ndarray):
-            return vectorize(datetime_to_cdf_epoch)(time)
+            return vectorize(datetime_to_cdf_epoch, otypes=('float64',))(time)
         return datetime_to_cdf_epoch(time)
     raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
@@ -240,7 +240,7 @@ def cdf_rawtime_to_datetime(raw_time, cdf_type):
     """
     if cdf_type == CDF_EPOCH_TYPE:
         if isinstance(raw_time, ndarray):
-            return vectorize(cdf_epoch_to_datetime)(raw_time)
+            return vectorize(cdf_epoch_to_datetime, otypes=('object',))(raw_time)
         return cdf_epoch_to_datetime(raw_time)
     raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
