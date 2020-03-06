@@ -35,6 +35,7 @@ from vires.data.vires_settings import CACHED_PRODUCT_FILE
 
 class BaseModelFile():
     """ Base model file object. """
+
     @property
     def filename(self):
         """ Get model filename. """
@@ -65,6 +66,7 @@ class ModelFileCached(BaseModelFile):
 
 class BaseModelSource():
     """ Base model source class. """
+
     @property
     def sources(self):
         """ Get list of sources and their validity intervals. """
@@ -73,6 +75,11 @@ class BaseModelSource():
 
 class LiteralModelSource(BaseModelSource):
     """ Model source with single single source literal. """
+
+    @property
+    def sources(self):
+        return ([self.source], asarray([self.validity]))
+
     @property
     def source(self):
         """ Get single source identifier. """
@@ -83,16 +90,12 @@ class LiteralModelSource(BaseModelSource):
         """ Get model validity interval. """
         raise NotImplementedError
 
-    @property
-    def sources(self):
-        return ([self.source], asarray([self.validity]))
-
 
 class ModelFileWithLiteralSource(ModelFileStatic, LiteralModelSource):
     """ Model file with single literal source. """
 
     def __init__(self, filename, source, validity_reader):
-        ModelFileStatic.__init__(self, filename)
+        super().__init__(filename)
         self._source = source
         self._validity_reader = validity_reader
 
@@ -107,8 +110,9 @@ class ModelFileWithLiteralSource(ModelFileStatic, LiteralModelSource):
 
 class CachedModelFileWithSourceFile(ModelFileCached, LiteralModelSource):
     """ Cached model file with extra source file. """
+
     def __init__(self, cache_id, validity_reader):
-        ModelFileCached.__init__(self, cache_id)
+        super().__init__(cache_id)
         self._validity_reader = validity_reader
 
     @property
@@ -125,7 +129,7 @@ class CachedComposedModelFile(ModelFileCached, BaseModelSource):
     """ Cached composed model with sources stored in the CDF file attributes. """
 
     def __init__(self, cache_id):
-        ModelFileCached.__init__(self, cache_id)
+        super().__init__(cache_id)
 
     @property
     def sources(self):

@@ -58,7 +58,7 @@ TEST_ATTRIB = {
 }
 
 
-class FilterStub(object):
+class FilterStub():
     """ Test filter stub. """
 
     def __init__(self, required_variables):

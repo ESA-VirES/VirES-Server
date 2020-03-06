@@ -125,7 +125,7 @@ class TestFileChangeMonitor(TestCase):
                 self.assertTrue(obj.changed(filename1, filename2))
 
 
-class TempFilename(object):
+class TempFilename():
 
     def __init__(self):
         with NamedTemporaryFile() as file_:
