@@ -83,6 +83,13 @@ class TestCDFEpochTimeBaseline(ArrayMixIn, unittest.TestCase):
             cdf_rawtime_to_datetime(input_, CDF_EPOCH_TYPE), expected
         )
 
+    def test_cdf_rawtime_to_datetime_subms_empty_array(self):
+        input_ = array([], 'float64')
+        expected = array([], 'object')
+        self.assertAllEqual(
+            cdf_rawtime_to_datetime(input_, CDF_EPOCH_TYPE), expected
+        )
+
     def test_datetime_to_cdf_rawtime_subms_scalar(self):
         self.assertEqual(
             datetime_to_cdf_rawtime(
@@ -112,6 +119,13 @@ class TestCDFEpochTimeBaseline(ArrayMixIn, unittest.TestCase):
             [63570441599939.984, 63570441599959.984],
             [63570441599979.984, 63570441599999.984],
         ])
+        self.assertAllEqual(
+            datetime_to_cdf_rawtime(input_, CDF_EPOCH_TYPE), expected
+        )
+
+    def test_datetime_to_cdf_rawtime_subms_empty_array(self):
+        input_ = array([], 'object')
+        expected = array([], 'float64')
         self.assertAllEqual(
             datetime_to_cdf_rawtime(input_, CDF_EPOCH_TYPE), expected
         )
