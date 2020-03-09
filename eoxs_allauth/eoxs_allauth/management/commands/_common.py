@@ -26,9 +26,14 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from __future__ import print_function
 import sys
 from logging import INFO, WARNING, ERROR
+from datetime import datetime, time
+from django.core.management.base import BaseCommand
+from django.utils.timezone import utc
+from django.utils.dateparse import parse_date, parse_datetime
+from eoxserver.core.util.timetools import parse_duration
+
 
 _LABEL2LOGLEVEL = {
     "INFO": INFO,
@@ -48,23 +53,80 @@ def datetime_to_string(dtobj):
     return dtobj if dtobj is None else dtobj.isoformat('T')
 
 
-class ConsoleOutput(object):
+def naive_to_utc(dt_obj):
+    """ Convert naive `datetime.datetime` to UTC time-zone aware one. """
+    if dt_obj.tzinfo is None:
+        dt_obj = dt_obj.replace(tzinfo=utc)
+    return dt_obj.astimezone(utc)
+
+
+def time_spec(value):
+    """ CLI time specification parser. """
+    date_ = parse_date(value)
+    if date_ is not None:
+        return naive_to_utc(datetime.combine(date_, time()))
+    datetime_ = parse_datetime(value)
+    if datetime_ is not None:
+        return naive_to_utc(datetime_)
+    try:
+        return naive_to_utc(datetime.utcnow() + parse_duration(value))
+    except ValueError:
+        pass
+    raise ValueError("Invalid time specification '%s'." % value)
+
+
+class ConsoleOutput():
     logger = None
 
-    @classmethod
-    def info(cls, message, *args, **kwargs):
-        cls.print_message("INFO", message, *args, **kwargs)
+    def info(self, message, *args, **kwargs):
+        self.print_message("INFO", message, *args, **kwargs)
 
-    @classmethod
-    def warning(cls, message, *args, **kwargs):
-        cls.print_message("WARNING", message, *args, **kwargs)
+    def warning(self, message, *args, **kwargs):
+        self.print_message("WARNING", message, *args, **kwargs)
 
-    @classmethod
-    def error(cls, message, *args, **kwargs):
-        cls.print_message("ERROR", message, *args, **kwargs)
+    def error(self, message, *args, **kwargs):
+        self.print_message("ERROR", message, *args, **kwargs)
 
-    @classmethod
-    def print_message(cls, label, message, *args, **kwargs):
+    def print_message(self, label, message, *args, **kwargs):
         print("%s: %s" % (label, message % args), file=sys.stderr)
-        if kwargs.get('log') and cls.logger:
-            cls.logger.log(_LABEL2LOGLEVEL[label], message, *args)
+        if self.logger and(getattr(self, 'log', False) or kwargs.get('log')):
+            self.logger.log(_LABEL2LOGLEVEL[label], message, *args)
+
+
+class Subcommand(ConsoleOutput):
+    """ Base subcommand class """
+    def __init__(self, logger=None):
+        self.logger = logger
+        self.log = False
+
+    def add_arguments(self, parser):
+        """ Add CLI arguments. """
+        raise NotImplementedError
+
+    def handle(self, **kwargs):
+        """ Handle subcommand. """
+        raise NotImplementedError
+
+
+class Supercommand(ConsoleOutput, BaseCommand):
+    """ Base class for Django command with subcommands. """
+
+    commands = {}
+
+    def add_arguments(self, parser):
+        super().add_arguments(parser)
+
+        subparsers = parser.add_subparsers(
+            dest="command", metavar="<command>", #required=True,
+        )
+
+        for name, command in self.commands.items():
+            subparser = subparsers.add_parser(name, help=command.help)
+            command.add_arguments(subparser)
+
+        # .add_subparsers() in Python < 3.7 does not support required parameter
+        # and the attribute has to be set as an object property.
+        subparsers.required = True
+
+    def handle(self, *arg, **kwargs):
+        return self.commands[kwargs.pop('command')].handle(**kwargs)

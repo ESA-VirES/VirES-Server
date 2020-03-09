@@ -59,7 +59,7 @@ def client_state_collection(request, **kwargs):
     """ Custom data collection view. """
     if request.method == "GET":
         return list_collection(request, **kwargs)
-    elif request.method == "POST":
+    if request.method == "POST":
         return post_item(request, **kwargs)
     raise HttpError405
 
@@ -71,7 +71,7 @@ def client_state_item(request, identifier, **kwargs):
         return get_item(request, identifier, **kwargs)
     if request.method == "PATCH":
         return update_item(request, identifier, **kwargs)
-    elif request.method == "DELETE":
+    if request.method == "DELETE":
         return delete_item(request, identifier, **kwargs)
     raise HttpError405
 
@@ -94,7 +94,7 @@ def model_to_infodict(obj, include_state=True):
 @reject_content
 def list_collection(request, **kwargs):
     """ List client state collection. """
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     data = json.dumps([
         model_to_infodict(state) for state in  _get_models(owner)
     ])
@@ -104,7 +104,7 @@ def list_collection(request, **kwargs):
 @reject_content
 def get_item(request, identifier, **kwargs):
     """ Get info about the client state."""
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     state = _get_model(owner, identifier)
     data = json.dumps(model_to_infodict(state))
     return HttpResponse(data, "application/json")
@@ -115,7 +115,7 @@ def get_item(request, identifier, **kwargs):
 def post_item(request, **kwargs):
     """ Post client state. """
     # metadata
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     timestamp = naive_to_utc(datetime.utcnow())
     identifier = str(uuid4()) # create a new random identifier
 
@@ -144,7 +144,7 @@ def post_item(request, **kwargs):
 @reject_content
 def delete_item(request, identifier, **kwargs):
     """ Delete client state."""
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     state = _get_model(owner, identifier)
     state.delete()
 
@@ -158,7 +158,7 @@ def delete_item(request, identifier, **kwargs):
 def update_item(request, identifier, **kwargs):
     """ Post client state. """
     # metadata
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     state = _get_model(owner, identifier)
     input_ = _parse_request(request.body)
 

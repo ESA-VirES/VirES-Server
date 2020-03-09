@@ -29,7 +29,6 @@
 
 
 import csv
-import re
 from datetime import datetime
 from numpy import concatenate
 from eoxserver.core.util.timetools import isoformat
@@ -38,6 +37,7 @@ from eoxserver.services.ows.wps.parameters import (
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
+from vires.time_util import naive_to_utc
 from vires.cdf_util import cdf_rawtime_to_datetime
 from vires.processes.base import WPSProcess
 from vires.processes.util.time_series import ProductTimeSeries
@@ -45,7 +45,6 @@ from vires.processes.util.time_series import ProductTimeSeries
 TIME_VARIABLE = "Timestamp"
 DATA_VARIABLE = "Bubble_Probability"
 BUBBLE_PROBABILITY_THRESHOLD = 0.1
-RE_COLLECTION_ID = re.compile("SW_OPER_IBI[ABC]TMS_2F")
 
 
 class RetrieveBubbleIndex(WPSProcess):
@@ -56,7 +55,7 @@ class RetrieveBubbleIndex(WPSProcess):
     metadata = {}
     profiles = ["vires"]
 
-    inputs = [
+    inputs = WPSProcess.inputs + [
         ("collection_id", LiteralData(
             'collection_id', str, optional=False,
             title="Bubble index collection identifier",
@@ -79,21 +78,29 @@ class RetrieveBubbleIndex(WPSProcess):
         )),
     ]
 
-    def execute(self, collection_id, begin_time, end_time, output, **kwarg):
+    def execute(self, collection_id, begin_time, end_time, output, **kwargs):
         """ Execute process. """
+        access_logger = self.get_access_logger(**kwargs)
 
         try:
-            if not RE_COLLECTION_ID.match(collection_id):
-                raise ProductCollection.DoesNotExist
-
             time_series = ProductTimeSeries(
-                ProductCollection.objects.get(identifier=collection_id)
+                ProductCollection.objects
+                .select_related('type')
+                .filter(type__identifier="SW_IBIxTMS_2F")
+                .get(identifier=collection_id)
             )
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
                 "collection_id",
                 "Invalid collection identifier %r!" % collection_id
             )
+
+        access_logger.info(
+            "request: collection: %s, toi: (%s, %s)",
+            collection_id,
+            naive_to_utc(begin_time).isotime("T") if begin_time else "-",
+            naive_to_utc(end_time) if end_time else "-",
+        )
 
         def _generate_pairs():
             variables = [TIME_VARIABLE, DATA_VARIABLE]

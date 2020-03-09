@@ -24,9 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
-from .cache import with_cache_session
 from .input_parsers import (
     parse_style, parse_collections,
     parse_model_expression, parse_model_list,
@@ -34,7 +32,6 @@ from .input_parsers import (
     parse_variables, get_subtracted_variables,
 )
 from .png_output import data_to_png, array_to_png
-from .auth import get_username, get_user
 from .resolver import VariableResolver, extract_product_names
 from .spacecraft_subtraction import group_subtracted_variables
 from .magnetic_model_renderer import (

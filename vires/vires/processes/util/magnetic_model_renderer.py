@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments,too-many-locals,missing-docstring
+# pylint: disable=too-many-arguments,too-many-locals
 
 from os import remove
 from os.path import join, exists
@@ -33,12 +33,12 @@ from math import pi, ceil
 from matplotlib.colors import Normalize
 from numpy import cos, meshgrid, empty, linspace, tile
 from scipy.interpolate import RectBivariateSpline
-from eoxserver.services.ows.wps.parameters import CDFile
 from eoxmagmod import (
     vnorm, convert, vincdecnorm,
     GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL,
     decimal_year_to_mjd2000,
 )
+from eoxserver.services.ows.wps.parameters import CDFile
 from vires.config import SystemConfigReader
 from .png_output import data_to_png
 from .f107 import get_f107_value
@@ -183,7 +183,7 @@ def eval_model_int(model, variable, mjd2000, bbox, srid, elevation, size,
 
     # Rectangular Bivariate Cubic Spline interpolation
     field_components = empty(lons.shape + (3,))
-    for idx in xrange(field_components.shape[2]):
+    for idx in range(field_components.shape[2]):
         field_components[..., idx] = RectBivariateSpline(
             -lats1_int, lons1_int, field_components_int[..., idx],
             (-lats1_int[0], -lats1_int[-1], lons1_int[0], lons1_int[-1]),

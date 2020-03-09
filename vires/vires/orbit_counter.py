@@ -2,9 +2,7 @@
 #
 # Orbit number file handling.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2017 EOX IT Services GmbH
 #
@@ -63,8 +61,8 @@ def update_orbit_counter_file(src_file, dst_file):
                 )
             cdf.attrs['VALIDITY'] = [start, end]
 
-    if isinstance(src_file, basestring):
-        with open(src_file, "rb") as file_in:
+    if isinstance(src_file, str):
+        with open(src_file) as file_in:
             _write_orbit_counter_file(file_in, src_file, dst_file)
     else:
         _write_orbit_counter_file(src_file, None, dst_file)
@@ -81,12 +79,6 @@ def parse_orbit_counter_file(src_file):
         data[:, 0].astype('uint32'), data[:, 1], data[:, 4],
         data[:, 5].astype('uint8')
     )
-
-
-
-
-
-
 
 
 def get_max_orbit_number(filename):

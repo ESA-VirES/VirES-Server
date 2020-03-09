@@ -24,11 +24,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-arguments,missing-docstring,unused-argument
+#pylint: disable=too-many-arguments,unused-argument
 
 from logging import getLogger, LoggerAdapter
+from numpy import full
 from vires.cdf_util import CDF_CHAR_TYPE
-from vires.util import full
 from vires.dataset import Dataset
 from .base import Model
 
@@ -45,7 +45,7 @@ class Label(Model):
     def __init__(self, variable, label, string_size=1,
                  description=None, unit=None,
                  logger=None, varmap=None):
-        super(Label, self).__init__()
+        super().__init__()
         self._variable = variable
         self._label = str(label)[:string_size]
         self._description = description or ""

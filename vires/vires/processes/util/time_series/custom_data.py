@@ -24,7 +24,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
 import json
 from ctypes import c_long
@@ -43,6 +42,10 @@ from .product import BaseProductTimeSeries, DEFAULT_PRODUCT_TYPE_PARAMETERS
 
 class CustomDatasetTimeSeries(BaseProductTimeSeries):
     """ Custom dataset time-series class. """
+    # fake collection metadata
+    metadata = {
+        "spacecraft": "U",
+    }
     COLLECTION_IDENTIFIER = "USER_DATA"
     TIME_VARIABLE = "Timestamp"
 
@@ -53,7 +56,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     def __init__(self, user, logger=None):
         params = DEFAULT_PRODUCT_TYPE_PARAMETERS
 
-        super(CustomDatasetTimeSeries, self).__init__(
+        super().__init__(
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
                 "username": user.username if user else "<anonymous-user>"
             }),

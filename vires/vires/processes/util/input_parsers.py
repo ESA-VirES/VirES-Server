@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,too-many-branches,unused-argument
+# pylint: disable=too-many-branches,unused-argument
 
 import re
 from collections import OrderedDict
@@ -67,17 +67,18 @@ def parse_collections(input_id, source, custom_dataset=None, user=None):
             input_id, "JSON object expected!"
         )
     # resolve collection ids
-    for label, collection_ids in source.iteritems():
+    for label, collection_ids in source.items():
         if not isinstance(collection_ids, (list, tuple)):
             raise InvalidInputValueError(
                 input_id, "A list of collection identifiers expected for "
                 "label %r!" % label
             )
-        available_collections = dict(
-            (obj.identifier, obj) for obj in ProductCollection.objects.filter(
+        available_collections = {
+            collection.identifier: collection for collection
+            in ProductCollection.objects.prefetch_related('type').filter(
                 identifier__in=collection_ids
             )
-        )
+        }
         if custom_dataset and custom_dataset in collection_ids:
             result[label] = custom_dataset
         else:
@@ -92,8 +93,7 @@ def parse_collections(input_id, source, custom_dataset=None, user=None):
                     (exc.args[0], label)
                 )
 
-    range_types = []
-    master_rtype = None
+    master_ptype = None
     for label, collections in result.items():
         if collections == custom_dataset:
             continue
@@ -104,14 +104,13 @@ def parse_collections(input_id, source, custom_dataset=None, user=None):
                 input_id, "Collection list must have at least one item!"
                 " (label: %r)" % label
             )
-        # master (first collection) must be always of the same range-type
-        if master_rtype is None:
-            master_rtype = collections[0].range_type
-            range_types = [master_rtype] # master is always the first
+        # master (first collection) must be always of the same product type
+        if master_ptype is None:
+            master_ptype = collections[0].type
         else:
-            if master_rtype != collections[0].range_type:
+            if master_ptype != collections[0].type:
                 raise InvalidInputValueError(
-                    input_id, "Master collection type mismatch!"
+                    input_id, "Master collection product type mismatch!"
                     " (label: %r; )" % label
                 )
 
@@ -119,30 +118,25 @@ def parse_collections(input_id, source, custom_dataset=None, user=None):
         # slaves' order does not matter
 
         # collect slave range-types
-        slave_rtypes = []
+        slave_ptypes = set()
 
         # for one label multiple collections of the same range-type not allowed
-        for rtype in (collection.range_type for collection in collections[1:]):
-            if rtype == master_rtype or rtype in slave_rtypes:
+        for ptype in (collection.type for collection in collections[1:]):
+            if ptype == master_ptype or ptype in slave_ptypes:
                 raise InvalidInputValueError(
                     input_id, "Multiple collections of the same type "
                     "are not allowed! (label: %r; )" % label
                 )
-            slave_rtypes.append(rtype)
-
-        # collect all unique range-types
-        range_types.extend(
-            rtype for rtype in slave_rtypes if rtype not in range_types
-        )
+            slave_ptypes.add(ptype)
 
     # convert collections to product time-series
-    return dict(
-        (
-            label,
-            [CustomDatasetTimeSeries(user)] if collections == custom_dataset else
+    return {
+        label: (
+            [CustomDatasetTimeSeries(user)]
+            if collections == custom_dataset else
             [ProductTimeSeries(collection) for collection in collections]
-        ) for label, collections in result.iteritems()
-    )
+        ) for label, collections in result.items()
+    }
 
 
 def parse_model_expression(input_id, model_input, shc=None, shc_input_id="shc"):
@@ -323,7 +317,7 @@ def parse_filters2(input_id, filter_string):
 
     return [
         _get_filter(name, vmin, vmax) for name, (vmin, vmax)
-        in parse_filters(input_id, filter_string).iteritems()
+        in parse_filters(input_id, filter_string).items()
     ]
 
 

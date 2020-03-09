@@ -35,7 +35,7 @@ def read_csv_data(path):
     of arrays.
     """
     try:
-        with open(path, "rb") as file_:
+        with open(path, encoding="ascii") as file_:
             data = records_to_list(parse_record_values(read_csv_file(file_)))
     except csv.Error as error:
         raise InvalidFileFormat(str(error))
@@ -52,7 +52,10 @@ def read_csv_file(file_):
     """ Generator parsing VirES CSV from a file yielding raw parsed records.
     """
     records = csv.reader(file_)
-    header = next(records)
+    try:
+        header = next(records)
+    except StopIteration:
+        return
     yield header
     for line_no, record in enumerate(records, 2):
         if len(record) != len(header):
@@ -81,7 +84,10 @@ def parse_record_values(records):
         # no type matched passing trough the original string
         return value, str
 
-    header = next(records)
+    try:
+        header = next(records)
+    except StopIteration:
+        return
     yield header
 
     parsers = [type_parsers[0]] * len(header)
@@ -101,14 +107,14 @@ def records_to_list(records):
     for record in records:
         for value, list_ in zip(record, data):
             list_.append(value)
-    return {field: list_ for field, list_ in zip(header, data)}
+    return dict(zip(header, data))
 
 
 def parse_datetime(value):
     """ Parse ISO-8601 time-stamp to NumPy datetime64 with a milliseconds
     resolution.
     """
-    return datetime64(value, 'ms')
+    return datetime64(value[:-1] if value[-1:] == "Z" else value, 'ms')
 
 
 def parse_csv_array(value, start="{", end="}", delimiter=";"):
@@ -126,7 +132,7 @@ def parse_csv_array(value, start="{", end="}", delimiter=";"):
                 if tmp:
                     data.append(float(tmp))
                 break
-            elif idx > 1 and string[idx-1] == end:
+            if idx > 1 and string[idx-1] == end:
                 tmp = string[:idx-1]
                 if tmp:
                     data.append(float(tmp))

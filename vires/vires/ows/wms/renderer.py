@@ -24,14 +24,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,too-many-arguments,too-many-boolean-expressions
+# pylint: disable=too-many-arguments,too-many-boolean-expressions,too-many-locals
 
+from logging import getLogger
 from eoxserver.services.ows.wps.v10.encoders.execute_response_raw import ResultAlt
 from eoxserver.core.decoders import InvalidParameterException
-from eoxserver.services.subset import Trim, Slice
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
-from vires.processes.util import (
-    parse_model_list, parse_style, render_model, ALLOWED_VARIABLES,
+from vires.access_util import AccessLoggerAdapter, get_username, get_remote_addr
+from vires.processes.util import parse_style, render_model
+from .parsers import (
+    get_models, parse_query_parameter, parse_colormaps, parse_bool,
+    parse_value_range, parse_variable,
 )
 
 
@@ -41,7 +44,7 @@ MAX_IMAGE_SIZE = (2048, 2048)
 
 
 def render_wms_response(layers, srid, bbox, elevation, time, width, height,
-                        response_format, query):
+                        response_format, query, logger):
     """ Render WMS response. """
     check_inputs(
         layers, srid, bbox, elevation, time, width, height, response_format,
@@ -61,6 +64,14 @@ def render_wms_response(layers, srid, bbox, elevation, time, width, height,
 
     models = select_models(layers, get_models(query, layers))
 
+    logger.info(
+        "request: time: %s, aoi: %s, elevation: %g, "
+        "model: %s, variable: %s, image-size: (%d, %d), mime-type: %s",
+        naive_to_utc(time).isoformat("T"),
+        bbox, elevation, models[-1].full_expression,
+        variable, width, height, response_format,
+    )
+
     payload, content_type, value_range = render_model(
         model=models[-1],
         variable=variable,
@@ -78,89 +89,6 @@ def render_wms_response(layers, srid, bbox, elevation, time, width, height,
     return encode_response(payload, content_type)
 
 
-def get_models(query, layers):
-    """ Extract and parse models from the query dict. """
-    model_list_string = parse_query_parameter(
-        query, "models", lambda s: s.strip(), default=[""]
-    )
-    if model_list_string:
-        model_list_string += "," + ",".join(layers)
-    else:
-        model_list_string = ",".join(layers)
-
-    models, _ = parse_model_list("models", model_list_string)
-    return models
-
-
-def select_models(layers, models):
-    """ Select requested models. """
-    model_dict = {model.name: model for model in models}
-    return [model_dict[layer] for layer in layers]
-
-
-def parse_query_parameter(query, parameter, parser, default=None,
-                          multiple_values=False):
-    """ Parse parameter from the query dictionary. """
-    input_ = query.get(parameter, default)
-    if input_ is not None and not multiple_values:
-        if len(input_) < 1:
-            input_ = None
-        elif len(input_) > 1:
-            raise InvalidParameterException(
-                "Unexpected multiple values of %r parameter!" % parameter,
-                parameter
-            )
-
-        else:
-            input_ = input_[0]
-
-    if input_ is None:
-        raise InvalidParameterException(
-            "Missing mandatory %r parameter!" % parameter, parameter
-        )
-
-    try:
-        if multiple_values:
-            result = [parser(item) for item in input_]
-        else:
-            result = parser(input_)
-    except (TypeError, ValueError) as error:
-        raise InvalidParameterException(str(error), parameter)
-
-    return result
-
-def parse_colormaps(input_string):
-    """ Parse colormap ids. """
-    return [v.strip() for v in input_string.split(',')]
-
-
-def parse_value_range(input_string):
-    """ parse value range """
-    min_value, max_value = [float(v) for v in input_string.split(',')]
-    return (min_value, max_value)
-
-
-def parse_variable(input_string):
-    """ parse variable """
-    variable, = [v.strip() for v in input_string.split(',')]
-    if variable not in ALLOWED_VARIABLES:
-        raise ValueError("Invalid variable!")
-    return variable
-
-
-def parse_bool(input_string):
-    return input_string.strip().lower() == "true"
-
-
-def get_single_time(time):
-    """ Extract single time from the time selection. """
-    if isinstance(time, Trim):
-        return (time.high - time.low) / 2 + time.low
-    elif isinstance(time, Slice):
-        return time.value
-    return None
-
-
 def check_inputs(layers, srid, bbox, elevation, time, width, height,
                  response_format):
     """ Check the input parameters. """
@@ -168,7 +96,7 @@ def check_inputs(layers, srid, bbox, elevation, time, width, height,
         raise InvalidParameterException("No layers specified", "layers")
 
     if time is None:
-        InvalidParameterException(
+        raise InvalidParameterException(
             "Missing mandatory 'time' parameter", "time"
         )
 
@@ -202,8 +130,24 @@ def check_inputs(layers, srid, bbox, elevation, time, width, height,
             "Invalid geographic extent!", "bbox"
         )
 
+
+def select_models(layers, models):
+    """ Select requested models. """
+    model_dict = {model.name: model for model in models}
+    return [model_dict[layer] for layer in layers]
+
+
 def encode_response(payload, content_type, headers=None, filename=None):
     """ Encode raw complex data."""
     return ResultAlt(
         payload, content_type=content_type, filename=filename, headers=headers,
     ),
+
+
+def get_access_logger(request):
+    """ Get access logger wrapped by the AccessLoggerAdapter """
+    return AccessLoggerAdapter(
+        getLogger("access.wms.eval_model"),
+        username=get_username(request),
+        remote_addr=get_remote_addr(request),
+    )

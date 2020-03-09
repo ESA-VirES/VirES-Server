@@ -2,9 +2,7 @@
 #
 # Orbit direction - update of the lookup tables
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -26,9 +24,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=too-many-arguments
 
-from __future__ import print_function
 from os import remove, rename
 from os.path import exists, basename, splitext
 from logging import getLogger
@@ -40,7 +37,6 @@ from numpy import (
     empty, int8,
 )
 from eoxmagmod import mjd2000_to_decimal_year, eval_qdlatlon
-from .util import full
 from .cdf_util import cdf_open, CDF_EPOCH_TYPE
 from .cdf_write_util import cdf_add_variable, CdfTypeEpoch
 
@@ -67,10 +63,9 @@ Products = namedtuple("Products", ["names", "start_times", "end_times"])
 
 class DataIntegrityError(ValueError):
     """ Command error exception. """
-    pass
 
 
-class OrbitDirectionTables(object):
+class OrbitDirectionTables():
     """ Single spacecraft orbit direction lookup tables class. """
 
     def __init__(self, geo_table_filename, mag_table_filename, reset=False,
@@ -160,7 +155,7 @@ class OrbitDirectionTables(object):
         )
 
 
-class OrbitDirectionTable(object):
+class OrbitDirectionTable():
     """ Base orbit direction lookup table class """
     DESCRIPTION = None
 
@@ -200,7 +195,7 @@ class OrbitDirectionTable(object):
         try:
             with cdf_open(tmp_filename, "w") as cdf:
                 self._save_table(cdf)
-        except:
+        except: # pylint: disable=try-except-raise
             raise
         else:
             rename(tmp_filename, self._filename)
@@ -227,6 +222,7 @@ class OrbitDirectionTable(object):
         self._changed = True
 
     def dump(self):
+        """ Dump content of the orbit direction table. """
         self._dump(self._data)
 
     @staticmethod
@@ -369,7 +365,7 @@ class OrbitDirectionTable(object):
         """ Load orbit direction table from a CDF file. """
 
         def _read_time_ranges(attr):
-            attr._raw = True
+            attr._raw = True # pylint: disable=protected-access
             data = asarray([CdfTypeEpoch.decode(item) for item in attr])
             if data.size == 0:
                 return empty(0, 'float64'), empty(0, 'float64')
@@ -485,6 +481,7 @@ def process_variable(times, values, has_product_before, has_product_after):
 
 
 def check_input_data_integrity(data, start_time, end_time):
+    """ Check integrity of the input date. """
     time = data[0]
     if time[0] != start_time:
         raise ValueError(

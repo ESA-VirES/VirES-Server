@@ -1,11 +1,9 @@
 #-------------------------------------------------------------------------------
 #
-# VirES specific Djnago DB models.
+# VirES specific Django DB models.
 #
-# Project: VirES
-# Authors: Fabian Schindler <fabian.schindler@eox.at>
-#          Martin Paces <martin.paces@eox.at>
-#
+# Authors: Martin Paces <martin.paces@eox.at>
+#          Fabian Schindler <fabian.schindler@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -27,22 +25,42 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+#pylint: disable=missing-docstring,unused-argument
+#pylint: disable=no-init,too-few-public-methods,too-many-ancestors
 
-#pylint: disable=missing-docstring,fixme,unused-argument
-#pylint: disable=old-style-class,no-init,too-few-public-methods,too-many-ancestors
-
-from django.core.exceptions import ValidationError
+import re
+from datetime import timedelta
+from django.core.validators import RegexValidator
 from django.db.models import (
     Model, ForeignKey, BooleanField, CharField, DateTimeField, BigIntegerField,
-    TextField,
+    TextField, Index, DurationField,
+    CASCADE as ON_DELETE_CASCADE,
+    PROTECT as ON_DELETE_PROTECT,
 )
-from django.contrib.gis import geos
-from django.contrib.gis.db.models import GeoManager
+from django.contrib.postgres.fields import JSONField
 from django.contrib.auth.models import User
 
-from eoxserver.resources.coverages.models import (
-    collect_eo_metadata, Collection, Coverage, EO_OBJECT_TYPE_REGISTRY
+
+ID_VALIDATOR = RegexValidator(
+    re.compile(r'^[a-zA-z_][a-zA-Z0-9_]*$'),
+    message="Invalid identifier."
 )
+
+
+MANDATORY = dict(null=False, blank=False)
+OPTIONAL = dict(null=True, blank=True)
+UNIQUE = dict(unique=True)
+INDEXED = dict(db_index=True)
+
+CASCADE = dict(on_delete=ON_DELETE_CASCADE)
+PROTECT = dict(on_delete=ON_DELETE_PROTECT)
+
+
+def get_user(username):
+    """ Get the User object for the given username.
+    Returns None if the username is None.
+    """
+    return None if username is None else User.objects.get(username=username)
 
 
 class Job(Model):
@@ -64,10 +82,10 @@ class Job(Model):
         (UNDEFINED, "UNDEFINED"),
     )
 
-    owner = ForeignKey(User, related_name='jobs', null=True, blank=True)
-    identifier = CharField(max_length=256, null=False, blank=False)
-    process_id = CharField(max_length=256, null=False, blank=False)
-    response_url = CharField(max_length=512, null=False, blank=False)
+    owner = ForeignKey(User, related_name='jobs', **OPTIONAL, **CASCADE)
+    identifier = CharField(max_length=256, **MANDATORY, **UNIQUE)
+    process_id = CharField(max_length=256, **MANDATORY)
+    response_url = CharField(max_length=512, **MANDATORY)
     created = DateTimeField(auto_now_add=True)
     started = DateTimeField(null=True)
     stopped = DateTimeField(null=True)
@@ -77,7 +95,7 @@ class Job(Model):
         verbose_name = "WPS Job"
         verbose_name_plural = "WPS Jobs"
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s:%s:%s" % (self.process_id, self.identifier, self.status)
 
 
@@ -85,13 +103,13 @@ class UploadedFile(Model):
     """ Model describing user uploaded file. """
     is_valid = BooleanField(default=True)
     created = DateTimeField(auto_now_add=True)
-    identifier = CharField(max_length=64, null=False, blank=False, unique=True)
-    filename = CharField(max_length=255, null=False, blank=False)
-    location = CharField(max_length=4096, null=False, blank=False)
-    size = BigIntegerField(null=False, blank=False)
-    content_type = CharField(max_length=64, null=False, blank=False)
-    checksum = CharField(max_length=64, null=False, blank=False)
-    info = TextField(null=True, blank=True) # optional additional info in JSON
+    identifier = CharField(max_length=64, **MANDATORY, **UNIQUE)
+    filename = CharField(max_length=255, **MANDATORY)
+    location = CharField(max_length=4096, **MANDATORY)
+    size = BigIntegerField(**MANDATORY)
+    content_type = CharField(max_length=64, **MANDATORY)
+    checksum = CharField(max_length=64, **MANDATORY)
+    info = JSONField(default=None, **MANDATORY)
 
     class Meta:
         abstract = True
@@ -99,62 +117,77 @@ class UploadedFile(Model):
 
 class CustomDataset(UploadedFile):
     """ Model describing user uploaded custom dataset. """
-    owner = ForeignKey(User, null=True, blank=True)
-    start = DateTimeField(null=False, blank=False)
-    end = DateTimeField(null=False, blank=False)
+    owner = ForeignKey(User, **OPTIONAL, **CASCADE)
+    start = DateTimeField(**MANDATORY)
+    end = DateTimeField(**MANDATORY)
 
 
 class CustomModel(UploadedFile):
     """ Model describing user uploaded custom model. """
-    owner = ForeignKey(User, null=True, blank=True)
-    start = DateTimeField(null=False, blank=False)
-    end = DateTimeField(null=False, blank=False)
+    owner = ForeignKey(User, **OPTIONAL, **CASCADE)
+    start = DateTimeField(**MANDATORY)
+    end = DateTimeField(**MANDATORY)
 
 
 class ClientState(Model):
     """ Model describing saved client state. """
-    owner = ForeignKey(User, related_name='client_states', null=True, blank=True)
+    owner = ForeignKey(User, related_name='client_states', **OPTIONAL, **CASCADE)
     created = DateTimeField(auto_now_add=True)
     updated = DateTimeField(auto_now=True)
-    identifier = CharField(max_length=64, null=False, blank=False, unique=True)
-    name = CharField(max_length=256, null=False, blank=False)
-    description = TextField(null=True, blank=True)
-    state = TextField(null=False, blank=False) # stored JSON
+    identifier = CharField(max_length=64, **MANDATORY, **UNIQUE)
+    name = CharField(max_length=256, **MANDATORY)
+    description = TextField(**OPTIONAL)
+    state = JSONField(**MANDATORY)
 
 
-class Product(Coverage):
-    objects = GeoManager()
+class ProductType(Model):
+    identifier = CharField(max_length=64, validators=[ID_VALIDATOR], **MANDATORY, **UNIQUE)
+    created = DateTimeField(auto_now_add=True)
+    updated = DateTimeField(auto_now=True)
+    definition = JSONField(**MANDATORY)
 
-EO_OBJECT_TYPE_REGISTRY[201] = Product
+    class Meta:
+        verbose_name = "Product Type"
+        verbose_name_plural = "Product Types"
 
 
-class ProductCollection(Product, Collection):
-    objects = GeoManager()
+class ProductCollection(Model):
+    identifier = CharField(max_length=256, validators=[ID_VALIDATOR], **MANDATORY, **UNIQUE)
+    type = ForeignKey(ProductType, related_name='collections', **MANDATORY, **PROTECT)
+    created = DateTimeField(auto_now_add=True)
+    updated = DateTimeField(auto_now=True)
+    max_product_duration = DurationField(default=timedelta(0), **MANDATORY)
+    metadata = JSONField(default=dict, **MANDATORY)
 
     class Meta:
         verbose_name = "Product Collection"
         verbose_name_plural = "Product Collections"
 
-    def perform_insertion(self, eo_object, through=None):
-        if eo_object.real_type != Product:
-            raise ValidationError("In a %s only %s can be inserted." % (
-                ProductCollection._meta.verbose_name,
-                Product._meta.verbose_name_plural
-            ))
 
-        product = eo_object.cast()
+class Product(Model):
+    identifier = CharField(max_length=256, **MANDATORY)
+    collection = ForeignKey(ProductCollection, related_name='products', **MANDATORY, **PROTECT)
+    begin_time = DateTimeField(**MANDATORY)
+    end_time = DateTimeField(**MANDATORY)
+    created = DateTimeField(auto_now_add=True)
+    updated = DateTimeField(auto_now=True)
+    metadata = JSONField(default=dict, **MANDATORY)
+    datasets = JSONField(default=dict, **MANDATORY)
 
-        if self.begin_time and self.end_time and self.footprint:
-            self.begin_time = min(self.begin_time, product.begin_time)
-            self.end_time = max(self.end_time, product.end_time)
-            footprint = self.footprint.union(product.footprint)
-            self.footprint = geos.MultiPolygon(
-                geos.Polygon.from_bbox(footprint.extent)
-            )
-        else:
-            self.begin_time, self.end_time, self.footprint = collect_eo_metadata(
-                self.eo_objects.all(), insert=[eo_object], bbox=True
-            )
-        self.save()
+    class Meta:
+        unique_together = ('collection', 'identifier')
+        indexes = [
+            Index(fields=['collection', 'begin_time']),
+            Index(fields=['collection', 'end_time']),
+        ]
 
-EO_OBJECT_TYPE_REGISTRY[210] = ProductCollection
+    def set_location(self, dataset_id, location):
+        _datasets = self.datasets or {}
+        _dataset = _datasets.setdefault(dataset_id, {})
+        _dataset['location'] = location
+        self.datasets = _datasets
+
+    def get_location(self, dataset_id=None):
+        if dataset_id is None:
+            dataset_id = self.collection.type.definition['defaultDatadaset']
+        return self.datasets[dataset_id]['location']
