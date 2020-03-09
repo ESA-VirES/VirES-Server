@@ -35,7 +35,7 @@ from numpy import nan, full
 import msgpack
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, BoundingBoxData, ComplexData, FormatText, FormatJSON,
-    CDFileWrapper, FormatBinaryRaw, CDObject,
+    CDFileWrapper, FormatBinaryRaw, CDObject, RequestParameter,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
@@ -113,6 +113,7 @@ class FetchData(WPSProcess):
     profiles = ["vires"]
 
     inputs = WPSProcess.inputs + [
+        ('user', RequestParameter(lambda request: request.user)),
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -175,7 +176,7 @@ class FetchData(WPSProcess):
         )),
     ]
 
-    def execute(self, username, collection_ids, begin_time, end_time, bbox,
+    def execute(self, user, collection_ids, begin_time, end_time, bbox,
                 requested_variables, model_ids, shc,
                 csv_time_format, output, **kwargs):
         """ Execute process """
@@ -185,7 +186,7 @@ class FetchData(WPSProcess):
         sources = parse_collections(
             'collection_ids', collection_ids.data,
             custom_dataset=CustomDatasetTimeSeries.COLLECTION_IDENTIFIER,
-            user=get_user(kwargs.get('username'))
+            user=user
         )
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
