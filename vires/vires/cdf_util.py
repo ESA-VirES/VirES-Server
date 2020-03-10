@@ -70,8 +70,8 @@ CDF_TYPE_TO_LABEL = {
     CDF_TIME_TT2000_TYPE: "CDF_TIME_TT2000",
     CDF_FLOAT_TYPE: "CDF_FLOAT",
     CDF_DOUBLE_TYPE: "CDF_DOUBLE",
-    CDF_REAL8_TYPE: "CDF_REAL8",
     CDF_REAL4_TYPE: "CDF_REAL4",
+    CDF_REAL8_TYPE: "CDF_REAL8",
     CDF_UINT1_TYPE: "CDF_UINT1",
     CDF_UINT2_TYPE: "CDF_UINT2",
     CDF_UINT4_TYPE: "CDF_UINT4",
@@ -80,6 +80,11 @@ CDF_TYPE_TO_LABEL = {
     CDF_INT4_TYPE: "CDF_INT4",
     CDF_INT8_TYPE: "CDF_INT8",
     CDF_CHAR_TYPE: "CDF_CHAR",
+}
+
+CDF_TYPE_MAP = {
+    CDF_REAL4_TYPE: CDF_FLOAT_TYPE,
+    CDF_REAL8_TYPE: CDF_DOUBLE_TYPE,
 }
 
 LABEL_TO_CDF_TYPE = {
@@ -110,6 +115,11 @@ CDF_CREATOR = "%s [%s-%s, libcdf-%s]" % (
     FULL_PACKAGE_NAME, spacepy.__name__, spacepy.__version__,
     "%s.%s.%s-%s" % pycdf.lib.version
 )
+
+
+def cdf_type_map(cdf_type):
+    """ CDF type conversion. """
+    return CDF_TYPE_MAP.get(cdf_type, cdf_type)
 
 
 def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):

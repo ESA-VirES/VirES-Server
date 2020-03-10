@@ -31,7 +31,7 @@ from logging import getLogger, LoggerAdapter
 from numpy import empty, argsort, searchsorted, broadcast_to, asarray
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_datetime, datetime_to_cdf_rawtime,
-    CDF_EPOCH_TYPE,
+    cdf_type_map, CDF_EPOCH_TYPE,
 )
 from vires.models import CustomDataset
 from vires.dataset import Dataset
@@ -202,7 +202,9 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
             else: # NRV variable
                 value = asarray(cdf_var[...])
                 data = broadcast_to(value, (idx.size,) + value.shape[1:])
-            dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
+            dataset.set(
+                variable, data, cdf_type_map(cdf_var.type()), cdf_var.attrs
+            )
         return dataset
 
     def _subset_qs(self, start, stop):
