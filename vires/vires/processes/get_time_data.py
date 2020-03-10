@@ -30,10 +30,11 @@ import csv
 from datetime import datetime
 from eoxserver.core.util.timetools import isoformat
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData, CDTextBuffer, FormatText
+    LiteralData, ComplexData, CDTextBuffer, FormatText, RequestParameter,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
+from vires.access_util import get_vires_permissions
 from vires.time_util import naive_to_utc
 from vires.processes.base import WPSProcess
 
@@ -52,6 +53,7 @@ class GetTimeDataProcess(WPSProcess):
     profiles = ['EOxServer:GetTimeData']
 
     inputs = WPSProcess.inputs + [
+        ("permissions", RequestParameter(get_vires_permissions)),
         ("collection_id", LiteralData(
             "collection",
             title="Collection name."
@@ -73,13 +75,15 @@ class GetTimeDataProcess(WPSProcess):
         )
     }
 
-    def execute(self, collection_id, begin_time, end_time, **kwargs):
+    def execute(self, permissions, collection_id, begin_time, end_time, **kwargs):
         """ The main execution function for the process.
         """
         access_logger = self.get_access_logger(**kwargs)
 
         try:
-            collection = ProductCollection.objects.get(identifier=collection_id)
+            collection = ProductCollection.select_permitted(permissions).get(
+                identifier=collection_id
+            )
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
                 "collection", "Invalid collection name '%s'!" % collection_id

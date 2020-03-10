@@ -59,7 +59,8 @@ def parse_style(input_id, style):
         )
 
 
-def parse_collections(input_id, source, custom_dataset=None, user=None):
+def parse_collections(input_id, source, permissions,
+                      custom_dataset=None, user=None):
     """ Parse input collections definitions. """
     result = {}
     if not isinstance(source, dict):
@@ -75,7 +76,7 @@ def parse_collections(input_id, source, custom_dataset=None, user=None):
             )
         available_collections = {
             collection.identifier: collection for collection
-            in ProductCollection.objects.prefetch_related('type').filter(
+            in ProductCollection.select_permitted(permissions).filter(
                 identifier__in=collection_ids
             )
         }

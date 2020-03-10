@@ -30,6 +30,7 @@ from eoxserver.services.ows.wps.parameters import (
     RequestParameter, ComplexData, FormatJSON, CDObject,
 )
 from vires.models import Job
+from vires.access_util import get_user
 from vires.processes.base import WPSProcess
 
 STATUS_TO_STRING = dict(Job.STATUS_CHOICES)
@@ -46,7 +47,7 @@ class ListJobs(WPSProcess):
     profiles = ["vires-util"]
 
     inputs = WPSProcess.inputs + [
-        ('user', RequestParameter(lambda request: request.user)),
+        ('user', RequestParameter(get_user)),
     ]
 
     outputs = [

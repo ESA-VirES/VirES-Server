@@ -46,9 +46,25 @@ def get_remote_addr(request):
     return request.META.get('REMOTE_ADDR')
 
 
+def get_user(request):
+    """ Extract authenticated user from the Django HttpRequest
+    or return None for unauthenticated user.
+    """
+    user = request.user
+    return user if user and user.is_authenticated else None
+
+
 def get_username(request):
     """ Extract username of the authenticated user from the Django HttpRequest
     or return None for unauthenticated user.
     """
-    user = request.user
-    return user.username if user.is_authenticated else None
+    user = get_user(request)
+    return user.username if user else None
+
+
+def get_vires_permissions(request):
+    """ Extract vires permissions of the authenticated user from the
+    Django HttpRequest or return None for unauthenticated user.
+    """
+    user = get_user(request)
+    return getattr(user, 'vires_permissions', None) if user else None

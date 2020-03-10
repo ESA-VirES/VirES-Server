@@ -30,6 +30,7 @@ from eoxserver.services.ows.wps.parameters import RequestParameter, LiteralData
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from eoxserver.services.ows.wps.v10.execute import WPS10ExecuteHandler
 from vires.models import Job
+from vires.access_util import get_user
 from vires.processes.base import WPSProcess
 
 
@@ -47,7 +48,7 @@ class RemoveJob(WPSProcess):
     profiles = ["vires-util"]
 
     inputs = WPSProcess.inputs + [
-        ('user', RequestParameter(lambda request: request.user)),
+        ('user', RequestParameter(get_user)),
         ('job_id', LiteralData('job_id', str, title="Job Identifier")),
     ]
 
