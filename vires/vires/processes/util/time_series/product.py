@@ -32,7 +32,7 @@ from datetime import timedelta
 from numpy import searchsorted, broadcast_to, asarray
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
-    timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
+    timedelta_to_cdf_rawtime, cdf_type_map, CDF_EPOCH_TYPE,
 )
 from vires.time_util import naive_to_utc
 from vires.models import Product, ProductCollection
@@ -236,7 +236,9 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 value = asarray(cdf_var[...])
                 size = max(0, idx_high - idx_low)
                 data = broadcast_to(value, (size,) + value.shape[1:])
-            dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
+            dataset.set(
+                variable, data, cdf_type_map(cdf_var.type()), cdf_var.attrs
+            )
         return dataset
 
     def _get_empty_dataset(self, variables):

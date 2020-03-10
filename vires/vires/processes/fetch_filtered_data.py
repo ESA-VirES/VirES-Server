@@ -37,7 +37,7 @@ from numpy import nan, full
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, AllowedRange,
     FormatText, FormatJSON, FormatBinaryRaw,
-    CDFile, CDTextBuffer,
+    CDFile, CDTextBuffer, RequestParameter,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
@@ -45,6 +45,7 @@ from eoxserver.services.ows.wps.exceptions import (
 from vires.models import ProductCollection
 from vires.config import SystemConfigReader
 from vires.util import unique, exclude, include
+from vires.access_util import get_vires_permissions
 from vires.time_util import (
     naive_to_utc, timedelta_to_iso_duration,
 )
@@ -111,6 +112,7 @@ class FetchFilteredData(WPSProcess):
     profiles = ["vires"]
 
     inputs = WPSProcess.inputs + [
+        ('permissions', RequestParameter(get_vires_permissions)),
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -188,14 +190,16 @@ class FetchFilteredData(WPSProcess):
         )),
     ]
 
-    def execute(self, collection_ids, begin_time, end_time, filters,
-                sampling_step, requested_variables, model_ids, shc,
+    def execute(self, permissions, collection_ids, begin_time, end_time,
+                filters, sampling_step, requested_variables, model_ids, shc,
                 csv_time_format, output, source_products, **kwargs):
         """ Execute process """
         access_logger = self.get_access_logger(**kwargs)
         workspace_dir = SystemConfigReader().path_temp
         # parse inputs
-        sources = parse_collections('collection_ids', collection_ids.data)
+        sources = parse_collections(
+            'collection_ids', collection_ids.data, permissions=permissions,
+        )
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
         )

@@ -31,10 +31,12 @@ from io import StringIO
 from django.db.models import Count, Min, Max
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, FormatJSON, CDFileWrapper, CDObject,
+    RequestParameter,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
 from vires.models import ProductCollection
 from vires.util import unique
+from vires.access_util import get_vires_permissions
 from vires.processes.base import WPSProcess
 
 
@@ -50,6 +52,7 @@ class GetCollectionInfo(WPSProcess):
     profiles = ["vires"]
 
     inputs = WPSProcess.inputs + [
+        ("permissions", RequestParameter(get_vires_permissions)),
         ("collection_ids", LiteralData(
             "collection", str, optional=True, default=None,
             title="Optional comma separated list of collection identifiers."
@@ -65,8 +68,31 @@ class GetCollectionInfo(WPSProcess):
         )),
     ]
 
+    def execute(self, permissions, collection_ids, output, **kwargs):
+        """ Execute process """
+        access_logger = self.get_access_logger(**kwargs)
+
+        collection_ids = self._parse_collection_ids(collection_ids)
+        collections = self._get_collections(collection_ids, permissions)
+
+        access_logger.info(
+            "request: collection_ids: %s, ",
+            "<all>" if collection_ids is None else
+            "(%s)" % ", ".join(collection_ids)
+        )
+
+        if output['mime_type'] == "text/csv":
+            return self._csv_output(collections, output)
+        if output['mime_type'] == "application/json":
+            return self._json_output(collections, output)
+
+        raise InvalidOutputDefError(
+            'output',
+            "Unexpected output format %r requested!" % output['mime_type']
+        )
+
     @staticmethod
-    def _parse_collections_ids(collection_ids):
+    def _parse_collection_ids(collection_ids):
         if collection_ids is None:
             return None
         collection_ids = collection_ids.strip()
@@ -74,38 +100,21 @@ class GetCollectionInfo(WPSProcess):
             return []
         return list(unique(RE_CSL_DEMIMITER.split(collection_ids)))
 
+    @staticmethod
+    def _get_collections(collection_ids, permisisons):
 
-    def execute(self, collection_ids, output, **kwargs):
-        """ Execute process """
-        access_logger = self.get_access_logger(**kwargs)
-
-        query = ProductCollection.objects.values(
+        collections = ProductCollection.select_permitted(permisisons).values(
             'identifier', 'type__identifier', 'metadata'
-        ).prefetch_related('type').annotate(
+        ).annotate(
             product_count=Count('products'),
             begin_time=Min('products__begin_time'),
             end_time=Max('products__end_time'),
         ).order_by('identifier')
 
-        parsed_collection_ids = self._parse_collections_ids(collection_ids)
         if collection_ids is not None:
-            query = query.filter(identifier__in=parsed_collection_ids)
+            collections = collections.filter(identifier__in=collection_ids)
 
-        access_logger.info(
-            "request: collection_ids: %s, ",
-            "<all>" if collection_ids is None else
-            "(%s)" % ", ".join(parsed_collection_ids)
-        )
-
-        if output['mime_type'] == "text/csv":
-            return self._csv_output(query, output)
-        if output['mime_type'] == "application/json":
-            return self._json_output(query, output)
-
-        raise InvalidOutputDefError(
-            'output',
-            "Unexpected output format %r requested!" % output['mime_type']
-        )
+        return collections
 
     @classmethod
     def _csv_output(cls, collections, output):

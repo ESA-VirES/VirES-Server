@@ -33,7 +33,7 @@ from datetime import timedelta
 from django.core.validators import RegexValidator
 from django.db.models import (
     Model, ForeignKey, BooleanField, CharField, DateTimeField, BigIntegerField,
-    TextField, Index, DurationField,
+    TextField, Index, DurationField, Q,
     CASCADE as ON_DELETE_CASCADE,
     PROTECT as ON_DELETE_PROTECT,
 )
@@ -158,6 +158,16 @@ class ProductCollection(Model):
     updated = DateTimeField(auto_now=True)
     max_product_duration = DurationField(default=timedelta(0), **MANDATORY)
     metadata = JSONField(default=dict, **MANDATORY)
+
+    @classmethod
+    def select_permitted(cls, permissions):
+        query = cls.objects.prefetch_related('type')
+        if permissions is None:
+            return query
+        return query.filter(
+            Q(metadata__requiredPermission__isnull=True)|
+            Q(metadata__requiredPermission__in=permissions)
+        )
 
     class Meta:
         verbose_name = "Product Collection"

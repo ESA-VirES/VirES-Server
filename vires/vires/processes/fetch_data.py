@@ -40,8 +40,9 @@ from eoxserver.services.ows.wps.parameters import (
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
 )
-from vires.models import ProductCollection, get_user
+from vires.models import ProductCollection
 from vires.util import unique, exclude
+from vires.access_util import get_user, get_vires_permissions
 from vires.time_util import (
     naive_to_utc, timedelta_to_iso_duration,
 )
@@ -113,7 +114,8 @@ class FetchData(WPSProcess):
     profiles = ["vires"]
 
     inputs = WPSProcess.inputs + [
-        ('user', RequestParameter(lambda request: request.user)),
+        ('user', RequestParameter(get_user)),
+        ('permissions', RequestParameter(get_vires_permissions)),
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -176,17 +178,17 @@ class FetchData(WPSProcess):
         )),
     ]
 
-    def execute(self, user, collection_ids, begin_time, end_time, bbox,
-                requested_variables, model_ids, shc,
+    def execute(self, user, permissions, collection_ids, begin_time, end_time,
+                bbox, requested_variables, model_ids, shc,
                 csv_time_format, output, **kwargs):
         """ Execute process """
         access_logger = self.get_access_logger(**kwargs)
 
         # parse inputs
         sources = parse_collections(
-            'collection_ids', collection_ids.data,
+            'collection_ids', collection_ids.data, permissions=permissions,
             custom_dataset=CustomDatasetTimeSeries.COLLECTION_IDENTIFIER,
-            user=user
+            user=user,
         )
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
