@@ -140,6 +140,7 @@
     },
     {
         "name": "SW_OPER_AUX_IMF_2_",
-        "productType": "SW_AUX_IMF_2_"
+        "productType": "SW_AUX_IMF_2_",
+        "requiredPermission": "__restricted__"
     }
 ]
