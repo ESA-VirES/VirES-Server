@@ -370,7 +370,7 @@ $ <instance>/manage.py product dump --invalid-only
 The `--invalid-only` command is also accepted by the `import` command, though, in this case it is only applied when the products are removed with the `--sync` option:
 ```
 $ <instance>/manage.py product import -t SW_MAGx_LR_1B --sync --invalid-only < products_dump.json
-
+```
 
 ### Cached Products
 
