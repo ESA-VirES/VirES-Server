@@ -52,6 +52,7 @@ class UpdateOrbitDirectionSubcommand(Subcommand):
             counter, kwargs.pop('product-identifier'), **kwargs
         )
         counter.print_report(self.info)
+        sys.exit(counter.failed)
 
 
     def update_from_products(self, counter, product_ids, **kwargs):

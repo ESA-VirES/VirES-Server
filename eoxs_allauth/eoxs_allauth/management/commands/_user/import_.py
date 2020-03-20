@@ -95,6 +95,7 @@ class ImportUserSubcommand(Subcommand):
                 "%d of %d user%s failed to be imported", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
+        sys.exit(failed_count)
 
 
 def _parse_datetime(value):

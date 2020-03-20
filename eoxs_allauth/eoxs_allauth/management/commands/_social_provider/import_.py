@@ -55,12 +55,14 @@ class ImportSocialProviderSubcommand(Subcommand):
             self.save_providers(json.load(file_), **kwargs)
 
     def save_providers(self, data, **kwargs):
+        failed_count = 0
         sites = list(Site.objects.filter(id=settings.SITE_ID))
         for item in data:
             name = item.get("provider")
             try:
                 is_updated = save_provider(item, sites)
             except Exception as error:
+                failed_count += 1
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
                 self.error(
@@ -72,6 +74,7 @@ class ImportSocialProviderSubcommand(Subcommand):
                     "%s updated" if is_updated else "%s created",
                     name, log=True
                 )
+        sys.exit(failed_count)
 
 
 @transaction.atomic

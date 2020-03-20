@@ -118,26 +118,26 @@ class RegisterProductSubcommand(Subcommand):
                     "Registration of %s/%s failed! Reason: %s",
                     collection.identifier, product_id, error
                 )
-                counter.increment_failed()
+                counter.failed += 1
                 product = None
             else:
-                counter.increment_removed(len(removed))
+                counter.removed += len(removed)
                 if updated:
-                    counter.increment_updated()
+                    counter.updated += 1
                 elif inserted:
-                    counter.increment_inserted()
+                    counter.inserted += 1
                 else:
-                    counter.increment_skipped()
+                    counter.skipped += 1
             finally:
-                counter.increment()
+                counter.total += 1
 
             if product:
                 if collection.metadata.get("calculateOrbitDirection"):
                     self._update_orbit_direction(product)
 
-
-
         counter.print_report(lambda msg: print(msg, file=sys.stderr))
+
+        sys.exit(counter.failed)
 
     @transaction.atomic
     def _register_product(self, collection, product_id, data_file,
@@ -190,61 +190,43 @@ class RegisterProductSubcommand(Subcommand):
 class Counter():
 
     def __init__(self):
-        self._total = 0
-        self._inserted = 0
-        self._updated = 0
-        self._removed = 0
-        self._skipped = 0
-        self._failed = 0
-
-    def increment(self, count=1):
-        self._total += count
-
-    def increment_inserted(self, count=1):
-        self._inserted += count
-
-    def increment_updated(self, count=1):
-        self._updated += count
-
-    def increment_removed(self, count=1):
-        self._removed += count
-
-    def increment_skipped(self, count=1):
-        self._skipped += count
-
-    def increment_failed(self, count=1):
-        self._failed += count
+        self.total = 0
+        self.inserted = 0
+        self.updated = 0
+        self.removed = 0
+        self.skipped = 0
+        self.failed = 0
 
     def print_report(self, print_fcn):
-        if self._inserted > 0:
+        if self.inserted > 0:
             print_fcn(
                 "%d of %d product(s) registered."
-                % (self._inserted, self._total)
+                % (self.inserted, self.total)
             )
 
-        if self._updated > 0:
+        if self.updated > 0:
             print_fcn(
                 "%d of %d product(s) updated."
-                % (self._updated, self._total)
+                % (self.updated, self.total)
             )
 
-        if self._skipped > 0:
+        if self.skipped > 0:
             print_fcn(
                 "%d of %d product(s) skipped."
-                % (self._skipped, self._total)
+                % (self.skipped, self.total)
             )
 
-        if self._removed > 0:
-            print_fcn("%d product(s) de-registered." % self._removed)
+        if self.removed > 0:
+            print_fcn("%d product(s) de-registered." % self.removed)
 
 
-        if self._failed > 0:
+        if self.failed > 0:
             print_fcn(
                 "Failed to register %d of %d product(s)."
-                % (self._failed, self._total)
+                % (self.failed, self.total)
             )
 
-        if self._total == 0:
+        if self.total == 0:
             print_fcn("No action performed.")
 
 

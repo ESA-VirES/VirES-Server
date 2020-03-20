@@ -281,6 +281,10 @@ class Counter():
         self._skipped = 0
         self._removed = 0
 
+    @property
+    def failed(self):
+        return self._failed
+
     def increment(self, count=1):
         self._total += count
 

@@ -83,6 +83,7 @@ class ImportProductSubcommand(ProductSelectionSubcommand):
             self._remove_products(data, products, counter, **kwargs)
         self._import_products(data, counter, **kwargs)
         counter.print_summary()
+        sys.exit(counter.failed_count)
 
     def _import_products(self, data, counter, **kwargs):
         """ Update or inset products' records. """

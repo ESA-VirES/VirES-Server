@@ -55,3 +55,4 @@ class RebuildOrbitDirectionSubcommand(Subcommand):
             rebuild_orbit_direction_tables(collection, logger=self, counter=counter)
         self.log = False
         counter.print_report(self.info)
+        sys.exit(counter.failed)

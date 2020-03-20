@@ -96,6 +96,7 @@ class ImportProductTypeSubcommand(Subcommand):
                 "%d of %d product type%s failed ", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
+        sys.exit(failed_count)
 
 
 @transaction.atomic

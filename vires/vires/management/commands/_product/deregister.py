@@ -81,8 +81,4 @@ class DeregisterProductSubcommand(ProductSelectionSubcommandProtected):
                 failed_count, total_count, "s" if failed_count > 1 else ""
             )
 
-        if failed_count:
-            self.info(
-                "%d of %d matched product%s failed to be de-registered.",
-                failed_count, total_count, "s" if failed_count > 1 else ""
-            )
+        sys.exit(failed_count)

@@ -97,6 +97,8 @@ class ImportProductCollectionSubcommand(Subcommand):
                 "s" if failed_count > 1 else ""
             )
 
+        sys.exit(failed_count)
+
 
 @transaction.atomic
 def save_product_collection(data):

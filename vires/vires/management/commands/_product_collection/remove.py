@@ -105,3 +105,5 @@ class RemoveProductCollectionSubcommand(Subcommand):
                 "%d of %d matched product collection%s failed to be removed",
                 failed_count, total_count, "s" if failed_count > 1 else ""
             )
+
+        sys.exit(failed_count)
