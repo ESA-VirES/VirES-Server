@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 #pylint: disable=missing-docstring
 
+import sys
 from vires.models import ProductCollection
 from .._common import Subcommand
 from .common import Counter, sync_orbit_direction_tables
