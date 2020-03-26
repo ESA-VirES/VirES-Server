@@ -28,6 +28,7 @@
 
 from django.conf import settings
 from vires.dataset import Dataset
+from vires.models import ProductCollection
 from vires.cdf_util import CDF_EPOCH_TYPE, mjd2000_to_cdf_rawtime
 from .models import SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle
 from .time_series import ProductTimeSeries
@@ -39,7 +40,9 @@ IMF_V_VARIABLE = "IMF_V"
 
 def get_amps_inputs(mjd2000):
     """ Get AMPS model inputs for the given MJD2000 time. """
-    index_imf = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+    index_imf = ProductTimeSeries(
+        ProductCollection.objects.get(type__identifier="SW_AUX_IMF_2_")
+    )
     model_sun = SunPosition()
     model_subsol = SubSolarPoint()
     model_dipole = MagneticDipole()
