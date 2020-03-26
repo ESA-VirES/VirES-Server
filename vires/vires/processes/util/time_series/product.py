@@ -25,15 +25,14 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-locals, too-many-arguments, too-few-public-methods
-# pylint: disable=too-many-instance-attributes,missing-docstring
+# pylint: disable=too-many-instance-attributes
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
 from numpy import searchsorted, broadcast_to, asarray
-from eoxserver.backends.access import connect
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
-    timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
+    timedelta_to_cdf_rawtime, cdf_type_map, CDF_EPOCH_TYPE,
 )
 from vires.time_util import naive_to_utc
 from vires.models import Product, ProductCollection
@@ -41,7 +40,7 @@ from vires.dataset import Dataset
 from .base import TimeSeries
 
 
-class SwarmDefaultParameters(object):
+class SwarmDefaultParameters():
     """ Default SWARM product parameters. """
     TIME_VARIABLE = "Timestamp"
     TIME_TOLERANCE = timedelta(microseconds=0) # time selection tolerance
@@ -84,8 +83,8 @@ class AuxImf2Parameters(SwarmDefaultParameters):
 
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
-    "SWARM_EEF": SwarmEEFParameters,
-    "AUX_IMF_2_": AuxImf2Parameters,
+    "SW_EEFxTMS_2F": SwarmEEFParameters,
+    "SW_AUX_IMF_2_": AuxImf2Parameters,
 }
 
 
@@ -93,7 +92,7 @@ class BaseProductTimeSeries(TimeSeries):
     """ Base product time-series """
 
     def __init__(self, logger=None, **kwargs):
-        super(BaseProductTimeSeries, self).__init__()
+        super().__init__()
         self.logger = logger or getLogger(__name__)
         self.time_variable = kwargs.get("time_variable")
         self.time_tolerance = kwargs.get("time_tolerance")
@@ -184,14 +183,14 @@ class ProductTimeSeries(BaseProductTimeSeries):
             return '%s: %s' % (self.extra["collection_id"], msg), kwargs
 
     def __init__(self, collection, logger=None):
-        if isinstance(collection, basestring):
+        if isinstance(collection, str):
             collection = self._get_collection(collection)
 
         params = PRODUCT_TYPE_PARAMETERS.get(
-            collection.range_type.name, DEFAULT_PRODUCT_TYPE_PARAMETERS
+            collection.type.identifier, DEFAULT_PRODUCT_TYPE_PARAMETERS
         )
 
-        super(ProductTimeSeries, self).__init__(
+        super().__init__(
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
                 "collection_id": collection.identifier,
             }),
@@ -205,7 +204,12 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
         self.collection = collection
         self.translate_fw = dict(params.VARIABLE_TRANSLATES)
-        self.translate_bw = dict((v, k) for k, v in self.translate_fw.iteritems())
+        self.translate_bw = dict((v, k) for k, v in self.translate_fw.items())
+
+    @property
+    def metadata(self):
+        """ Get collection metadata. """
+        return self.collection.metadata
 
     @property
     def collection_identifier(self):
@@ -214,9 +218,11 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
     @property
     def variables(self):
+        type_def = self.collection.type.definition
+        dataset_id = type_def['defaultDatadaset']
         return [
-            self.translate_bw.get(band.identifier, band.identifier)
-            for band in self.collection.range_type
+            self.translate_bw.get(variable, variable)
+            for variable in type_def['datasets'][dataset_id]
         ]
 
     def _extract_dataset(self, cdf, extracted_variables, idx_low, idx_high):
@@ -230,7 +236,9 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 value = asarray(cdf_var[...])
                 size = max(0, idx_high - idx_low)
                 data = broadcast_to(value, (size,) + value.shape[1:])
-            dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
+            dataset.set(
+                variable, data, cdf_type_map(cdf_var.type()), cdf_var.attrs
+            )
         return dataset
 
     def _get_empty_dataset(self, variables):
@@ -242,7 +250,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             # we need at least one product from the collection
             # to initialize correctly the empty variables
             product = Product.objects.filter(
-                collections=self.collection
+                collection=self.collection
             ).order_by('begin_time')[0]
         except IndexError:
             self.logger.error(
@@ -255,7 +263,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
         else:
             # generate an empty dataset from the sample product
             self.logger.debug("template product: %s ", product.identifier)
-            with cdf_open(connect(product.data_items.all()[0])) as cdf:
+            with cdf_open(product.get_location()) as cdf:
                 return self._extract_dataset(cdf, variables, 0, 0)
 
 
@@ -316,7 +324,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
             self.product_set.add(product.identifier) # record source product
 
-            with cdf_open(connect(product.data_items.all()[0])) as cdf:
+            with cdf_open(product.get_location()) as cdf:
                 # temporal sub-setting
                 temp_var = cdf.raw_var(
                     self.translate_fw.get(self.time_variable, self.time_variable)
@@ -340,6 +348,8 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
             self.logger.debug("dataset length: %s ", dataset.length)
 
+            dataset.source = product.identifier # record source product
+
             yield dataset
             counter += 1
 
@@ -351,10 +361,13 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
     def _subset_qs(self, start, stop):
         """ Subset Django query set. """
-        return Product.objects.filter(
-            collections=self.collection,
-            begin_time__lt=naive_to_utc(stop + self.time_tolerance),
-            end_time__gte=naive_to_utc(start - self.time_tolerance),
+        _start = naive_to_utc(start) - self.time_tolerance
+        _stop = naive_to_utc(stop) + self.time_tolerance
+        return Product.objects.prefetch_related('collection__type').filter(
+            collection=self.collection,
+            begin_time__lt=_stop,
+            end_time__gte=_start,
+            begin_time__gte=(_start - self.collection.max_product_duration),
         )
 
     @staticmethod

@@ -24,12 +24,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-locals,too-many-instance-attributes,missing-docstring
+# pylint: disable=too-many-locals,too-many-instance-attributes
 
 from logging import LoggerAdapter, getLogger
 from itertools import chain
 from numpy import searchsorted, zeros
-from django.conf import settings
 from vires.orbit_counter import OrbitCounterReader
 from vires.cdf_util import (
     CDF_DOUBLE_TYPE, CDF_EPOCH_TYPE,
@@ -37,6 +36,8 @@ from vires.cdf_util import (
 )
 from vires.util import include
 from vires.dataset import Dataset
+from vires.cache_util import cache_path
+from vires.data.vires_settings import ORBIT_COUNTER_FILE
 from .base import Model
 
 
@@ -49,12 +50,12 @@ class SatSatSubtraction(Model):
 
     def __init__(self, master_spacecraft, slave_spacecraft,
                  grouped_collections, logger=None):
-        super(SatSatSubtraction, self).__init__()
+        super().__init__()
 
-        if master_spacecraft not in settings.VIRES_ORBIT_COUNTER_FILE:
+        if master_spacecraft not in ORBIT_COUNTER_FILE:
             raise ValueError("Invalid master spacecraft %s!" % master_spacecraft)
 
-        if slave_spacecraft not in settings.VIRES_ORBIT_COUNTER_FILE:
+        if slave_spacecraft not in ORBIT_COUNTER_FILE:
             raise ValueError("Invalid slave spacecraft %s!" % slave_spacecraft)
 
         self._master_spacecraft = master_spacecraft
@@ -62,12 +63,12 @@ class SatSatSubtraction(Model):
         self._collections = grouped_collections
 
         self._master_orbit_counter = OrbitCounterReader(
-            settings.VIRES_ORBIT_COUNTER_FILE[self._master_spacecraft],
+            cache_path(ORBIT_COUNTER_FILE[self._master_spacecraft]),
             self.product_set
         )
 
         self._slave_orbit_counter = OrbitCounterReader(
-            settings.VIRES_ORBIT_COUNTER_FILE[self._slave_spacecraft],
+            cache_path(ORBIT_COUNTER_FILE[self._slave_spacecraft]),
             self.product_set
         )
 
@@ -102,7 +103,7 @@ class SatSatSubtraction(Model):
         }
 
         var_pairs = tuple(chain.from_iterable(
-            pairs for _, pairs in self._collections.itervalues()
+            pairs for _, pairs in self._collections.values()
         ))
 
         self._output_variables = tuple(v for v, _ in var_pairs) + (

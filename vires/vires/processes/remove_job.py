@@ -24,55 +24,48 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=no-self-use,missing-docstring,too-few-public-methods
+# pylint: disable=no-self-use,too-few-public-methods,unused-argument
 
-from eoxserver.core import Component, implements, ExtensionPoint, env
-from eoxserver.services.ows.wps.interfaces import (
-    ProcessInterface, AsyncBackendInterface
-)
-from eoxserver.services.ows.wps.parameters import (
-    RequestParameter, LiteralData,
-)
+from eoxserver.services.ows.wps.parameters import RequestParameter, LiteralData
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from eoxserver.services.ows.wps.v10.execute import WPS10ExecuteHandler
 from vires.models import Job
-
-
-class _AsyncBackendProvider(Component):
-    """ Component providing list of WPS AsyncBackend components. """
-    async_backends = ExtensionPoint(AsyncBackendInterface)
+from vires.access_util import get_user
+from vires.processes.base import WPSProcess
 
 
 def get_wps_async_backend():
     """ Get the asynchronous WPS back-end. """
-    for async_backend in _AsyncBackendProvider(env).async_backends:
-        return async_backend
-    return None
+    return WPS10ExecuteHandler().get_async_backend()
 
 
-class RemoveJob(Component):
+class RemoveJob(WPSProcess):
     """ This utility process removes an asynchronous WPS  job owned
     by the current user.
     """
-    implements(ProcessInterface)
-
     identifier = "removeJob"
     metadata = {}
     profiles = ["vires-util"]
 
-    inputs = [
-        ('user', RequestParameter(lambda request: request.user)),
+    inputs = WPSProcess.inputs + [
+        ('user', RequestParameter(get_user)),
         ('job_id', LiteralData('job_id', str, title="Job Identifier")),
     ]
 
     outputs = [('is_removed', bool)]
 
     def execute(self, user, job_id, **kwargs):
+        """ Execute process. """
+        access_logger = self.get_access_logger(**kwargs)
+
         # find job removal candidates
-        owner = user if user.is_authenticated() else None
+        owner = user if user.is_authenticated else None
         try:
             job = Job.objects.get(owner=owner, identifier=job_id)
         except Job.DoesNotExist:
             raise InvalidInputValueError('job_id')
+
+        access_logger.info("request: job: %s", job_id)
 
         get_wps_async_backend().purge(job.identifier)
         job.delete()

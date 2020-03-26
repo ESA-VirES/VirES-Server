@@ -1,0 +1,146 @@
+[
+    {
+        "name": "SW_OPER_MAGA_LR_1B",
+        "productType": "SW_MAGx_LR_1B",
+        "spacecraft": "A",
+        "subtractableCollections": {
+            "C": "SW_OPER_MAGC_LR_1B"
+        },
+        "calculateOrbitDirection": true
+    },
+    {
+        "name": "SW_OPER_MAGB_LR_1B",
+        "productType": "SW_MAGx_LR_1B",
+        "spacecraft": "B",
+        "calculateOrbitDirection": true
+    },
+    {
+        "name": "SW_OPER_MAGC_LR_1B",
+        "productType": "SW_MAGx_LR_1B",
+        "spacecraft": "C",
+        "subtractableCollections": {
+            "A": "SW_OPER_MAGA_LR_1B"
+        },
+        "calculateOrbitDirection": true
+    },
+    {
+        "name": "SW_OPER_MAGA_HR_1B",
+        "productType": "SW_MAGx_HR_1B",
+        "spacecraft": "A",
+        "subtractableCollections": {
+            "C": "SW_OPER_MAGC_HR_1B"
+        }
+    },
+    {
+        "name": "SW_OPER_MAGB_HR_1B",
+        "productType": "SW_MAGx_HR_1B",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_MAGC_HR_1B",
+        "productType": "SW_MAGx_HR_1B",
+        "spacecraft": "C",
+        "subtractableCollections": {
+            "A": "SW_OPER_MAGA_HR_1B"
+        }
+    },
+    {
+        "name": "SW_OPER_EFIA_LP_1B",
+        "productType": "SW_EFIx_LP_1B",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_EFIB_LP_1B",
+        "productType": "SW_EFIx_LP_1B",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_EFIC_LP_1B",
+        "productType": "SW_EFIx_LP_1B",
+        "spacecraft": "C"
+    },
+    {
+        "name": "SW_OPER_IBIATMS_2F",
+        "productType": "SW_IBIxTMS_2F",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_IBIBTMS_2F",
+        "productType": "SW_IBIxTMS_2F",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_IBICTMS_2F",
+        "productType": "SW_IBIxTMS_2F",
+        "spacecraft": "C"
+    },
+    {
+        "name": "SW_OPER_TECATMS_2F",
+        "productType": "SW_TECxTMS_2F",
+        "spacecraft": "A",
+        "groupSamples": true
+    },
+    {
+        "name": "SW_OPER_TECBTMS_2F",
+        "productType": "SW_TECxTMS_2F",
+        "spacecraft": "B",
+        "groupSamples": true
+    },
+    {
+        "name": "SW_OPER_TECCTMS_2F",
+        "productType": "SW_TECxTMS_2F",
+        "spacecraft": "C",
+        "groupSamples": true
+    },
+    {
+        "name": "SW_OPER_FACATMS_2F",
+        "productType": "SW_FACxTMS_2F",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_FACBTMS_2F",
+        "productType": "SW_FACxTMS_2F",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_FACCTMS_2F",
+        "productType": "SW_FACxTMS_2F",
+        "spacecraft": "C"
+    },
+    {
+        "name": "SW_OPER_FAC_TMS_2F",
+        "productType": "SW_FACxTMS_2F"
+    },
+    {
+        "name": "SW_OPER_EEFATMS_2F",
+        "productType": "SW_EEFxTMS_2F",
+        "spacecraft": "A",
+        "extraSampled": true
+    },
+    {
+        "name": "SW_OPER_EEFBTMS_2F",
+        "productType": "SW_EEFxTMS_2F",
+        "spacecraft": "B",
+        "extraSampled": true
+    },
+    {
+        "name": "SW_OPER_IPDAIRR_2F",
+        "productType": "SW_IPDxIRR_2F",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_IPDBIRR_2F",
+        "productType": "SW_IPDxIRR_2F",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_IPDCIRR_2F",
+        "productType": "SW_IPDxIRR_2F",
+        "spacecraft": "C"
+    },
+    {
+        "name": "SW_OPER_AUX_IMF_2_",
+        "productType": "SW_AUX_IMF_2_",
+        "requiredPermission": "__restricted__"
+    }
+]

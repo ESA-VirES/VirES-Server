@@ -2,9 +2,7 @@
 #
 #  Testing dataset class.
 #
-## Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,14 +24,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,too-few-public-methods
 
 from unittest import main, TestCase
+from numpy.random import random, randint
+from numpy import concatenate, arange, array, nan
 from vires.tests import ArrayMixIn
 from vires.dataset import Dataset
 from vires.cdf_util import CDF_DOUBLE_TYPE
-from numpy.random import random, randint
-from numpy import concatenate, arange, array, nan
 
 N = 100
 M = 4
@@ -60,13 +58,14 @@ TEST_ATTRIB = {
 }
 
 
-class FilterStub(object):
+class FilterStub():
     """ Test filter stub. """
 
     def __init__(self, required_variables):
         self.required_variables = required_variables
 
-    def filter(self, dataset, index):
+    @staticmethod
+    def filter(dataset, index):
         if index is None:
             index = arange(dataset.length)
         return index[:(len(index) >> 1)]

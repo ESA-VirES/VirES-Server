@@ -27,26 +27,17 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring,no-self-use,too-few-public-methods
 
-from eoxserver.core import Component, implements
 from eoxserver.core.decoders import kvp, typelist
 from eoxserver.resources.coverages import crss
-from eoxserver.services.ows.interfaces import (
-    ServiceHandlerInterface, GetServiceHandlerInterface
-)
-from eoxserver.services.ows.wms.util import parse_bbox, parse_time, int_or_str
+from eoxserver.services.ows.wms.parsing import parse_bbox, parse_time, int_or_str
 from eoxserver.services.result import to_http_response
 from eoxserver.services.ows.wms.exceptions import InvalidCRS
-from vires.ows.wms.renderer import (
-    render_wms_response, get_single_time, SUPPORTED_SRIDS,
-)
+from .renderer import render_wms_response, SUPPORTED_SRIDS, get_access_logger
+from .parsers import get_mean_time
 
 
-class WMS11GetMapHandler(Component):
-    implements(ServiceHandlerInterface)
-    implements(GetServiceHandlerInterface)
-
-    #renderer = UniqueExtensionPoint(WMSMapRendererInterface)
-
+class WMS11GetMapHandler():
+    methods = ['GET']
     service = "WMS"
     versions = ("1.1", "1.1.0", "1.1.1")
     request = "GetMap"
@@ -67,11 +58,12 @@ class WMS11GetMapHandler(Component):
             srid=srid,
             bbox=(minx, miny, maxx, maxy),
             elevation=decoder.elevation,
-            time=get_single_time(decoder.time),
+            time=get_mean_time(decoder.time),
             width=int(decoder.width),
             height=int(decoder.height),
             response_format=decoder.format,
             query=dict(request.GET),
+            logger=get_access_logger(request),
         ))
 
 

@@ -24,32 +24,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=no-self-use,missing-docstring,too-few-public-methods
+# pylint: disable=no-self-use,too-few-public-methods
 
-from eoxserver.core import Component, implements
-from eoxserver.services.ows.wps.interfaces import ProcessInterface
 from eoxserver.services.ows.wps.parameters import (
     RequestParameter, ComplexData, FormatJSON, CDObject,
 )
 from vires.models import Job
+from vires.access_util import get_user
+from vires.processes.base import WPSProcess
 
 STATUS_TO_STRING = dict(Job.STATUS_CHOICES)
 
 
-class ListJobs(Component):
+class ListJobs(WPSProcess):
     """ This utility process lists all asynchronous WPS jobs owned by
     the current user.
     The jobs are grouped by the process identifier and ordered by the creation
     time.
     """
-    implements(ProcessInterface)
-
     identifier = "listJobs"
     metadata = {}
     profiles = ["vires-util"]
 
-    inputs = [
-        ('user', RequestParameter(lambda request: request.user)),
+    inputs = WPSProcess.inputs + [
+        ('user', RequestParameter(get_user)),
     ]
 
     outputs = [
@@ -60,7 +58,10 @@ class ListJobs(Component):
     ]
 
     def execute(self, user, **kwargs):
-        owner = user if user.is_authenticated() else None
+        """ Execute process. """
+        access_logger = self.get_access_logger(**kwargs)
+
+        owner = user if user.is_authenticated else None
         job_list = {}
         for job in Job.objects.filter(owner=owner).order_by("created"):
             job_list.setdefault(job.process_id, []).append({
@@ -71,6 +72,9 @@ class ListJobs(Component):
                 "stopped": job.stopped.isoformat("T") if job.stopped else None,
                 "status": STATUS_TO_STRING[job.status],
             })
+
+        access_logger.info("request:")
+
         return CDObject(
             job_list, format=FormatJSON(), filename="job_list.json",
             **kwargs['job_list']

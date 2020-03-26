@@ -46,7 +46,7 @@ setup(
     },
     scripts=[],
     install_requires=[
-        'EOxServer', 'eoxmagmod>=0.9.6', 'pyamps>=1.4.0'
+        'EOxServer', 'eoxmagmod>=0.9.7', 'pyamps>=1.4.0'
     ],
     zip_safe=False,
 
@@ -56,7 +56,7 @@ setup(
     maintainer="EOX IT Services GmbH",
     maintainer_email="packages@eox.at",
 
-    description="VirES server - EOxServer extension",
+    description="VirES for Swarm server",
     #long_description=read("README.rst"),
 
     classifiers=[
@@ -72,7 +72,7 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Topic :: Database',
         'Topic :: Internet',
         'Topic :: Internet :: WWW/HTTP',
