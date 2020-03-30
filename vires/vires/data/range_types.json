@@ -1185,8 +1185,8 @@
             "data_type": "CFloat64",
             "definition": "",
             "description": "milliseconds elapsed since 00:00:00 January 1, 2000 UTC",
-            "identifier": "timestamp",
-            "name": "timestamp",
+            "identifier": "Timestamp",
+            "name": "Timestamp",
             "nil_values": [],
             "uom": "ms"
         },
@@ -1195,8 +1195,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "Geographic longitude of satellite crossing of the magnetic equator",
-            "identifier": "longitude",
-            "name": "longitude",
+            "identifier": "Longitude",
+            "name": "Longitude",
             "nil_values": [],
             "uom": "deg"
         },
@@ -1205,8 +1205,8 @@
             "data_type": "Float64",
             "definition": "",
             "description": "Geographic latitude of satellite crossing of the magnetic equator",
-            "identifier": "latitude",
-            "name": "latitude",
+            "identifier": "Latitude",
+            "name": "Latitude",
             "nil_values": [],
             "uom": "deg"
         },
@@ -1218,13 +1218,23 @@
             "identifier": "EEF",
             "name": "EEF",
             "nil_values": [],
-            "uom": "V/m"
+            "uom": "mV/m"
         },
         {
             "color_interpretation": "Undefined",
             "data_type": "Float64",
             "definition": "",
-            "description": "Quality indicator of EEF estimate; relative error between modeled and observed current profil",
+            "description": "Height-integrated east current profile in QD latitude, spanning [-20:0.5:20] degrees",
+            "identifier": "EEJ",
+            "name": "EEJ",
+            "nil_values": [],
+            "uom": "mA/m"
+        },
+        {
+            "color_interpretation": "Undefined",
+            "data_type": "Float64",
+            "definition": "",
+            "description": "Quality indicator of EEF estimate; relative error between modeled and observed current profile",
             "identifier": "RelErr",
             "name": "RelErr",
             "nil_values": [],
@@ -1235,8 +1245,8 @@
             "data_type": "Byte",
             "definition": "",
             "description": "Flags describing data gaps and satellite identification",
-            "identifier": "flags",
-            "name": "flags",
+            "identifier": "Flags",
+            "name": "Flags",
             "nil_values": [],
             "uom": ""
         }
