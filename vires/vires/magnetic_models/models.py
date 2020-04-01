@@ -29,7 +29,7 @@
 from os.path import basename
 from logging import getLogger
 from numpy import inf
-from eoxmagmod.data import CHAOS_STATIC_LATEST, IGRF12, IGRF13, LCS1, MF7
+from eoxmagmod.data import CHAOS_STATIC_LATEST, IGRF13, LCS1, MF7
 from eoxmagmod import (
     load_model_shc,
     load_model_swarm_mma_2c_internal,
@@ -52,7 +52,6 @@ from .files import (
 
 
 DIPOLE_MODEL = "IGRF"
-IGRF12_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20191231T235959_0102"
 IGRF13_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20241231T235959_0103"
 CHAOS_STATIC_SOURCE = basename(CHAOS_STATIC_LATEST)
 LCS1_SOURCE = basename(LCS1)
@@ -119,12 +118,7 @@ class ModelCache():
 
 
 MODEL_ALIASES = {
-    "IGRF": "IGRF13",
     "MCO_SHA_2X": "CHAOS-Core",
-    "CHAOS-6-Core": "CHAOS-Core",
-    "CHAOS-6-Static": "CHAOS-Static",
-    "CHAOS-6-MMA-Primary": "CHAOS-MMA-Primary",
-    "CHAOS-6-MMA-Secondary": "CHAOS-MMA-Secondary",
 }
 
 
@@ -148,11 +142,7 @@ def mio_validity_reader(_):
 
 
 MODEL_FACTORIES = {
-    "IGRF12": ModelFactory(
-        lambda file_: load_model_shc(file_, interpolate_in_decimal_years=True),
-        [ModelFileWithLiteralSource(IGRF12, IGRF12_SOURCE, shc_validity_reader)]
-    ),
-    "IGRF13": ModelFactory(
+    "IGRF": ModelFactory(
         lambda file_: load_model_shc(file_, interpolate_in_decimal_years=True),
         [ModelFileWithLiteralSource(IGRF13, IGRF13_SOURCE, shc_validity_reader)]
     ),
