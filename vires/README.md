@@ -246,12 +246,12 @@ The identifiers of the registered products can be listed by the `list` command:
 $ <instance>/manage.py product list | less -S
 ```
 
-The list may be quite long and it can be limited by the product type (`-t` option), collection name (`-c` option) or acquisition times (`--after`, `--before`, `--created-after`, `--created-before`, `--updated-after`, and `--updated-before` options accepting ISO-8601 timestamps or duration relative to the current time), e.g.:
+The list may be quite long and it can be limited by the product type (`-t` option), collection name (`-c` option) or acquisition times (`--after`, `--before`, `--created-after`, `--created-before`, `--updated-after`, and `--updated-before` options accepting ISO-8601 timestamps or duration before the current time), e.g.:
 
 
 ```
 $ <instance>/manage.py product list -t SW_MAGx_HR_1B -t SW_MAGx_LR_1B --after=2016-01-01 --before=2016-01-02
-$ <instance>/manage.py product list -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=-P31D
+$ <instance>/manage.py product list -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=P31D
 ```
 
 #### Check Product Existence
@@ -318,11 +318,11 @@ If no product identifier is specified all registered products are exported:
 $ <instance>/manage.py product product exported > products_dump.json
 ```
 
-The product output can be limited by the product type (`-t` option), collection name (`-c` option) or acquisition, creation and last update times (`--after`, `--before`, `--created-after`, `--created-before`, `--updated-after`, and `--updated-before` options accepting ISO-8601 timestamps or duration relative to the current time), e.g.:
+The product output can be limited by the product type (`-t` option), collection name (`-c` option) or acquisition, creation and last update times (`--after`, `--before`, `--created-after`, `--created-before`, `--updated-after`, and `--updated-before` options accepting ISO-8601 timestamps or duration before the current time), e.g.:
 
 ```
 $ <instance>/manage.py product list -t SW_MAGx_HR_1B -t SW_MAGx_LR_1B --after=2016-01-01 --before=2016-01-02
-$ <instance>/manage.py product list -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=-P31D
+$ <instance>/manage.py product list -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=P31D
 ```
 
 #### Product Import
@@ -349,11 +349,11 @@ By default, the `import` command imports only new product records. To fully sync
 $ <instance>/manage.py product product import --sync < products_dump.json
 ```
 
-The imported product records can be limited by the product type (`-t` option), collection name (`-c` option) or acquisition, creation and last update times (`--after`, `--before`, `--created-after`, `--created-before`, `--updated-after`, and `--updated-before` options accepting ISO-8601 timestamps or duration relative to the current time), e.g.:
+The imported product records can be limited by the product type (`-t` option), collection name (`-c` option) or acquisition, creation and last update times (`--after`, `--before`, `--created-after`, `--created-before`, `--updated-after`, and `--updated-before` options accepting ISO-8601 timestamps or duration before the current time), e.g.:
 
 ```
 $ <instance>/manage.py product import -t SW_MAGx_HR_1B -t SW_MAGx_LR_1B --after=2016-01-01 --before=2016-01-02 < products_dump.json
-$ <instance>/manage.py product import -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=-P31D < products_dump.json
+$ <instance>/manage.py product import -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=P31D < products_dump.json
 ```
 
 This selection can be combined with the `--sync` and `--update` options to limit, e.g., the synchronization to one or more selected collections:
@@ -376,12 +376,12 @@ $ <instance>/manage.py product deregister --all
 
 ```
 
-The products to be de-registered can be constrained by the product type (`-t` option), collection name (`-c` option) or acquisition times (`--after`, `--before`, `--created-after`, `--created-before`, `--updated-after`, and `--updated-before` options accepting ISO-8601 timestamps or duration relative to the current time), e.g.:
+The products to be de-registered can be constrained by the product type (`-t` option), collection name (`-c` option) or acquisition times (`--after`, `--before`, `--created-after`, `--created-before`, `--updated-after`, and `--updated-before` options accepting ISO-8601 timestamps or duration before the current time), e.g.:
 
 
 ```
 $ <instance>/manage.py product deregister --all -t SW_MAGx_HR_1B -t SW_MAGx_LR_1B --after=2016-01-01 --before=2016-01-02
-$ <instance>/manage.py product deregister --all -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=-P31D
+$ <instance>/manage.py product deregister --all -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=P31D
 ```
 
 #### Detection and De-registration of Invalid Products

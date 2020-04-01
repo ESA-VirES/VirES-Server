@@ -62,7 +62,7 @@ def time_spec(value):
     if datetime_ is not None:
         return naive_to_utc(datetime_)
     try:
-        return naive_to_utc(datetime.utcnow() + parse_duration(value))
+        return naive_to_utc(datetime.utcnow() - abs(parse_duration(value)))
     except ValueError:
         pass
     raise ValueError("Invalid time specification '%s'." % value)
