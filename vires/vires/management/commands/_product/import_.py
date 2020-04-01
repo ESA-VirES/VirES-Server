@@ -67,6 +67,7 @@ class ImportProductSubcommand(ProductSelectionSubcommand):
         )
 
     def handle(self, **kwargs):
+        self.verbosity = kwargs["verbosity"]
         products = self.select_products(
             Product.objects.prefetch_related('collection', 'collection__type'),
             **kwargs
@@ -116,7 +117,8 @@ class ImportProductSubcommand(ProductSelectionSubcommand):
                     self.info("%s/%s created", collection_id, identifier, log=True)
                 elif is_updated is None:
                     counter.ignored_count += 1
-                    self.info("%s/%s ignored", collection_id, identifier)
+                    if self.verbosity > 1:
+                        self.info("%s/%s ignored", collection_id, identifier)
             finally:
                 counter.total_count += 1
 
