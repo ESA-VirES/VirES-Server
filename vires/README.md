@@ -254,6 +254,40 @@ $ <instance>/manage.py product list -t SW_MAGx_HR_1B -t SW_MAGx_LR_1B --after=20
 $ <instance>/manage.py product list -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B --after=-P31D
 ```
 
+#### Check Product Existence
+
+To check if a product exists use the `exists` command:
+
+```
+$ <instance>/manage.py product exists SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 || echo "DOES NOT EXIST" && echo EXISTS
+INFO: SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 exists
+EXISTS
+
+$ <instance>/manage.py product exists XYZ || echo "DOES NOT EXIST" && echo EXISTS
+INFO: XYZ does not exist
+DOES NOT EXIST
+```
+
+The check result can be negated by the `--not` option:
+```
+$ <instance>/manage.py product exists --not SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 || echo EXISTS && echo "DOES NOT EXIST" 
+INFO: SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 exists
+EXISTS
+
+$ <instance>/manage.py product exists XYZ  || echo EXISTS && echo "DOES NOT EXIST"
+INFO: XYZ does not exist
+DOES NOT EXIST
+```
+
+The check accepts the same product selection options as the other product commmands. E.g., the product type (`-t` option) or collection name (`-c` option):
+
+```
+$ <instance>/manage.py product list -c SW_OPER_MAGA_LR_1B SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 || echo "DOES NOT EXIST" 
+&& echo EXISTS
+INFO: SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 exists
+EXISTS
+```
+
 #### Product Export
 
 More details on the individual products can be exported in JSON format by the `export` command:

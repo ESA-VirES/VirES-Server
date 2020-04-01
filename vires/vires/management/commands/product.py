@@ -30,6 +30,7 @@
 from logging import getLogger
 from ._common import Supercommand
 from ._product.list import ListProductSubcommand
+from ._product.exists import ExistsProductSubcommand
 from ._product.import_ import ImportProductSubcommand
 from ._product.export import ExportProductSubcommand
 from ._product.register import RegisterProductSubcommand
@@ -44,6 +45,7 @@ class Command(Supercommand):
         command.name: command(getLogger("%s.%s" % (__name__, command.name)))
         for command in [
             ListProductSubcommand,
+            ExistsProductSubcommand,
             ImportProductSubcommand,
             ExportProductSubcommand,
             RegisterProductSubcommand,
