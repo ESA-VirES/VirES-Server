@@ -59,7 +59,7 @@ class RemoveJob(WPSProcess):
         access_logger = self.get_access_logger(**kwargs)
 
         # find job removal candidates
-        owner = user if user.is_authenticated else None
+        owner = user if user and user.is_authenticated else None
         try:
             job = Job.objects.get(owner=owner, identifier=job_id)
         except Job.DoesNotExist:

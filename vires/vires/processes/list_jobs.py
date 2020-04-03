@@ -61,7 +61,7 @@ class ListJobs(WPSProcess):
         """ Execute process. """
         access_logger = self.get_access_logger(**kwargs)
 
-        owner = user if user.is_authenticated else None
+        owner = user if user and user.is_authenticated else None
         job_list = {}
         for job in Job.objects.filter(owner=owner).order_by("created"):
             job_list.setdefault(job.process_id, []).append({
