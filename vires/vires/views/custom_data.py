@@ -501,7 +501,7 @@ def _get_missing_fields(fields):
     missing_fields = {}
 
     def _check_field(name, types, shape, is_mandatory):
-        types = map(int, types)
+        types = list(map(int, types))
         field = fields.get(name)
         if not field:
             if is_mandatory:

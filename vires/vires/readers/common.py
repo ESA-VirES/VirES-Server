@@ -79,9 +79,10 @@ def sanitize_custom_data(data):
 
     # join B_NEC components
     if "B_NEC" not in data and "B_N" in data and "B_E" in data and "B_C" in data:
-        data["B_NEC"] = stack((data["B_N"], data["B_E"], data["B_C"]), axis=1)
-        del data["B_N"]
-        del data["B_E"]
-        del data["B_C"]
+        data["B_NEC"] = stack((
+            data.pop("B_N").astype('float64'),
+            data.pop("B_E").astype('float64'),
+            data.pop("B_C").astype('float64'),
+        ), axis=1)
 
     return data
