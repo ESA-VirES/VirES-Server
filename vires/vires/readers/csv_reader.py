@@ -30,6 +30,7 @@ from os import PathLike
 from numpy import array, datetime64
 from .exceptions import InvalidFileFormat
 
+
 TYPE_TO_STR = {
     str: 'string',
     int: 'number',
@@ -82,23 +83,6 @@ def read_csv_file(file_):
 
 def parse_record_values(records):
     """ Parse the raw string records values. """
-    type_parsers = [int, float, parse_csv_array, parse_datetime]
-
-    def _parse_value(value, type_parser):
-        if type_parser:
-            try:
-                return type_parser(value), type_parser
-            except (ValueError, TypeError):
-                pass
-
-        for type_parser_ in type_parsers:
-            try:
-                return type_parser_(value), type_parser
-            except (ValueError, TypeError):
-                continue
-        # no type matched passing trough the original string
-        return value, None
-
     try:
         header = next(records)
     except StopIteration:
@@ -108,11 +92,29 @@ def parse_record_values(records):
     parsers = [None] * len(header)
     for record in records:
         temp = [
-            _parse_value(value, parser)
+            parse_value(value, parser)
             for parser, value in zip(parsers, record)
         ]
         parsers = [parser for _, parser in temp]
         yield [value for value, _ in temp]
+
+
+def parse_value(value, type_parser=None):
+    """ Parse single value and return the used parser. """
+    if type_parser:
+        try:
+            return type_parser(value), type_parser
+        except (ValueError, TypeError):
+            pass
+
+    for type_parser_ in TYPE_PARSERS:
+        try:
+            return type_parser_(value), type_parser_
+        except (ValueError, TypeError):
+
+            continue
+    # no type matched passing trough the original string
+    return value, None
 
 
 def records_to_list(records):
@@ -194,3 +196,6 @@ def parse_csv_array(value, start="{", end="}", delimiter=";"):
 
     _, data = _parse_array(value[1:])
     return data
+
+
+TYPE_PARSERS = [int, float, parse_csv_array, parse_datetime]
