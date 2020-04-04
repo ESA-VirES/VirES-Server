@@ -285,7 +285,7 @@ def update_item(request, identifier, **kwargs):
     _save_constant_variables(dataset.location, fields_info['constant_fields'])
 
     upload_dir = join(get_upload_dir(), identifier)
-    with open(join(upload_dir, "info.json"), "wb") as file_:
+    with open(join(upload_dir, "info.json"), "w") as file_:
         file_.write(data)
 
     update_change_log("UPDATED", identifier)
