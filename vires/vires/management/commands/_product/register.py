@@ -87,6 +87,7 @@ class RegisterProductSubcommand(Subcommand):
         )
 
     def handle(self, **kwargs):
+        self.verbosity = kwargs["verbosity"]
         data_files = kwargs["product-file"]
         ignore_registered = kwargs["ignore_registered"]
         ignore_overlaps = kwargs["ignore_overlaps"]
@@ -171,7 +172,8 @@ class RegisterProductSubcommand(Subcommand):
             updated.append(product_id)
         else:
             product = None
-            self.info("%s/%s ignored", collection.identifier, product_id)
+            if self.verbosity > 1:
+                self.info("%s/%s ignored", collection.identifier, product_id)
 
         return removed, inserted, updated, product
 
