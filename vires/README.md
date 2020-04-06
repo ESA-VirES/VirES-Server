@@ -34,10 +34,10 @@ These commands and their options are described in the following sections:
 
 #### Product Type Import
 The VirES-Server comes with a predefined set of product types of the supported products.
-The default product types are loaded by the `import` command:
+The default product types are loaded by the `import` command with the `--default` option:
 
 ```
-$ <instance>/manage.py product_type import
+$ <instance>/manage.py product_type import --default
 ```
 
 New product types can be imported from their JSON definition, either from a file or from the standard input:
@@ -102,10 +102,10 @@ Please note that the VirES server allows only removal of product types which are
 #### Product Collection Import
 The registered products of the same product type are organized in collections. Multiple collections for same product type may exist, e.g., for different spacecrafts.
 
-The VirES-Server comes with a predefined set of product collections for the supported Swarm products. The default definitions are loaded by the `import` command:
+The VirES-Server comes with a predefined set of product collections for the supported Swarm products. The default product collections are loaded by the `import` command with the `--default` option:
 
 ```
-$ <instance>/manage.py product_collection import
+$ <instance>/manage.py product_collection import --default
 ```
 
 New definitions of the product collections and their metadata can imported from a JSON file,
@@ -259,18 +259,18 @@ $ <instance>/manage.py product list -c SW_OPER_MAGA_HR_1B -c SW_OPER_MAGC_HR_1B 
 To check if a product exists use the `exists` command:
 
 ```
-$ <instance>/manage.py product exists SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 || echo "DOES NOT EXIST" && echo EXISTS
+$ <instance>/manage.py product exists SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 && echo EXISTS || echo "DOES NOT EXIST"
 INFO: SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 exists
 EXISTS
 
-$ <instance>/manage.py product exists XYZ || echo "DOES NOT EXIST" && echo EXISTS
+$ <instance>/manage.py product exists XYZ && echo EXISTS || echo "DOES NOT EXIST"
 INFO: XYZ does not exist
 DOES NOT EXIST
 ```
 
 The check result can be negated by the `--not` option:
 ```
-$ <instance>/manage.py product exists --not SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 || echo EXISTS && echo "DOES NOT EXIST" 
+$ <instance>/manage.py product exists --not SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 && echo "DOES NOT EXIST" || echo EXISTS
 INFO: SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 exists
 EXISTS
 
@@ -282,8 +282,7 @@ DOES NOT EXIST
 The check accepts the same product selection options as the other product commmands. E.g., the product type (`-t` option) or collection name (`-c` option):
 
 ```
-$ <instance>/manage.py product list -c SW_OPER_MAGA_LR_1B SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 || echo "DOES NOT EXIST" 
-&& echo EXISTS
+$ <instance>/manage.py product list -c SW_OPER_MAGA_LR_1B SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 && echo EXISTS || echo "DOES NOT EXIST"
 INFO: SW_OPER_MAGA_LR_1B_20160101T000000_20160101T235959_0409 exists
 EXISTS
 ```

@@ -59,6 +59,7 @@ class Command(ConsoleOutput, BaseCommand):
     def handle(self, filename, load_defaults, **kwargs):
 
         if load_defaults:
+            self.info("Loading default groups ...")
             filename = DEFAULT_GROUPS
 
         with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:

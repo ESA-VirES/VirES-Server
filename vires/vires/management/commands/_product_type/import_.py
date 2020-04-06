@@ -42,14 +42,20 @@ class ImportProductTypeSubcommand(Subcommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "-f", "--file", dest="filename", default=PRODUCT_TYPES, help=(
+            "-f", "--file", dest="filename", default="-", help=(
                 "Optional input JSON file-name. "
-                "Defaults to the definition of the standard product types. "
             )
+        )
+        parser.add_argument(
+            "-d", "--default", dest="load_defaults", action="store_true",
+            default=False, help="Import default product types."
         )
 
     def handle(self, **kwargs):
         filename = kwargs['filename']
+        if kwargs['load_defaults']:
+            self.info("Loading default product types ...")
+            filename = PRODUCT_TYPES
 
         with sys.stdin if filename == "-" else open(filename, "rb") as file_:
             self.save_product_types(json.load(file_), **kwargs)

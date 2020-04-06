@@ -42,14 +42,20 @@ class ImportProductCollectionSubcommand(Subcommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "-f", "--file", dest="filename", default=PRODUCT_COLLECTIONS, help=(
+            "-f", "--file", dest="filename", default="-", help=(
                 "Optional input JSON file-name. "
-                "Defaults to the definition of the standard product collections. "
             )
+        )
+        parser.add_argument(
+            "-d", "--default", dest="load_defaults", action="store_true",
+            default=False, help="Import default product collections."
         )
 
     def handle(self, **kwargs):
         filename = kwargs['filename']
+        if kwargs['load_defaults']:
+            self.info("Loading default product collections ...")
+            filename = PRODUCT_COLLECTIONS
 
         with sys.stdin if filename == "-" else open(filename, "rb") as file_:
             self.save_product_collections(json.load(file_), **kwargs)
