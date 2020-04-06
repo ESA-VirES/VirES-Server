@@ -75,8 +75,8 @@ class Command(ConsoleOutput, BaseCommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing user %s updated." if is_updated else
-                    "New user %s created.", name, log=True
+                    "user %s updated" if is_updated else
+                    "user %s created", name, log=True
                 )
 
         if created_count:

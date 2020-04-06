@@ -1,17 +1,28 @@
 [
   {
     "name": "admin",
-    "title": "VirES administrators",
+    "title": "VirES for Swarm administrator",
     "permissions": [
       "admin",
       "swarm",
       "swarm_vre",
-      "swarm_disc"
+      "swarm_disc",
+      "swarm_advanced"
+    ]
+  },
+  {
+    "name": "privileged",
+    "title": "VirES for Swarm privileged user",
+    "permissions": [
+      "swarm",
+      "swarm_vre",
+      "swarm_disc",
+      "swarm_advanced"
     ]
   },
   {
     "name": "default",
-    "title": "Default VirES user",
+    "title": "Default VirES for Swarm user",
     "permissions": [
       "swarm"
     ]
@@ -31,6 +42,14 @@
       "swarm",
       "swarm_vre",
       "swarm_disc"
+    ]
+  },
+  {
+    "name": "swarm_advanced",
+    "title": "Swarm Advances Datasets' user",
+    "permissions": [
+      "swarm",
+      "swarm_advanced"
     ]
   }
 ]

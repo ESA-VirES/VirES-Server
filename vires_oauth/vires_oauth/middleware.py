@@ -35,9 +35,9 @@ from django.contrib.auth import logout
 #from django.contrib import messages
 from .utils import AccessLoggerAdapter
 from .models import Permission
-from .settings import (
-    ACCESS_LOGGER_NAME, DEFAULT_SESSION_IDLE_TIMEOUT,
-)
+from .settings import DEFAULT_SESSION_IDLE_TIMEOUT
+
+ACCESS_LOGGER_NAME = "access.http"
 
 
 def session_idle_timeout(get_response):

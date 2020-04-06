@@ -1,0 +1,1063 @@
+[
+    {
+        "name": "SW_MAGx_LR_1B",
+        "defaultDatadaset": "MDR_MAG_LR",
+        "datasets": {
+            "MDR_MAG_LR": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "SyncStatus": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Synchronization status",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "F": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic field intensity",
+                        "UNITS": "nT"
+                    }
+                },
+                "dF_AOCS": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction intensity of AOCS magneto-torquer coils",
+                        "UNITS": "nT"
+                    }
+                },
+                "dF_other": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction intensity of all other sources",
+                        "UNITS": "nT"
+                    }
+                },
+                "F_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Error estimate on magnetic field intensity",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_VFM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic field vector, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic field vector, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_Sun": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction vector of Sun induced perturbation, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_AOCS": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction vector of AOCS magneto-torquer coils, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_other": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction vector of all other sources, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_error": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Error estimates on magnetic field, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_NEC_CRF": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: NEC ← CRF",
+                        "UNITS": "-"
+                    }
+                },
+                "Att_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Error estimates on attitude information",
+                        "UNITS": "mdeg"
+                    }
+                },
+                "Flags_F": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the magnetic field intensity measurement (F)",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_B": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the magnetic field measurement",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_q": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the attitude information",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_Platform": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the S/C platform information",
+                        "UNITS": "-"
+                    }
+                },
+                "ASM_Freq_Dev": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION":  "ASM frequency calibration data deviation",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_MAGx_HR_1B",
+        "defaultDatadaset": "MDR_MAG_HR",
+        "datasets": {
+            "MDR_MAG_HR": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "SyncStatus": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Synchronization status",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF \u2013 Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF \u2013 Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF \u2013 Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_VFM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic field vector, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic field vector, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_Sun": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction vector of Sun induced perturbation, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_AOCS": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction vector of AOCS magneto-torquer coils, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_other": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction vector of all other sources, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_error": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Error estimates on magnetic field, VFM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_NEC_CRF": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: NEC \u2190 CRF",
+                        "UNITS": "-"
+                    }
+                },
+                "Att_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Error estimates on attitude information",
+                        "UNITS": "mdeg"
+                    }
+                },
+                "Flags_B": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the magnetic field measurement",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_q": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the attitude information",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_Platform": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the S/C platform information",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_EFIx_LP_1B",
+        "defaultDatadaset": "MDR_EFI_LP",
+        "datasets": {
+            "MDR_EFI_LP": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "SyncStatus": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Synchronization status",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF \u2013 Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF \u2013 Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF \u2013 Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "U_orbit": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Spacecraft velocity in the ITRF",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Ne": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Plasma density (electron)",
+                        "UNITS": "cm-3"
+                    }
+                },
+                "Ne_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Error estimate of plasma density (Ne)",
+                        "UNITS": "cm-3"
+                    }
+                },
+                "Te": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Plasma electron temperature",
+                        "UNITS": "K"
+                    }
+                },
+                "Te_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Error estimate of plasma electron temperature (Te)",
+                        "UNITS": "K"
+                    }
+                },
+                "Vs": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Spacecraft potential",
+                        "UNITS": "V"
+                    }
+                },
+                "Vs_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Error estimate of spacecraft potential (U_pol)",
+                        "UNITS": "V"
+                    }
+                },
+                "Flags_LP": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags indicating the source/method of LP measurements (ne, Te, Vs)",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_Ne": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the plasma density measurement",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_Te": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the electron temperature measurement",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_Vs": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the spacecraft potential measurement",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_IBIxTMS_2F",
+        "defaultDatadaset": "IBI_TMS",
+        "datasets": {
+            "IBI_TMS": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp in UTC",
+                        "UNITS": "ms"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geographic latitude",
+                        "UNITS": "degree"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geographic longitude",
+                        "UNITS": "degree"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geographic radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Bubble_Index": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Plasma Bubble Index",
+                        "UNITS": "-"
+                    }
+                },
+                "Bubble_Probability": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Detection probability of the plasma bubble",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_Bubble": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags related to the plasma bubble index",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_F": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags_F passed through from MAGx_L1_B",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_B": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags_B passed through from MAGx_L1_B",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_q": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags_q passed through from MAGx_L1_B",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_EEFxTMS_2F",
+        "defaultDatadaset": "EEF_TMS",
+        "datasets": {
+            "EEF_TMS": {
+                "Timestamp": {
+                    "dataType": "Timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of satellite crossing of the magnetic equator, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geographic longitude of satellite crossing of the magnetic equator",
+                        "UNITS": "degrees"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geographic latitude of satellite crossing of the magnetic equator",
+                        "UNITS": "degrees"
+                    }
+                },
+                "EEF": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Estimate of the equatorial electric field",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "EEJ": {
+                    "dataType": "float64",
+                    "dimension": [81],
+                    "attributes": {
+                        "DESCRIPTION": "Height-integrated east current profile in QD latitude, spanning [-20:0.5:20] degrees",
+                        "UNITS": "mA/m"
+                    }
+                },
+                "RelErr": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quality indicator of EEF estimate; relative error between modeled and observed current profile",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Flags describing data gaps and satellite identification",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_FACxTMS_2F",
+        "defaultDatadaset": "FAC_TMS",
+        "datasets": {
+            "FAC_TMS": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time, UTC",
+                        "UNITS": "ms"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF, Latitude",
+                        "UNITS": "degrees"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF, Longitude",
+                        "UNITS": "degrees"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF, Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "IRC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ionospheric radial current (IRC)",
+                        "UNITS": "uA/m2"
+                    }
+                },
+                "IRC_Error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "uncertainty of IRC",
+                        "UNITS": "uA/m2"
+                    }
+                },
+                "FAC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Field-aligned current (FAC)",
+                        "UNITS": "uA/m2"
+                    }
+                },
+                "FAC_Error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "uncertainty of FAC",
+                        "UNITS": "uA/m2"
+                    }
+                },
+                "Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the product quality (processing flags)",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_F": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flags_F passed through from L1b and accumulated for quad points",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_B": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flags_B passed through from L1b and accumulated for quad points",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_q": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flags_q passed through from L1b and accumulated for quad points",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_TECxTMS_2F",
+        "defaultDatadaset": "TEC_TMS",
+        "datasets": {
+            "TEC_TMS": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp in UTC",
+                        "UNITS": "ms"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geographic latitude",
+                        "UNITS": "degree"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geographic longitude",
+                        "UNITS": "degree"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geographic radius",
+                        "UNITS": "km"
+                    }
+                },
+                "GPS_Position": {
+                    "dataType": "float64",
+                    "dimension": [
+                        3
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "X-,Y-,Z-coordinates (WGS84) of the GPS satellite",
+                        "UNITS": "km"
+                    }
+                },
+                "LEO_Position": {
+                    "dataType": "float64",
+                    "dimension": [
+                        3
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "X-,Y-,Z-coordinates (WGS84) of the LEO satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "PRN": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "GPS satellite PRN",
+                        "UNITS": "-"
+                    }
+                },
+                "L1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS L1 carrier phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "L2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS L2 carrier phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "P1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS P1 code phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "P2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS P2 code phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "S1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS signal-to-noise ratio or raw signal strength on L1",
+                        "UNITS": "-"
+                    }
+                },
+                "S2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS signal-to-noise ratio or raw signal strength on L2",
+                        "UNITS": "-"
+                    }
+                },
+                "Absolute_STEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Absolute slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Absolute_VTEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Absolute vertical TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Elevation_Angle": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Elevation Angle",
+                        "UNITS": "degree"
+                    }
+                },
+                "Relative_STEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Relative slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Relative_STEC_RMS": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Root mean square error of relative slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "DCB": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS receiver differential code bias",
+                        "UNITS": "TECU"
+                    }
+                },
+                "DCB_Error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Error of the GPS receiver differential code bias",
+                        "UNITS": "TECU"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_IPDxIRR_2F",
+        "defaultDatadaset": "IPD_IRR",
+        "datasets": {
+            "IPD_IRR": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "CDF_EPOCH of the measurement.",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude.",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude.",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius.",
+                        "UNITS": "m"
+                    }
+                },
+                "Ne": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Plasma density, directly copied from the Langmuir probe files.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "Background_Ne": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Background density, as calculated from Ne using a percentile filter of 551 datapoints (2 Hz raw data) and 35 as the percentile.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "Foreground_Ne": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Foreground density, as calculated from ndens using a percentile filter of 7 datapoints (2 Hz raw data) and 50 as the percentile.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "Te": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Electron temperature, directly copied from the Langmuir probe files.",
+                        "UNITS": "K"
+                    }
+                },
+                "PCP_flag": {
+                    "dataType": "int32",
+                    "attributes": {
+                        "DESCRIPTION": "The polar cap patch flag:  0 if the plasma density measurement occurred OUTSIDE a polar cap patch. 1 if the plasma density measurement occurred at one of the edges of a polar cap patch (no plasma velocity measurements are available). 2 if the plasma density measurement occurred at the LEADING edge of a polar cap patch. 3 if the plasma density measurement occurred at the TRAILING edge of a polar cap patch. 4 if the plasma density measurement occurred INSIDE a polar cap patch proper. When no ion drift data is available, the leading and trailing edges cannot be distinguished. In this case the polar cap patch flag is set to 4 throughout the patch proper and to 1 throughout both edges.",
+                        "UNITS": "-"
+                    }
+                },
+                "Grad_Ne_at_100km": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "The electron density gradient in a running window calculated via linear regression over 27 data points for the 2 Hz electron density data.",
+                        "UNITS": "cm^-3/m"
+                    }
+                },
+                "Grad_Ne_at_50km": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "The electron density gradient in a running window calculated via linear regression over 13 data points for the 2 Hz electron density data.",
+                        "UNITS": "cm^-3/m"
+                    }
+                },
+                "Grad_Ne_at_20km": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "The electron density gradient in a running window calculated via linear regression over 5 data points for the 2 Hz electron density data.",
+                        "UNITS": "cm^-3/m"
+                    }
+                },
+                "Grad_Ne_at_PCP_edge": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "The linear electron density gradient calculated over the edges of a patch. This variable is non-zero only at the edges of polar cap patches.",
+                        "UNITS": "cm^-3/m"
+                    }
+                },
+                "ROD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rate Of change of Density",
+                        "UNITS": "cm^-3/s"
+                    }
+                },
+                "RODI10s": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rate Of change of Density Index (RODI) is the standard deviation of ROD over 10 seconds.",
+                        "UNITS": "cm^-3/s"
+                    }
+                },
+                "RODI20s": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rate Of change of Density Index (RODI) is the standard deviation of ROD over 20 seconds.",
+                        "UNITS": "cm^-3/s"
+                    }
+                },
+                "delta_Ne10s": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Derived by subtracting Ne by its median filtered value in 10 seconds. As a result, delta_Ne10s indicates the electron density fluctuations smaller than 75 km.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "delta_Ne20s": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Derived by subtracting Ne by its median filtered value in 20 seconds. As a result, delta_Ne20s indicates the electron density fluctuations smaller than 150 km.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "delta_Ne40s": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Derived by subtracting Ne by its median filtered value in 40 seconds. As a result, delta_Ne40s indicates the electron density fluctuations smaller than 300 km.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "Num_GPS_satellites": {
+                    "dataType": "int32",
+                    "attributes": {
+                        "DESCRIPTION": "Total number of tracked GPS satellites above 20 degrees.",
+                        "UNITS": "-"
+                    }
+                },
+                "mVTEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Median of VTEC from all available GPS satellites above 30 degrees.",
+                        "UNITS": "TECU"
+                    }
+                },
+                "mROT": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Median of Rate Of change of TEC (ROT) from all available GPS satellites above 30 degrees.",
+                        "UNITS": "TECU/s"
+                    }
+                },
+                "mROTI10s": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Median of Rate Of change of TEC Index (ROTI) from all available GPS satellites above 30 degrees. The ROTI of each satellite is the standard deviation of ROT over 10 seconds.",
+                        "UNITS": "TECU/s"
+                    }
+                },
+                "mROTI20s": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Median of Rate Of change of TEC Index (ROTI) from all available GPS satellites above 30 degrees. The ROTI of each satellite is the standard deviation of ROT over 20 seconds.",
+                        "UNITS": "TECU/s"
+                    }
+                },
+                "IBI_flag": {
+                    "dataType": "int32",
+                    "attributes": {
+                        "DESCRIPTION": "Plasma Bubble Index, copied from the level-2 Ionospheric Bubble Index product, IBIxTMS_2F. ",
+                        "UNITS": "-"
+                    }
+                },
+                "Ionosphere_region_flag": {
+                    "dataType": "int32",
+                    "attributes": {
+                        "DESCRIPTION": "0: equator, 1: mid-latitudes; 2: auroral oval; 3: polar cap.",
+                        "UNITS": "-"
+                    }
+                },
+                "IPIR_index": {
+                    "dataType": "int32",
+                    "attributes": {
+                        "DESCRIPTION": "The numeric index for plasma fluctuations and irregularities: 0-3 low, 4-5 medium, and > 6 high level of ionosphericplasma irregularities.",
+                        "UNITS": "-"
+                    }
+                },
+                "Ne_quality_flag": {
+                    "dataType": "int32",
+                    "attributes": {
+                        "DESCRIPTION": "Quality flag for the Ne data and the derived data from Ne, e.g., background density, foreground density etc.",
+                        "UNITS": "-"
+                    }
+                },
+                "TEC_STD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "STD of VTEC from all GPS satellites.",
+                        "UNITS": "TECU"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_AUX_IMF_2_",
+        "defaultDatadaset": "AUX_IMF",
+        "datasets": {
+            "AUX_IMF": {
+                "Epoch": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Epoch time",
+                        "UNITS": "-"
+                    }
+                },
+                "BY_GSM": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "1AU IP By (nT), GSM",
+                        "UNITS": "nT"
+                    }
+                },
+                "BZ_GSM": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "1AU IP Bz (nT), GSM",
+                        "UNITS": "nT"
+                    }
+                },
+                "V": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "1AU IP plasma flow speed (km/s)",
+                        "UNITS": "nT"
+                    }
+                },
+                "F10_INDEX": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "F10.7 - Daily 10.7 cm solar radio flux, units: 10**(-22) Joules/second/square-meter/Hertz, from NGDC (1963/001-2016/366)",
+                        "UNITS": "10-22.J.s-1.m-2.Hz-1"
+                    }
+                }
+            }
+        }
+    }
+]

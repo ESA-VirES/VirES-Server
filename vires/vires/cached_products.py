@@ -24,13 +24,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments
 
 from sys import stdin
 from os import rename, remove
 from os.path import exists, basename, splitext
 from shutil import copyfileobj
 from contextlib import closing
-from urllib2 import urlopen
+from urllib.request import urlopen
 from logging import getLogger
 
 # URL time-out in seconds
@@ -39,7 +40,6 @@ URL_TIMEOUT = 25
 
 class InvalidSourcesError(ValueError):
     """ Exception raised in case of invalid number of updater sources. """
-    pass
 
 
 def update_cached_product(sources, destination, updater, filter_=None,
@@ -98,7 +98,7 @@ def copy_file(source, destination):
         with open(destination, "wb") as file_out:
             copyfileobj(file_in, file_out, 1024*1024)
 
-    with open(source_info_file, "wb") as file_out:
+    with open(source_info_file, "w") as file_out:
         file_out.write(source_id)
 
 
@@ -108,9 +108,9 @@ def open_source(source):
     """
     if is_url(source):
         return closing(urlopen(source, timeout=URL_TIMEOUT))
-    elif source == '-':
+    if source == '-':
         return stdin
-    return open(source, "rb")
+    return open(source)
 
 
 def remove_if_exists(filename):

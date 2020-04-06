@@ -30,9 +30,9 @@
 class HttpError(Exception):
     """ Simple HTTP error exception """
     def __init__(self, status, message, headers=None):
-        Exception.__init__(self, message)
+        super().__init__(message)
         self.status = status
-        self.message = self.message
+        self.message = message
         self.headers = headers or []
 
     def __str__(self):
@@ -42,22 +42,22 @@ class HttpError(Exception):
 class HttpError400(HttpError):
     """ 400 Bad Request exception. """
     def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 400, message or "Bad request!", headers)
+        super().__init__(400, message or "Bad request!", headers)
 
 
 class HttpError404(HttpError):
     """ 404 Not Found exception. """
     def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 404, message or "Not found!", headers)
+        super().__init__(404, message or "Not found!", headers)
 
 
 class HttpError405(HttpError):
     """ 405 Method Not Allowed exception. """
     def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 405, message or "Method not allowed!", headers)
+        super().__init__(405, message or "Method not allowed!", headers)
 
 
 class HttpError413(HttpError):
     """ 413 Payload Too Large exception. """
     def __init__(self, message=None, headers=None):
-        HttpError.__init__(self, 413, message or "Payload too large!", headers)
+        super().__init__(413, message or "Payload too large!", headers)

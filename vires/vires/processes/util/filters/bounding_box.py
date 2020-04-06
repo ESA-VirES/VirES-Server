@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments,missing-docstring
+# pylint: disable=too-many-arguments
 
 from .base import Filter
 from .range import ScalarRangeFilter

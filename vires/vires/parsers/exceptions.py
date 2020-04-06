@@ -26,8 +26,9 @@
 #-------------------------------------------------------------------------------
 
 class ParserError(Exception):
+    """ Parser error exception. """
 
     def __init__(self, line, column, message):
-        super(ParserError, self).__init__(message)
+        super().__init__(message)
         self.line = line
         self.line = column
