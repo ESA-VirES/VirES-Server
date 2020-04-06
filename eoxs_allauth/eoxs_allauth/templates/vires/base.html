@@ -3,25 +3,25 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <link rel="apple-touch-icon" sizes="57x57" href="/eoxs_static/other/favicon/apple-touch-icon-57x57.png">
-  <link rel="apple-touch-icon" sizes="60x60" href="/eoxs_static/other/favicon/apple-touch-icon-60x60.png">
-  <link rel="apple-touch-icon" sizes="72x72" href="/eoxs_static/other/favicon/apple-touch-icon-72x72.png">
-  <link rel="apple-touch-icon" sizes="76x76" href="/eoxs_static/other/favicon/apple-touch-icon-76x76.png">
-  <link rel="apple-touch-icon" sizes="114x114" href="/eoxs_static/other/favicon/apple-touch-icon-114x114.png">
-  <link rel="apple-touch-icon" sizes="120x120" href="/eoxs_static/other/favicon/apple-touch-icon-120x120.png">
-  <link rel="apple-touch-icon" sizes="144x144" href="/eoxs_static/other/favicon/apple-touch-icon-144x144.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="/eoxs_static/other/favicon/apple-touch-icon-152x152.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/eoxs_static/other/favicon/apple-touch-icon-180x180.png">
-  <link rel="icon" type="image/png" href="/eoxs_static/other/favicon/favicon-32x32.png" sizes="32x32">
-  <link rel="icon" type="image/png" href="/eoxs_static/other/favicon/android-chrome-192x192.png" sizes="192x192">
-  <link rel="icon" type="image/png" href="/eoxs_static/other/favicon/favicon-96x96.png" sizes="96x96">
-  <link rel="icon" type="image/png" href="/eoxs_static/other/favicon/favicon-16x16.png" sizes="16x16">
-  <link rel="manifest" href="/eoxs_static/other/favicon/manifest.json">
-  <link rel="mask-icon" href="/eoxs_static/other/favicon/safari-pinned-tab.svg" color="#5bbad5">
-  <link rel="shortcut icon" href="/eoxs_static/other/favicon/favicon.ico">
+  <link rel="apple-touch-icon" sizes="57x57" href="{% static 'other/favicon/apple-touch-icon-57x57.png' %}">
+  <link rel="apple-touch-icon" sizes="60x60" href="{% static 'other/favicon/apple-touch-icon-60x60.png' %}">
+  <link rel="apple-touch-icon" sizes="72x72" href="{% static 'other/favicon/apple-touch-icon-72x72.png' %}">
+  <link rel="apple-touch-icon" sizes="76x76" href="{% static 'other/favicon/apple-touch-icon-76x76.png' %}">
+  <link rel="apple-touch-icon" sizes="114x114" href="{% static 'other/favicon/apple-touch-icon-114x114.png' %}">
+  <link rel="apple-touch-icon" sizes="120x120" href="{% static 'other/favicon/apple-touch-icon-120x120.png' %}">
+  <link rel="apple-touch-icon" sizes="144x144" href="{% static 'other/favicon/apple-touch-icon-144x144.png' %}">
+  <link rel="apple-touch-icon" sizes="152x152" href="{% static 'other/favicon/apple-touch-icon-152x152.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'other/favicon/apple-touch-icon-180x180.png' %}">
+  <link rel="icon" type="image/png" href="{% static 'other/favicon/favicon-32x32.png' %}" sizes="32x32">
+  <link rel="icon" type="image/png" href="{% static 'other/favicon/android-chrome-192x192.png' %}" sizes="192x192">
+  <link rel="icon" type="image/png" href="{% static 'other/favicon/favicon-96x96.png' %}" sizes="96x96">
+  <link rel="icon" type="image/png" href="{% static 'other/favicon/favicon-16x16.png' %}" sizes="16x16">
+  <link rel="manifest" href="{% static 'other/favicon/manifest.json' %}">
+  <link rel="mask-icon" href="{% static 'other/favicon/safari-pinned-tab.svg' %}" color="#5bbad5">
+  <link rel="shortcut icon" href="{% static 'other/favicon/favicon.ico' %}">
   <meta name="msapplication-TileColor" content="#da532c">
-  <meta name="msapplication-TileImage" content="/eoxs_static/other/favicon/mstile-144x144.png">
-  <meta name="msapplication-config" content="/eoxs_static/other/favicon/browserconfig.xml">
+  <meta name="msapplication-TileImage" content="{% static 'other/favicon/mstile-144x144.png' %}">
+  <meta name="msapplication-config" content="{% static 'other/favicon/browserconfig.xml' %}">
   <meta name="theme-color" content="#ffffff">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +29,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="VirES for Swarm Service">
   <meta name="twitter:description" content="Highly interactive data analysis and retrieval web interface for the ESA Swarm products">
-  <meta name="twitter:image" content="https://vires.services/eoxs_static/images/VirES_Swarm_twitter.jpg">
+  <meta name="twitter:image" content="https://vires.services{% static 'images/VirES_Swarm_twitter.jpg' %}">
   <meta name="twitter:image:alt" content="VirES for Swarm service image">
   {% block title %}
   <title>VirES for Swarm</title>
