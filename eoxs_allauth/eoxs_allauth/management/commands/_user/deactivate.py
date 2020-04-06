@@ -43,6 +43,6 @@ class DeactivateUserSubcommand(UserSelectionSubcommandProtected):
             if user.is_active:
                 user.is_active = False
                 user.save()
-                self.info("%s deactivated", user.username, log=True)
+                self.info("user %s deactivated", user.username, log=True)
             else:
-                self.info("%s is already inactive", user.username)
+                self.info("user %s is already inactive", user.username)

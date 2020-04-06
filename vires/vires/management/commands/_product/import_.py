@@ -111,14 +111,22 @@ class ImportProductSubcommand(ProductSelectionSubcommand):
             else:
                 if is_updated is True:
                     counter.updated_count += 1
-                    self.info("%s/%s updated", collection_id, identifier, log=True)
+                    self.info(
+                        "product %s/%s updated",
+                        collection_id, identifier, log=True
+                    )
                 elif is_updated is False:
                     counter.created_count += 1
-                    self.info("%s/%s created", collection_id, identifier, log=True)
+                    self.info(
+                        "product %s/%s registered",
+                        collection_id, identifier, log=True
+                    )
                 elif is_updated is None:
                     counter.ignored_count += 1
                     if self.verbosity > 1:
-                        self.info("%s/%s ignored", collection_id, identifier)
+                        self.info(
+                            "product %s/%s ignored", collection_id, identifier
+                        )
             finally:
                 counter.total_count += 1
 
@@ -149,7 +157,7 @@ class ImportProductSubcommand(ProductSelectionSubcommand):
             else:
                 counter.removed_count += 1
                 self.info(
-                    "%s/%s de-registered",
+                    "product %s/%s de-registered",
                     collection_id, identifier, log=True
                 )
             finally:
@@ -287,7 +295,7 @@ class Counter():
     def print_summary(self):
         if self.created_count:
             self.print_function(
-                "%d of %d product%s created.",
+                "%d of %d product%s registered.",
                 self.created_count, self.total_count,
                 "s" if self.created_count > 1 else ""
             )
@@ -301,7 +309,7 @@ class Counter():
 
         if self.removed_count:
             self.print_function(
-                "%d of %d product%s removed.",
+                "%d of %d product%s de-registered.",
                 self.removed_count, self.total_count,
                 "s" if self.removed_count > 1 else ""
             )

@@ -43,6 +43,6 @@ class ActivateUserSubcommand(UserSelectionSubcommandProtected):
             if not user.is_active:
                 user.is_active = True
                 user.save()
-                self.info("%s activated", user.username, log=True)
+                self.info("user %s activated", user.username, log=True)
             else:
-                self.info("%s is already active", user.username)
+                self.info("user %s is already active", user.username)

@@ -90,7 +90,7 @@ class RemoveProductCollectionSubcommand(Subcommand):
                 )
             else:
                 removed_count += 1
-                self.info("Product collection %s removed.", identifier, log=True)
+                self.info("product collection %s removed", identifier, log=True)
             finally:
                 total_count += 1
 

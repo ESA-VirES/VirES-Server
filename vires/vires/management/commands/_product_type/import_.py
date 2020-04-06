@@ -75,8 +75,8 @@ class ImportProductTypeSubcommand(Subcommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing product type %s updated." if is_updated else
-                    "New product type %s created.", identifier, log=True
+                    "product type %s updated" if is_updated else
+                    "product type %s created", identifier, log=True
                 )
 
         if created_count:

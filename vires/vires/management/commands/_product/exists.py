@@ -44,13 +44,20 @@ class ExistsProductSubcommand(ProductSelectionSubcommand):
         self._add_selection_arguments(parser)
 
     def handle(self, **kwargs):
-        products = self.select_products(Product.objects, **kwargs)
-        product_count = sum(1 for _ in products)
-        exists = product_count > 0
-
-        self.info("%s %s" % (
-            kwargs['identifier'][0], 'exists' if exists else 'does not exist'
+        products = list(self.select_products(
+            Product.objects.prefetch_related('collection'), **kwargs
         ))
 
-        result = not exists if kwargs['negate'] else exists
+        if products:
+            for product in products:
+                self.info("product %s/%s exists" % (
+                    product.collection.identifier, product.identifier
+                ))
+        else:
+            self.info("product %s does not exist" % kwargs['identifier'][0])
+
+        result = bool(products)
+        if kwargs['negate']:
+            result = not result
+
         sys.exit(0 if result else 1)

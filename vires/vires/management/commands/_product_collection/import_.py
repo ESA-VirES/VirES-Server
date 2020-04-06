@@ -75,8 +75,8 @@ class ImportProductCollectionSubcommand(Subcommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing product collection %s updated." if is_updated else
-                    "New product collection %s created.", identifier, log=True
+                    "product collection %s updated" if is_updated else
+                    "product collection %s created", identifier, log=True
                 )
 
         if created_count:

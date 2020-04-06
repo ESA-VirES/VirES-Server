@@ -82,8 +82,8 @@ class Command(ConsoleOutput, BaseCommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing user group %s updated." if is_updated else
-                    "New user group %s created.", name, log=True
+                    "user group %s updated" if is_updated else
+                    "user group %s created", name, log=True
                 )
 
         if created_count:

@@ -78,8 +78,8 @@ class Command(ConsoleOutput, BaseCommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing permission %s updated." if is_updated else
-                    "New permission %s created.", name, log=True
+                    "permission %s updated" if is_updated else
+                    "permission %s created", name, log=True
                 )
 
         if created_count:

@@ -71,8 +71,8 @@ class ImportSocialProviderSubcommand(Subcommand):
                 )
             else:
                 self.info(
-                    "%s updated" if is_updated else "%s created",
-                    name, log=True
+                    "social provider %s updated" if is_updated else
+                    "social provider %s created", name, log=True
                 )
         sys.exit(failed_count)
 

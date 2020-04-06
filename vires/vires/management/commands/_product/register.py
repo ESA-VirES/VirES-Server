@@ -156,24 +156,39 @@ class RegisterProductSubcommand(Subcommand):
                 old_product = product
             else:
                 if ignore_overlaps and product.identifier != product_id:
-                    self.info("%s/%s ignored", collection.identifier, product.identifier)
+                    self.info(
+                        "product %s/%s time overlap ignored",
+                        collection.identifier, product.identifier
+                    )
                 else:
                     delete_product(product)
-                    self.info("%s/%s de-registered", collection.identifier, product.identifier)
+                    self.info(
+                        "product %s/%s de-registered",
+                        collection.identifier, product.identifier
+                    )
                     removed.append(product.identifier)
 
         if not old_product:
             product = register_product(collection, product_id, data_file, metadata)
-            self.info("%s/%s registered", collection.identifier, product_id, log=True)
+            self.info(
+                "product %s/%s registered",
+                collection.identifier, product_id, log=True
+            )
             inserted.append(product_id)
         elif not ignore_registered:
             product = update_product(old_product, data_file, metadata)
-            self.info("%s/%s updated", collection.identifier, product_id, log=True)
+            self.info(
+                "product %s/%s updated",
+                collection.identifier, product_id, log=True
+            )
             updated.append(product_id)
         else:
             product = None
             if self.verbosity > 1:
-                self.info("%s/%s ignored", collection.identifier, product_id)
+                self.info(
+                    "product %s/%s ignored",
+                    collection.identifier, product_id
+                )
 
         return removed, inserted, updated, product
 

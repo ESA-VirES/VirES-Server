@@ -65,7 +65,10 @@ class DeregisterProductSubcommand(ProductSelectionSubcommandProtected):
                 )
             else:
                 removed_count += 1
-                self.info("%s/%s de-registered", collection_id, identifier, log=True)
+                self.info(
+                    "product %s/%s de-registered", collection_id, identifier,
+                    log=True
+                )
             finally:
                 total_count += 1
 
