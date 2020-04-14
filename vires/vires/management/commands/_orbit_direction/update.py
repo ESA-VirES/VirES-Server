@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Update orbit direction cached product for selected products.
+# Update orbit direction lookup tables for selected products.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------

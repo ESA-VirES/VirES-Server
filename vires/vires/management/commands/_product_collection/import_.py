@@ -61,6 +61,7 @@ class ImportProductCollectionSubcommand(Subcommand):
             self.save_product_collections(json.load(file_), **kwargs)
 
     def save_product_collections(self, data, **kwargs):
+        total_count = 0
         failed_count = 0
         created_count = 0
         updated_count = 0
@@ -80,12 +81,14 @@ class ImportProductCollectionSubcommand(Subcommand):
             else:
                 updated_count += is_updated
                 created_count += not is_updated
-                self.info(
+                self.logger.info(
                     "product collection %s updated" if is_updated else
-                    "product collection %s created", identifier, log=True
+                    "product collection %s created", identifier
                 )
+            finally:
+                total_count += 1
 
-        if created_count:
+        if created_count or total_count == 0:
             self.info(
                 "%d of %d product collection%s created.", created_count, len(data),
                 "s" if created_count > 1 else ""

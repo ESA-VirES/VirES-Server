@@ -61,6 +61,7 @@ class ImportProductTypeSubcommand(Subcommand):
             self.save_product_types(json.load(file_), **kwargs)
 
     def save_product_types(self, data, **kwargs):
+        total_count = 0
         failed_count = 0
         created_count = 0
         updated_count = 0
@@ -80,12 +81,14 @@ class ImportProductTypeSubcommand(Subcommand):
             else:
                 updated_count += is_updated
                 created_count += not is_updated
-                self.info(
+                self.logger.info(
                     "product type %s updated" if is_updated else
-                    "product type %s created", identifier, log=True
+                    "product type %s created", identifier
                 )
+            finally:
+                total_count += 1
 
-        if created_count:
+        if created_count or total_count == 0:
             self.info(
                 "%d of %d product type%s created.", created_count, len(data),
                 "s" if created_count > 1 else ""

@@ -126,3 +126,9 @@ def datetime_array_slice(start, stop, first, last, step, tolerance):
         0.0, (last - first).total_seconds(),
         step.total_seconds(), tolerance.total_seconds()
     )
+
+
+class AttributeDict(dict):
+    """ A dictionary whose keys can be accessed as object attributes. """
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__

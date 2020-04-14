@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Update cached product
+# Product collection management API
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2018 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,35 +24,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=missing-docstring
 
-from django.core.management.base import CommandError
-from vires.management.api.cached_product import (
-    CACHED_PRODUCTS, update_cached_product,
-)
-from .._common import Subcommand
+from vires.models import ProductCollection
 
 
-class UpdateCachedProductSubcommand(Subcommand):
-    name = "update"
-    help = """ Update cached product. """
-
-    def add_arguments(self, parser):
-        parser.add_argument(
-            "product_type", help="Product type",
-            choices=list(sorted(CACHED_PRODUCTS)),
-        )
-        parser.add_argument(
-            "source", nargs="+", help="Source filename or URL."
-        )
-
-    def handle(self, **kwargs):
-        product_type = kwargs['product_type']
-        sources = kwargs['source']
-
-        try:
-            update_cached_product(product_type, *sources, logger=self.logger)
-        except Exception as error:
-            raise CommandError(
-                "Failed to update cached file %s! %s" % (product_type, error)
-            )
+def get_product_collection(collection_id):
+    """ Get vires.models.ProductCollection object for the given collection
+    and product identifiers or raises DoesNotExist exception.
+    """
+    return ProductCollection.objects.select_related('type').get(identifier=collection_id)
