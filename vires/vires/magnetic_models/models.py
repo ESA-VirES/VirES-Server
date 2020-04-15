@@ -24,12 +24,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-few-public-methods, missing-docstring
+#pylint: disable=too-few-public-methods
 
 from os.path import basename
 from logging import getLogger
 from numpy import inf
-from eoxmagmod.data import CHAOS_STATIC_LATEST, IGRF12, LCS1, MF7
+from eoxmagmod.data import CHAOS_STATIC_LATEST, IGRF13, LCS1, MF7
 from eoxmagmod import (
     load_model_shc,
     load_model_swarm_mma_2c_internal,
@@ -51,14 +51,14 @@ from .files import (
 )
 
 
-DIPOLE_MODEL = "IGRF12"
-IGRF12_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20191231T235959_0102"
+DIPOLE_MODEL = "IGRF"
+IGRF13_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20241231T235959_0103"
 CHAOS_STATIC_SOURCE = basename(CHAOS_STATIC_LATEST)
 LCS1_SOURCE = basename(LCS1)
 MF7_SOURCE = basename(MF7)
 
 
-class ModelFactory(object):
+class ModelFactory():
     """ Model factory class. """
     def __init__(self, loader, model_files):
         self.loader = loader
@@ -85,7 +85,7 @@ class ModelFactory(object):
         return [model_file.sources for model_file in self.model_files]
 
 
-class ModelCache(object):
+class ModelCache():
     """ Model cache class. """
     def __init__(self, model_factories, model_aliases=None, logger=None):
         self.logger = logger or getLogger(__name__)
@@ -119,10 +119,6 @@ class ModelCache(object):
 
 MODEL_ALIASES = {
     "MCO_SHA_2X": "CHAOS-Core",
-    "CHAOS-6-Core": "CHAOS-Core",
-    "CHAOS-6-Static": "CHAOS-Static",
-    "CHAOS-6-MMA-Primary": "CHAOS-MMA-Primary",
-    "CHAOS-6-MMA-Secondary": "CHAOS-MMA-Secondary",
 }
 
 
@@ -133,7 +129,7 @@ def shc_validity_reader(filename):
 
 def _shc_validity_reader(filename, to_mjd2000):
     """ Low-level SHC model validity reader. """
-    with open(filename, "rb") as file_in:
+    with open(filename) as file_in:
         header = parse_shc_header(file_in)
     return (
         to_mjd2000(header["validity_start"]), to_mjd2000(header["validity_end"])
@@ -146,9 +142,9 @@ def mio_validity_reader(_):
 
 
 MODEL_FACTORIES = {
-    "IGRF12": ModelFactory(
+    "IGRF": ModelFactory(
         lambda file_: load_model_shc(file_, interpolate_in_decimal_years=True),
-        [ModelFileWithLiteralSource(IGRF12, IGRF12_SOURCE, shc_validity_reader)]
+        [ModelFileWithLiteralSource(IGRF13, IGRF13_SOURCE, shc_validity_reader)]
     ),
     "CHAOS-Static": ModelFactory(
         load_model_shc,
@@ -158,7 +154,7 @@ MODEL_FACTORIES = {
     ),
     "CHAOS-Core": ModelFactory(
         load_model_shc,
-        [CachedModelFileWithSourceFile("MCO_CHAOS6", shc_validity_reader)]
+        [CachedModelFileWithSourceFile("MCO_SHA_2X", shc_validity_reader)]
     ),
     "LCS-1": ModelFactory(
         load_model_shc,
@@ -218,11 +214,11 @@ MODEL_FACTORIES = {
     ),
     "CHAOS-MMA-Primary": ModelFactory(
         load_model_swarm_mma_2c_external,
-        [CachedComposedModelFile("MMA_CHAOS6")]
+        [CachedComposedModelFile("MMA_CHAOS_")]
     ),
     "CHAOS-MMA-Secondary": ModelFactory(
         load_model_swarm_mma_2c_internal,
-        [CachedComposedModelFile("MMA_CHAOS6")]
+        [CachedComposedModelFile("MMA_CHAOS_")]
     ),
 }
 

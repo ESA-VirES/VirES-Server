@@ -1,9 +1,7 @@
 #
 # Performance measurement utilities.
 #
-# Project: VirES-Server
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -31,7 +29,7 @@ import sys
 import logging
 from .time_util import Timer
 
-class ElapsedTimePrintBase(object):
+class ElapsedTimePrintBase():
     """ Print elapsed time - base class """
     format = "%s %.3gs"
     def __init__(self, message=""):
@@ -54,19 +52,19 @@ class ElapsedTimePrint(ElapsedTimePrintBase):
     """ Print elapsed time."""
 
     def __init__(self, message="", output=sys.stdout):
-        super(ElapsedTimePrint, self).__init__(message)
+        super().__init__(message)
         self.output = output
 
     def write(self, message):
         """ Print the message with the elapsed time appended. """
-        print >>self.output, self.format % (message, self.timer())
+        print(self.format % (message, self.timer()), file=self.output)
 
 
 class ElapsedTimeLogger(ElapsedTimePrintBase):
     """ Elapsed time logger. """
 
     def __init__(self, message="", logger=None, level=logging.INFO):
-        super(ElapsedTimeLogger, self).__init__(message)
+        super().__init__(message)
         self.logger = logger or logging.getLogger(__name__)
         self.level = level
 

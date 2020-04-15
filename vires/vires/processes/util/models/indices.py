@@ -24,7 +24,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=missing-docstring
 
 from logging import getLogger, LoggerAdapter
 from vires.cdf_util import CDF_DOUBLE_TYPE
@@ -57,7 +56,7 @@ class IndexKpFromKp10(Model):
             return 'KpFromKp10: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
-        super(IndexKpFromKp10, self).__init__()
+        super().__init__()
         varmap = varmap or {}
         self._required_variable = varmap.get(
             self.REQUIRED_VARIABLE, self.REQUIRED_VARIABLE

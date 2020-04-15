@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,too-few-public-methods
+# pylint: disable=too-few-public-methods
 
 from vires.cdf_util import CDF_INT1_TYPE, CDF_EPOCH_TYPE
 from vires.orbit_direction import OrbitDirectionReader
@@ -128,5 +128,4 @@ def assert_cdf_epoch_type(times, cdf_type):
     """ Assert CDF EPOCH time. """
     if cdf_type == CDF_EPOCH_TYPE:
         return times
-    else:
-        raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)

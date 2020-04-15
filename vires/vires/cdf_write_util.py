@@ -2,9 +2,7 @@
 #
 # CDF write utilities
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -26,7 +24,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
 from numpy import asarray, dtype
 from .cdf_util import (
@@ -86,13 +83,13 @@ def get_cdf_type(array_dtype):
     except KeyError:
         pass
 
-    if array_dtype.kind == "S":
+    if array_dtype.kind in ("S", "U"):
         return CDF_CHAR_TYPE
 
     raise TypeError("Array type %s not supported!" % array_dtype)
 
 
-class CdfTypeDummy(object):
+class CdfTypeDummy():
     """ CDF dummy type conversions. """
 
     @staticmethod
@@ -106,7 +103,7 @@ class CdfTypeDummy(object):
         return values
 
 
-class CdfTypeEpoch(object):
+class CdfTypeEpoch():
     """ CDF Epoch Time type conversions. """
 
     @classmethod

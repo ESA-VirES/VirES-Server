@@ -76,8 +76,8 @@ class Command(ConsoleOutput, BaseCommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing social provider %s updated." if is_updated else
-                    "New social provider %s created.", name, log=True
+                    "social provider %s updated" if is_updated else
+                    "social provider %s created", name, log=True
                 )
 
         if created_count:

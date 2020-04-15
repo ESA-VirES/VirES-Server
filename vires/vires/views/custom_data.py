@@ -43,7 +43,7 @@ from ..time_util import datetime, naive_to_utc, format_datetime, Timer
 from ..cdf_util import (
     is_cdf_file, cdf_open, cdf_epoch16_to_epoch, cdf_tt2000_to_epoch, CDFError,
     CDF_EPOCH_TYPE, CDF_EPOCH16_TYPE, CDF_TIME_TT2000_TYPE, CDF_DOUBLE_TYPE,
-    CDF_TYPE_TO_LABEL, LABEL_TO_CDF_TYPE, CDF_TYPE_TO_DTYPE,
+    CDF_REAL8_TYPE, CDF_TYPE_TO_LABEL, LABEL_TO_CDF_TYPE, CDF_TYPE_TO_DTYPE,
 )
 from ..cdf_write_util import (
     cdf_add_variable, cdf_assert_backward_compatible_dtype
@@ -73,9 +73,14 @@ CHANGE_LOG_FILENAME = "change.log"
 
 EXCLUDED_FIELDS = {'Spacecraft'}
 MANDATORY_FIELDS = [
-    ("Timestamp", CDF_EPOCH_TYPE, ()),
-    ("Latitude", CDF_DOUBLE_TYPE, ()),
-    ("Longitude", CDF_DOUBLE_TYPE, ()),
+    ("Timestamp", (CDF_EPOCH_TYPE,), ()),
+    ("Latitude", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), ()),
+    ("Longitude", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), ()),
+]
+EXPECTED_FIELDS = [
+    ("Radius", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), ()),
+    ("F", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), ()),
+    ("B_NEC", (CDF_DOUBLE_TYPE, CDF_REAL8_TYPE), (3,)),
 ]
 
 
@@ -93,7 +98,7 @@ def custom_data_collection(request, **kwargs):
     """ Custom data collection view. """
     if request.method == "GET":
         return list_collection(request, **kwargs)
-    elif request.method == "POST":
+    if request.method == "POST":
         return post_item(request, **kwargs)
     raise HttpError405
 
@@ -103,9 +108,9 @@ def custom_data_item(request, identifier, **kwargs):
     """ Custom data item view. """
     if request.method == "GET":
         return get_item(request, identifier, **kwargs)
-    elif request.method in ("PUT", "PATCH"):
+    if request.method in ("PUT", "PATCH"):
         return update_item(request, identifier, **kwargs)
-    elif request.method == "DELETE":
+    if request.method == "DELETE":
         return delete_item(request, identifier, **kwargs)
     raise HttpError405
 
@@ -138,7 +143,7 @@ def sanitize_info(info):
         # old info version
         info = {
             "size": info["Timestamp"]["shape"][0],
-            "source_fields": [name for name in info],
+            "source_fields": list(info),
             "fields": {
                 name: {
                     "shape": field["shape"][1:],
@@ -160,7 +165,7 @@ def sanitize_info(info):
 @reject_content
 def list_collection(request, **kwargs):
     """ List custom data collection. """
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     data = json.dumps([
         model_to_infodict(dataset) for dataset in _get_models(owner)
     ])
@@ -170,7 +175,7 @@ def list_collection(request, **kwargs):
 @reject_content
 def get_item(request, identifier, **kwargs):
     """ Get info about the custom data."""
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     dataset = _get_model(owner, identifier)
     data = json.dumps(model_to_infodict(dataset))
     return HttpResponse(data, "application/json")
@@ -198,7 +203,7 @@ def post_item(request, **kwargs):
     size = uploaded_file.size
 
     # create upload directory and save the uploaded file
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     upload_dir = join(get_upload_dir(), identifier)
     filename = join(upload_dir, base_name)
     makedirs(upload_dir)
@@ -240,7 +245,7 @@ def post_item(request, **kwargs):
 
         data = json.dumps(model_to_infodict(dataset))
 
-        with open(join(upload_dir, "info.json"), "wb") as file_:
+        with open(join(upload_dir, "info.json"), "w") as file_:
             file_.write(data)
 
         update_change_log("CREATED", identifier, timestamp)
@@ -262,7 +267,7 @@ def post_item(request, **kwargs):
 @allow_content_length(MAX_UPDATE_PAYLOAD_SIZE)
 def update_item(request, identifier, **kwargs):
     """ Update custom dataset. """
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     dataset = _get_model(owner, identifier)
 
     fields_info = json.loads(dataset.info)
@@ -280,7 +285,7 @@ def update_item(request, identifier, **kwargs):
     _save_constant_variables(dataset.location, fields_info['constant_fields'])
 
     upload_dir = join(get_upload_dir(), identifier)
-    with open(join(upload_dir, "info.json"), "wb") as file_:
+    with open(join(upload_dir, "info.json"), "w") as file_:
         file_.write(data)
 
     update_change_log("UPDATED", identifier)
@@ -295,7 +300,7 @@ def update_item(request, identifier, **kwargs):
 @reject_content
 def delete_item(request, identifier, **kwargs):
     """ Delete custom data."""
-    owner = request.user if request.user.is_authenticated() else None
+    owner = request.user if request.user.is_authenticated else None
     dataset = _get_model(owner, identifier)
     _delete_item(owner, dataset, kwargs["logger"])
 
@@ -459,12 +464,16 @@ def process_input_cdf(path):
     if "Timestamp" not in fields:
         raise InvalidFileFormat("Missing mandatory Timestamp field!")
 
-    size = fields["Timestamp"]["shape"][0]
+    timestamp_shape = fields["Timestamp"]["shape"]
+    size = timestamp_shape[0]
+
+    if len(timestamp_shape) != 1:
+        raise InvalidFileFormat("Invalid dimension of Timestamp field!")
 
     if size == 0:
         raise InvalidFileFormat("Empty dataset!")
 
-    for name, field in fields.items():
+    for name, field in list(fields.items()):
         shape = field["shape"]
         if name in EXCLUDED_FIELDS:
             del fields[name]
@@ -482,7 +491,7 @@ def process_input_cdf(path):
     return start, end, {
         "size": size,
         "fields": fields,
-        "source_fields": [name for name in fields],
+        "source_fields": list(fields),
         "missing_fields": _get_missing_fields(fields),
         "constant_fields": {},
     }
@@ -490,17 +499,20 @@ def process_input_cdf(path):
 
 def _get_missing_fields(fields):
     missing_fields = {}
-    for name, type_, shape in MANDATORY_FIELDS:
+
+    def _check_field(name, types, shape, is_mandatory):
+        types = list(map(int, types))
         field = fields.get(name)
         if not field:
-            missing_fields[name] = {
-                "shape": shape,
-                "cdf_type": int(type_),
-                "data_type": CDF_TYPE_TO_LABEL[type_],
-            }
-            continue
+            if is_mandatory:
+                missing_fields[name] = {
+                    "shape": shape,
+                    "cdf_type": types[0],
+                    "data_type": CDF_TYPE_TO_LABEL[types[0]],
+                }
+            return
 
-        if field["cdf_type"] != int(type_):
+        if field["cdf_type"] not in types:
             raise InvalidFileFormat("Invalid type of %s field!" % name)
 
         if len(field["shape"]) != len(shape):
@@ -508,6 +520,13 @@ def _get_missing_fields(fields):
 
         if tuple(field["shape"]) != shape:
             raise InvalidFileFormat("Invalid shape of %s field!" % name)
+
+
+    for name, types, shape in MANDATORY_FIELDS:
+        _check_field(name, types, shape, True)
+
+    for name, types, shape in EXPECTED_FIELDS:
+        _check_field(name, types, shape, False)
 
     return missing_fields
 

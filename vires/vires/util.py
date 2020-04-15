@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Project: EOxServer <http://eoxserver.org>
+#  various utilities
+#
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #          Daniel Santillan <daniel.santillan@eox.at>
 #          Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -31,18 +31,7 @@
 from sys import exc_info
 from traceback import extract_tb
 from math import ceil, floor
-from itertools import ifilter, ifilterfalse
-
-
-try:
-    from numpy import full
-except ImportError:
-    from numpy import empty
-    def full(shape, value, dtype=None, order='C'):
-        """ Numpy < 1.8 workaround. """
-        arr = empty(shape, dtype, order)
-        arr.fill(value)
-        return arr
+from itertools import filterfalse
 
 
 def format_exception():
@@ -59,7 +48,7 @@ def format_exception():
 def unique(iterable):
     """ Remove duplicates from an iterable preserving the order."""
     items = set()
-    for item in ifilterfalse(items.__contains__, iterable):
+    for item in filterfalse(items.__contains__, iterable):
         yield item
         items.add(item)
 
@@ -68,17 +57,17 @@ def exclude(iterable, excluded):
     """ Remove items from the `iterable` which are present among the
     elements of the `excluded` set.
     """
-    return ifilterfalse(set(excluded).__contains__, iterable)
+    return filterfalse(set(excluded).__contains__, iterable)
 
 
 def include(iterable, included):
     """ Remove items from the `iterable` which are not present among the
     elements of the `included` set.
     """
-    return ifilter(set(included).__contains__, iterable)
+    return filter(set(included).__contains__, iterable)
 
 
-class cached_property(object): #pylint: disable=invalid-name
+class cached_property(): #pylint: disable=invalid-name
     """ Decorator converting a given method with a single self argument
      into a property cached on the instance.
     """
@@ -105,16 +94,6 @@ def between_co(data, lower_bound, upper_bound):
         lower_bound <= value < upper_bound
     """
     return (data >= lower_bound) & (data < upper_bound)
-
-
-# TODO: To be removed.
-#       Unnecessary as the Python 2.6 compatibility has been dropped.
-def get_total_seconds(td_obj):
-    """ Get `datetime.timedelta` as total number of seconds. """
-    try:
-        return td_obj.total_seconds()
-    except AttributeError:
-        return td_obj.microseconds*1e-6 + td_obj.seconds + td_obj.days*86400
 
 
 def float_array_slice(start, stop, first, last, step, tolerance):
@@ -147,3 +126,9 @@ def datetime_array_slice(start, stop, first, last, step, tolerance):
         0.0, (last - first).total_seconds(),
         step.total_seconds(), tolerance.total_seconds()
     )
+
+
+class AttributeDict(dict):
+    """ A dictionary whose keys can be accessed as object attributes. """
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__

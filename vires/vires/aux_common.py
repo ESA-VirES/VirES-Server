@@ -2,9 +2,7 @@
 #
 # common auxiliary file handling code
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -46,7 +44,7 @@ def render_filename(format_, start, end, **kwargs):
     )
 
 
-class BaseReader(object):
+class BaseReader():
     """ Base reader class. """
     TIME_FIELD = None
     DATA_FIELDS = None
@@ -126,13 +124,13 @@ class BaseReader(object):
         return result
 
 
-class NoSourceMixIn(object):
+class NoSourceMixIn():
     """ No source mix-in class """
     def _update_product_set(self, cdf, start, end):
         pass
 
 
-class SingleSourceMixIn(object):
+class SingleSourceMixIn():
     """ Single source mix-in class """
     def _update_product_set(self, cdf, start, end):
         validity_start, validity_end = cdf.attrs['VALIDITY']
@@ -140,7 +138,7 @@ class SingleSourceMixIn(object):
             self.product_set.add(str(cdf.attrs['SOURCE']))
 
 
-class MJD2000TimeMixIn(object):
+class MJD2000TimeMixIn():
     """ MJD2000 mix-in class. """
     @staticmethod
     def _from_datetime(time):
@@ -151,7 +149,7 @@ class MJD2000TimeMixIn(object):
         return mjd2000_to_datetime(time)
 
 
-class CdfEpochTimeMixIn(object):
+class CdfEpochTimeMixIn():
     """ CDF_EPOCH mix-in class. """
     @staticmethod
     def _from_datetime(time):

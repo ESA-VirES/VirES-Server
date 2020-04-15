@@ -26,25 +26,24 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,
-# pylint: disable=too-many-branches,too-many-statements
-# pylint: disable=missing-docstring,unused-argument
+# pylint: disable=too-many-branches,too-many-statements,unused-argument
 
 from os import remove
 from os.path import exists
-from itertools import chain, izip
+from itertools import chain
 from datetime import datetime, timedelta
-from numpy import nan
-from django.conf import settings
+from numpy import nan, full
 from django.utils.timezone import utc
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData, AllowedRange, RequestParameter, Reference,
-    FormatText, FormatJSON, FormatBinaryRaw,
+    LiteralData, ComplexData, AllowedRange, Reference,
+    FormatText, FormatJSON, FormatBinaryRaw, RequestParameter,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError, ServerBusy,
 )
-from vires.models import Job
-from vires.util import unique, exclude, include, full
+from vires.models import ProductCollection, Job, get_user
+from vires.util import unique, exclude, include
+from vires.access_util import get_vires_permissions
 from vires.time_util import (
     naive_to_utc, timedelta_to_iso_duration,
 )
@@ -52,11 +51,16 @@ from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
     timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE, cdf_open,
 )
+from vires.cache_util import cache_path
+from vires.data.vires_settings import (
+    CACHED_PRODUCT_FILE, AUX_DB_KP, AUX_DB_DST, SPACECRAFTS,
+    ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
+)
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters2,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names, get_username, get_user, with_cache_session,
+    extract_product_names,
 )
 from vires.processes.util.time_series import (
     ProductTimeSeries,
@@ -69,6 +73,7 @@ from vires.processes.util.models import (
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
     IndexKpFromKp10,
     Identity,
+    BnecToF,
 )
 from vires.processes.util.filters import (
     MinStepSampler, GroupingSampler, ExtraSampler,
@@ -110,8 +115,8 @@ class FetchFilteredDataAsync(WPSProcess):
     synchronous = False
     asynchronous = True
 
-    inputs = [
-        ("username", RequestParameter(get_username)),
+    inputs = WPSProcess.inputs + [
+        ('permissions', RequestParameter(get_vires_permissions)),
         ("collection_ids", ComplexData(
             'collection_ids', title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
@@ -264,15 +269,17 @@ class FetchFilteredDataAsync(WPSProcess):
             context.logger.info("Job removed.")
 
 
-    @with_cache_session
-    def execute(self, collection_ids, begin_time, end_time, filters,
-                sampling_step, requested_variables, model_ids, shc,
-                csv_time_format, output, source_products, context, **kwarg):
+    def execute(self, permissions, collection_ids, begin_time, end_time,
+                filters, sampling_step, requested_variables, model_ids, shc,
+                csv_time_format, output, source_products, context, **kwargs):
         """ Execute process """
+        access_logger = self.get_access_logger(**kwargs)
         #workspace_dir = ""
 
         # parse inputs
-        sources = parse_collections('collection_ids', collection_ids.data)
+        sources = parse_collections(
+            'collection_ids', collection_ids.data, permissions=permissions,
+        )
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
         )
@@ -294,11 +301,11 @@ class FetchFilteredDataAsync(WPSProcess):
                 "Time selection limit (%s) has been exceeded!" %
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
-            self.access_logger.error(message)
+            access_logger.warning(message)
             raise InvalidInputValueError('end_time', message)
 
         # log the request
-        self.access_logger.info(
+        access_logger.info(
             "request parameters: toi: (%s, %s), collections: (%s), "
             "models: (%s), filters: {%s}",
             begin_time.isoformat("T"), end_time.isoformat("T"),
@@ -325,23 +332,26 @@ class FetchFilteredDataAsync(WPSProcess):
                 spacecraft: [
                     OrbitCounter(
                         "OrbitCounter" + spacecraft,
-                        settings.VIRES_ORBIT_COUNTER_FILE[spacecraft]
+                        cache_path(ORBIT_COUNTER_FILE[spacecraft])
                     ),
                     OrbitDirection(
                         "OrbitDirection" + spacecraft,
-                        settings.VIRES_ORBIT_DIRECTION_GEO_FILE[spacecraft]
+                        cache_path(ORBIT_DIRECTION_GEO_FILE[spacecraft])
                     ),
                     QDOrbitDirection(
                         "QDOrbitDirection" + spacecraft,
-                        settings.VIRES_ORBIT_DIRECTION_MAG_FILE[spacecraft]
+                        cache_path(ORBIT_DIRECTION_MAG_FILE[spacecraft])
                     ),
                 ]
-                for spacecraft in settings.VIRES_SPACECRAFTS
+                for spacecraft in SPACECRAFTS
             }
-            index_kp10 = IndexKp10(settings.VIRES_AUX_DB_KP)
-            index_dst = IndexDst(settings.VIRES_AUX_DB_DST)
-            index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS["AUX_F10_2_"])
-            index_imf = ProductTimeSeries(settings.VIRES_AUX_IMF_2__COLLECTION)
+            index_kp10 = IndexKp10(cache_path(AUX_DB_KP))
+            index_dst = IndexDst(cache_path(AUX_DB_DST))
+            index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
+            index_imf = ProductTimeSeries(
+                ProductCollection.objects.get(type__identifier="SW_AUX_IMF_2_")
+            )
+            model_bnec_intensity = BnecToF()
             model_kp = IndexKpFromKp10()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
@@ -375,7 +385,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 sampler, grouping_sampler = None, None
 
             # resolving variable dependencies for each label separately
-            for label, product_sources in sources.iteritems():
+            for label, product_sources in sources.items():
                 resolvers[label] = resolver = VariableResolver()
 
                 # master
@@ -391,13 +401,13 @@ class FetchFilteredDataAsync(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                     # optional extra sampling for selected collections
-                    if sampler and slave.collection_identifier in settings.VIRES_EXTRA_SAMPLED_COLLECTIONS:
+                    if sampler and slave.metadata.get('extraSampled'):
                         resolver.add_filter(ExtraSampler(
                             'Timestamp', slave.collection_identifier, slave
                         ))
 
                 # optional sample grouping
-                if grouping_sampler and master.collection_identifier in settings.VIRES_GROUPED_SAMPLES_COLLECTIONS:
+                if grouping_sampler and master.metadata.get('groupSamples'):
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
@@ -405,9 +415,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
-                spacecraft = (
-                    settings.VIRES_COL2SAT.get(master.collection_identifier)
-                )
+                spacecraft = master.metadata.get('spacecraft')
                 resolver.add_model(SpacecraftLabel(spacecraft or '-'))
 
                 for item in orbit_info.get(spacecraft, []):
@@ -430,6 +438,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
                 # models
                 aux_models = chain((
+                    model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals, copied_variables)
@@ -486,12 +495,12 @@ class FetchFilteredDataAsync(WPSProcess):
             # count products
             collection_product_counts = dict(
                 (label, resolver.master.subset_count(begin_time, end_time))
-                for label, resolver in resolvers.iteritems()
+                for label, resolver in resolvers.items()
             )
-            total_product_count = sum(collection_product_counts.itervalues())
+            total_product_count = sum(collection_product_counts.values())
 
 
-            for label, resolver in resolvers.iteritems():
+            for label, resolver in resolvers.items():
 
                 all_variables = resolver.required
                 variables = tuple(exclude(
@@ -504,13 +513,17 @@ class FetchFilteredDataAsync(WPSProcess):
                 )
 
                 for product_idx, dataset in enumerate(dataset_iterator, 1):
-                    context.update_progress(
-                        (product_count * 100) // total_product_count,
-                        "Filtering collection %s, product %d of %d." % (
-                            label, product_idx, collection_product_counts[label]
+                    # In case of no product selected the iterator yields one
+                    # empty dataset which should not be counted as a product.
+                    if collection_product_counts[label] > 0:
+                        context.update_progress(
+                            (product_count * 100) // total_product_count,
+                            "Filtering collection %s, product %d of %d." % (
+                                label, product_idx,
+                                collection_product_counts[label]
+                            )
                         )
-                    )
-                    product_count += 1
+                        product_count += 1
 
 
                     self.logger.debug(
@@ -554,7 +567,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     if total_count > MAX_SAMPLES_COUNT:
-                        self.access_logger.error(
+                        access_logger.warning(
                             "The sample count %d exceeds the maximum allowed "
                             "count of %d samples!",
                             total_count, MAX_SAMPLES_COUNT,
@@ -567,7 +580,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
                     yield label, dataset
 
-            self.access_logger.info(
+            access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
                 total_count, output['mime_type'], ", ".join(output_variables)
             )
@@ -590,12 +603,11 @@ class FetchFilteredDataAsync(WPSProcess):
             #result_filename = result_basename + ".csv"
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
-            with open(temp_filename, "wb") as output_fobj:
+            with open(temp_filename, "w", encoding="utf-8", newline="\r\n") as output_fobj:
 
                 if sources:
                     # write CSV header
-                    output_fobj.write(",".join(output_variables))
-                    output_fobj.write("\r\n")
+                    print(",".join(output_variables), file=output_fobj)
 
                 for label, dataset in _generate_data_():
                     formatters = []
@@ -616,11 +628,11 @@ class FetchFilteredDataAsync(WPSProcess):
                         "nan" if item is None else "%s" for item in data
                     )
                     # iterate the rows and write the CSV records
-                    for row in izip(*(item for item in data if item is not None)):
-                        output_fobj.write(
-                            format_ % tuple(f(v) for f, v in zip(formatters, row))
+                    for row in zip(*(item for item in data if item is not None)):
+                        print(
+                            format_ % tuple(f(v) for f, v in zip(formatters, row)),
+                            file=output_fobj
                         )
-                        output_fobj.write("\r\n")
 
             product_names = extract_product_names(resolvers.values())
 
@@ -683,7 +695,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         "%s = %s" % (model.name, model.full_expression)
                         for model in requested_models
                     ],
-                    "SOURCES": sources.keys(),
+                    "SOURCES": list(sources.keys()),
                     "ORIGINAL_PRODUCT_NAMES": product_names,
                 })
 
@@ -694,10 +706,9 @@ class FetchFilteredDataAsync(WPSProcess):
             )
 
         source_products_filename = temp_basename + "_sources.txt"
-        with open(source_products_filename, "wb") as output_fobj:
+        with open(source_products_filename, "w", encoding="utf-8", newline="\r\n") as output_fobj:
             for product_name in product_names:
-                output_fobj.write(product_name)
-                output_fobj.write("\r\n")
+                print(product_name, file=output_fobj)
 
         return {
             'output': Reference(*context.publish(temp_filename), **output),

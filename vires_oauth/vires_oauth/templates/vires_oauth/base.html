@@ -35,9 +35,9 @@
   <title>VirES Identity Server</title>
   {% endblock %}
   {% block additional_headers %}
-  <link rel="stylesheet" type="text/css" href="/eoxs_static/workspace/styles/main.css" />
-  <script type="text/javascript" src="/eoxs_static/workspace/bower_components/jquery/jquery.min.js"></script>
-  <script type="text/javascript" src="/eoxs_static/workspace/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+  <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
   <link rel="stylesheet" type="text/css" href="{% static 'css/form_styles.css' %}">
   <link rel="stylesheet" type="text/css" href="{% static 'css/social_providers.css' %}">
   <link rel="stylesheet" type="text/css" href="{% static 'css/cookie_banner.css' %}" />

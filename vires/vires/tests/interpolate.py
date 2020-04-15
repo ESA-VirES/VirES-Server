@@ -2,9 +2,7 @@
 #
 #  Testing gap-aware 1D interpolation.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,12 +24,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,line-too-long
 
 from unittest import TestCase, main
 from logging import getLogger, DEBUG, INFO, Formatter, StreamHandler
-from numpy import array, nan, empty
-from vires.util import full
+from numpy import array, nan, empty, full
 from vires.tests import ArrayMixIn
 from vires.interpolate import Interp1D
 
@@ -78,19 +75,19 @@ class InterplateTestMixIn(ArrayMixIn):
         try:
             self.assertAllEqual(result, self.Y_DST)
         except:
-            print
-            print self.__class__.__name__
-            print "x_src:", x_src
-            print "x_dst:", x_dst
-            print "y_src:", y_src
-            print "expected:", y_dst
-            print "received:", result
+            print()
+            print(self.__class__.__name__)
+            print("x_src:", x_src)
+            print("x_dst:", x_dst)
+            print("y_src:", y_src)
+            print("expected:", y_dst)
+            print("received:", result)
             raise
 
 #-------------------------------------------------------------------------------
 
 class TestI1DErrors(TestCase):
-    
+
     def test_size_mismatch(self):
         x_src = array([10, 20, 30, 40, 50, 60, 70, 80, 90])
         y_src = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
@@ -98,7 +95,7 @@ class TestI1DErrors(TestCase):
 
         with self.assertRaises(ValueError):
             Interp1D(x_src, x_dst)(y_src, "nearest")
-    
+
     def test_invalid_kind(self):
         x_src = array([10, 20, 30, 40, 50, 60, 70, 80, 90])
         y_src = array([1, 2, 3, 4, 5, 6, 7, 8, 9])

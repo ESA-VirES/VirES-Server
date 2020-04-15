@@ -2,9 +2,7 @@
 #
 #  Dataset Class - data container
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,6 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments
 
 from collections import OrderedDict
 from numpy import array, concatenate, inf
@@ -50,7 +49,7 @@ class Dataset(OrderedDict):
         """ Get length of the dataset (length of the arrays held by the
         dataset).
         """
-        return next(self.itervalues()).shape[0] if self else 0
+        return next(iter(self.values())).shape[0] if self else 0
 
     def set(self, variable, data, cdf_type=None, cdf_attr=None):
         """ Set variable. """
@@ -77,7 +76,7 @@ class Dataset(OrderedDict):
                 (dataset.length, self.length)
             )
 
-        for variable, data in dataset.iteritems():
+        for variable, data in dataset.items():
             if variable not in self:
                 self.set(
                     variable, data,
@@ -96,7 +95,7 @@ class Dataset(OrderedDict):
                 (dataset.length, self.length)
             )
 
-        for variable, data in dataset.iteritems():
+        for variable, data in dataset.items():
             self.set(
                 variable, data,
                 dataset.cdf_type.get(variable),
@@ -120,7 +119,7 @@ class Dataset(OrderedDict):
                 # concatenate with the current data
                 OrderedDict.update(self, (
                     (variable, concatenate((data, dataset[variable]), axis=0))
-                    for variable, data in self.iteritems()
+                    for variable, data in self.items()
                 ))
 
     def subset(self, index, always_copy=True):
@@ -133,7 +132,7 @@ class Dataset(OrderedDict):
             dataset = Dataset(self)
         else:
             dataset = Dataset()
-            for variable, data in self.iteritems():
+            for variable, data in self.items():
                 dataset.set(
                     variable, data[index],
                     self.cdf_type.get(variable),
@@ -175,13 +174,13 @@ class Dataset(OrderedDict):
             self if variables is None else include(unique(variables), self)
         )
 
-        for variable in variables:
-            kind = kinds.get(variable, 'nearest')
-            data = self[variable]
+        for name in variables:
+            kind = kinds.get(name, 'nearest')
+            data = self[name]
             dataset.set(
-                variable, interp1d(data, kind).astype(data.dtype),
-                CDF_DOUBLE_TYPE, #self.cdf_type.get(variable),
-                self.cdf_attr.get(variable)
+                name, interp1d(data, kind).astype(data.dtype),
+                CDF_DOUBLE_TYPE, #self.cdf_type.get(name),
+                self.cdf_attr.get(name)
             )
 
         return dataset

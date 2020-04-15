@@ -77,8 +77,8 @@ class Command(ConsoleOutput, BaseCommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing app %s updated." if is_updated else
-                    "New app %s created.", name, log=True
+                    "app %s updated" if is_updated else
+                    "app %s created", name, log=True
                 )
 
         if created_count:

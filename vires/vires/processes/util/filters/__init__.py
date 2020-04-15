@@ -24,7 +24,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
 from numpy import empty
 from .base import Filter
@@ -37,7 +36,7 @@ def format_filters(filters):
     """ Convert filters to a string. """
     return "; ".join(
         "%s: %g,%g" % (key, vmin, vmax)
-        for key, (vmin, vmax) in filters.iteritems()
+        for key, (vmin, vmax) in filters.items()
     )
 
 

@@ -1,10 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Testing # AUX_F107_2_ index file handling.
+# Testing AUX_F107_2_ index file handling.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2018 EOX IT Services GmbH
 #
@@ -31,7 +29,7 @@
 from unittest import TestCase, main
 from os import remove
 from os.path import exists
-from StringIO import StringIO
+from io import StringIO
 from numpy import array, linspace
 from numpy.testing import assert_equal
 from scipy.interpolate import interp1d

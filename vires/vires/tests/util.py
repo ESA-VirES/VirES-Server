@@ -34,7 +34,6 @@ from numpy import array
 from vires.tests import ArrayMixIn
 from vires.util import (
     between, between_co, float_array_slice, datetime_array_slice,
-    get_total_seconds
 )
 
 class TestUtil(ArrayMixIn, unittest.TestCase):
@@ -49,19 +48,6 @@ class TestUtil(ArrayMixIn, unittest.TestCase):
         self.assertAllEqual(
             between_co(array([1.0, 1.5, 2.0, 3.0, 3.5, 4.0]), 1.5, 3.5),
             array([False, True, True, True, False, False])
-        )
-
-    def test_total_seconds(self):
-        self.assertAlmostEqual(
-            get_total_seconds(
-                datetime(2016, 3, 30, 1, 1, 1, 1001) - datetime(2016, 3, 29)
-            ), 90061.001001, delta=1e-7
-        )
-        self.assertAlmostEqual(
-            get_total_seconds(
-                datetime(2016, 3, 27, 22, 58, 58, 998999) -
-                datetime(2016, 3, 29)
-            ), -90061.001001, delta=1e-7
         )
 
     def test_float_array_slice(self):

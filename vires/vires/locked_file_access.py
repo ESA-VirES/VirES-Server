@@ -2,9 +2,7 @@
 #
 # locked file access
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -31,9 +29,9 @@ from fcntl import flock, LOCK_EX, LOCK_NB
 from errno import EAGAIN
 from time import sleep
 
+
 class FileIsLocked(Exception):
     """ Locked file exception. """
-    pass
 
 
 def open_locked(filename, mode="r", **kwargs):
@@ -62,7 +60,7 @@ def log_append(filename, line, n_atempts=10, sleep_time=0.001):
         with open_locked(filename, "a") as file_:
             file_.write(line)
 
-    for atempt in xrange(n_atempts):
+    for atempt in range(n_atempts):
         try:
             _append()
         except FileIsLocked:
