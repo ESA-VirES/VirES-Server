@@ -43,7 +43,8 @@ class SwarmProductMetadataReader():
     TIME_KEYS = [
         "Timestamp",
         "timestamp",
-        "Epoch"
+        "Epoch",
+        "t",
     ]
 
     @classmethod

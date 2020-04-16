@@ -435,14 +435,14 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic latitude",
-                        "UNITS": "degree"
+                        "UNITS": "deg"
                     }
                 },
                 "Longitude": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic longitude",
-                        "UNITS": "degree"
+                        "UNITS": "deg"
                     }
                 },
                 "Radius": {
@@ -514,14 +514,14 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic longitude of satellite crossing of the magnetic equator",
-                        "UNITS": "degrees"
+                        "UNITS": "deg"
                     }
                 },
                 "Latitude": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic latitude of satellite crossing of the magnetic equator",
-                        "UNITS": "degrees"
+                        "UNITS": "deg"
                     }
                 },
                 "EEF": {
@@ -573,14 +573,14 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF, Latitude",
-                        "UNITS": "degrees"
+                        "UNITS": "deg"
                     }
                 },
                 "Longitude": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF, Longitude",
-                        "UNITS": "degrees"
+                        "UNITS": "deg"
                     }
                 },
                 "Radius": {
@@ -666,14 +666,14 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic latitude",
-                        "UNITS": "degree"
+                        "UNITS": "deg"
                     }
                 },
                 "Longitude": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic longitude",
-                        "UNITS": "degree"
+                        "UNITS": "deg"
                     }
                 },
                 "Radius": {
@@ -770,7 +770,7 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Elevation Angle",
-                        "UNITS": "degree"
+                        "UNITS": "deg"
                     }
                 },
                 "Relative_STEC": {
@@ -1055,6 +1055,457 @@
                     "attributes": {
                         "DESCRIPTION": "F10.7 - Daily 10.7 cm solar radio flux, units: 10**(-22) Joules/second/square-meter/Hertz, from NGDC (1963/001-2016/366)",
                         "UNITS": "10-22.J.s-1.m-2.Hz-1"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_AEJxLPL_2F",
+        "defaultDatadaset": "AEJ_LPL",
+        "datasets": {
+            "AEJ_LPL": {
+                "t": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time",
+                        "UNITS": "hour"
+                    }
+                },
+                "J": {
+                    "dataType": "float64",
+                    "dimension": [2],
+                    "attributes": {
+                        "DESCRIPTION": "North- and East-component of horizontal sheet current density vector in geographic frame",
+                        "UNITS": "A/km"
+                    }
+                },
+                "J_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Eastward horizontal sheet current density in QD frame (positive in East QD direction)",
+                        "UNITS": "A/km"
+                    }
+                }
+            },
+            "Quality": {
+                "t_qual": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time instants of quality information (rms_misfit and confidence), UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "RMS_misfit": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quality indicator: rms misfit between observations and model values of the four orbital sections",
+                        "UNITS": "nT"
+                    }
+                },
+                "Confidence": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Goodness of fit computed as 1 - (residual variance / signal variance)",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_AEJxPBL_2F",
+        "defaultDatadaset": "AEJ_PBL",
+        "datasets": {
+            "AEJ_PBL": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "UTC time",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time (QD)",
+                        "UNITS": "hour"
+                    }
+                },
+                "Flags": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Quality indicator",
+                        "UNITS": "-"
+                    }
+                },
+                "PointType": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Point Type: 0 - EB0, 1 - EB1, 2 - PB0, 3 - PB1, 4 - Minimum, 5 - Maximum, 255 - No-data",
+                        "UNITS": "-"
+                    }
+                },
+                "J_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Peak horizontal sheet current intensity in the QD frame (positive in East QD direction). Set to NaN for boundaries.",
+                        "UNITS": "A/km"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_AEJxLPS_2F",
+        "defaultDatadaset": "AEJ_LPS",
+        "datasets": {
+            "AEJ_LPS": {
+                "t": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "geodetic latitude of the ionospheric footprint",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "geodetic longitude of the ionospheric footprint",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "quasi-dipole latitude of the ionospheric footprint",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "quasi-dipole longitude of the ionospheric footprint",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "magnetic local time in quasi-dipole coordinates",
+                        "UNITS": "hour"
+                    }
+                },
+                "J_CF": {
+                    "dataType": "float64",
+                    "dimension": [2],
+                    "attributes": {
+                        "DESCRIPTION": "Column 1: north component of the curl-free ionospheric current density in the spherical frame; column 2: east component of the curl-free ionospheric current density in the spherical frame",
+                        "UNITS": "A/km"
+                    }
+                },
+                "J_DF": {
+                    "dataType": "float64",
+                    "dimension": [2],
+                    "attributes": {
+                        "DESCRIPTION": "Column 1: north component of the divergence-free ionospheric current density in the spherical frame; column 2: east component of the divergence-free ionospheric current density in the spherical frame",
+                        "UNITS": "A/km"
+                    }
+                },
+                "J_CF_SemiQD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "theta component of the curl-free ionospheric current density in the SECS frame",
+                        "UNITS": "A/km"
+                    }
+                },
+                "J_DF_SemiQD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "phi component of the divergence-free ionospheric current density in the SECS frame",
+                        "UNITS": "A/km"
+                    }
+                },
+                "J_C": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "radial ionospheric current density in the SECS frame",
+                        "UNITS": "A/km^2"
+                    }
+                }
+            },
+            "Quality": {
+                "t_qual": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time instants of quality information (rms_misfit and confidence), UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "RMS_misfit": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "root mean square error of the fitted Swarm magnetic field ((r,theta)-plane in DIP)",
+                        "UNITS": "nT"
+                    }
+                },
+                "Confidence": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "1-rms(Bpar-Bpar_modelled)/rms(Bpar) ((r,theta)-plane in DIP)",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_AEJxPBS_2F",
+        "defaultDatadaset": "AEJ_PBS",
+        "datasets": {
+            "AEJ_PBS": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "UTC time",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time (QD)",
+                        "UNITS": "hour"
+                    }
+                },
+                "Flags": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Quality indicator",
+                        "UNITS": "-"
+                    }
+                },
+                "PointType": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Point Type: 0 - EB0, 1 - EB1, 2 - PB0, 3 - PB1, 4 - Minimum, 5 - Maximum, 255 - No-data",
+                        "UNITS": "-"
+                    }
+                }
+            },
+            "GroundMagneticDisturbance": {
+                "Timestamp_B": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "UTC time of peak (minimum and maximum) ground magnetic field disturbance.",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_B": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position of peak (minimum and maximum) ground magnetic field disturbance in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_B": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position of peak (minimum and maximum) ground magnetic field disturbance in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Peak ground magnetic field disturbance, NEC frame.",
+                        "UNITS": "nT"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_AOBxFAC_2F",
+        "defaultDatadaset": "AOB_FAC",
+        "datasets": {
+            "AOB_FAC": {
+                "t": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of equatorward/poleward boundary, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position of equatorward/poleward boundary in ITRF - Geocentric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position of equatorward/poleward boundary in ITRF - Geocentric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position of equatorward/poleward boundary in ITRF - Radius from the Earth center",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "QD latitude of equatorward/poleward boundary",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "QD longitude of equatorward/poleward boundary",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time of equatorward/poleward boundary",
+                        "UNITS": "hour"
+                    }
+                },
+                "Boundary_Flag": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Indicator for equatorward (=1) or poleward (=2) boundary",
+                        "UNITS": "-"
+                    }
+                },
+                "Quality": {
+                    "dataType": "float64",
+                    "dimension": [2],
+                    "attributes": {
+                        "DESCRIPTION": "Quality indicator of equatorward/poleward boundary (Pa, Sigma)",
+                        "UNITS": "-"
+                    }
+                },
+                "Pair_Indicator": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Indicator of equatorward/poleward boundary of auroral oval. If the auroral oval boundaries are detectable as one pair, the pair indicator represents the record of previous (-1) or next (1) equatorward/poleward boundary within one pair; otherwise, the pair indicator is set to 0",
+                        "UNITS": "-"
                     }
                 }
             }

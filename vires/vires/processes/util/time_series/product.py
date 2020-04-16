@@ -80,6 +80,13 @@ class SwarmAEJLPParameters(SwarmDefaultParameters):
     }
 
 
+class SwarmAEJLPQualityParameters(SwarmDefaultParameters):
+    """ Common AEJ_LPx product quality parameters. """
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 't_qual',
+    }
+
+
 class SwarmAEJPBParameters(SwarmDefaultParameters):
     """ Common AEJxPBx product parameters. """
     VARIABLE_TRANSLATES = {
@@ -98,12 +105,11 @@ class SwarmAEJPBSGroundMagneticDisturbancesParameters(SwarmDefaultParameters):
 
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
-    "SWARM_AEJ_LPL": SwarmAEJLPParameters,
-    "SWARM_AEJ_LPS": SwarmAEJLPParameters,
-    "SWARM_AEJ_PBL": SwarmAEJPBParameters,
-    "SWARM_AEJ_PBS": SwarmAEJPBParameters,
-    "SWARM_AEJ_PBS:PGMFD": SwarmAEJPBSGroundMagneticDisturbancesParameters,
-    "SWARM_AOB_FAC": SwarmAEJLPParameters,
+    "SW_AEJxLPL_2F": SwarmAEJLPParameters,
+    "SW_AEJxLPS_2F": SwarmAEJLPParameters,
+    "SW_AEJxPBL_2F": SwarmAEJPBParameters,
+    "SW_AEJxPBS_2F": SwarmAEJPBParameters,
+    "SW_AOBxFAC_2F": SwarmAEJLPParameters,
     "SW_AUX_IMF_2_": AuxImf2Parameters,
 }
 
