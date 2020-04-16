@@ -592,7 +592,8 @@ class FetchFilteredDataAsync(WPSProcess):
         #result_basename = "%s_%s_%s_Filtered" % (
         temp_basename = "%s_%s_%s_Filtered" % (
             "_".join(
-                s.collection_identifier for l in sources.values() for s in l
+                s.collection_identifier.replace(":", "-")
+                for l in sources.values() for s in l
             ),
             begin_time.strftime("%Y%m%dT%H%M%S"),
             end_time.strftime("%Y%m%dT%H%M%S"),

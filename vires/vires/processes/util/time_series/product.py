@@ -207,21 +207,36 @@ class BaseProductTimeSeries(TimeSeries):
 class ProductTimeSeries(BaseProductTimeSeries):
     """ Product time-series class. """
 
+    @staticmethod
+    def _get_id(base_id, dataset_id, is_default_dataset):
+        if is_default_dataset:
+            return base_id
+        return "%s:%s" % (base_id, dataset_id)
+
+
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return '%s: %s' % (self.extra["collection_id"], msg), kwargs
 
-    def __init__(self, collection, logger=None):
+    def __init__(self, collection, dataset_id=None, logger=None):
+
         if isinstance(collection, str):
             collection = self._get_collection(collection)
 
+        default_dataset_id = collection.type.definition["defaultDatadaset"]
+        if not dataset_id:
+            dataset_id = default_dataset_id
+
+        is_default_dataset = (dataset_id == default_dataset_id)
+
         params = PRODUCT_TYPE_PARAMETERS.get(
-            collection.type.identifier, DEFAULT_PRODUCT_TYPE_PARAMETERS
+            self._get_id(collection.type.identifier, dataset_id, is_default_dataset),
+            DEFAULT_PRODUCT_TYPE_PARAMETERS
         )
 
         super().__init__(
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
-                "collection_id": collection.identifier,
+                "collection_id": self._get_id(collection.identifier, dataset_id, is_default_dataset),
             }),
             time_variable=params.TIME_VARIABLE,
             time_tolerance=params.TIME_TOLERANCE,
@@ -232,6 +247,9 @@ class ProductTimeSeries(BaseProductTimeSeries):
         )
 
         self.collection = collection
+        self.dataset_id = dataset_id
+        self.is_default_dataset = is_default_dataset
+
         self.translate_fw = dict(params.VARIABLE_TRANSLATES)
         self.translate_bw = dict((v, k) for k, v in self.translate_fw.items())
 
@@ -243,15 +261,15 @@ class ProductTimeSeries(BaseProductTimeSeries):
     @property
     def collection_identifier(self):
         """ Get collection identifier. """
-        return self.collection.identifier
+        return self._get_id(
+            self.collection.identifier, self.dataset_id, self.is_default_dataset
+        )
 
     @property
     def variables(self):
-        type_def = self.collection.type.definition
-        dataset_id = type_def['defaultDatadaset']
+        dataset = self.collection.type.definition['datasets'][self.dataset_id]
         return [
-            self.translate_bw.get(variable, variable)
-            for variable in type_def['datasets'][dataset_id]
+            self.translate_bw.get(variable, variable) for variable in dataset
         ]
 
     def _extract_dataset(self, cdf, extracted_variables, idx_low, idx_high):
