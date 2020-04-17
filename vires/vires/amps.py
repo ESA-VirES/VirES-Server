@@ -55,7 +55,7 @@ class AmpsMagneticFieldModel(GeomagneticModel):
     DEFAULT_EPOCH = 2015.0
     REFERENCE_HEIGHT = 110.0
 
-    validity = (-inf, +inf)
+    validity = (-36524.0, 7305.0) # 1900 - 2019
 
     def __init__(self, filename):
         self.filename = filename
