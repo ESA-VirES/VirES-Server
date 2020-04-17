@@ -63,36 +63,19 @@ def parse_collections(input_id, source, permissions,
                       custom_dataset=None, user=None):
     """ Parse input collections definitions. """
     result = {}
+
     if not isinstance(source, dict):
         raise InvalidInputValueError(
             input_id, "JSON object expected!"
         )
-    # resolve collection ids
+
     for label, collection_ids in source.items():
-        if not isinstance(collection_ids, (list, tuple)):
-            raise InvalidInputValueError(
-                input_id, "A list of collection identifiers expected for "
-                "label %r!" % label
+        try:
+            result[label] = _parse_collection_ids(
+                collection_ids, custom_dataset, permissions
             )
-        available_collections = {
-            collection.identifier: collection for collection
-            in ProductCollection.select_permitted(permissions).filter(
-                identifier__in=collection_ids
-            )
-        }
-        if custom_dataset and custom_dataset in collection_ids:
-            result[label] = custom_dataset
-        else:
-            try:
-                result[label] = [
-                    available_collections[id_] if id_ != custom_dataset else id_
-                    for id_ in collection_ids
-                ]
-            except KeyError as exc:
-                raise InvalidInputValueError(
-                    input_id, "Invalid collection identifier %r! (label: %r)" %
-                    (exc.args[0], label)
-                )
+        except (ValueError, TypeError) as error:
+            raise InvalidInputValueError("label %r: %s" % (label, str(error)))
 
     master_ptype = None
     for label, collections in result.items():
@@ -106,10 +89,11 @@ def parse_collections(input_id, source, permissions,
                 " (label: %r)" % label
             )
         # master (first collection) must be always of the same product type
+        collection, dataset_id = collections[0]
         if master_ptype is None:
-            master_ptype = collections[0].type
+            master_dataset = (collection.type.identifier, dataset_id)
         else:
-            if master_ptype != collections[0].type:
+            if master_dataset != (collection.type.identifier, dataset_id):
                 raise InvalidInputValueError(
                     input_id, "Master collection product type mismatch!"
                     " (label: %r; )" % label
@@ -118,26 +102,76 @@ def parse_collections(input_id, source, permissions,
         # slaves are optional
         # slaves' order does not matter
 
-        # collect slave range-types
-        slave_ptypes = set()
+        # collect slave product-types
+        slave_datasets = set()
 
         # for one label multiple collections of the same range-type not allowed
-        for ptype in (collection.type for collection in collections[1:]):
-            if ptype == master_ptype or ptype in slave_ptypes:
+        for collection, dataset_id in collections[1:]:
+            dataset = (collection.type.identifier, dataset_id)
+            if dataset == master_dataset or dataset in slave_datasets:
                 raise InvalidInputValueError(
                     input_id, "Multiple collections of the same type "
                     "are not allowed! (label: %r; )" % label
                 )
-            slave_ptypes.add(ptype)
+            slave_datasets.add(dataset)
 
     # convert collections to product time-series
     return {
         label: (
-            [CustomDatasetTimeSeries(user)]
-            if collections == custom_dataset else
-            [ProductTimeSeries(collection) for collection in collections]
+            [
+                CustomDatasetTimeSeries(user)
+            ] if collections == custom_dataset else [
+                ProductTimeSeries(collection, dataset_id)
+                for collection, dataset_id in collections
+            ]
         ) for label, collections in result.items()
     }
+
+
+def _parse_collection_ids(ids, custom_dataset, permissions):
+
+    if not isinstance(ids, (list, tuple)):
+        raise TypeError("Invalid list of collection identifiers! %r" % ids)
+
+    collection_dataset_ids = []
+    for id_ in ids:
+        if not isinstance(id_, str):
+            raise TypeError("Invalid collection identifier %r!" % id_)
+        collection_id, _, dataset_id = id_.partition(':')
+        collection_dataset_ids.append((collection_id, dataset_id))
+
+    available_collections = {
+        collection.identifier: collection for collection
+        in ProductCollection.select_permitted(permissions).filter(
+            identifier__in=set(cid for cid, _ in collection_dataset_ids)
+        )
+    }
+
+    collections = []
+    for collection_id, dataset_id in collection_dataset_ids:
+
+        if collection_id == custom_dataset:
+            if dataset_id:
+                raise ValueError(
+                    "Custom dataset does not allow dataset identifier "
+                    "specification!"
+                )
+            return custom_dataset
+
+        collection = available_collections.get(collection_id)
+        if not collection:
+            raise ValueError("Invalid collection identifier %r!" % collection_id)
+
+        type_def = collection.type.definition
+        if not dataset_id:
+            dataset_id = type_def["defaultDatadaset"]
+
+        if dataset_id not in type_def["datasets"]:
+            raise ValueError("Invalid dataset identifier %r!" % dataset_id)
+
+        collections.append((collection, dataset_id))
+
+    return collections
 
 
 def parse_model_expression(input_id, model_input, shc=None, shc_input_id="shc"):
