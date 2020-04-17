@@ -28,44 +28,55 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, no-self-use, unused-argument
 
-from logging import getLogger, INFO, WARNING
+from logging import getLogger, INFO, WARNING, ERROR
 from django.contrib.auth import logout
+from .utils import AccessLoggerAdapter, get_remote_addr, get_username
 
-LOGGER = getLogger("eoxs_allauth.access")
+ACCESS_LOGGER_NAME = "access.http"
 
 
-class AccessLoggingMiddleware(object):
-    """ Middleware that logs access to the service.
+def access_logging_middleware(get_response):
+    base_logger = getLogger(ACCESS_LOGGER_NAME)
 
-    This middleware makes use of the view attributes to decide the logging
-    level of the authenticated and non-authenticated requests.
-    """
+    # log levels are set via the  `log_access` decorator
+    log_level_authenticated = getattr(
+        get_response, 'log_level_authenticated', INFO
+    )
+    log_level_unauthenticated = getattr(
+        get_response, 'log_level_unauthenticated', INFO
+    )
 
-    def process_view(self, request, view_func, view_args, view_kwargs):
-        """ Access logging. """
-        if request.user.is_authenticated():
-            type_, level = "A", getattr(view_func, 'log_level_auth', INFO)
-        else:
-            type_, level = "N", getattr(view_func, 'log_level_unauth', INFO)
-        LOGGER.log(level, "%s %s %s", type_, request.method, request.path)
+    def get_log_level(status_code, is_authenticated):
+        if status_code < 400:
+            if is_authenticated:
+                return log_level_authenticated
+            return log_level_unauthenticated
+        if status_code < 500:
+            return WARNING
+        return ERROR
 
-    def process_response(self, request, response):
-        """ Log response status. """
-        # Warn in case of an error.
-        level = WARNING if response.status_code >= 400 else INFO
-        LOGGER.log(
-            level, "R %s %s %s %s ", request.method, request.path,
-            response.status_code, response.reason_phrase,
+    def middleware(request):
+        logger = AccessLoggerAdapter(
+            logger=base_logger,
+            username=get_username(request.user),
+            remote_addr=get_remote_addr(request),
+        )
+        response = get_response(request)
+        logger.log(
+            get_log_level(response.status_code, request.user.is_authenticated),
+            "%s %s %s %s ", request.method, request.path, response.status_code,
+            response.reason_phrase,
         )
         return response
 
+    return middleware
 
-class InactiveUserLogoutMiddleware(object):
-    """ Middleware that terminates sessions for authenticated but inactive
-    users.
-    """
 
-    def process_request(self, request):
-        """ Log out inactive users. """
-        if request.user.is_authenticated() and not request.user.is_active:
+def inactive_user_logout_middleware(get_response):
+
+    def middleware(request):
+        if request.user.is_authenticated and not request.user.is_active:
             logout(request)
+        return get_response(request)
+
+    return middleware

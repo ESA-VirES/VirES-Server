@@ -79,7 +79,7 @@ class TestColormaps(TestCase):
                     isinstance(get_colormap(name), Colormap)
                 )
             except:
-                print "Test failed for colormap %r!" % name
+                print("Test failed for colormap %r!" % name)
                 raise
 
     def test_get_colormap_invalid(self):

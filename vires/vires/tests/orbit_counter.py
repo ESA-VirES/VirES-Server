@@ -2,9 +2,7 @@
 #
 # Testing Orbit Counter Data Handling
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -31,7 +29,7 @@
 import unittest
 from os import remove
 from os.path import exists
-from StringIO import StringIO
+from io import StringIO
 from numpy import array, linspace, nan, isnan, logical_not
 from scipy.interpolate import interp1d
 

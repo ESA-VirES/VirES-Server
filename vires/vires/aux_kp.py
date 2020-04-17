@@ -2,10 +2,8 @@
 #
 # Kp index file handling.
 #
-# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #          Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -37,7 +35,7 @@ from .aux_common import (
     SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
 )
 
-KP_FLAGS = {"D": 0, "Q": 1} # Definitive / Quick-look
+KP_FLAGS = {b"D": 0, b"Q": 1} # Definitive / Quick-look
 
 
 class KpReader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
@@ -61,8 +59,8 @@ def update_kp(src_file, dst_file):
             )
             cdf.attrs['VALIDITY'] = [start, end]
 
-    if isinstance(src_file, basestring):
-        with open(src_file, "rb") as file_in:
+    if isinstance(src_file, str):
+        with open(src_file) as file_in:
             _write_kp(file_in, dst_file)
     else:
         _write_kp(src_file, dst_file)

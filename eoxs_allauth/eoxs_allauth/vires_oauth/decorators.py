@@ -49,7 +49,7 @@ def logout_unauthorized(view_func):
     """ Log out unauthorized users. """
 
     def _logout_unauthorized_view(request, *args, **kwargs):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             logout(request)
             add_message_access_denied(request)
         return view_func(request, *args, **kwargs)
@@ -63,7 +63,7 @@ def redirect_unauthorized(redirect_url):
     def _redirect_unauthorized(view_func):
 
         def _redirect_unauthorized_view(request, *args, **kwargs):
-            if request.user.is_authenticated():
+            if request.user.is_authenticated:
                 logout(request)
                 add_message_access_denied(request)
             return HttpResponseRedirect(redirect_url)

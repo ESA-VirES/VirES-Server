@@ -73,7 +73,7 @@ def get_model_expression_parser():
     return MODEL_EXPRESSION_PARSER
 
 
-class ModelExpressionParser(object):
+class ModelExpressionParser():
 
     tokens = list(ModelExpressionLexer.token_labels)
 
@@ -91,8 +91,7 @@ class ModelExpressionParser(object):
                     token.value, line, column
                 )
             )
-        else:
-            raise ParserError(-1, -1, "Syntax error!")
+        raise ParserError(-1, -1, "Syntax error!")
 
     @staticmethod
     def p_model_expression_item(param):

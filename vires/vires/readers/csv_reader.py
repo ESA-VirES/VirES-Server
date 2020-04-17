@@ -26,17 +26,32 @@
 #-------------------------------------------------------------------------------
 
 import csv
+from os import PathLike
 from numpy import array, datetime64
 from .exceptions import InvalidFileFormat
+
+
+TYPE_TO_STR = {
+    str: 'string',
+    int: 'number',
+    float: 'number',
+    datetime64: 'timestamp',
+}
 
 
 def read_csv_data(path):
     """ Read data from a VirES compatible CSV file and get a dictionary
     of arrays.
     """
+    def _read_csv_data(file_):
+        return records_to_list(parse_record_values(read_csv_file(file_)))
+
     try:
-        with open(path, "rb") as file_:
-            data = records_to_list(parse_record_values(read_csv_file(file_)))
+        if isinstance(path, (str, PathLike)):
+            with open(path, encoding="ascii") as file_:
+                data = _read_csv_data(file_)
+        else:
+            data = _read_csv_data(path)
     except csv.Error as error:
         raise InvalidFileFormat(str(error))
 
@@ -52,7 +67,10 @@ def read_csv_file(file_):
     """ Generator parsing VirES CSV from a file yielding raw parsed records.
     """
     records = csv.reader(file_)
-    header = next(records)
+    try:
+        header = next(records)
+    except StopIteration:
+        return
     yield header
     for line_no, record in enumerate(records, 2):
         if len(record) != len(header):
@@ -65,50 +83,81 @@ def read_csv_file(file_):
 
 def parse_record_values(records):
     """ Parse the raw string records values. """
-    type_parsers = [int, float, parse_csv_array, parse_datetime]
-
-    def _parse_value(value, type_parser):
-        try:
-            return type_parser(value), type_parser
-        except (ValueError, TypeError):
-            pass
-
-        for type_parser_ in type_parsers:
-            try:
-                return type_parser_(value), type_parser
-            except (ValueError, TypeError):
-                continue
-        # no type matched passing trough the original string
-        return value, str
-
-    header = next(records)
+    try:
+        header = next(records)
+    except StopIteration:
+        return
     yield header
 
-    parsers = [type_parsers[0]] * len(header)
+    parsers = [None] * len(header)
     for record in records:
         temp = [
-            _parse_value(value, parser)
+            parse_value(value, parser)
             for parser, value in zip(parsers, record)
         ]
         parsers = [parser for _, parser in temp]
         yield [value for value, _ in temp]
 
 
+def parse_value(value, type_parser=None):
+    """ Parse single value and return the used parser. """
+    if type_parser:
+        try:
+            return type_parser(value), type_parser
+        except (ValueError, TypeError):
+            pass
+
+    for type_parser_ in TYPE_PARSERS:
+        try:
+            return type_parser_(value), type_parser_
+        except (ValueError, TypeError):
+
+            continue
+    # no type matched passing trough the original string
+    return value, None
+
+
 def records_to_list(records):
-    """ Convert a sequence of records to dictionary or lists. """
+    """ Convert a sequence of records to a dictionary or lists. """
     header = next(records)
+    types = [set() for _ in header]
     data = [[] for _ in header]
     for record in records:
-        for value, list_ in zip(record, data):
+        for value, list_, type_ in zip(record, data, types):
+            type_.add(type(value))
             list_.append(value)
-    return {field: list_ for field, list_ in zip(header, data)}
+
+    # detect mixed type fields
+    for idx, (name, value_types) in enumerate(zip(header, types)):
+        str_value_types = set(
+            TYPE_TO_STR.get(type_) or str(type_) for type_ in value_types
+        )
+        if len(str_value_types) == 1:
+            continue
+        if not str_value_types.difference(['string', 'number']):
+            data[idx] = replace_str_with_nodata(data[idx], float('NaN'))
+            continue
+        raise InvalidFileFormat(
+            'Invalid mixed %s and %s values of variable %s.' % (
+                ", ".join(list(str_value_types)[:-1]),
+                list(str_value_types)[-1], name
+            )
+        )
+    return dict(zip(header, data))
+
+
+def replace_str_with_nodata(values, nodata):
+    """ Replace strings with the given no-data value. """
+    return [nodata if isinstance(value, str) else value for value in values]
 
 
 def parse_datetime(value):
     """ Parse ISO-8601 time-stamp to NumPy datetime64 with a milliseconds
     resolution.
     """
-    return datetime64(value, 'ms')
+    if value:
+        return datetime64(value[:-1] if value[-1:] == "Z" else value, 'ms')
+    raise ValueError("Not a datetime string")
 
 
 def parse_csv_array(value, start="{", end="}", delimiter=";"):
@@ -126,7 +175,7 @@ def parse_csv_array(value, start="{", end="}", delimiter=";"):
                 if tmp:
                     data.append(float(tmp))
                 break
-            elif idx > 1 and string[idx-1] == end:
+            if idx > 1 and string[idx-1] == end:
                 tmp = string[:idx-1]
                 if tmp:
                     data.append(float(tmp))
@@ -147,3 +196,6 @@ def parse_csv_array(value, start="{", end="}", delimiter=";"):
 
     _, data = _parse_array(value[1:])
     return data
+
+
+TYPE_PARSERS = [int, float, parse_csv_array, parse_datetime]

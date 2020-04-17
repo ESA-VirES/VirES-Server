@@ -3,7 +3,6 @@
 # MMA products handling
 #
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2018 EOX IT Services GmbH
 #
@@ -161,14 +160,17 @@ def filter_and_sort_sources(sources, max_gap):
 
     def _filter_sources(items):
         items = iter(items)
-        item = items.next()
+        try:
+            item = next(items)
+        except StopIteration:
+            return
         previous_start = item['start']
         yield item
         for item in items:
             current_end = item['end']
             if current_end > previous_start:
                 continue
-            elif previous_start - current_end <= max_gap:
+            if previous_start - current_end <= max_gap:
                 yield item
                 previous_start = item['start']
             else:

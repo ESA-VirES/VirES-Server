@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('expires', models.DateTimeField(default=None, null=True)),
                 ('purpose', models.CharField(max_length=128, null=True, blank=True)),
-                ('owner', models.ForeignKey(related_name='tokens', to=settings.AUTH_USER_MODEL)),
+                ('owner', models.ForeignKey(related_name='tokens', to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
         ),
     ]

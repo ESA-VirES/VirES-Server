@@ -57,6 +57,7 @@ class Command(ConsoleOutput, BaseCommand):
     def handle(self, filename, load_defaults, **kwargs):
 
         if load_defaults:
+            self.info("Loading default permissions ...")
             filename = DEFAULT_PERMISSIONS
 
         with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
@@ -78,8 +79,8 @@ class Command(ConsoleOutput, BaseCommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing permission %s updated." if is_updated else
-                    "New permission %s created.", name, log=True
+                    "permission %s updated" if is_updated else
+                    "permission %s created", name, log=True
                 )
 
         if created_count:

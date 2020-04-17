@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-arguments,missing-docstring
+#pylint: disable=too-many-arguments
 
 from logging import getLogger, LoggerAdapter
 from numpy import array, empty
@@ -61,7 +61,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
 
     def __init__(self, name, filename, reader_factory, varmap,
                  logger=None):
-        super(AuxiliaryDataTimeSeries, self).__init__()
+        super().__init__()
         self._name = name
         self._filename = filename
         self._reader = reader_factory(filename, self.product_set)

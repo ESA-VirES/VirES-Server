@@ -24,7 +24,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
 from numpy import empty, concatenate, unique
 
@@ -34,6 +33,6 @@ def merge_indices(*indices):
     indices = [index for index in indices if index is not None]
     if len(indices) > 1:
         return unique(concatenate(indices))
-    elif len(indices) == 1:
+    if len(indices) == 1:
         return indices[0]
     return empty(0, dtype='int64')

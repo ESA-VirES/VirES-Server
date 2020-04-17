@@ -36,7 +36,7 @@ def get_required_permission():
 
 
 def get_user_permissions(user):
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         return set()
     try:
         vires_account = user.socialaccount_set.get(provider=ViresProvider.id)

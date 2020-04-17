@@ -14,5 +14,9 @@
     {
         "name": "swarm_disc",
         "description": "Access to Swarm DISC"
+    },
+    {
+        "name": "swarm_advanced",
+        "description": "Access to Swarm Advanced Datasets"
     }
 ]

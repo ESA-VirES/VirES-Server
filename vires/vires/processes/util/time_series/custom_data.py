@@ -24,7 +24,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
 import json
 from ctypes import c_long
@@ -32,7 +31,7 @@ from logging import getLogger, LoggerAdapter
 from numpy import empty, argsort, searchsorted, broadcast_to, asarray
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_datetime, datetime_to_cdf_rawtime,
-    CDF_EPOCH_TYPE,
+    cdf_type_map, CDF_EPOCH_TYPE,
 )
 from vires.models import CustomDataset
 from vires.dataset import Dataset
@@ -43,6 +42,10 @@ from .product import BaseProductTimeSeries, DEFAULT_PRODUCT_TYPE_PARAMETERS
 
 class CustomDatasetTimeSeries(BaseProductTimeSeries):
     """ Custom dataset time-series class. """
+    # fake collection metadata
+    metadata = {
+        "spacecraft": "U",
+    }
     COLLECTION_IDENTIFIER = "USER_DATA"
     TIME_VARIABLE = "Timestamp"
 
@@ -53,7 +56,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     def __init__(self, user, logger=None):
         params = DEFAULT_PRODUCT_TYPE_PARAMETERS
 
-        super(CustomDatasetTimeSeries, self).__init__(
+        super().__init__(
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
                 "username": user.username if user else "<anonymous-user>"
             }),
@@ -199,7 +202,9 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
             else: # NRV variable
                 value = asarray(cdf_var[...])
                 data = broadcast_to(value, (idx.size,) + value.shape[1:])
-            dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
+            dataset.set(
+                variable, data, cdf_type_map(cdf_var.type()), cdf_var.attrs
+            )
         return dataset
 
     def _subset_qs(self, start, stop):

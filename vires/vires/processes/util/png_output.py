@@ -24,10 +24,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+
 from matplotlib.cm import ScalarMappable
 from numpy import array, isnan
 from numpy.ma import masked_where
-#from osgeo import gdal; gdal.UseExceptions() #pylint: disable=multiple-statements
 from eoxserver.contrib import gdal
 
 
@@ -64,6 +64,6 @@ def array_to_png(filename, data):
     if len(data.shape) == 2:
         mem_ds.GetRasterBand(1).WriteArray(data)
     else:
-        for idx in xrange(nbands):
+        for idx in range(nbands):
             mem_ds.GetRasterBand(idx + 1).WriteArray(data[:, :, idx])
     png_driver.CreateCopy(filename, mem_ds, 0)

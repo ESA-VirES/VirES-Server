@@ -24,8 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals,too-many-arguments,missing-docstring
-#pylint: disable=too-few-public-methods
+#pylint: disable=too-many-locals,too-many-arguments,too-few-public-methods
 
 from logging import getLogger, LoggerAdapter
 from itertools import chain
@@ -53,7 +52,7 @@ class MagneticModelResidual(Model):
             return '%s: %s' % (self.extra["residual_name"], msg), kwargs
 
     def __init__(self, model_name, variable, logger=None):
-        super(MagneticModelResidual, self).__init__()
+        super().__init__()
         self.model_name = model_name
         self.variable = variable
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
@@ -98,7 +97,7 @@ class MagneticModelResidual(Model):
         }
 
 
-class ExtractSourcesMixIn(object):
+class ExtractSourcesMixIn():
     """ Mix-in class defining the extract sources method. """
 
     def extract_sources(self, start, end):
@@ -140,7 +139,10 @@ class ComposedMagneticModel(Model, ExtractSourcesMixIn):
         """ full composed model expression """
         def _generate_parts():
             components = iter(self.components)
-            scale, model = next(components)
+            try:
+                scale, model = next(components)
+            except StopIteration:
+                return
             yield "%s%s" % ("- " if scale < 0 else "", model.short_expression)
             for scale, model in components:
                 yield "%s %s" % (
@@ -204,7 +206,7 @@ class ComposedMagneticModel(Model, ExtractSourcesMixIn):
             return '%s: %s' % (self.extra["model_name"], msg), kwargs
 
     def __init__(self, name, components, logger=None):
-        super(ComposedMagneticModel, self).__init__()
+        super().__init__()
         self.name = name
         self.components = components
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
@@ -310,7 +312,7 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
 
     def __init__(self, model_name, model, sources=None, parameters=None,
                  logger=None, varmap=None):
-        super(SourceMagneticModel, self).__init__()
+        super().__init__()
         self.short_name = model_name
         self.model = model
         self.sources = sources or []

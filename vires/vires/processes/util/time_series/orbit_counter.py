@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,too-few-public-methods
+# pylint: disable=too-few-public-methods
 
 from vires.cdf_util import (
     CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDF_INT1_TYPE, CDF_INT4_TYPE,

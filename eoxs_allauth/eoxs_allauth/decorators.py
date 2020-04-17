@@ -30,25 +30,20 @@
 
 import re
 from functools import wraps
-from logging import getLogger, NOTSET
+from logging import NOTSET
 from django.utils.timezone import now
 from django.core.exceptions import PermissionDenied
 from .models import AuthenticationToken
 
-LOGGER = getLogger("eoxs_allauth.access")
 
-
-def log_access(level_auth=NOTSET, level_unauth=NOTSET):
+def log_access(level_authenticated=NOTSET, level_unauthenticated=NOTSET):
     """ Set the level for the request logging made by the access logging
     middleware.
     """
     def _decorator_(view_func):
-        @wraps(view_func)
-        def _wrapper_(request, *args, **kwargs):
-            return view_func(request, *args, **kwargs)
-        _wrapper_.log_level_auth = level_auth
-        _wrapper_.log_level_unauth = level_unauth
-        return _wrapper_
+        view_func.log_level_authenticated = level_authenticated
+        view_func.log_level_unauthenticated = level_unauthenticated
+        return view_func
     return _decorator_
 
 
@@ -56,10 +51,9 @@ def authenticated_only(view_func):
     """ Allow only authenticated users or deny access. """
     @wraps(view_func)
     def _wrapper_(request, *args, **kwargs):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             return view_func(request, *args, **kwargs)
-        else:
-            raise PermissionDenied
+        raise PermissionDenied
     return _wrapper_
 
 
@@ -93,7 +87,7 @@ def token_authentication(view_func):
 
     @wraps(view_func)
     def _wrapper_(request, *args, **kwargs):
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             user = _get_user(_extract_token(request))
             if user and user.is_active:
                 request.user = user

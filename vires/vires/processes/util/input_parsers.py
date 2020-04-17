@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,too-many-branches,unused-argument
+# pylint: disable=too-many-branches,unused-argument
 
 import re
 from collections import OrderedDict
@@ -59,41 +59,25 @@ def parse_style(input_id, style):
         )
 
 
-def parse_collections(input_id, source, custom_dataset=None, user=None):
+def parse_collections(input_id, source, permissions,
+                      custom_dataset=None, user=None):
     """ Parse input collections definitions. """
     result = {}
+
     if not isinstance(source, dict):
         raise InvalidInputValueError(
             input_id, "JSON object expected!"
         )
-    # resolve collection ids
-    for label, collection_ids in source.iteritems():
-        if not isinstance(collection_ids, (list, tuple)):
-            raise InvalidInputValueError(
-                input_id, "A list of collection identifiers expected for "
-                "label %r!" % label
-            )
-        available_collections = dict(
-            (obj.identifier, obj) for obj in ProductCollection.objects.filter(
-                identifier__in=collection_ids
-            )
-        )
-        if custom_dataset and custom_dataset in collection_ids:
-            result[label] = custom_dataset
-        else:
-            try:
-                result[label] = [
-                    available_collections[id_] if id_ != custom_dataset else id_
-                    for id_ in collection_ids
-                ]
-            except KeyError as exc:
-                raise InvalidInputValueError(
-                    input_id, "Invalid collection identifier %r! (label: %r)" %
-                    (exc.args[0], label)
-                )
 
-    range_types = []
-    master_rtype = None
+    for label, collection_ids in source.items():
+        try:
+            result[label] = _parse_collection_ids(
+                collection_ids, custom_dataset, permissions
+            )
+        except (ValueError, TypeError) as error:
+            raise InvalidInputValueError("label %r: %s" % (label, str(error)))
+
+    master_ptype = None
     for label, collections in result.items():
         if collections == custom_dataset:
             continue
@@ -104,45 +88,90 @@ def parse_collections(input_id, source, custom_dataset=None, user=None):
                 input_id, "Collection list must have at least one item!"
                 " (label: %r)" % label
             )
-        # master (first collection) must be always of the same range-type
-        if master_rtype is None:
-            master_rtype = collections[0].range_type
-            range_types = [master_rtype] # master is always the first
+        # master (first collection) must be always of the same product type
+        collection, dataset_id = collections[0]
+        if master_ptype is None:
+            master_dataset = (collection.type.identifier, dataset_id)
         else:
-            if master_rtype != collections[0].range_type:
+            if master_dataset != (collection.type.identifier, dataset_id):
                 raise InvalidInputValueError(
-                    input_id, "Master collection type mismatch!"
+                    input_id, "Master collection product type mismatch!"
                     " (label: %r; )" % label
                 )
 
         # slaves are optional
         # slaves' order does not matter
 
-        # collect slave range-types
-        slave_rtypes = []
+        # collect slave product-types
+        slave_datasets = set()
 
         # for one label multiple collections of the same range-type not allowed
-        for rtype in (collection.range_type for collection in collections[1:]):
-            if rtype == master_rtype or rtype in slave_rtypes:
+        for collection, dataset_id in collections[1:]:
+            dataset = (collection.type.identifier, dataset_id)
+            if dataset == master_dataset or dataset in slave_datasets:
                 raise InvalidInputValueError(
                     input_id, "Multiple collections of the same type "
                     "are not allowed! (label: %r; )" % label
                 )
-            slave_rtypes.append(rtype)
-
-        # collect all unique range-types
-        range_types.extend(
-            rtype for rtype in slave_rtypes if rtype not in range_types
-        )
+            slave_datasets.add(dataset)
 
     # convert collections to product time-series
-    return dict(
-        (
-            label,
-            [CustomDatasetTimeSeries(user)] if collections == custom_dataset else
-            [ProductTimeSeries(collection) for collection in collections]
-        ) for label, collections in result.iteritems()
-    )
+    return {
+        label: (
+            [
+                CustomDatasetTimeSeries(user)
+            ] if collections == custom_dataset else [
+                ProductTimeSeries(collection, dataset_id)
+                for collection, dataset_id in collections
+            ]
+        ) for label, collections in result.items()
+    }
+
+
+def _parse_collection_ids(ids, custom_dataset, permissions):
+
+    if not isinstance(ids, (list, tuple)):
+        raise TypeError("Invalid list of collection identifiers! %r" % ids)
+
+    collection_dataset_ids = []
+    for id_ in ids:
+        if not isinstance(id_, str):
+            raise TypeError("Invalid collection identifier %r!" % id_)
+        collection_id, _, dataset_id = id_.partition(':')
+        collection_dataset_ids.append((collection_id, dataset_id))
+
+    available_collections = {
+        collection.identifier: collection for collection
+        in ProductCollection.select_permitted(permissions).filter(
+            identifier__in=set(cid for cid, _ in collection_dataset_ids)
+        )
+    }
+
+    collections = []
+    for collection_id, dataset_id in collection_dataset_ids:
+
+        if collection_id == custom_dataset:
+            if dataset_id:
+                raise ValueError(
+                    "Custom dataset does not allow dataset identifier "
+                    "specification!"
+                )
+            return custom_dataset
+
+        collection = available_collections.get(collection_id)
+        if not collection:
+            raise ValueError("Invalid collection identifier %r!" % collection_id)
+
+        type_def = collection.type.definition
+        if not dataset_id:
+            dataset_id = type_def["defaultDatadaset"]
+
+        if dataset_id not in type_def["datasets"]:
+            raise ValueError("Invalid dataset identifier %r!" % dataset_id)
+
+        collections.append((collection, dataset_id))
+
+    return collections
 
 
 def parse_model_expression(input_id, model_input, shc=None, shc_input_id="shc"):
@@ -323,7 +352,7 @@ def parse_filters2(input_id, filter_string):
 
     return [
         _get_filter(name, vmin, vmax) for name, (vmin, vmax)
-        in parse_filters(input_id, filter_string).iteritems()
+        in parse_filters(input_id, filter_string).items()
     ]
 
 

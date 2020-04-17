@@ -24,9 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
-from django.conf import settings
 from vires.models import ProductCollection
 from .time_series import ProductTimeSeries
 
@@ -50,15 +48,15 @@ def group_subtracted_variables(sources, residual_variables):
             continue # no source found
 
         # check the spacecraft
-        spacecraft = settings.VIRES_COL2SAT.get(source.collection.identifier)
+        spacecraft = source.metadata['spacecraft']
         if master_spacecraft != spacecraft:
             continue # master spacecraft mismatch
 
         # find the slave collection
         try:
-            slave_collection_id = settings.VIRES_TYPE2COL[
-                source.collection.range_type.name
-            ][slave_spacecraft]
+            slave_collection_id = (
+                source.metadata['subtractableCollections'][slave_spacecraft]
+            )
         except KeyError:
             continue # no reference collection found
 

@@ -24,25 +24,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
 from logging import getLogger
-from eoxserver.core import Component, implements
-from eoxserver.services.ows.wps.interfaces import ProcessInterface
+from eoxserver.services.ows.wps.parameters import RequestParameter
 from vires.util import cached_property
+from vires.access_util import AccessLoggerAdapter, get_username, get_remote_addr
 
 
-class WPSProcess(Component):
+class WPSProcess():
     """ Process retrieving registered Swarm data based on collection, time
     interval and additional optional parameters.
     This precess is designed to be used by the web-client.
     """
-    implements(ProcessInterface)
-    abstract = True
+
+    inputs = [
+        ("username", RequestParameter(get_username)),
+        ("remote_addr", RequestParameter(get_remote_addr)),
+    ]
+
+    def get_access_logger(self, *args, **kwargs):
+        """ Get access logger wrapped by the AccessLoggerAdapter """
+        return AccessLoggerAdapter(self._access_logger, *args, **kwargs)
 
     @cached_property
-    def access_logger(self):
-        """ Get access logger. """
+    def _access_logger(self):
+        """ Get raw access logger. """
         return getLogger(
             "access.wps.%s" % self.__class__.__module__.split(".")[-1]
         )

@@ -27,16 +27,13 @@
 # pylint: disable=missing-docstring
 
 from functools import wraps
-from logging import getLogger, NOTSET
+from logging import NOTSET
 from urllib.parse import quote
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from oauth2_provider.settings import oauth2_settings
-from .settings import ACCESS_LOGGER_NAME
-
-LOGGER = getLogger(ACCESS_LOGGER_NAME)
 
 
 def oauth2_protected(*required_scopes):

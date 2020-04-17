@@ -25,15 +25,14 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-locals, too-many-arguments, too-few-public-methods
-# pylint: disable=too-many-instance-attributes,missing-docstring
+# pylint: disable=too-many-instance-attributes
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
 from numpy import searchsorted, broadcast_to, asarray
-from eoxserver.backends.access import connect
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
-    timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
+    timedelta_to_cdf_rawtime, cdf_type_map, CDF_EPOCH_TYPE,
 )
 from vires.time_util import naive_to_utc
 from vires.models import Product, ProductCollection
@@ -41,7 +40,7 @@ from vires.dataset import Dataset
 from .base import TimeSeries
 
 
-class SwarmDefaultParameters(object):
+class SwarmDefaultParameters():
     """ Default SWARM product parameters. """
     TIME_VARIABLE = "Timestamp"
     TIME_TOLERANCE = timedelta(microseconds=0) # time selection tolerance
@@ -81,6 +80,13 @@ class SwarmAEJLPParameters(SwarmDefaultParameters):
     }
 
 
+class SwarmAEJLPQualityParameters(SwarmDefaultParameters):
+    """ Common AEJ_LPx product quality parameters. """
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 't_qual',
+    }
+
+
 class SwarmAEJPBParameters(SwarmDefaultParameters):
     """ Common AEJxPBx product parameters. """
     VARIABLE_TRANSLATES = {
@@ -88,8 +94,8 @@ class SwarmAEJPBParameters(SwarmDefaultParameters):
     }
 
 
-class SwarmAEJPBSGroundMagneticDisturbancesParameters(SwarmDefaultParameters):
-    """ AEJxPBS peak ground magnetic disturbances product parameters. """
+class SwarmAEJPBSGroundMagneticDisturbanceParameters(SwarmDefaultParameters):
+    """ AEJxPBS peak ground magnetic disturbance product parameters. """
     VARIABLE_TRANSLATES = {
         'Timestamp': 'Timestamp_B',
         'Latitude': 'Latitude_B',
@@ -99,13 +105,15 @@ class SwarmAEJPBSGroundMagneticDisturbancesParameters(SwarmDefaultParameters):
 
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
-    "AUX_IMF_2_": AuxImf2Parameters,
-    "SWARM_AEJ_LPL": SwarmAEJLPParameters,
-    "SWARM_AEJ_LPS": SwarmAEJLPParameters,
-    "SWARM_AEJ_PBL": SwarmAEJPBParameters,
-    "SWARM_AEJ_PBS": SwarmAEJPBParameters,
-    "SWARM_AEJ_PBS:PGMFD": SwarmAEJPBSGroundMagneticDisturbancesParameters,
-    "SWARM_AOB_FAC": SwarmAEJLPParameters,
+    "SW_AEJxLPL_2F": SwarmAEJLPParameters,
+    "SW_AEJxLPS_2F": SwarmAEJLPParameters,
+    "SW_AEJxLPL_2F:Quality": SwarmAEJLPQualityParameters,
+    "SW_AEJxLPS_2F:Quality": SwarmAEJLPQualityParameters,
+    "SW_AEJxPBL_2F": SwarmAEJPBParameters,
+    "SW_AEJxPBS_2F": SwarmAEJPBParameters,
+    "SW_AEJxPBS_2F:GroundMagneticDisturbance": SwarmAEJPBSGroundMagneticDisturbanceParameters,
+    "SW_AOBxFAC_2F": SwarmAEJLPParameters,
+    "SW_AUX_IMF_2_": AuxImf2Parameters,
 }
 
 
@@ -113,7 +121,7 @@ class BaseProductTimeSeries(TimeSeries):
     """ Base product time-series """
 
     def __init__(self, logger=None, **kwargs):
-        super(BaseProductTimeSeries, self).__init__()
+        super().__init__()
         self.logger = logger or getLogger(__name__)
         self.time_variable = kwargs.get("time_variable")
         self.time_tolerance = kwargs.get("time_tolerance")
@@ -199,21 +207,36 @@ class BaseProductTimeSeries(TimeSeries):
 class ProductTimeSeries(BaseProductTimeSeries):
     """ Product time-series class. """
 
+    @staticmethod
+    def _get_id(base_id, dataset_id, is_default_dataset):
+        if is_default_dataset:
+            return base_id
+        return "%s:%s" % (base_id, dataset_id)
+
+
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return '%s: %s' % (self.extra["collection_id"], msg), kwargs
 
-    def __init__(self, collection, logger=None):
-        if isinstance(collection, basestring):
+    def __init__(self, collection, dataset_id=None, logger=None):
+
+        if isinstance(collection, str):
             collection = self._get_collection(collection)
 
+        default_dataset_id = collection.type.definition["defaultDatadaset"]
+        if not dataset_id:
+            dataset_id = default_dataset_id
+
+        is_default_dataset = (dataset_id == default_dataset_id)
+
         params = PRODUCT_TYPE_PARAMETERS.get(
-            collection.range_type.name, DEFAULT_PRODUCT_TYPE_PARAMETERS
+            self._get_id(collection.type.identifier, dataset_id, is_default_dataset),
+            DEFAULT_PRODUCT_TYPE_PARAMETERS
         )
 
-        super(ProductTimeSeries, self).__init__(
+        super().__init__(
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
-                "collection_id": collection.identifier,
+                "collection_id": self._get_id(collection.identifier, dataset_id, is_default_dataset),
             }),
             time_variable=params.TIME_VARIABLE,
             time_tolerance=params.TIME_TOLERANCE,
@@ -224,19 +247,29 @@ class ProductTimeSeries(BaseProductTimeSeries):
         )
 
         self.collection = collection
+        self.dataset_id = dataset_id
+        self.is_default_dataset = is_default_dataset
+
         self.translate_fw = dict(params.VARIABLE_TRANSLATES)
-        self.translate_bw = dict((v, k) for k, v in self.translate_fw.iteritems())
+        self.translate_bw = dict((v, k) for k, v in self.translate_fw.items())
+
+    @property
+    def metadata(self):
+        """ Get collection metadata. """
+        return self.collection.metadata
 
     @property
     def collection_identifier(self):
         """ Get collection identifier. """
-        return self.collection.identifier
+        return self._get_id(
+            self.collection.identifier, self.dataset_id, self.is_default_dataset
+        )
 
     @property
     def variables(self):
+        dataset = self.collection.type.definition['datasets'][self.dataset_id]
         return [
-            self.translate_bw.get(band.identifier, band.identifier)
-            for band in self.collection.range_type
+            self.translate_bw.get(variable, variable) for variable in dataset
         ]
 
     def _extract_dataset(self, cdf, extracted_variables, idx_low, idx_high):
@@ -250,7 +283,9 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 value = asarray(cdf_var[...])
                 size = max(0, idx_high - idx_low)
                 data = broadcast_to(value, (size,) + value.shape[1:])
-            dataset.set(variable, data, cdf_var.type(), cdf_var.attrs)
+            dataset.set(
+                variable, data, cdf_type_map(cdf_var.type()), cdf_var.attrs
+            )
         return dataset
 
     def _get_empty_dataset(self, variables):
@@ -262,7 +297,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             # we need at least one product from the collection
             # to initialize correctly the empty variables
             product = Product.objects.filter(
-                collections=self.collection
+                collection=self.collection
             ).order_by('begin_time')[0]
         except IndexError:
             self.logger.error(
@@ -275,7 +310,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
         else:
             # generate an empty dataset from the sample product
             self.logger.debug("template product: %s ", product.identifier)
-            with cdf_open(connect(product.data_items.all()[0])) as cdf:
+            with cdf_open(product.get_location()) as cdf:
                 return self._extract_dataset(cdf, variables, 0, 0)
 
 
@@ -336,7 +371,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
             self.product_set.add(product.identifier) # record source product
 
-            with cdf_open(connect(product.data_items.all()[0])) as cdf:
+            with cdf_open(product.get_location()) as cdf:
                 # temporal sub-setting
                 temp_var = cdf.raw_var(
                     self.translate_fw.get(self.time_variable, self.time_variable)
@@ -373,10 +408,13 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
     def _subset_qs(self, start, stop):
         """ Subset Django query set. """
-        return Product.objects.filter(
-            collections=self.collection,
-            begin_time__lt=naive_to_utc(stop + self.time_tolerance),
-            end_time__gte=naive_to_utc(start - self.time_tolerance),
+        _start = naive_to_utc(start) - self.time_tolerance
+        _stop = naive_to_utc(stop) + self.time_tolerance
+        return Product.objects.prefetch_related('collection__type').filter(
+            collection=self.collection,
+            begin_time__lt=_stop,
+            end_time__gte=_start,
+            begin_time__gte=(_start - self.collection.max_product_duration),
         )
 
     @staticmethod

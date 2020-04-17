@@ -2,10 +2,8 @@
 #
 # Dst index file handling.
 #
-# Project: VirES
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #          Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -35,7 +33,7 @@ from .aux_common import (
     SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
 )
 
-DST_FLAGS = {"D": 0, "P": 1} # Definitive / Preliminary(?)
+DST_FLAGS = {b"D": 0, b"P": 1} # Definitive / Preliminary(?)
 
 
 def update_dst(src_file, dst_file):
@@ -54,8 +52,8 @@ def update_dst(src_file, dst_file):
             )
             cdf.attrs['VALIDITY'] = [start, end]
 
-    if isinstance(src_file, basestring):
-        with open(src_file, "rb") as file_in:
+    if isinstance(src_file, str):
+        with open(src_file) as file_in:
             _write_dst(file_in, dst_file)
     else:
         _write_dst(src_file, dst_file)

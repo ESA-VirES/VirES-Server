@@ -24,9 +24,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-locals,too-many-arguments,missing-docstring
+# pylint: disable=too-many-locals,too-many-arguments
 
-from django.conf import settings
+from vires.cache_util import cache_path
+from vires.data.vires_settings import CACHED_PRODUCT_FILE
 from .time_series import IndexF107
 
 F107_VARIABLE = "F107"
@@ -35,7 +36,7 @@ F107_PRODUCT_TYPE = "AUX_F10_2_"
 
 def get_f107_value(mjd2000):
     """ Get F10.7 index value for the given MJD2000 time. """
-    index_f10 = IndexF107(settings.VIRES_CACHED_PRODUCTS[F107_PRODUCT_TYPE])
+    index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE[F107_PRODUCT_TYPE]))
     dataset = index_f10.interpolate(
         mjd2000, variables=[F107_VARIABLE], cdf_type=None
     )

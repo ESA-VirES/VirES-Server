@@ -2,9 +2,7 @@
 #
 # Testing Time Utilities
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -74,7 +72,7 @@ class TestTimeUtils(unittest.TestCase):
                     mjd2000_to_decimal_year(mjd2000), result, delta=1e-15
                 )
             except:
-                print "Failed: ", (mjd2000, result)
+                print("Failed: ", (mjd2000, result))
                 raise
 
     def test_decimal_year_to_mjd2000(self):
@@ -99,7 +97,7 @@ class TestTimeUtils(unittest.TestCase):
                     decimal_year_to_mjd2000(dec_year), result, delta=5e-11
                 )
             except:
-                print "Failed: ", (dec_year, result)
+                print("Failed: ", (dec_year, result))
                 raise
 
     def test_decimal_year_to_datetime(self):
@@ -141,7 +139,7 @@ class TestTimeUtils(unittest.TestCase):
                     dec_year, delta=5e-14
                 )
             except:
-                print "Failed: ", (dec_year, result)
+                print("Failed: ", (dec_year, result))
                 raise
 
     def test_datetime_to_decimal_year(self):
@@ -184,7 +182,7 @@ class TestTimeUtils(unittest.TestCase):
                     delta=5e-6 # assuming 10 usec precision
                 )
             except:
-                print "Failed: ", (dt_obj, result)
+                print("Failed: ", (dt_obj, result))
                 raise
 
     def test_mjd2000_to_unix_epoch(self):
@@ -209,7 +207,7 @@ class TestTimeUtils(unittest.TestCase):
                     mjd2000_to_unix_epoch(mjd2000), result, delta=5e-6
                 )
             except:
-                print "Failed: ", (mjd2000, result)
+                print("Failed: ", (mjd2000, result))
                 raise
 
     def test_unix_epoch_to_mjd2000(self):
@@ -234,7 +232,7 @@ class TestTimeUtils(unittest.TestCase):
                     unix_epoch_to_mjd2000(ux_epoch), result, delta=5e-11
                 )
             except:
-                print "Failed: ", (ux_epoch, result)
+                print("Failed: ", (ux_epoch, result))
                 raise
 
 
@@ -272,7 +270,7 @@ class TestTimeUtils(unittest.TestCase):
                     ux_epoch, delta=5e-7
                 )
             except:
-                print "Failed: ", (ux_epoch, result)
+                print("Failed: ", (ux_epoch, result))
                 raise
 
     def test_datetime_to_unix_epoch(self):
@@ -315,7 +313,7 @@ class TestTimeUtils(unittest.TestCase):
                     timegm(dt_obj.timetuple())
                 )
             except:
-                print "Failed: ", (dt_obj, result)
+                print("Failed: ", (dt_obj, result))
                 raise
 
     def test_mjd2000_to_datetime(self):
@@ -351,7 +349,7 @@ class TestTimeUtils(unittest.TestCase):
                     mjd2000, delta=5e-11
                 )
             except:
-                print "Failed: ", (mjd2000, result)
+                print("Failed: ", (mjd2000, result))
                 raise
 
     def test_datetime_to_mjd2000(self):
@@ -389,7 +387,7 @@ class TestTimeUtils(unittest.TestCase):
                     delta=5e-6 # assuming 10 usec precision
                 )
             except:
-                print "Failed: ", (dt_obj, result)
+                print("Failed: ", (dt_obj, result))
                 raise
 
     def test_year_to_day2k(self):
@@ -400,7 +398,7 @@ class TestTimeUtils(unittest.TestCase):
             try:
                 self.assertEqual(year_to_day2k(year), result)
             except:
-                print "Failed: ", (year, result)
+                print("Failed: ", (year, result))
                 raise
 
     def test_day2k_to_year(self):
@@ -413,7 +411,7 @@ class TestTimeUtils(unittest.TestCase):
             try:
                 self.assertEqual(day2k_to_year(day2k), result)
             except:
-                print "Failed: ", (day2k, result)
+                print("Failed: ", (day2k, result))
                 raise
 
     def test_date_to_day2k(self):
@@ -428,7 +426,7 @@ class TestTimeUtils(unittest.TestCase):
             try:
                 self.assertEqual(date_to_day2k(*date_), result)
             except:
-                print "Failed: ", (date_, result)
+                print("Failed: ", (date_, result))
                 raise
 
     def test_day2k_to_date(self):
@@ -443,7 +441,7 @@ class TestTimeUtils(unittest.TestCase):
             try:
                 self.assertEqual(day2k_to_date(day2k), result)
             except:
-                print "Failed: ", (day2k, result)
+                print("Failed: ", (day2k, result))
                 raise
 
     def test_day_fraction_to_time(self):
@@ -468,7 +466,7 @@ class TestTimeUtils(unittest.TestCase):
                     day_fraction_to_time(day_fraction), result
                 )
             except:
-                print "Failed: ", (day_fraction, result)
+                print("Failed: ", (day_fraction, result))
                 raise
 
     def test_time_to_day_fraction(self):
@@ -493,7 +491,7 @@ class TestTimeUtils(unittest.TestCase):
                     time_to_day_fraction(*time_), result, delta=1e-14
                 )
             except:
-                print "Failed: ", (time_, result)
+                print("Failed: ", (time_, result))
                 raise
 
     def test_time_to_seconds(self):
@@ -515,7 +513,7 @@ class TestTimeUtils(unittest.TestCase):
                     time_to_seconds(*time_), result, delta=1e-9
                 )
             except:
-                print "Failed: ", (time_, result)
+                print("Failed: ", (time_, result))
                 raise
 
     def test_days_per_year(self):
@@ -534,7 +532,7 @@ class TestTimeUtils(unittest.TestCase):
             try:
                 self.assertEqual(days_per_year(year), result)
             except:
-                print "Failed: ", (year, result)
+                print("Failed: ", (year, result))
                 raise
 
     def test_is_leap_year(self):
@@ -553,7 +551,7 @@ class TestTimeUtils(unittest.TestCase):
             try:
                 self.assertEqual(is_leap_year(year), result)
             except:
-                print "Failed: ", (year, result)
+                print("Failed: ", (year, result))
                 raise
 
 

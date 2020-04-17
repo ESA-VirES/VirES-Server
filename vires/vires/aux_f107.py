@@ -2,9 +2,7 @@
 #
 # AUX_F10_2_ index file handling.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2018 EOX IT Services GmbH
 #
@@ -60,8 +58,8 @@ def update_aux_f107_2_(src_file, dst_file):
                 )
             cdf.attrs['VALIDITY'] = [start, end]
 
-    if isinstance(src_file, basestring):
-        with open(src_file, "rb") as file_in:
+    if isinstance(src_file, str):
+        with open(src_file) as file_in:
             _write_aux_f107_2_(file_in, src_file, dst_file)
     else:
         _write_aux_f107_2_(src_file, None, dst_file)

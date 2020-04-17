@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-arguments,missing-docstring
+#pylint: disable=too-many-arguments
 
 from vires.cdf_util import CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDF_UINT2_TYPE
 from vires.aux_kp import KpReader

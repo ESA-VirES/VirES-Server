@@ -32,7 +32,7 @@ from numpy import asarray
 from numpy.testing import assert_equal, assert_allclose
 
 
-class ArrayMixIn(object):
+class ArrayMixIn():
     """ Mix-in class adding handy array assertions. """
     # pylint: disable=invalid-name
 

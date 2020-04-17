@@ -2,9 +2,7 @@
 #
 #  Gap-aware 1D interpolation.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -26,18 +24,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-instance-attributes,too-many-arguments,too-many-locals
 
 from logging import getLogger
 from numpy import (
     array, arange, empty, isnan, invert, diff, inf, nan, concatenate,
-    searchsorted,
+    searchsorted, full,
 )
 import scipy
 from scipy.interpolate import interp1d
-from vires.util import full
 
 
-class Interp1D(object):
+class Interp1D():
     """ 1D interpolator.
     This class is optimised for repeated 1D interpolation of multiple
     dataset using the same target sampling (x_dst).

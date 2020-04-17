@@ -56,7 +56,7 @@ setup(
     maintainer="EOX IT Services GmbH",
     maintainer_email="packages@eox.at",
 
-    description="VirES server - EOxServer extension",
+    description="VirES for Swarm server",
     #long_description=read("README.rst"),
 
     classifiers=[
@@ -72,7 +72,7 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Topic :: Database',
         'Topic :: Internet',
         'Topic :: Internet :: WWW/HTTP',

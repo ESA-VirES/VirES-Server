@@ -28,8 +28,6 @@
 
 PACKAGE_NAME = "vires_oauth"
 
-ACCESS_LOGGER_NAME = PACKAGE_NAME + ".access"
-
 DEFAULT_SESSION_IDLE_TIMEOUT = 600 # seconds
 
 # Application scopes

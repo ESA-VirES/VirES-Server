@@ -2,9 +2,7 @@
 #
 # Orbit direction file handling
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -26,8 +24,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments
 
-from numpy import abs, asarray, searchsorted
+from numpy import abs as aabs, asarray, searchsorted
 from .aux_common import CdfEpochTimeMixIn, BaseReader
 
 
@@ -42,11 +41,11 @@ class OrbitDirectionReader(CdfEpochTimeMixIn, BaseReader):
     def _update_product_set(self, cdf, start, end):
 
         def _read_time_ranges(attr):
-            attr._raw = True
-            return asarray([item for item in attr])
+            attr._raw = True               # pylint: disable=protected-access
+            return asarray(list(attr))
 
         def _add_overlap(starts, ends, distance, overlap):
-            idx, = (abs((starts - ends) - distance) < 5.).nonzero()
+            idx, = (aabs((starts - ends) - distance) < 5.).nonzero()
             ends[idx] += overlap
             starts[idx] -= overlap
 

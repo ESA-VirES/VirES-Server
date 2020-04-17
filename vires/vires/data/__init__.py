@@ -2,9 +2,7 @@
 #
 # Miscellaneous data files.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2016 EOX IT Services GmbH
 #
@@ -31,5 +29,5 @@ from os.path import join, dirname
 
 _DIRNAME = dirname(__file__)
 
-# range-types used by the VirES-Server
-RANGE_TYPES = join(_DIRNAME, "range_types.json")
+PRODUCT_TYPES = join(_DIRNAME, "product_types.json")
+PRODUCT_COLLECTIONS = join(_DIRNAME, "product_collections.json")

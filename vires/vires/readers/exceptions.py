@@ -27,4 +27,3 @@
 
 class InvalidFileFormat(Exception):
     """ Invalid data format error. """
-    pass

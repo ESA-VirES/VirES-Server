@@ -59,6 +59,7 @@ class Command(ConsoleOutput, BaseCommand):
     def handle(self, filename, load_defaults, **kwargs):
 
         if load_defaults:
+            self.info("Loading default groups ...")
             filename = DEFAULT_GROUPS
 
         with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
@@ -82,8 +83,8 @@ class Command(ConsoleOutput, BaseCommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "Existing user group %s updated." if is_updated else
-                    "New user group %s created.", name, log=True
+                    "user group %s updated" if is_updated else
+                    "user group %s created", name, log=True
                 )
 
         if created_count:

@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals,missing-docstring
+#pylint: disable=too-many-locals
 
 from logging import getLogger, LoggerAdapter
 from numpy import stack
@@ -71,7 +71,7 @@ class QuasiDipoleCoordinates(Model):
             return 'QDLatLon: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
-        super(QuasiDipoleCoordinates, self).__init__()
+        super().__init__()
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
@@ -147,7 +147,7 @@ class MagneticLocalTime(Model):
             return 'MLT: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
-        super(MagneticLocalTime, self).__init__()
+        super().__init__()
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES

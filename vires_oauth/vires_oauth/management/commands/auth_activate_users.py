@@ -65,10 +65,9 @@ class Command(ConsoleOutput, BaseCommand):
                 profile.user.is_active = True
                 profile.user.save()
                 self.info(
-                    "User %s has been activated." % profile.user.username, log=True
+                    "user %s activated" % profile.user.username, log=True
                 )
             else:
                 self.info(
-                    "User %s is already active. No change needed." %
-                    profile.user.username
+                    "user %s is already active" % profile.user.username
                 )

@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals,missing-docstring
+#pylint: disable=too-many-locals
 
 from logging import getLogger, LoggerAdapter
 from numpy import stack, ones
@@ -64,7 +64,7 @@ class SunPosition(Model):
             return 'SunPosition: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
-        super(SunPosition, self).__init__()
+        super().__init__()
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES
@@ -148,7 +148,7 @@ class SubSolarPoint(Model):
             return 'SubSolarPoint: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
-        super(SubSolarPoint, self).__init__()
+        super().__init__()
         varmap = varmap or {}
         self._required_variables = [
             varmap.get(var, var) for var in self.DEFAULT_REQUIRED_VARIABLES

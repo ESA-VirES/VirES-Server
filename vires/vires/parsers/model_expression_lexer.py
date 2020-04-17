@@ -35,7 +35,7 @@ def get_model_expression_lexer():
     return __MODEL_EXPRESSION_LEXER.clone()
 
 
-class ModelExpressionLexer(object):
+class ModelExpressionLexer():
     """ Model expression lexer class. """
     tokens = [
         "model_id",

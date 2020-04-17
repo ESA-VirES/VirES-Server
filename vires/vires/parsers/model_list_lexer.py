@@ -35,7 +35,7 @@ def get_model_list_lexer():
     return __MODEL_LIST_LEXER.clone()
 
 
-class ModelListLexer(object):
+class ModelListLexer():
     """ Models lexer class. """
     tokens = [
         "model_id",

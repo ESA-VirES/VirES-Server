@@ -1,10 +1,9 @@
+#-------------------------------------------------------------------------------
 #
 # Time utilities.
 #
-# Project: VirES-Server
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #          Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -82,10 +81,11 @@ def is_leap_year(year):
     """ Return boolean flag indicating whether the given year is a leap year
     or not.
     """
-    if year > 1582:
-        return year % 4 == 0 and year % 100 != 0 or year % 400 == 0
-    else:
-        return year % 4 == 0
+    return (
+        year % 4 == 0 and year % 100 != 0 or year % 400 == 0
+        if year > 1582 else
+        year % 4 == 0
+    )
 
 
 def days_per_year(year):
@@ -107,8 +107,8 @@ def day_fraction_to_time(fraction):
     """ Convert day fraction to to time as (hour, min, sec, usec) tuple. """
     subsec, sec = math.modf(round(fraction * 86400.0, 6)) # round to usec
     sec, usec = int(sec), int(subsec * 1e6)
-    min_, sec = sec / 60, sec % 60,
-    hour, min_ = min_ / 60, min_ % 60,
+    min_, sec = sec // 60, sec % 60
+    hour, min_ = min_ // 60, min_ % 60
     return hour, min_, sec, usec
 
 
@@ -251,7 +251,7 @@ def decimal_year_to_mjd2000(decimal_year):
     return year_to_day2k(year) + fraction * days_per_year(year)
 
 
-class Timer(object):
+class Timer():
     """ Object used to measure elapsed time in seconds. """
 
     def __init__(self):

@@ -2,9 +2,7 @@
 #
 # Orbit direction file handling - test
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -30,7 +28,7 @@
 
 from unittest import TestCase, main
 from datetime import datetime
-from numpy import round, linspace
+from numpy import round as around, linspace
 from numpy.testing import assert_equal
 from scipy.interpolate import interp1d
 from vires.cdf_util import cdf_open, datetime_to_cdf_rawtime, CDF_EPOCH_TYPE
@@ -73,7 +71,7 @@ class TestOrbitDirection(TestCase):
             assert_equal(data, reference[slice_])
 
     def _test_interpolate(self, start, stop, count):
-        times = round(linspace(
+        times = around(linspace(
             datetime_to_cdf_rawtime(start, CDF_EPOCH_TYPE),
             datetime_to_cdf_rawtime(stop, CDF_EPOCH_TYPE),
             count,

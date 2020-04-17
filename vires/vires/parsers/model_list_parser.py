@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=missing-docstring,invalid-name
+#pylint: disable=missing-docstring,invalid-name,too-many-public-methods
 
 from collections import namedtuple
 from ply.yacc import yacc
@@ -84,7 +84,7 @@ def get_model_list_parser():
     return MODEL_LIST_PARSER
 
 
-class ModelListParser(object):
+class ModelListParser():
 
     tokens = list(ModelListLexer.token_labels)
 
@@ -102,8 +102,7 @@ class ModelListParser(object):
                     token.value, line, column
                 )
             )
-        else:
-            raise ParserError(-1, -1, "Syntax error!")
+        raise ParserError(-1, -1, "Syntax error!")
 
     @staticmethod
     def p_models_as_model_list(param):

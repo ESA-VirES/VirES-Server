@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('country', django_countries.fields.CountryField(blank=True, max_length=2)),
                 ('study_area', models.CharField(max_length=200, blank=True)),
                 ('executive_summary', models.CharField(max_length=3000, blank=True)),
-                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
         ),
     ]

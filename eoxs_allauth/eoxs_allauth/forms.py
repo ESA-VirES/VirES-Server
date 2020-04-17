@@ -38,16 +38,9 @@ from .models import UserProfile
 # Regular expression filter used to remove invalid user-name characters.
 RE_USER_NAME_FILTER = re.compile('[^a-zA-Z0-9_.]+')
 
-# FIXME: Is this still relevant? If not remove it!
-# When account is created via social, fire django-allauth signal to populate
-# Django User record.
-#from django.dispatch import receiver
-#from django.contrib.auth.models import User
-#from allauth.account.signals import user_signed_up
-
 
 class ProfileForm(ModelForm):
-    class Meta: # pylint: disable=old-style-class, no-init, too-few-public-methods
+    class Meta: # pylint: disable=no-init, too-few-public-methods
         model = UserProfile
         fields = [
             'title', 'institution', 'country', 'study_area',

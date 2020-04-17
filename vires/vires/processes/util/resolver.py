@@ -25,7 +25,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
-# pylint: disable=too-many-instance-attributes, missing-docstring
+# pylint: disable=too-many-instance-attributes
 
 from collections import OrderedDict, defaultdict
 from itertools import chain
@@ -51,7 +51,7 @@ def extract_product_names(resolvers):
     return list(sorted(product_set))
 
 
-class VariableResolver(object):
+class VariableResolver():
     """ Variable Resolver collects the available sources, models and filters
     and resolves the variable consumer/producer dependencies.
     """
@@ -69,7 +69,7 @@ class VariableResolver(object):
 
     def remove_producers(self, removed):
         """ Remove consumers. """
-        for variable, producer in self._producers.items():
+        for variable, producer in list(self._producers.items()):
             if producer in removed:
                 del self._producers[variable]
 
@@ -83,7 +83,7 @@ class VariableResolver(object):
 
     def remove_consumers(self, removed):
         """ Remove consumers. """
-        for variable, consumers in self._consumers.items():
+        for variable, consumers in list(self._consumers.items()):
             consumers.difference_update(removed)
             if not consumers:
                 del self._consumers[variable]
