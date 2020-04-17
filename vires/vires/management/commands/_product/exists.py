@@ -1,12 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# User management - activate one or more inactive users
+# Check existence of one more products.
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,23 +24,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-few-public-methods
+# pylint: disable=missing-docstring
 
-from django.contrib.auth.models import User
-from .common import UserSelectionSubcommandProtected
+import sys
+from vires.models import Product
+from .common import ProductSelectionSubcommand
 
 
-class DeactivateUserSubcommand(UserSelectionSubcommandProtected):
-    name = "deactivate"
-    help = "Deactivate active users."
+class ExistsProductSubcommand(ProductSelectionSubcommand):
+    name = "exists"
+    help = "Check product existence."
+
+    def add_arguments(self, parser):
+        parser.add_argument("identifier", nargs=1)
+        parser.add_argument(
+            "--not", dest="negate", action="store_true",
+            default=False, help="Negate the result."
+        )
+        self._add_selection_arguments(parser)
 
     def handle(self, **kwargs):
-        users = self.select_users(User.objects.all(), **kwargs)
+        products = list(self.select_products(
+            Product.objects.prefetch_related('collection'), **kwargs
+        ))
 
-        for user in users:
-            if user.is_active:
-                user.is_active = False
-                user.save()
-                self.info("user %s deactivated", user.username, log=True)
-            else:
-                self.info("user %s is already inactive", user.username)
+        if products:
+            for product in products:
+                self.info("product %s/%s exists" % (
+                    product.collection.identifier, product.identifier
+                ))
+        else:
+            self.info("product %s does not exist" % kwargs['identifier'][0])
+
+        result = bool(products)
+        if kwargs['negate']:
+            result = not result
+
+        sys.exit(0 if result else 1)

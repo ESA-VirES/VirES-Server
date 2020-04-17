@@ -1,12 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# User management - activate one or more inactive users
+# Product collection management API
 #
-# Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>
-#
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,23 +24,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-few-public-methods
 
-from django.contrib.auth.models import User
-from .common import UserSelectionSubcommandProtected
+from vires.models import ProductCollection
 
 
-class DeactivateUserSubcommand(UserSelectionSubcommandProtected):
-    name = "deactivate"
-    help = "Deactivate active users."
-
-    def handle(self, **kwargs):
-        users = self.select_users(User.objects.all(), **kwargs)
-
-        for user in users:
-            if user.is_active:
-                user.is_active = False
-                user.save()
-                self.info("user %s deactivated", user.username, log=True)
-            else:
-                self.info("user %s is already inactive", user.username)
+def get_product_collection(collection_id):
+    """ Get vires.models.ProductCollection object for the given collection
+    and product identifiers or raises DoesNotExist exception.
+    """
+    return ProductCollection.objects.select_related('type').get(identifier=collection_id)

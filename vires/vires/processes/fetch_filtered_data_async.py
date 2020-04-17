@@ -300,7 +300,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 "Time selection limit (%s) has been exceeded!" %
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
-            access_logger.error(message)
+            access_logger.warning(message)
             raise InvalidInputValueError('end_time', message)
 
         # log the request
@@ -561,7 +561,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     # check if the number of samples is within the allowed limit
                     total_count += dataset.length
                     if total_count > MAX_SAMPLES_COUNT:
-                        access_logger.error(
+                        access_logger.warning(
                             "The sample count %d exceeds the maximum allowed "
                             "count of %d samples!",
                             total_count, MAX_SAMPLES_COUNT,

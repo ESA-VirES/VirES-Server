@@ -28,8 +28,8 @@
 
 import sys
 from traceback import print_exc
-from django.db import transaction
 from vires.models import Product
+from vires.management.api.product import deregister_product
 from .common import ProductSelectionSubcommandProtected
 
 
@@ -53,8 +53,7 @@ class DeregisterProductSubcommand(ProductSelectionSubcommandProtected):
             collection_id = product.collection.identifier
 
             try:
-                with transaction.atomic():
-                    product.delete()
+                deregister_product(product, self.logger)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
@@ -65,11 +64,10 @@ class DeregisterProductSubcommand(ProductSelectionSubcommandProtected):
                 )
             else:
                 removed_count += 1
-                self.info("%s/%s de-registered", collection_id, identifier, log=True)
             finally:
                 total_count += 1
 
-        if removed_count:
+        if removed_count or total_count == 0:
             self.info(
                 "%d of %d matched product%s de-registered.",
                 removed_count, total_count, "s" if removed_count > 1 else ""

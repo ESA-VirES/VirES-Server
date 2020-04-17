@@ -42,19 +42,26 @@ class ImportProductTypeSubcommand(Subcommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "-f", "--file", dest="filename", default=PRODUCT_TYPES, help=(
+            "-f", "--file", dest="filename", default="-", help=(
                 "Optional input JSON file-name. "
-                "Defaults to the definition of the standard product types. "
             )
+        )
+        parser.add_argument(
+            "-d", "--default", dest="load_defaults", action="store_true",
+            default=False, help="Import default product types."
         )
 
     def handle(self, **kwargs):
         filename = kwargs['filename']
+        if kwargs['load_defaults']:
+            self.info("Loading default product types ...")
+            filename = PRODUCT_TYPES
 
         with sys.stdin if filename == "-" else open(filename, "rb") as file_:
             self.save_product_types(json.load(file_), **kwargs)
 
     def save_product_types(self, data, **kwargs):
+        total_count = 0
         failed_count = 0
         created_count = 0
         updated_count = 0
@@ -74,12 +81,14 @@ class ImportProductTypeSubcommand(Subcommand):
             else:
                 updated_count += is_updated
                 created_count += not is_updated
-                self.info(
-                    "Existing product type %s updated." if is_updated else
-                    "New product type %s created.", identifier, log=True
+                self.logger.info(
+                    "product type %s updated" if is_updated else
+                    "product type %s created", identifier
                 )
+            finally:
+                total_count += 1
 
-        if created_count:
+        if created_count or total_count == 0:
             self.info(
                 "%d of %d product type%s created.", created_count, len(data),
                 "s" if created_count > 1 else ""

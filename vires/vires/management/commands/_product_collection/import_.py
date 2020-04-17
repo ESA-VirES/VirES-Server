@@ -42,19 +42,26 @@ class ImportProductCollectionSubcommand(Subcommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "-f", "--file", dest="filename", default=PRODUCT_COLLECTIONS, help=(
+            "-f", "--file", dest="filename", default="-", help=(
                 "Optional input JSON file-name. "
-                "Defaults to the definition of the standard product collections. "
             )
+        )
+        parser.add_argument(
+            "-d", "--default", dest="load_defaults", action="store_true",
+            default=False, help="Import default product collections."
         )
 
     def handle(self, **kwargs):
         filename = kwargs['filename']
+        if kwargs['load_defaults']:
+            self.info("Loading default product collections ...")
+            filename = PRODUCT_COLLECTIONS
 
         with sys.stdin if filename == "-" else open(filename, "rb") as file_:
             self.save_product_collections(json.load(file_), **kwargs)
 
     def save_product_collections(self, data, **kwargs):
+        total_count = 0
         failed_count = 0
         created_count = 0
         updated_count = 0
@@ -74,12 +81,14 @@ class ImportProductCollectionSubcommand(Subcommand):
             else:
                 updated_count += is_updated
                 created_count += not is_updated
-                self.info(
-                    "Existing product collection %s updated." if is_updated else
-                    "New product collection %s created.", identifier, log=True
+                self.logger.info(
+                    "product collection %s updated" if is_updated else
+                    "product collection %s created", identifier
                 )
+            finally:
+                total_count += 1
 
-        if created_count:
+        if created_count or total_count == 0:
             self.info(
                 "%d of %d product collection%s created.", created_count, len(data),
                 "s" if created_count > 1 else ""

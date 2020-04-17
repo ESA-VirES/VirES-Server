@@ -51,15 +51,6 @@ class SwarmDefaultParameters():
     VARIABLE_INTERPOLATION_KINDS = {}
 
 
-class SwarmEEFParameters(SwarmDefaultParameters):
-    """ Default SWARM product parameters. """
-    VARIABLE_TRANSLATES = {
-        'Timestamp': 'timestamp',
-        'Latitude': 'latitude',
-        'Longitude': 'longitude'
-    }
-
-
 class AuxImf2Parameters(SwarmDefaultParameters):
     """ AUX_IMF_2_ parameters """
     INTERPOLATION_KIND = "zero"
@@ -83,7 +74,6 @@ class AuxImf2Parameters(SwarmDefaultParameters):
 
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
-    "SW_EEFxTMS_2F": SwarmEEFParameters,
     "SW_AUX_IMF_2_": AuxImf2Parameters,
 }
 

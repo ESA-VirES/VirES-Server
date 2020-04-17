@@ -34,6 +34,9 @@ class ProductSelectionSubcommand(Subcommand):
 
     def add_arguments(self, parser):
         parser.add_argument("identifier", nargs="*")
+        self._add_selection_arguments(parser)
+
+    def _add_selection_arguments(self, parser):
         parser.add_argument(
             "-t", "--product-type", dest="product_type", action='append', help=(
                 "Optional filter on the collection product type. "

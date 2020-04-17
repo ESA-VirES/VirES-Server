@@ -124,6 +124,12 @@
         "extraSampled": true
     },
     {
+        "name": "SW_OPER_EEFCTMS_2F",
+        "productType": "SW_EEFxTMS_2F",
+        "spacecraft": "C",
+        "extraSampled": true
+    },
+    {
         "name": "SW_OPER_IPDAIRR_2F",
         "productType": "SW_IPDxIRR_2F",
         "spacecraft": "A"

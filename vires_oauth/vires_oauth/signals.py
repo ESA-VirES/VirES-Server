@@ -43,6 +43,9 @@ from allauth.socialaccount.signals import (
 )
 from .utils import AccessLoggerAdapter
 
+ACCESS_LOGGER_NAME_ALLAUTH = "access.auth"
+ACCESS_LOGGER_NAME_OAUTH2 = "access.oauth2_provider"
+
 
 @receiver(user_signed_up)
 def set_default_group(sender, request, user, **kwargs):
@@ -69,7 +72,7 @@ def receive_app_authorized(request, token, **kwargs):
     app_info = [("client_id", token.application.client_id)]
     if token.application.name:
         app_info.append(("name", token.application.name))
-    _get_access_logger(request, token.user, "vires_oauth.oauth2_provider").info(
+    _get_access_logger(request, token.user, ACCESS_LOGGER_NAME_ALLAUTH).info(
         "oauth application authorized (%s)" % _items2str(app_info)
     )
 
@@ -195,5 +198,6 @@ def _items2str(data):
 
 def _get_access_logger(request, user, name=None):
     return AccessLoggerAdapter(
-        getLogger(name or "vires_oauth.allauth"), request, user=user
+        getLogger(name or ACCESS_LOGGER_NAME_ALLAUTH),
+        request, user=user
     )

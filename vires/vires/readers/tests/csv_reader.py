@@ -27,10 +27,16 @@
 #pylint: disable=missing-docstring
 
 from unittest import TestCase, main
-from numpy import dtype
-from vires.readers import read_csv_data, reduce_int_type, sanitize_custom_data
+from io import StringIO
+from numpy import dtype, array, nan, datetime64
+from numpy.testing import assert_equal
+from vires.readers import (
+    InvalidFileFormat, read_csv_data, reduce_int_type, sanitize_custom_data,
+)
+from vires.readers.csv_reader import parse_value, parse_csv_array, parse_datetime
 from vires.util import cached_property
 from vires.readers.tests.data import TEST1_CSV_FILE, TEST2_CSV_FILE
+
 
 class CSVReaderTestMixIn(TestCase):
     TEST_CSV_FILE = None
@@ -102,6 +108,95 @@ class TestCSVReaderSanitized(CSVReaderTestMixIn, TestCase):
 
     def test_reduced_int8(self):
         self.assert_type_and_shape('int8', (), 'int8')
+
+
+class TestCSVReaderSpecialCase(TestCase):
+
+    def test_mixed_types_timestamp_string(self):
+        source = StringIO("variable,fill\n,A\n2020-01-01T00:00:00,B\n")
+        with self.assertRaises(InvalidFileFormat):
+            read_csv_data(source)
+
+        source = StringIO("variable\n2020-01-01T00:00:00\nXXX\n")
+        with self.assertRaises(InvalidFileFormat):
+            read_csv_data(source)
+
+    def test_mixed_types_timestamp_float_string(self):
+        source = StringIO("variable\n2020-01-01T00:00:00\n0.1\nXXX\n")
+        with self.assertRaises(InvalidFileFormat):
+            read_csv_data(source)
+
+    def test_mixed_types_timestamp_float(self):
+        source = StringIO("variable\n2020-01-01T00:00:00\n0.1\n")
+        with self.assertRaises(InvalidFileFormat):
+            read_csv_data(source)
+
+    def test_mixed_types_float_int(self):
+        source = StringIO("variable\n2\n0.1\n3\n")
+        assert_equal(read_csv_data(source)['variable'], array([2, 0.1, 3]))
+        source = StringIO("variable\n0.1\n2\n0.3\n")
+        assert_equal(read_csv_data(source)['variable'], array([0.1, 2, 0.3]))
+
+    def test_mixed_types_float_str(self):
+        source = StringIO("variable\n1\nX\n3\n")
+        assert_equal(read_csv_data(source)['variable'], array([1, nan, 3]))
+        source = StringIO("variable\n.1\nX\n.3\n")
+        assert_equal(read_csv_data(source)['variable'], array([.1, nan, .3]))
+        source = StringIO("variable\nX\n2\n.3\n")
+        assert_equal(read_csv_data(source)['variable'], array([nan, 2, .3]))
+
+
+class TextCsvValueParser(TestCase):
+
+    def test_parse_value_str(self):
+        input_ = "X"
+        expected = ("X", None)
+        self.assertEqual(parse_value(input_), expected)
+        self.assertEqual(parse_value(input_, None), expected)
+        self.assertEqual(parse_value(input_, int), expected)
+        self.assertEqual(parse_value(input_, float), expected)
+        self.assertEqual(parse_value(input_, parse_csv_array), expected)
+        self.assertEqual(parse_value(input_, parse_datetime), expected)
+
+    def test_parse_value_int(self):
+        input_ = "1"
+        expected = (1, int)
+        self.assertEqual(parse_value(input_), expected)
+        self.assertEqual(parse_value(input_, None), expected)
+        self.assertEqual(parse_value(input_, int), expected)
+        self.assertEqual(parse_value(input_, float), (1.0, float))
+        self.assertEqual(parse_value(input_, parse_csv_array), expected)
+        self.assertEqual(parse_value(input_, parse_datetime), (datetime64("0001-01-01"), parse_datetime))
+
+    def test_parse_value_float(self):
+        input_ = "1e-3"
+        expected = (1e-3, float)
+        self.assertEqual(parse_value(input_), expected)
+        self.assertEqual(parse_value(input_, None), expected)
+        self.assertEqual(parse_value(input_, int), expected)
+        self.assertEqual(parse_value(input_, float), expected)
+        self.assertEqual(parse_value(input_, parse_csv_array), expected)
+        self.assertEqual(parse_value(input_, parse_datetime), expected)
+
+    def test_parse_value_array(self):
+        input_ = "{{1;2};{3;4}}"
+        expected = ([[1., 2.], [3., 4.]], parse_csv_array)
+        self.assertEqual(parse_value(input_), expected)
+        self.assertEqual(parse_value(input_, None), expected)
+        self.assertEqual(parse_value(input_, int), expected)
+        self.assertEqual(parse_value(input_, float), expected)
+        self.assertEqual(parse_value(input_, parse_csv_array), expected)
+        self.assertEqual(parse_value(input_, parse_datetime), expected)
+
+    def test_parse_value_timestamp(self):
+        input_ = "2020-01-01T12:30:29.123Z"
+        expected = (datetime64('2020-01-01T12:30:29.123'), parse_datetime)
+        self.assertEqual(parse_value(input_), expected)
+        self.assertEqual(parse_value(input_, None), expected)
+        self.assertEqual(parse_value(input_, int), expected)
+        self.assertEqual(parse_value(input_, float), expected)
+        self.assertEqual(parse_value(input_, parse_csv_array), expected)
+        self.assertEqual(parse_value(input_, parse_datetime), expected)
 
 
 if __name__ == "__main__":

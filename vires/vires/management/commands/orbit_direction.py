@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Orbit direction product management command
+# Orbit direction lookup table management command
 #
 # Project: VirES
 # Authors: Martin Paces <martin.paces@eox.at>

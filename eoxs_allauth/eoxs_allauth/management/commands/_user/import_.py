@@ -74,7 +74,7 @@ class ImportUserSubcommand(Subcommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "%s updated" if is_updated else "%s created",
+                    "user %s updated" if is_updated else "user %s created",
                     name, log=True
                 )
 

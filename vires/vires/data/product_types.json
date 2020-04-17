@@ -502,22 +502,22 @@
         "defaultDatadaset": "EEF_TMS",
         "datasets": {
             "EEF_TMS": {
-                "timestamp": {
-                    "dataType": "timestamp",
+                "Timestamp": {
+                    "dataType": "Timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
-                        "DESCRIPTION": "milliseconds elapsed since 00:00:00 January 1, 2000 UTC",
-                        "UNITS": "ms"
+                        "DESCRIPTION": "Time of satellite crossing of the magnetic equator, UTC",
+                        "UNITS": "-"
                     }
                 },
-                "longitude": {
+                "Longitude": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic longitude of satellite crossing of the magnetic equator",
                         "UNITS": "degrees"
                     }
                 },
-                "latitude": {
+                "Latitude": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic latitude of satellite crossing of the magnetic equator",
@@ -528,7 +528,15 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Estimate of the equatorial electric field",
-                        "UNITS": "V/m"
+                        "UNITS": "mV/m"
+                    }
+                },
+                "EEJ": {
+                    "dataType": "float64",
+                    "dimension": [81],
+                    "attributes": {
+                        "DESCRIPTION": "Height-integrated east current profile in QD latitude, spanning [-20:0.5:20] degrees",
+                        "UNITS": "mA/m"
                     }
                 },
                 "RelErr": {
@@ -538,7 +546,7 @@
                         "UNITS": "-"
                     }
                 },
-                "flags": {
+                "Flags": {
                     "dataType": "uint16",
                     "attributes": {
                         "DESCRIPTION": "Flags describing data gaps and satellite identification",

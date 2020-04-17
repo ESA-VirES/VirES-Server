@@ -285,7 +285,7 @@ def update_item(request, identifier, **kwargs):
     _save_constant_variables(dataset.location, fields_info['constant_fields'])
 
     upload_dir = join(get_upload_dir(), identifier)
-    with open(join(upload_dir, "info.json"), "wb") as file_:
+    with open(join(upload_dir, "info.json"), "w") as file_:
         file_.write(data)
 
     update_change_log("UPDATED", identifier)
@@ -501,7 +501,7 @@ def _get_missing_fields(fields):
     missing_fields = {}
 
     def _check_field(name, types, shape, is_mandatory):
-        types = map(int, types)
+        types = list(map(int, types))
         field = fields.get(name)
         if not field:
             if is_mandatory:

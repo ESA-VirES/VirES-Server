@@ -210,7 +210,7 @@ class FetchData(WPSProcess):
                 "Time selection limit (%s) has been exceeded!" %
                 timedelta_to_iso_duration(MAX_TIME_SELECTION)
             )
-            access_logger.error(message)
+            access_logger.warning(message)
             raise InvalidInputValueError('end_time', message)
 
         # log the request
@@ -438,7 +438,7 @@ class FetchData(WPSProcess):
                     total_count += dataset.length
                     collection_count += dataset.length
                     if collection_count > MAX_SAMPLES_COUNT_PER_COLLECTION:
-                        access_logger.error(
+                        access_logger.warning(
                             "The sample count %d exceeds the maximum allowed "
                             "count of %d samples per collection!",
                             collection_count, MAX_SAMPLES_COUNT_PER_COLLECTION

@@ -70,7 +70,7 @@ class ConnectVirsOauthSubcommand(UserSelectionSubcommandProtected):
                 account.delete()
 
         if has_vires_connection:
-            self.info("%s already connected", user.username)
+            self.info("user %s already connected", user.username)
             return
 
         try:
@@ -88,4 +88,4 @@ class ConnectVirsOauthSubcommand(UserSelectionSubcommandProtected):
                 extra_data={}
             ).save()
 
-        self.info("%s connected", user.username, log=True)
+        self.info("user %s connected", user.username, log=True)
