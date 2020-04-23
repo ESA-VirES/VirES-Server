@@ -277,7 +277,6 @@ class FetchFilteredDataAsync(WPSProcess):
     @staticmethod
     def discard(context):
         """ Asynchronous process removal. """
-        context.logger.info("removing %s" % context.identifier)
         job = get_job_by_id(context.identifier, raise_exception=False)
         if job:
             job.delete()
