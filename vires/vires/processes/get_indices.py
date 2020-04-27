@@ -31,12 +31,12 @@
 
 from datetime import datetime
 from io import StringIO
-from numpy import vectorize, choose
+from numpy import vectorize, choose, empty, ravel, stack, concatenate
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, CDFileWrapper,
 )
 from vires.aux_kp import KpReader
-from vires.aux_dst import DstReader
+from vires.aux_dst import DstReader, DDstReader
 from vires.aux_f107 import F10_2_Reader
 from vires.time_util import (
     mjd2000_to_datetime, mjd2000_to_unix_epoch, naive_to_utc,
@@ -66,6 +66,12 @@ AUX_INDEX = {
     "dst": (
         DstReader(cache_path(AUX_DB_DST)), ("time", "dst"), abs_amax, "%.6g"
     ),
+    "ddst": (
+        DDstReader(cache_path(AUX_DB_DST)), ("time", "ddst"), abs_amax, "%.6g"
+    ),
+    "ddst_abs": (
+        DDstReader(cache_path(AUX_DB_DST)), ("time", "ddst"), amax, "%.6g"
+    ),
     "f107": (
         F10_2_Reader(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"])),
         ("MJD2000", "F10.7"), amax, "%.6g"
@@ -86,7 +92,7 @@ class GetIndices(WPSProcess):
         ("index_id", LiteralData(
             'index_id', str, optional=False,
             abstract="Identifier of the queried auxiliary index.",
-            allowed_values=('kp', 'dst', 'f107'),
+            allowed_values=list(AUX_INDEX),
         )),
         ("begin_time", LiteralData(
             'begin_time', datetime, optional=False,
@@ -130,7 +136,13 @@ class GetIndices(WPSProcess):
         reader, fields, lessen, data_format = AUX_INDEX[index_id]
 
         time, data = self._read_data(reader, begin_time, end_time, fields=fields)
-        time, data = self._reduce_data(time, data, lessen)
+        if index_id in ('ddst', 'ddst_abs'):
+            time, data = self._fix_ddst(time, data)
+            if index_id == 'ddst_abs':
+                data = abs(data)
+            time, data = self._reduce_binned_data(time, data, lessen)
+        else:
+            time, data = self._reduce_data(time, data, lessen)
         time, time_format = self._convert_time(time, csv_time_format)
 
         if index_id == 'kp':
@@ -153,6 +165,12 @@ class GetIndices(WPSProcess):
         return 0.1 * kp10
 
     @staticmethod
+    def _fix_ddst(time, ddst):
+        if time.size < 2:
+            return empty(0), empty(0)
+        return time, ddst[:-1]
+
+    @staticmethod
     def _read_data(reader, begin_time, end_time, fields):
         aux_data = reader.subset(begin_time, end_time, fields=fields)
         return [aux_data[field] for field in fields]
@@ -167,6 +185,20 @@ class GetIndices(WPSProcess):
             data = lessen(data[:size].reshape(shape), 1)
             time = time[:size].reshape(shape)
             time = 0.5 * (time[:, 0] + time[:, -1])
+        return time, data
+
+    @staticmethod
+    def _reduce_binned_data(time, data, lessen, max_count=500):
+        if data.size > max_count:
+            bin_size = (data.size - 1)//max_count + 1
+            bin_count = data.size // bin_size
+            shape = (bin_count, bin_size)
+            size = bin_size * bin_count
+            data = lessen(data[:size].reshape(shape), 1)
+            time = time[:(size + 1)]
+            time = concatenate((time[:-1].reshape(shape)[:, 0], time[-1:]))
+        time = ravel(stack((time[:-1], time[1:]), axis=-1))
+        data = ravel(stack((data, data), axis=-1))
         return time, data
 
     @staticmethod

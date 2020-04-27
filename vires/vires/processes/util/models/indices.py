@@ -31,7 +31,52 @@ from vires.dataset import Dataset
 from .base import Model
 
 
-class IndexKpFromKp10(Model):
+class SingleVariableTransform(Model):
+    """ Single variable conversion. """
+    REQUIRED_VARIABLE = None
+    PROVIDED_VARIABLE = None
+    CDF_VARIABLE = ()
+
+    def _transform(self, data):
+        raise NotImplementedError
+
+    @property
+    def variables(self):
+        return [self.PROVIDED_VARIABLE]
+
+    @property
+    def required_variables(self):
+        return [self._required_variable]
+
+    def __init__(self, logger, varmap=None):
+        super().__init__()
+        varmap = varmap or {}
+        self._required_variable = varmap.get(
+            self.REQUIRED_VARIABLE, self.REQUIRED_VARIABLE
+        )
+        self.logger = logger
+
+    def eval(self, dataset, variables=None, **kwargs):
+        output_ds = Dataset()
+        required_variable = self._required_variable
+        provided_variable = self.PROVIDED_VARIABLE
+
+        requested = variables is None or provided_variable in variables
+
+        self.logger.debug(
+            "requested variables: %s", required_variable if requested else ""
+        )
+
+        if requested:
+            output_ds.set(
+                provided_variable, self._transform(dataset[required_variable]),
+                *self.CDF_VARIABLE
+            )
+
+        return output_ds
+
+
+class IndexKpFromKp10(SingleVariableTransform):
     """ Conversion of Kp10 to Kp.
     """
     REQUIRED_VARIABLE = "Kp10"
@@ -43,41 +88,44 @@ class IndexKpFromKp10(Model):
         }
     )
 
-    @property
-    def variables(self):
-        return [self.PROVIDED_VARIABLE]
-
-    @property
-    def required_variables(self):
-        return [self._required_variable]
+    def _transform(self, data):
+        return 0.1 * data
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return 'KpFromKp10: %s' % msg, kwargs
 
     def __init__(self, logger=None, varmap=None):
-        super().__init__()
-        varmap = varmap or {}
-        self._required_variable = varmap.get(
-            self.REQUIRED_VARIABLE, self.REQUIRED_VARIABLE
-        )
-        self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
-
-    def eval(self, dataset, variables=None, **kwargs):
-        output_ds = Dataset()
-        required_variable = self._required_variable
-        provided_variable = self.PROVIDED_VARIABLE
-
-        eval_kp = variables is None or provided_variable in variables
-
-        self.logger.debug(
-            "requested variables: %s", required_variable if eval_kp else ""
+        super().__init__(
+            logger=self._LoggerAdapter(logger or getLogger(__name__), {}),
+            varmap=varmap,
         )
 
-        if eval_kp:
-            output_ds.set(
-                provided_variable, 0.1*dataset[required_variable],
-                *self.CDF_VARIABLE
-            )
 
-        return output_ds
+class IndexAbsDDstFromDDst(SingleVariableTransform):
+    """ Conversion of dDst to |dDst|.
+    """
+    REQUIRED_VARIABLE = "dDst"
+    PROVIDED_VARIABLE = "dDst_abs"
+    CDF_VARIABLE = (
+        CDF_DOUBLE_TYPE, {
+            'DESCRIPTION': (
+                'Absolute value of the temporal change rate of the disturbance '
+                'storm time index'
+            ),
+            'UNITS': 'nT/hour',
+        }
+    )
+
+    def _transform(self, data):
+        return abs(data)
+
+    class _LoggerAdapter(LoggerAdapter):
+        def process(self, msg, kwargs):
+            return 'AbsDDstFromDDst: %s' % msg, kwargs
+
+    def __init__(self, logger=None, varmap=None):
+        super().__init__(
+            logger=self._LoggerAdapter(logger or getLogger(__name__), {}),
+            varmap=varmap,
+        )
