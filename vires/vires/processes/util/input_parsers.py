@@ -28,11 +28,12 @@
 
 import re
 from collections import OrderedDict
+from itertools import chain
 from eoxmagmod import load_model_shc
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.colormaps import get_colormap
 from vires.models import ProductCollection
-from vires.magnetic_models import MODEL_CACHE
+from vires.magnetic_models import MODEL_CACHE, PREDEFINED_COMPOSED_MODELS
 from vires.parsers.exceptions import ParserError
 from vires.parsers.model_list_parser import get_model_list_parser
 from vires.parsers.model_list_lexer import get_model_list_lexer
@@ -45,6 +46,23 @@ from .filters import ScalarRangeFilter, VectorComponentRangeFilter
 
 RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
 RE_SUBTRACTED_VARIABLE = re.compile(r'(.+)_(?:res|diff)([ABC])([ABC])')
+
+PREDEFINED_MODELS = {}
+
+
+def lazy_model_loader(model_id, model_expression):
+    """ Lazy loader for pre-defined models. """
+    def _load_predefined_model():
+        parser = ModelInputParser()
+        model_obj = parser.parse_model_expression(model_expression, model_id)
+        return model_obj, parser.source_models.values()
+    return _load_predefined_model
+
+
+PREDEFINED_MODELS.update(
+    (model_id, lazy_model_loader(model_id, model_expression))
+    for model_id, model_expression in PREDEFINED_COMPOSED_MODELS.items()
+)
 
 
 def parse_style(input_id, style):
@@ -206,10 +224,10 @@ class ModelInputParser:
             )
 
     def _process_composed_model(self, model_id, model_components):
-        model_obj = ComposedMagneticModel(model_id, [
+        model_obj = ComposedMagneticModel(model_id, list(chain.from_iterable(
             self._process_model_component(component)
             for component in model_components
-        ])
+        )))
         self.known_models[model_id] = model_obj
         return model_obj
 
@@ -231,6 +249,14 @@ class ModelInputParser:
         scale = parameters.pop("scale", 1)
 
         model_obj = self.known_models.get(model_id)
+
+        if model_obj is None and model_id in PREDEFINED_MODELS:
+            model_obj, sources = PREDEFINED_MODELS[model_id]()
+            self.source_models.update((src.name, src) for src in sources)
+            for component_scale, component in model_obj.components:
+                yield scale*component_scale, component
+            return
+
         if model_obj is not None:
             if (
                     isinstance(model_obj, ComposedMagneticModel) and
@@ -263,7 +289,7 @@ class ModelInputParser:
                 )
             )
 
-        return scale, model_obj
+        yield scale, model_obj
 
     def _parse_custom_model(self, shc_coefficients):
         if shc_coefficients is None:
