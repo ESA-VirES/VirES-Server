@@ -57,6 +57,18 @@ CHAOS_STATIC_SOURCE = basename(CHAOS_STATIC_LATEST)
 LCS1_SOURCE = basename(LCS1)
 MF7_SOURCE = basename(MF7)
 
+MODEL_ALIASES = {}
+
+PREDEFINED_COMPOSED_MODELS = {
+    "MCO_SHA_2X": "'CHAOS-Core'",
+    "CHAOS": "'CHAOS-Core' + 'CHAOS-Static' + 'CHAOS-MMA-Primary' + 'CHAOS-MMA-Secondary'",
+    "CHAOS-MMA": "'CHAOS-MMA-Primary' + 'CHAOS-MMA-Secondary'",
+    "MMA_SHA_2C": "'MMA_SHA_2C-Primary' + 'MMA_SHA_2C-Secondary'",
+    "MMA_SHA_2F": "'MMA_SHA_2F-Primary' + 'MMA_SHA_2F-Secondary'",
+    "MIO_SHA_2C": "'MIO_SHA_2C-Primary' + 'MIO_SHA_2C-Secondary'",
+    "MIO_SHA_2D": "'MIO_SHA_2D-Primary' + 'MIO_SHA_2D-Secondary'",
+}
+
 
 class ModelFactory():
     """ Model factory class. """
@@ -115,11 +127,6 @@ class ModelCache():
         else:
             sources = self.sources[model_id]
         return model, sources
-
-
-MODEL_ALIASES = {
-    "MCO_SHA_2X": "CHAOS-Core",
-}
 
 
 def shc_validity_reader(filename):
@@ -223,6 +230,10 @@ MODEL_FACTORIES = {
 }
 
 # list of all available models
-MODEL_LIST = list(MODEL_FACTORIES) + list(MODEL_ALIASES)
+MODEL_LIST = (
+    list(MODEL_FACTORIES)
+    + list(MODEL_ALIASES)
+    + list(PREDEFINED_COMPOSED_MODELS)
+)
 
 MODEL_CACHE = ModelCache(MODEL_FACTORIES, MODEL_ALIASES)
