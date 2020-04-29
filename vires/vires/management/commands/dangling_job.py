@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Magnetic models
+# Job management command
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, too-few-public-methods
 
-from .models import (
-    MODEL_LIST,
-    MODEL_CACHE,
-    DIPOLE_MODEL,
-    PREDEFINED_COMPOSED_MODELS,
-)
+from logging import getLogger
+from ._common import Supercommand
+from ._dangling_job.list import ListDanglingJobSubcommand
+from ._dangling_job.info import InfoDanglingJobSubcommand
+from ._dangling_job.remove import RemoveDanglingJobSubcommand
+
+
+class Command(Supercommand):
+
+    help = "Dangling job management command."
+
+    commands = {
+        command.name: command(getLogger("%s.%s" % (__name__, command.name)))
+        for command in [
+            ListDanglingJobSubcommand,
+            InfoDanglingJobSubcommand,
+            RemoveDanglingJobSubcommand,
+        ]
+    }
