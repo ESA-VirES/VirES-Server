@@ -72,9 +72,31 @@ class AuxImf2Parameters(SwarmDefaultParameters):
     }
 
 
+class OmniHr1MinParameters(SwarmDefaultParameters):
+    """ AUX_IMF_2_ parameters """
+    INTERPOLATION_KIND = "zero"
+    TIME_TOLERANCE = timedelta(0) # time selection tolerance
+    TIME_OVERLAP = timedelta(minutes=120) # time interpolation overlap
+    TIME_GAP_THRESHOLD = timedelta(seconds=61) # gap time threshold
+    TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=60)
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 'Epoch',
+        'IMF_BY_GSM': 'BY_GSM',
+        'IMF_BZ_GSM': 'BZ_GSM',
+        'IMF_V': 'flow_speed',
+    }
+    VARIABLE_INTERPOLATION_KINDS = {
+        'F10_INDEX': 'zero',
+        'IMF_BY_GSM': 'zero',
+        'IMF_BZ_GSM': 'zero',
+        'IMF_V': 'zero',
+    }
+
+
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
     "SW_AUX_IMF_2_": AuxImf2Parameters,
+    "OMNI_HR_1min": OmniHr1MinParameters,
 }
 
 

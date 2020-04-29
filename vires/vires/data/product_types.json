@@ -1047,7 +1047,7 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP plasma flow speed (km/s)",
-                        "UNITS": "nT"
+                        "UNITS": "km/s"
                     }
                 },
                 "F10_INDEX": {
@@ -1055,6 +1055,64 @@
                     "attributes": {
                         "DESCRIPTION": "F10.7 - Daily 10.7 cm solar radio flux, units: 10**(-22) Joules/second/square-meter/Hertz, from NGDC (1963/001-2016/366)",
                         "UNITS": "10-22.J.s-1.m-2.Hz-1"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "OMNI_HR_1min",
+        "defaultDatadaset": "OMNI_HR_1min",
+        "datasets": {
+            "OMNI_HR_1min": {
+                "Epoch": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Epoch time",
+                        "UNITS": "-"
+                    }
+                },
+                "BY_GSM": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "1AU IP By (nT), GSM",
+                        "UNITS": "nT"
+                    }
+                },
+                "BZ_GSM": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "1AU IP Bz (nT), GSM",
+                        "UNITS": "nT"
+                    }
+                },
+                "Vx": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Vx Velocity, GSE",
+                        "UNITS": "km/s"
+                    }
+                },
+                "Vy": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Vy Velocity, GSE",
+                        "UNITS": "km/s"
+                    }
+                },
+                "Vz": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Vz Velocity, GSE",
+                        "UNITS": "km/s"
+                    }
+                },
+                "flow_speed": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "flow speed, GSE",
+                        "UNITS": "km/s"
                     }
                 }
             }
