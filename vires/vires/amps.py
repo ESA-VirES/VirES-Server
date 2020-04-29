@@ -56,7 +56,7 @@ class AmpsMagneticFieldModel(GeomagneticModel):
     DEFAULT_EPOCH = 2015.0
     REFERENCE_HEIGHT = 110.0
 
-    validity = (-36524.0, 7305.0) # 1900 - 2019
+    validity = (-36524.0, 9132.0) # (1900.0, 2025.0) IGRF13
 
     def __init__(self, filename):
         self.filename = filename
@@ -143,5 +143,8 @@ class AmpsMagneticFieldModel(GeomagneticModel):
         """ Get decimal year epoch for the given MJD time array. """
         time = asarray(time)
         if time.size:
-            return mjd2000_to_decimal_year(0.5*(time.min() + time.max()))
+            epoch = mjd2000_to_decimal_year(0.5*(time.min() + time.max()))
+            # pyAMPS fails for epochs outside of the employed IGRF model's validity.
+            epoch_min, epoch_max = cls.validity
+            return max(epoch_min, min(epoch_max, epoch))
         return cls.DEFAULT_EPOCH
