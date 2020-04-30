@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Magnetic models
+# List asynchronous WPS jobs without any Job DB record.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
-from .models import (
-    MODEL_LIST,
-    MODEL_CACHE,
-    DIPOLE_MODEL,
-    PREDEFINED_COMPOSED_MODELS,
-)
+from vires.processes.remove_job import get_wps_async_backend
+from .common import DanglingJobSelectionSubcommand
+
+
+class ListDanglingJobSubcommand(DanglingJobSelectionSubcommand):
+    name = "list"
+    help = "List asynchronous jobs without any DB record."
+
+    description = "List identifiers of asynchronous jobs without any DB record."
+
+    def handle(self, **kwargs):
+        backend = get_wps_async_backend()
+
+        for identifier, _ in self.select_jobs(backend, **kwargs):
+            print(identifier)

@@ -27,7 +27,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments
 
-from numpy import asarray, prod, empty, broadcast_to, stack, datetime64, inf
+from numpy import asarray, prod, empty, broadcast_to, stack, datetime64
 from eoxmagmod import (
     convert, vrotate, GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL,
     mjd2000_to_decimal_year,
@@ -50,25 +50,16 @@ def mjd2000_to_dt64ms(mjd2000):
 
 class AmpsMagneticFieldModel(GeomagneticModel):
     """ Abstract base class of the Earth magnetic field model. """
-    parameters = ("time", "location", "f107", "amps") # FIXME
+    user_parameters = ()
+    parameters = ("time", "location", "f107", "amps")
     CHUNK_SIZE = 1200
     DEFAULT_EPOCH = 2015.0
     REFERENCE_HEIGHT = 110.0
 
-    validity = (-36524.0, 7305.0) # 1900 - 2019
+    validity = (-36524.0, 9132.0) # (1900.0, 2025.0) IGRF13
 
     def __init__(self, filename):
         self.filename = filename
-
-    @property
-    def degree(self): # FIXME
-        """ Get maximum degree of the model. """
-        return 0
-
-    @property
-    def min_degree(self): # FIXME
-        """ Get minimum degree of the model. """
-        return 0
 
     def eval(self, time, location,
              input_coordinate_system=GEOCENTRIC_SPHERICAL,
@@ -152,5 +143,8 @@ class AmpsMagneticFieldModel(GeomagneticModel):
         """ Get decimal year epoch for the given MJD time array. """
         time = asarray(time)
         if time.size:
-            return mjd2000_to_decimal_year(0.5*(time.min() + time.max()))
+            epoch = mjd2000_to_decimal_year(0.5*(time.min() + time.max()))
+            # pyAMPS fails for epochs outside of the employed IGRF model's validity.
+            epoch_min, epoch_max = cls.validity
+            return max(epoch_min, min(epoch_max, epoch))
         return cls.DEFAULT_EPOCH

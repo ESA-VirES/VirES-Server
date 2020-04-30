@@ -41,7 +41,7 @@ from vires.processes.util import parse_model_list
 MIN_MJD2000 = decimal_year_to_mjd2000(1.0)
 MAX_MJD2000 = decimal_year_to_mjd2000(4000.0)
 
-DEFAULT_MODEL_IDS = ",".join(MODEL_LIST)
+DEFAULT_MODEL_IDS = ",".join(sorted(MODEL_LIST))
 
 
 class GetModelInfo(WPSProcess):

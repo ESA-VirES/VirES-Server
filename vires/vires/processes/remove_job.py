@@ -67,7 +67,6 @@ class RemoveJob(WPSProcess):
 
         access_logger.info("request: job: %s", job_id)
 
-        get_wps_async_backend().purge(job.identifier)
-        job.delete()
+        get_wps_async_backend().purge(job.identifier, job.process_id)
 
         return True

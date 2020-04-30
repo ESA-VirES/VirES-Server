@@ -115,6 +115,9 @@ class Supercommand(ConsoleOutput, BaseCommand):
 
         for name, command in self.commands.items():
             subparser = subparsers.add_parser(name, help=command.help)
+            subparser.description = getattr(command, "description", command.help)
+            if hasattr(command, "formatter_class"):
+                subparser.formatter_class = command.formatter_class
             command.add_arguments(subparser)
 
         # .add_subparsers() in Python < 3.7 does not support required parameter

@@ -197,41 +197,56 @@ class FetchFilteredDataAsync(WPSProcess):
     @staticmethod
     def on_started(context, progress, message):
         """ Callback executed when an asynchronous Job gets started. """
-        job = update_job(
-            get_job_by_id(context.identifier),
-            status=Job.STARTED,
-            started=datetime.now(utc),
-        )
-        context.logger.info(
-            "Job started after %.3gs waiting.",
-            (job.started - job.created).total_seconds()
-        )
+        try:
+            job = update_job(
+                get_job_by_id(context.identifier),
+                status=Job.STARTED,
+                started=datetime.now(utc),
+            )
+            context.logger.info(
+                "Job started after %.3gs waiting.",
+                (job.started - job.created).total_seconds()
+            )
+        except Job.DoesNotExist:
+            context.logger.warn(
+                "Failed to update the job status! The job does not exist!"
+            )
 
     @staticmethod
     def on_succeeded(context, outputs):
         """ Callback executed when an asynchronous Job finishes. """
-        job = update_job(
-            get_job_by_id(context.identifier),
-            status=Job.SUCCEEDED,
-            stopped=datetime.now(utc),
-        )
-        context.logger.info(
-            "Job finished after %.3gs running.",
-            (job.stopped - job.started).total_seconds()
-        )
+        try:
+            job = update_job(
+                get_job_by_id(context.identifier),
+                status=Job.SUCCEEDED,
+                stopped=datetime.now(utc),
+            )
+            context.logger.info(
+                "Job finished after %.3gs running.",
+                (job.stopped - job.started).total_seconds()
+            )
+        except Job.DoesNotExist:
+            context.logger.warn(
+                "Failed to update the job status! The job does not exist!"
+            )
 
     @staticmethod
     def on_failed(context, exception):
         """ Callback executed when an asynchronous Job fails. """
-        job = update_job(
-            get_job_by_id(context.identifier),
-            status=Job.FAILED,
-            stopped=datetime.now(utc),
-        )
-        context.logger.info(
-            "Job failed after %.3gs running.",
-            (job.stopped - job.started).total_seconds()
-        )
+        try:
+            job = update_job(
+                get_job_by_id(context.identifier),
+                status=Job.FAILED,
+                stopped=datetime.now(utc),
+            )
+            context.logger.info(
+                "Job failed after %.3gs running.",
+                (job.stopped - job.started).total_seconds()
+            )
+        except Job.DoesNotExist:
+            context.logger.warn(
+                "Failed to update the job status! The job does not exist!"
+            )
 
     def initialize(self, context, inputs, outputs, parts):
         """ Asynchronous process initialization. """
@@ -243,10 +258,12 @@ class FetchFilteredDataAsync(WPSProcess):
         user = get_user(inputs['\\username'])
 
         if count_active_jobs(user) >= MAX_ACTIVE_JOBS:
-            raise ServerBusy(
-                "Maximum number of allowed active asynchronous download "
-                "requests exceeded!"
+            message = (
+                "Per user maximum number of allowed active asynchronous "
+                "download requests exceeded!"
             )
+            context.logger.warning("Job rejected! %s", message)
+            raise ServerBusy(message)
 
         # create DB record for this WPS job
         update_job(
@@ -258,16 +275,13 @@ class FetchFilteredDataAsync(WPSProcess):
             response_url=context.status_location,
         )
 
-
     @staticmethod
     def discard(context):
         """ Asynchronous process removal. """
-        context.logger.info("removing %s" % context.identifier)
         job = get_job_by_id(context.identifier, raise_exception=False)
         if job:
             job.delete()
             context.logger.info("Job removed.")
-
 
     def execute(self, permissions, collection_ids, begin_time, end_time,
                 filters, sampling_step, requested_variables, model_ids, shc,
@@ -349,7 +363,9 @@ class FetchFilteredDataAsync(WPSProcess):
             index_dst = IndexDst(cache_path(AUX_DB_DST))
             index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
             index_imf = ProductTimeSeries(
-                ProductCollection.objects.get(type__identifier="SW_AUX_IMF_2_")
+                ProductCollection.objects.get(
+                    identifier="OMNI_HR_1min_avg20min_delay10min"
+                )
             )
             model_bnec_intensity = BnecToF()
             model_kp = IndexKpFromKp10()

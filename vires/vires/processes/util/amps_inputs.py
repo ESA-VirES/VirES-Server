@@ -26,7 +26,6 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-locals,too-many-arguments,missing-docstring
 
-from django.conf import settings
 from vires.dataset import Dataset
 from vires.models import ProductCollection
 from vires.cdf_util import CDF_EPOCH_TYPE, mjd2000_to_cdf_rawtime
@@ -41,7 +40,9 @@ IMF_V_VARIABLE = "IMF_V"
 def get_amps_inputs(mjd2000):
     """ Get AMPS model inputs for the given MJD2000 time. """
     index_imf = ProductTimeSeries(
-        ProductCollection.objects.get(type__identifier="SW_AUX_IMF_2_")
+        ProductCollection.objects.get(
+            identifier="OMNI_HR_1min_avg20min_delay10min"
+        )
     )
     model_sun = SunPosition()
     model_subsol = SubSolarPoint()
