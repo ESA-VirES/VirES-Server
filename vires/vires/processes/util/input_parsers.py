@@ -234,17 +234,48 @@ class ModelInputParser:
     def _assert_no_parameter(self, model_id, parameters):
         for parameter in parameters:
             raise self.ParsingError(
-                "The %s parameter is not allowed for a non-source model %s!"
-                % (parameter, model_id)
+                "The model %s does not accept the %s parameter!"
+                % (model_id, parameter)
             )
 
-    def _process_model_component(self, model_def):
+    def _get_model_parameters(self, model_id, model, parameters, defaults):
+        expected = self._get_user_parameter_names(model)
+        self._assert_no_parameter(model_id, set(parameters).difference(expected))
 
-        def _get_degree_range(parameters, min_degree, max_degree):
-            _max_degree = min(parameters.get("max_degree", max_degree), max_degree)
-            max_degree = max_degree if _max_degree < 0 else _max_degree
-            min_degree = max(parameters.get("min_degree", min_degree), min_degree)
-            return {"min_degree": min_degree, "max_degree": max_degree}
+        result = {}
+        result.update(defaults)
+        result.update(parameters)
+
+        if "min_degree" in result:
+            result["min_degree"] = max(result["min_degree"], defaults["min_degree"])
+
+        if "max_degree" in result:
+            max_degree = min(result["max_degree"], defaults["max_degree"])
+            if max_degree >= 0:
+                result["max_degree"] = max_degree
+
+        if "min_degree" in result and "max_degree" in result:
+            result["min_degree"] = min(result["min_degree"], result["max_degree"])
+
+        return result
+
+    def _get_model_defauls(self, model):
+        extract = {
+            "min_degree": lambda m, k: m.min_degree,
+            "max_degree": lambda m, k: m.degree,
+        }
+        expected = self._get_user_parameter_names(model)
+        return {
+            key: extract.get(key, getattr)(model, key) for key in expected
+        }
+
+    @staticmethod
+    def _get_user_parameter_names(model):
+        return getattr(
+            model, 'user_parameters', ("min_degree", "max_degree")
+        )
+
+    def _process_model_component(self, model_def):
 
         def _create_source_model(model_id, model, sources, params):
             model_obj = SourceMagneticModel(model_id, model, sources, params)
@@ -275,8 +306,10 @@ class ModelInputParser:
 
             if isinstance(model_obj, SourceMagneticModel):
                 model_obj = _create_source_model(
-                    model_id, model_obj.model, model_obj.sources, _get_degree_range(
-                        parameters, **model_obj.parameters
+                    model_id, model_obj.model, model_obj.sources,
+                    self._get_model_parameters(
+                        model_id, model_obj.model, parameters,
+                        model_obj.parameters
                     )
                 )
             else:
@@ -288,9 +321,10 @@ class ModelInputParser:
                 raise self.ParsingError(
                     "Invalid model identifier %r!" % model_def.id
                 )
+
             model_obj = _create_source_model(
-                model_id, model, sources, _get_degree_range(
-                    parameters, model.min_degree, model.degree
+                model_id, model, sources, self._get_model_parameters(
+                    model_id, model, parameters, self._get_model_defauls(model)
                 )
             )
 

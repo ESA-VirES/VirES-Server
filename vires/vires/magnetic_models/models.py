@@ -26,9 +26,10 @@
 #-------------------------------------------------------------------------------
 #pylint: disable=too-few-public-methods
 
-from os.path import basename
+from os.path import basename, splitext
 from logging import getLogger
 from numpy import inf
+from pyamps.model_utils import default_coeff_fn as AMPS
 from eoxmagmod.data import CHAOS_STATIC_LATEST, IGRF13, LCS1, MF7
 from eoxmagmod import (
     load_model_shc,
@@ -41,7 +42,7 @@ from eoxmagmod import (
 )
 from eoxmagmod.time_util import decimal_year_to_mjd2000
 from eoxmagmod.magnetic_model.parser_shc import parse_shc_header
-
+from ..amps import AmpsMagneticFieldModel
 from ..util import cached_property
 from ..file_util import FileChangeMonitor
 from .files import (
@@ -56,6 +57,7 @@ IGRF13_SOURCE = "SW_OPER_AUX_IGR_2__19000101T000000_20241231T235959_0103"
 CHAOS_STATIC_SOURCE = basename(CHAOS_STATIC_LATEST)
 LCS1_SOURCE = basename(LCS1)
 MF7_SOURCE = basename(MF7)
+AMPS_SOURCE = basename(splitext(AMPS)[0])
 
 MODEL_ALIASES = {}
 
@@ -226,6 +228,12 @@ MODEL_FACTORIES = {
     "CHAOS-MMA-Secondary": ModelFactory(
         load_model_swarm_mma_2c_internal,
         [CachedComposedModelFile("MMA_CHAOS_")]
+    ),
+    "AMPS": ModelFactory(
+        AmpsMagneticFieldModel,
+        [ModelFileWithLiteralSource(
+            AMPS, AMPS_SOURCE, lambda _: AmpsMagneticFieldModel.validity
+        )]
     ),
 }
 

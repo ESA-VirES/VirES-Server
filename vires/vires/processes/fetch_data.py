@@ -280,7 +280,9 @@ class FetchData(WPSProcess):
             index_ddst = IndexDDst(cache_path(AUX_DB_DST))
             index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
             index_imf = ProductTimeSeries(
-                ProductCollection.objects.get(type__identifier="SW_AUX_IMF_2_")
+                ProductCollection.objects.get(
+                    identifier="OMNI_HR_1min_avg20min_delay10min"
+                )
             )
             model_bnec_intensity = BnecToF()
             model_kp = IndexKpFromKp10()
@@ -291,6 +293,7 @@ class FetchData(WPSProcess):
             model_subsol = SubSolarPoint()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
+
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
             ))
