@@ -231,6 +231,13 @@ class ModelInputParser:
         self.known_models[model_id] = model_obj
         return model_obj
 
+    def _assert_no_parameter(self, model_id, parameters):
+        for parameter in parameters:
+            raise self.ParsingError(
+                "The %s parameter is not allowed for a non-source model %s!"
+                % (parameter, model_id)
+            )
+
     def _process_model_component(self, model_def):
 
         def _get_degree_range(parameters, min_degree, max_degree):
@@ -251,6 +258,7 @@ class ModelInputParser:
         model_obj = self.known_models.get(model_id)
 
         if model_obj is None and model_id in PREDEFINED_MODELS:
+            self._assert_no_parameter(model_id, parameters)
             model_obj, sources = PREDEFINED_MODELS[model_id]()
             self.source_models.update((src.name, src) for src in sources)
             for component_scale, component in model_obj.components:
@@ -272,11 +280,8 @@ class ModelInputParser:
                     )
                 )
             else:
-                for parameter in parameters:
-                    raise self.ParsingError(
-                        "The %s parameter is not allowed for a non-source model %s!"
-                        % (parameter, model_id)
-                    )
+                self._assert_no_parameter(model_id, parameters)
+
         else: # new source model
             model, sources = MODEL_CACHE.get_model_with_sources(model_def.id)
             if model is None:
