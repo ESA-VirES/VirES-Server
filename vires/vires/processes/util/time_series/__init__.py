@@ -28,6 +28,6 @@
 from .base import TimeSeries
 from .product import ProductTimeSeries
 from .custom_data import CustomDatasetTimeSeries
-from .indices import IndexKp10, IndexDst, IndexF107
+from .indices import IndexKp10, IndexDst, IndexDDst, IndexF107
 from .orbit_counter import OrbitCounter
 from .orbit_direction import OrbitDirection, QDOrbitDirection
