@@ -70,7 +70,7 @@ from vires.processes.util.models import (
     MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
-    IndexKpFromKp10, IndexAbsDDstFromDDst,
+    IndexKpFromKp10,
     BnecToF,
 )
 from vires.processes.util.filters import (
@@ -286,7 +286,6 @@ class FetchData(WPSProcess):
             )
             model_bnec_intensity = BnecToF()
             model_kp = IndexKpFromKp10()
-            model_absddst = IndexAbsDDstFromDDst()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
@@ -365,7 +364,7 @@ class FetchData(WPSProcess):
                 # models
                 aux_models = chain((
                     model_bnec_intensity,
-                    model_kp, model_absddst, model_qdc, model_mlt, model_sun,
+                    model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals)
 
