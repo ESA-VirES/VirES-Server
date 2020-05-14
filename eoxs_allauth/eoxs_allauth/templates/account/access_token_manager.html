@@ -1,79 +1,243 @@
 {% extends "account/base.html" %}
 {% load i18n %}
+{% load staticfiles %}
 {% block head_title %}{% trans "Access Tokens" %}{% endblock %}
+{% block additional_headers %}
+{{ block.super }}
+      <script type="text/javascript" src="{% static 'workspace/bower_components/jquery/jquery.min.js' %}"></script>
+      <script type="text/javascript" src="{% static 'workspace/bower_components/underscore-amd/underscore-min.js' %}"></script>
+      <script type="text/javascript" src="{% static 'workspace/bower_components/backbone-amd/backbone-min.js' %}"></script>
+{% endblock %}
 {% block content %}
-{% if new_token %}
-  <p>This is your new access token:</p>
-  <pre class="well well-lg text-center" style="font-weight: bold">{{ new_token.token }}</pre>
-  <p>Please copy the displayed character string. It will not be shown again.</p>
-  <p>Keep the access token private!</p>
-  <p class="text-center">
-    <a class="btn btn-primary" href="{% url 'account_manage_access_tokens' %}">Return to Access Token Manager</a>
-  </p>
-  <hr>
-  <h4>How to use the token</h4>
-  <p>The token is meant to be used for user authentication of a client
-  accessing the machine-to-machine interface.
-  The token shall be present in HTTP requests as the <i>bearer</i> header:
-  </p>
-  <pre class="well well">Authorization: Bearer &lt;token&gt;</pre>
-{% else %}
+<div id="token-manager-view">
   <h3>New Access Token</h3>
-  <form class="form-horizontal inputwide" method="POST" action="{% url 'account_manage_access_tokens' %}">
+  <form id="new-token-form" class="form-horizontal inputwide">
     {% csrf_token %}
     <fieldset>
-    <input type="hidden" name="action" value="create">
     <div class="control-group">
       <label class="form-check-label" for="token-purpose">Purpose (optional)</label>
       <input type="text" id="token-purpose" name="purpose" placeholder="optional label indicating purpose of the new token">
     </div>
     <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-      <button type="submit" class="btn btn-primary">Create New Access Token</button>
+      <button id="create-token-btn" type="button" class="btn btn-primary">Create New Access Token</button>
     </div>
     </fieldset>
   </form>
-  <h3>Active Access Tokens</h3>
-  <table class="table table-sm table-striped">
-  {% if tokens.count == 0 %}
-  <p>There is currently no valid access token assigned to your account.</p>
-  {% else %}
-  {% load tz %}
-  <thead>
-    <tr>
-      <th scope="col">Created</th>
-      <!--th scope="col">Expires</th-->
-      <th scope="col">Purpose</th>
-      <th>
-        <form method="POST" action="{% url 'account_manage_access_tokens' %}">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="remove-all">
-          <button type="submit" class="btn btn-sm btn-danger btn-block">Remove All</button>
-        </form>
-      </th>
-    </tr>
-  </thead>
-    {% for token in tokens %}
-    <tr>
-      <td>{{ token.created|utc|date:"Y-m-d H:i:s" }}Z</td>
-      <!--td>{% if token.expires %}{{ token.expires|utc|date:"Y-m-d H:i:s" }}Z{% endif %}</td-->
-      <td>{% if token.purpose %}{{ token.purpose }}{% else %}n/a{% endif %}</td>
-      <td>
-        <form method="POST" action="{% url 'account_manage_access_tokens' %}">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="remove">
-          <input type="hidden" name="identifier" value="{{ token.identifier }}">
-          <button type="submit" class="btn btn-sm btn-danger btn-block">Remove</button>
-        </form>
-      </td>
-    </div>
-    </fieldset>
-  </form>
-      </td>
-    </tr>
-    {% endfor %}
-  <tbody>
-  </tbody>
-  </table>
-  {% endif %}
-{% endif %}
+  <div id="error" style="color:red;"></div>
+  <div id="token-list-view">
+    <h3>Active Access Tokens</h3>
+    <p id="empty-collection" style="display:none;">There is currently no valid access token assigned to your account.</p>
+    <table id="non-empty-collection" class="table table-sm table-striped" style="display:none;">
+    <thead>
+      <tr>
+        <th scope="col">Created</th>
+        <th scope="col">Purpose</th>
+        <th><button id="delete-all-btn" type="button" class="btn btn-sm btn-danger btn-block">Remove All</button></th>
+      </tr>
+    </thead>
+    <tbody id="token-list"></tbody>
+    </table>
+  </div>
+</div>
+<div id="new-token-view" style="display:none;">
+  <p>This is your new access token:</p>
+  <pre class="well well-lg text-center" style="font-weight: bold"><span id="token">&lt;token&gt;</span></pre>
+  <p>Please copy the displayed character string. It will not be shown again.</p>
+  <p>Keep the access token private!</p>
+  <p class="text-center">
+    <button type="button" id="display-token-list-btn" class="btn btn-primary">Return to Access Token Manager</button>
+  </p>
+  <hr>
+  <h4>How to use the token</h4>
+  <p>The token is meant to be used for the user authentication when accessing
+  the VirES server API at:
+  <pre class="well well-lg text-center" style="font-weight: bold"><span id="server-url"></span></pre>
+  For more details of the client configuration see the
+  <a href="https://viresclient.readthedocs.io/en/latest/installation.html#first-usage-configuration" target="_blank">VirES client documentation.</a>
+  </p>
+  <p>
+  In case of direct HTTP requests to the VirES server API,
+  the token shall be present in HTTP requests as the <i>bearer</i> header:
+  <pre class="well well">Authorization: Bearer <span id="token">&lt;token&gt;</span></pre>
+  </p>
+</div>
+
+<script type="text/javascript">
+window.onload = function() {
+  var tokenListRowTmpl = _.template(
+    '<tr>' +
+    '<td><%= created %></td>' +
+    '<td><%= purpose %></td>' +
+    '<td><button id="delete-btn" type="button" class="btn btn-sm btn-danger btn-block">Remove</button></td>' +
+    '</tr>'
+  );
+
+  var printMessage = function (message) {
+    $("#error").empty().append($('<p>' + message + '</p>'));
+  };
+
+  var clearMessage = function () {
+    $("#error").empty();
+  };
+
+  var printHttpError = function (message, code, text) {
+    var reason = (code > 0) && text ? code + " " + text : "Cannot connect to the server!";
+    printMessage("ERROR: " + message + " Reason: " + reason);
+  };
+
+  var formatTimestamp = function (format, timestamp) {
+    if (!timestamp) {return "";}
+    var zeroPad = function (size, value) {
+      return ('0'.repeat(size) + value).slice(-size);
+    }
+    var dateObj = new Date(timestamp);
+    var parts = {
+      '%Y': zeroPad(4, dateObj.getFullYear()),
+      '%m': zeroPad(2, dateObj.getMonth() + 1),
+      '%d': zeroPad(2, dateObj.getDate()),
+      '%H': zeroPad(2, dateObj.getHours()),
+      '%M': zeroPad(2, dateObj.getMinutes()),
+      '%S': zeroPad(2, dateObj.getSeconds()),
+    }
+    return format.replace(/(%Y|%m|%d|%H|%M|%S)/g, function (key) {return parts[key];})
+  };
+
+  var AccessTokenModel = Backbone.Model.extend({
+    idAttribute: 'identifier',
+  });
+
+  var AccessTokenCollection = Backbone.Collection.extend({
+    model: AccessTokenModel,
+    sortKey: 'created',
+    ascendingOrder: false,
+    comparator: function (a, b) {
+      var order = this.ascendingOrder ? 1 : -1;
+      var keyA = a.get(this.sortKey);
+      var keyB = b.get(this.sortKey);
+      return (keyA < keyB ? -1 * order : (keyA > keyB ? 1 * order : 0));
+    },
+    fetch: function (options) {
+      options = _.clone(options || {});
+      clearMessage();
+      options.error = function(collection, response) {
+        printHttpError("Failed to fetch tokens!", response.status, response.statusText);
+      };
+      return Backbone.Collection.prototype.fetch.call(this, options);
+    },
+  });
+
+  var $form = $('form#new-token-form');
+  $.ajaxSetup({
+    headers: {
+      'X-CSRFToken': $form.find("input[name=csrfmiddlewaretoken]").val(),
+    },
+  });
+
+  var tokens = new AccessTokenCollection();
+  tokens.url = '{% url 'account_tokens_api' %}';
+  tokens.fetch();
+  window.setInterval(function() {tokens.fetch();}, 150000);
+
+  var renderTokens = function () {
+    var $view = $('div#token-list-view');
+    if (tokens.length < 1) {
+      $view.find("#non-empty-collection").hide();
+      $view.find("#empty-collection").show();
+      return;
+    }
+    $view.find("#empty-collection").hide();
+    $view.find("#non-empty-collection").show();
+    var $table = $view.find("#token-list").empty();
+    tokens.each(function (model, index) {
+      var data = model.attributes;
+      var $row = $(tokenListRowTmpl({
+        created: formatTimestamp("%Y-%m-%d %H:%M:%S", data.created),
+        purpose: data.purpose || 'n/a',
+      }));
+      $table.append($row);
+      $button = $row.find("button#delete-btn");
+      $button.click(function () {
+        $button.attr('disabled', true);
+        model.destroy({
+          wait: true,
+          error: function(model, response) {
+            printHttpError("Failed to remove the selected token!", response.status, response.statusText);
+            $button.attr('disabled', false);
+          },
+        });
+      });
+    });
+  };
+
+  tokens.on({
+    sync: renderTokens,
+    add: renderTokens,
+    remove: renderTokens,
+    change: renderTokens,
+    sort: renderTokens,
+    reset: renderTokens,
+    destroy: _.debounce(function () {tokens.fetch();}, 5000),
+  });
+
+  $('div#token-manager-view button#delete-all-btn').click(function () {
+    var $button = $('div#token-manager-view button#delete-all-btn');
+    $button.attr('disabled', true);
+    $.ajax({
+      url: '{% url 'account_tokens_api' %}',
+      method: 'DELETE',
+      error: function (qXHR, textStatus, errorThrown) {
+        printHttpError("Failed to remove tokens!", qXHR.status, errorThrown);
+        $button.attr('disabled', false);
+      },
+      success: function () {
+        $button.attr('disabled', false);
+        tokens.reset();
+        tokens.fetch();
+      }
+    });
+  });
+
+  $form.find('input[type=text]#token-purpose').keydown(function (event) {
+    if (event.keyCode != 13) return true;
+    $form.find('button#create-token-btn').focus();
+    event.preventDefault();
+    return false;
+  });
+
+  $form.find('button#create-token-btn').click(function (event) {
+    var formData = _.object(_.map($form.serializeArray(), function (item) {return [item.name, item.value]}));
+    $form.find('button#create-token-btn').addClass('disabled');
+    printMessage('Creating new token ...');
+    $.ajax({
+      url: '{% url 'account_tokens_api' %}',
+      method: 'POST',
+      data: JSON.stringify({purpose: formData.purpose}),
+      contentType: 'application/json',
+      error: function (qXHR, textStatus, errorThrown) {
+        printHttpError("Failed to create a new token!", qXHR.status, errorThrown);
+        $form.find('button#create-token-btn').removeClass('disabled');
+      },
+      success: function (data) {
+        $form.find('button#create-token-btn').removeClass('disabled');
+        clearMessage()
+        $form.find('input[type=text]#token-purpose').val('');
+        $('div#token-manager-view').hide();
+        var $tokenView = $('div#new-token-view')
+        $tokenView.find("span#token").text(data.token);
+        $tokenView.find("span#server-url").text(new URL("{% url 'ows'%}", document.baseURI).href);
+        $tokenView.show();
+        $tokenView.find("button#display-token-list-btn").focus();
+        tokens.fetch();
+      }
+    });
+  });
+
+  $('div#new-token-view button#display-token-list-btn').click(function (event) {
+    var $tokenView = $('div#new-token-view')
+    $tokenView.hide();
+    $tokenView.find("span#token").text('<token>');
+    $('div#token-manager-view').show();
+  });
+};
+</script>
 {% endblock %}

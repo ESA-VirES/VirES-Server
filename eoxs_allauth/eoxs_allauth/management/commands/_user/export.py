@@ -28,11 +28,13 @@
 
 import sys
 import json
+import base64
 from functools import partial
 from collections import OrderedDict
 from django.contrib.auth.models import User
 from eoxs_allauth.models import UserProfile
-from .._common import JSON_OPTS, datetime_to_string
+from eoxs_allauth.utils import datetime_to_string
+from .._common import JSON_OPTS
 from .common import UserSelectionSubcommand
 
 
@@ -140,7 +142,7 @@ def serialize_social_account(object_):
 def serialize_access_token(object_):
     return OrderedDict([
         ("identifier", object_.identifier),
-        ("token", object_.token),
+        ("token_sha256", binary_to_base64(object_.token_sha256)),
         ("purpose", object_.purpose),
         ("expires", object_.expires and datetime_to_string(object_.expires)),
         ("created", datetime_to_string(object_.created)),
@@ -150,6 +152,9 @@ def serialize_access_token(object_):
 def serialize_list(funct, objects):
     return [funct(object_) for object_ in objects]
 
+
+def binary_to_base64(data):
+    return base64.urlsafe_b64encode(data).decode('ascii')
 
 serialize_email_addresses = partial(serialize_list, serialize_email_address)
 serialize_social_accounts = partial(serialize_list, serialize_social_account)

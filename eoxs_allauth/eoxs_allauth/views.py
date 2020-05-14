@@ -28,12 +28,10 @@
 # pylint: disable=missing-docstring, too-few-public-methods, too-many-ancestors
 
 import json
-from time import sleep
 from logging import INFO, WARNING
-from datetime import datetime
 from django.conf import settings
 from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -42,14 +40,41 @@ from django.views.generic.base import View
 from django.views.generic.edit import UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.forms.models import modelform_factory
-from django.utils.timezone import now, is_aware, utc
-from django.utils.dateparse import parse_datetime
+from django.utils.timezone import now
 from django_countries.widgets import CountrySelectWidget
 from .models import UserProfile, AuthenticationToken
-from .decorators import log_access, authenticated_only, token_authentication
+from .utils import datetime_to_string, parse_datetime_or_duration
+from .decorators import (
+    log_access, authenticated_only, token_authentication,
+    csrf_protect_if_authenticated,
+)
 from .vires_oauth.decorators import (
     authorized_only, logout_unauthorized, redirect_unauthorized,
+    oauth_token_authentication,
 )
+
+
+class JsonResponse(HttpResponse):
+    """ JSON HTTP response. """
+    def __init__(self, content, **kwargs):
+        super().__init__(
+            json.dumps(content), content_type="application/json", **kwargs
+        )
+
+
+def wrap_csrf_protected_api(view):
+    """ Decorate protected API view.
+    Requires CSRF token for the session-cookie (browser) authentication is used.
+    """
+    return _decorate(
+        view,
+        csrf_protect_if_authenticated,
+        token_authentication,
+        log_access(INFO, WARNING),
+        authenticated_only,
+        authorized_only,
+        csrf_exempt,
+    )
 
 
 def wrap_protected_api(view):
@@ -178,100 +203,155 @@ class AccessTokenManagerView(View):
         )
 
     def get(self, request):
-        tokens = self._get_all_valid(request.user)
+        return render(request, self.template_name, {})
 
-        # only a new not yet shown token can be displayed
-        identifier = request.GET.get('show') or None
-        new_token = self._get_new(request.user, identifier)
-        if identifier and not new_token:
-            # attempt to display already shown token
-            return HttpResponseRedirect(request.path)
 
-        return render(request, self.template_name, {
-            "tokens": tokens,
-            "new_token": new_token,
-            "user": request.user,
-            "isoformat": self._isoformat,
-        })
-
-    def post(self, request):
-        new_token = None
-        action = request.POST.get("action", "").lower()
-        next_url = request.path
-
-        if action == "create":
-            try:
-                new_token = self._create_new(
-                    request.user, purpose=request.POST.get("purpose"),
-                    expires=self._parse_datetime(request.POST.get("expires")),
-                )
-            except ValueError:
-                pass # no change in case of an error
-            else:
-                # GET request that will display the token
-                next_url = "%s?show=%s" % (next_url, new_token.identifier)
-
-        elif action == "remove":
-            self._delete(request.user, request.POST.get("identifier"))
-
-        elif action == "remove-all":
-            self._delete_all(request.user)
-
-        return HttpResponseRedirect(next_url)
-
-    @staticmethod
-    def _parse_datetime(value):
-        if not value:
-            return None
-        if not isinstance(value, datetime):
-            try:
-                parse_datetime(value)
-            except (ValueError, KeyError, TypeError):
-                raise ValueError
-        if not is_aware(value):
-            value = value.astimezone(utc)
-        return value
-
-    @staticmethod
-    def _create_new(user, purpose=None, expires=None):
-        token = AuthenticationToken()
-        token.owner = user
-        token.expires = expires or None
-        token.purpose = purpose or None
-        token.is_new = True  # token has not been displayed yet
-        token.save()
-        return token
-
-    @staticmethod
-    def _get_new(user, identifier):
-        try:
-            token = user.tokens.get(identifier=identifier)
-        except AuthenticationToken.DoesNotExist:
-            sleep(2)
-            return None
-        if token.is_new:
-            token.is_new = False  # token will not be displayed again
-            token.save()
-            return token
-        return None
+class APIView(View):
 
     @classmethod
-    def _get_all_valid(cls, user):
-        cls._delete_expired(user)
+    def as_view(cls, **kwargs):
+        """ Return the actual Django view. """
+        return _decorate(
+            super().as_view(**kwargs),
+            csrf_protect_if_authenticated,
+            token_authentication,
+            oauth_token_authentication,
+            log_access(INFO, WARNING),
+            authenticated_only,
+            authorized_only,
+            csrf_exempt,
+        )
+
+    @classmethod
+    def error(cls, status, message):
+        """ Error response"""
+        return HttpResponse(
+            "%s\n" % message, content_type="text/plain", status=status
+        )
+
+    @classmethod
+    def not_found(cls):
+        """ Not found response. """
+        return cls.error(404, "Not found.")
+
+    @classmethod
+    def bad_request(cls):
+        """ Bad request response """
+        return cls.error(400, "Bad request.")
+
+    @classmethod
+    def no_response(cls):
+        """ No response response. """
+        return HttpResponse(status=204)
+
+
+class AccessTokenCollectionAPIView(APIView):
+
+    def get(self, request):
+        """ List tokens. """
+        return JsonResponse([
+            AccessTokenAPI.serialize_token(token)
+            for token in AccessTokenAPI.get_all_valid(request.user)
+        ])
+
+    def delete(self, request):
+        """ Delete all tokens. """
+        AccessTokenAPI.get_all(request.user).delete()
+        return self.no_response()
+
+    def post(self, request):
+        """ Create new token. """
+        try:
+            token_request = AccessTokenAPI.parse_token_request(
+                json.loads(request.body)
+            )
+        except (ValueError, TypeError):
+            return self.bad_request()
+
+        token_obj, token_str = AccessTokenAPI.create(
+            request.user, **token_request
+        )
+
+        return JsonResponse({
+            "token": token_str,
+            **AccessTokenAPI.serialize_token(token_obj)
+        })
+
+
+class AccessTokenObjectAPIView(APIView):
+
+    def get(self, request, identifier):
+        """ Get valid token info for the given identifier. """
+        try:
+            return JsonResponse(
+                AccessTokenAPI.serialize_token(
+                    AccessTokenAPI.get_valid(request.user, identifier)
+                )
+            )
+        except AuthenticationToken.DoesNotExist:
+            return self.not_found()
+
+    def delete(self, request, identifier):
+        """ Delete valid token with the given identifier. """
+        try:
+            AccessTokenAPI.get_valid(request.user, identifier).delete()
+        except AuthenticationToken.DoesNotExist:
+            return self.not_found()
+        return self.no_response()
+
+
+class AccessTokenAPI:
+    """ Access token management API. """
+
+    @staticmethod
+    def serialize_token(token):
+        return {
+            "identifier": token.identifier,
+            "created": datetime_to_string(token.created),
+            "expires": datetime_to_string(token.expires),
+            "purpose": token.purpose,
+        }
+
+    @staticmethod
+    def parse_token_request(data):
+        if not isinstance(data, dict):
+            raise TypeError("Not a valid token request!")
+        token_request = {
+            'expires': parse_datetime_or_duration(data.pop('expires', None)),
+            'purpose': str(data.pop('purpose', '')),
+        }
+        if data:
+            raise ValueError("Unexpected request fields!")
+        return token_request
+
+    @classmethod
+    def create(cls, user, purpose=None, expires=None):
+        token_obj = AuthenticationToken(
+            owner=user,
+            expires=(expires or None),
+            purpose=(purpose or None),
+        )
+        token = token_obj.set_new_token()
+        token_obj.save()
+        return token_obj, token
+
+    @classmethod
+    def get_all(cls, user):
+        """ Get all tokens. """
         return user.tokens.all().order_by("-created")
 
     @staticmethod
-    def _delete_expired(user):
-        return user.tokens.filter(expires__lte=now()).delete()
-
-    @staticmethod
-    def _delete_all(user):
-        return user.tokens.all().delete()
+    def get_expired(user):
+        return user.tokens.filter(expires__lte=now())
 
     @classmethod
-    def _delete(cls, user, identifier):
-        user.tokens.filter(identifier=identifier).delete()
+    def get_all_valid(cls, user):
+        """ Get all valid tokens. """
+        cls.get_expired(user).delete()
+        return cls.get_all(user)
 
-    @staticmethod
-    def _isoformat(value):
-        return value.isoformat("T")
+    @classmethod
+    def get_valid(cls, user, identifier):
+        """ Get valid token for the given identifier """
+        cls.get_expired(user).delete()
+        return user.tokens.get(identifier=identifier)

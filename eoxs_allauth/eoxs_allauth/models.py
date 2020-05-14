@@ -26,13 +26,13 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-import os
-import base64
-
+from secrets import token_urlsafe
+from hashlib import sha256
 from django.db.models import (
-    Model, OneToOneField, ForeignKey, CharField, DateTimeField,
+    Model, OneToOneField, ForeignKey, BinaryField, CharField, DateTimeField,
     BooleanField, CASCADE,
 )
+from django.utils.timezone import now
 from django.contrib.auth.models import User
 from django_countries.fields import CountryField
 
@@ -50,29 +50,57 @@ class UserProfile(Model):
         return "<UserProfile: %s>" % self.user
 
 
-def get_random_token(lenght):
-    return base64.urlsafe_b64encode(os.urandom(lenght)).decode('ascii')
-
 def get_default_identifier():
-    return get_random_token(12)
+    return token_urlsafe(12)
+
 
 def get_default_token():
-    return get_random_token(24)
+    return token_urlsafe(24)
 
 
 class AuthenticationToken(Model):
+
     owner = ForeignKey(
         User, related_name='tokens', null=False, blank=False, on_delete=CASCADE
     )
-    token = CharField(
-        max_length=32, blank=True, null=True,
-        default=get_default_token, unique=True
+    token_sha256 = BinaryField(
+        max_length=32, blank=False, null=False, unique=True,
     )
     identifier = CharField(
         max_length=16, blank=True, null=True,
         default=get_default_identifier, unique=True,
     )
-    is_new = BooleanField(default=False, null=False)
     created = DateTimeField(auto_now_add=True)
     expires = DateTimeField(null=True, default=None)
     purpose = CharField(max_length=128, blank=True, null=True)
+
+    @property
+    def is_expired(self):
+        """ True if model is expired. """
+        return self.expires and self.expires <= now()
+
+    def set_new_token(self):
+        """ Create new token and set hash in the model. """
+        token = get_default_token()
+        self.token_sha256 = self.hash_token_sha256(token)
+        return token
+
+    @classmethod
+    def find_object_by_token(cls, token):
+        """ Find object for the given token or return None. """
+        try:
+            token_obj = (
+                cls.objects.select_related('owner')
+                .get(token_sha256=AuthenticationToken.hash_token_sha256(token))
+            )
+        except cls.DoesNotExist:
+            return None
+        if token_obj.is_expired:
+            token_obj.delete()
+            return None
+        return token_obj
+
+    @staticmethod
+    def hash_token_sha256(token):
+        """ Binary digest of the hashed token. """
+        return sha256(token.encode('utf-8')).digest()
