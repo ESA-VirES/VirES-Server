@@ -146,6 +146,7 @@ def serialize_access_token(object_):
         ("purpose", object_.purpose),
         ("expires", object_.expires and datetime_to_string(object_.expires)),
         ("created", datetime_to_string(object_.created)),
+        ("scope", list(object_.scopes)),
     ])
 
 

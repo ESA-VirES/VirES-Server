@@ -76,6 +76,18 @@ def csrf_protect_if_authenticated(view_func):
 
 
 def token_authentication(view_func):
+    """ Perform access token authentication using the default scope. """
+    return _token_authentication(view_func, AuthenticationToken.SCOPE_VIRES_APP)
+
+
+def token_authentication_with_scope(scope):
+    """ Perform access token authentication using the requested scope. """
+    def _token_authentication_with_scope(view_func):
+        return _token_authentication(view_func, scope)
+    return _token_authentication_with_scope
+
+
+def _token_authentication(view_func, scope=None):
     """ Perform access token authentication. """
     # NOTE: Make sure the HTTP server is configured so that the Authorization
     #       header is passed to the WSGI interface (WSGIPassAuthorization On).
@@ -89,6 +101,8 @@ def token_authentication(view_func):
         model = None
         if token:
             model = AuthenticationToken.find_object_by_token(token)
+            if scope and scope not in model.scopes:
+                return None
         return model.owner if model else None
 
     @wraps(view_func)

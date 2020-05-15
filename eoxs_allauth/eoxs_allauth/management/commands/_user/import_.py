@@ -103,15 +103,13 @@ class ImportUserSubcommand(Subcommand):
 def _parse_datetime(value):
     return None if value is None else parse_datetime(value)
 
-def base64_to_binary(data):
-    return base64.urlsafe_b64decode(data.encode('ascii'))
-
 PARSERS = {
     "date_joined": _parse_datetime,
     "last_login": _parse_datetime,
     "created": _parse_datetime,
     "expires": _parse_datetime,
-    "token_sha256": base64_to_binary,
+    "token_sha256": lambda data: base64.urlsafe_b64decode(data.encode('ascii')),
+    "scopes": lambda data: list(data or []) or None,
 }
 
 USER_FIELDS = [
@@ -172,6 +170,7 @@ def set_access_tokens(user, data):
 def set_access_token(user, data):
     hash_token(data)
     access_token = get_access_token(user, data['identifier'])
+    access_token.scopes = None # needed for proper initialization of the scopes
     set_model(access_token, ACCESS_TOKEN_FIELDS, data, PARSERS)
     access_token.save()
 

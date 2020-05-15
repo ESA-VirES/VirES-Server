@@ -60,6 +60,12 @@ def get_default_token():
 
 class AuthenticationToken(Model):
 
+    SCOPE_VIRES_APP = "ViresApp"
+    SCOPE_TOKEN_MNG = "TokenMng"
+
+    ALLOWED_SCOPES = set([SCOPE_VIRES_APP, SCOPE_TOKEN_MNG])
+    DEFAULT_SCOPES = [SCOPE_VIRES_APP]
+
     owner = ForeignKey(
         User, related_name='tokens', null=False, blank=False, on_delete=CASCADE
     )
@@ -73,11 +79,24 @@ class AuthenticationToken(Model):
     created = DateTimeField(auto_now_add=True)
     expires = DateTimeField(null=True, default=None)
     purpose = CharField(max_length=128, blank=True, null=True)
+    scopes_packed = CharField(max_length=128, blank=False, null=False)
 
     @property
     def is_expired(self):
         """ True if model is expired. """
         return self.expires and self.expires <= now()
+
+    @property
+    def scopes(self):
+        """ Convenience scopes getter. """
+        return set(self.scopes_packed.split())
+
+    @scopes.setter
+    def scopes(self, scopes):
+        """ Convenience scopes setter. """
+        self.scopes_packed = " %s " % " ".join(
+            self.ALLOWED_SCOPES.intersection(scopes or self.DEFAULT_SCOPES)
+        )
 
     def set_new_token(self):
         """ Create new token and set hash in the model. """

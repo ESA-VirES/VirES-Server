@@ -46,7 +46,7 @@ from .models import UserProfile, AuthenticationToken
 from .utils import datetime_to_string, parse_datetime_or_duration
 from .decorators import (
     log_access, authenticated_only, token_authentication,
-    csrf_protect_if_authenticated,
+    token_authentication_with_scope, csrf_protect_if_authenticated,
 )
 from .vires_oauth.decorators import (
     authorized_only, logout_unauthorized, redirect_unauthorized,
@@ -206,7 +206,7 @@ class AccessTokenManagerView(View):
         return render(request, self.template_name, {})
 
 
-class APIView(View):
+class TokenAPIView(View):
 
     @classmethod
     def as_view(cls, **kwargs):
@@ -214,7 +214,7 @@ class APIView(View):
         return _decorate(
             super().as_view(**kwargs),
             csrf_protect_if_authenticated,
-            token_authentication,
+            token_authentication_with_scope(AuthenticationToken.SCOPE_TOKEN_MNG),
             oauth_token_authentication,
             log_access(INFO, WARNING),
             authenticated_only,
@@ -245,7 +245,7 @@ class APIView(View):
         return HttpResponse(status=204)
 
 
-class AccessTokenCollectionAPIView(APIView):
+class AccessTokenCollectionAPIView(TokenAPIView):
 
     def get(self, request):
         """ List tokens. """
@@ -278,7 +278,7 @@ class AccessTokenCollectionAPIView(APIView):
         })
 
 
-class AccessTokenObjectAPIView(APIView):
+class AccessTokenObjectAPIView(TokenAPIView):
 
     def get(self, request, identifier):
         """ Get valid token info for the given identifier. """
@@ -310,6 +310,7 @@ class AccessTokenAPI:
             "created": datetime_to_string(token.created),
             "expires": datetime_to_string(token.expires),
             "purpose": token.purpose,
+            "scopes": list(token.scopes),
         }
 
     @staticmethod
@@ -318,19 +319,21 @@ class AccessTokenAPI:
             raise TypeError("Not a valid token request!")
         token_request = {
             'expires': parse_datetime_or_duration(data.pop('expires', None)),
-            'purpose': str(data.pop('purpose', '')),
+            'purpose': str(data.pop('purpose', None) or ''),
+            'scopes': list(data.pop('scopes', None) or []) or None,
         }
         if data:
             raise ValueError("Unexpected request fields!")
         return token_request
 
     @classmethod
-    def create(cls, user, purpose=None, expires=None):
+    def create(cls, user, purpose=None, expires=None, scopes=None):
         token_obj = AuthenticationToken(
             owner=user,
             expires=(expires or None),
             purpose=(purpose or None),
         )
+        token_obj.scopes = scopes
         token = token_obj.set_new_token()
         token_obj.save()
         return token_obj, token
