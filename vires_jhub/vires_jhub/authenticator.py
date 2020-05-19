@@ -233,9 +233,6 @@ class ViresOAuthenticator(OAuthenticator):
                 "expires": data.get("expires"),
             }
 
-        if response.code in (403, 401):
-            return None
-
         self.log.warning(
             "POST request to %s failed! Reason: %s %s", url,
             response.code, response.reason,
