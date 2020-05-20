@@ -67,9 +67,6 @@ AUX_INDEX = {
         DstReader(cache_path(AUX_DB_DST)), ("time", "dst"), abs_amax, "%.6g"
     ),
     "ddst": (
-        DDstReader(cache_path(AUX_DB_DST)), ("time", "ddst"), abs_amax, "%.6g"
-    ),
-    "ddst_abs": (
         DDstReader(cache_path(AUX_DB_DST)), ("time", "ddst"), amax, "%.6g"
     ),
     "f107": (
@@ -136,10 +133,8 @@ class GetIndices(WPSProcess):
         reader, fields, lessen, data_format = AUX_INDEX[index_id]
 
         time, data = self._read_data(reader, begin_time, end_time, fields=fields)
-        if index_id in ('ddst', 'ddst_abs'):
+        if index_id == 'ddst':
             time, data = self._fix_ddst(time, data)
-            if index_id == 'ddst_abs':
-                data = abs(data)
             time, data = self._reduce_binned_data(time, data, lessen)
         else:
             time, data = self._reduce_data(time, data, lessen)

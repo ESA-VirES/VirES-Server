@@ -100,32 +100,3 @@ class IndexKpFromKp10(SingleVariableTransform):
             logger=self._LoggerAdapter(logger or getLogger(__name__), {}),
             varmap=varmap,
         )
-
-
-class IndexAbsDDstFromDDst(SingleVariableTransform):
-    """ Conversion of dDst to |dDst|.
-    """
-    REQUIRED_VARIABLE = "dDst"
-    PROVIDED_VARIABLE = "dDst_abs"
-    CDF_VARIABLE = (
-        CDF_DOUBLE_TYPE, {
-            'DESCRIPTION': (
-                'Absolute value of the temporal change rate of the disturbance '
-                'storm time index'
-            ),
-            'UNITS': 'nT/hour',
-        }
-    )
-
-    def _transform(self, data):
-        return abs(data)
-
-    class _LoggerAdapter(LoggerAdapter):
-        def process(self, msg, kwargs):
-            return 'AbsDDstFromDDst: %s' % msg, kwargs
-
-    def __init__(self, logger=None, varmap=None):
-        super().__init__(
-            logger=self._LoggerAdapter(logger or getLogger(__name__), {}),
-            varmap=varmap,
-        )

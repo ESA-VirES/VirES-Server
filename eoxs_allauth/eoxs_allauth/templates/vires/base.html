@@ -114,7 +114,9 @@
     </script>
     <noscript><p><img src="//nix.eox.at/piwik/piwik.php?idsite=4" style="border:0;" alt="" /></p></noscript>
     <script type="text/javascript">
+      var window_onload = window.onload;
       window.onload = function() {
+        if (window_onload) window_onload();
         var html = '<div>' +
             'You may choose to prevent this website from aggregating and analyzing '+
             'the actions you take here. Doing so will protect your privacy, but it '+

@@ -4,6 +4,42 @@
 <h1>Changelog</h1>
 <hr>
 <h3>
+    Release of Service v3.3.0 (25.05.2020)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>New AMPS magnetic model</b></br>
+      The magnetic field calculated by the
+      <a href="https://pyamps.readthedocs.io/en/latest/readme.html" target="_blank">AMPS model</a>
+      has been added to VirES.
+    </li>
+    <li><b>Composed magnetic models</b></br>
+      A set of new composed magnetic models have been added to VirES.
+      These composed models group already available simple models
+      and form new, complete and easy-to-use ones:
+      <ul>
+        <li>SwarmCI - Swarm Comprehensive Inversion model (MCO_SHA_2C, MLI_SHA_2C, MMA_SHA_2C, MIO_SHA_2C)</li>
+        <li>CHAOS-7 (CHAOS-7 Core, CHAOS-7 Static, CHAOS-MMA)</li>
+        <li>CHAOS-MMA (CHAOS-MMA-Primary + CHAOS-MMA-Secondary)</li>
+        <li>MMA_SHA_2C (MMA_SHA_2C-Primary, MMA_SHA_2C-Secondary)</li>
+        <li>MMA_SHA_2F (MMA_SHA_2F-Primary, MMA_SHA_2F-Secondary)</li>
+        <li>MIO_SHA_2C (MIO_SHA_2C-Primary, MIO_SHA_2C-Secondary)</li>
+        <li>MIO_SHA_2D (MIO_SHA_2D-Primary, MIO_SHA_2D-Secondary)</li>
+      </ul>
+    </li>
+    <li><b>New dDst index</b></br>
+      The absolute value of the Dst temporal rate of change has been added
+      to VirES as a new index quantifying the magnetospheric activity.
+    </li>
+    <li><b>VRE automatic VirES access configuration</b></br>
+      The VRE is now initialized automatically and it is no longer needed
+      to configure the VirES Python client manually.
+    </li>
+</ul>
+<hr>
+<h3>
     Release of Service v3.2.0 (06.04.2020)
 </h3>
 <p>

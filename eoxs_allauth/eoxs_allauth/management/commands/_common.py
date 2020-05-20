@@ -30,9 +30,9 @@ import sys
 from logging import INFO, WARNING, ERROR
 from datetime import datetime, time
 from django.core.management.base import BaseCommand
-from django.utils.timezone import utc
 from django.utils.dateparse import parse_date, parse_datetime
 from eoxserver.core.util.timetools import parse_duration
+from eoxs_allauth.utils import naive_to_utc
 
 
 _LABEL2LOGLEVEL = {
@@ -49,17 +49,6 @@ JSON_OPTS = {
 }
 
 
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')
-
-
-def naive_to_utc(dt_obj):
-    """ Convert naive `datetime.datetime` to UTC time-zone aware one. """
-    if dt_obj.tzinfo is None:
-        dt_obj = dt_obj.replace(tzinfo=utc)
-    return dt_obj.astimezone(utc)
-
-
 def time_spec(value):
     """ CLI time specification parser. """
     date_ = parse_date(value)
@@ -69,7 +58,7 @@ def time_spec(value):
     if datetime_ is not None:
         return naive_to_utc(datetime_)
     try:
-        return naive_to_utc(datetime.utcnow() + parse_duration(value))
+        return naive_to_utc(datetime.utcnow() - abs(parse_duration(value)))
     except ValueError:
         pass
     raise ValueError("Invalid time specification '%s'." % value)

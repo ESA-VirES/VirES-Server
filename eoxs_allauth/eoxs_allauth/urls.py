@@ -37,7 +37,12 @@ from allauth.socialaccount.views import (
     login_cancelled as socialaccount_login_cancelled,
     login_error as socialaccount_login_error,
 )
-from .views import AccessTokenManagerView
+from .views import (
+    AccessTokenManagerView,
+    AccessTokenCollectionAPIView,
+    AccessTokenObjectAPIView,
+)
+
 
 urlpatterns = [
     url(
@@ -54,6 +59,8 @@ urlpatterns = [
     url(r"^logout/$", account_logout, name="account_logout"),
     url(r"^inactive/$", account_inactive, name="account_inactive"),
     url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
+    url(r'^api/tokens/?$', AccessTokenCollectionAPIView.as_view(), name='account_tokens_api'),
+    url(r'^api/tokens/(?P<identifier>[A-Za-z0-9_-]{16,16})/?$', AccessTokenObjectAPIView.as_view()),
 ]
 
 document_urlpatterns = [

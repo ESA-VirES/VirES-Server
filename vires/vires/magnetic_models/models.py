@@ -69,6 +69,11 @@ PREDEFINED_COMPOSED_MODELS = {
     "MMA_SHA_2F": "'MMA_SHA_2F-Primary' + 'MMA_SHA_2F-Secondary'",
     "MIO_SHA_2C": "'MIO_SHA_2C-Primary' + 'MIO_SHA_2C-Secondary'",
     "MIO_SHA_2D": "'MIO_SHA_2D-Primary' + 'MIO_SHA_2D-Secondary'",
+    "SwarmCI": (
+        "MCO_SHA_2C + MLI_SHA_2C"
+        "+ 'MMA_SHA_2C-Primary' + 'MMA_SHA_2C-Secondary'"
+        "+ 'MIO_SHA_2C-Primary' + 'MIO_SHA_2C-Secondary'"
+    )
 }
 
 
