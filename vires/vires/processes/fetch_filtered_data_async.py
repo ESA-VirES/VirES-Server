@@ -60,11 +60,11 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters2,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names,
+    extract_product_names
 )
 from vires.processes.util.time_series import (
     ProductTimeSeries,
-    IndexKp10, IndexDst, IndexF107,
+    IndexKp10, IndexDst, IndexDDst, IndexF107,
     OrbitCounter, OrbitDirection, QDOrbitDirection,
 )
 from vires.processes.util.models import (
@@ -360,6 +360,7 @@ class FetchFilteredDataAsync(WPSProcess):
             }
             index_kp10 = IndexKp10(cache_path(AUX_DB_KP))
             index_dst = IndexDst(cache_path(AUX_DB_DST))
+            index_ddst = IndexDDst(cache_path(AUX_DB_DST))
             index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
             index_imf = ProductTimeSeries(
                 ProductCollection.objects.get(
@@ -421,7 +422,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
-                for slave in (index_kp10, index_dst, index_f10, index_imf):
+                for slave in (index_kp10, index_dst, index_ddst, index_f10, index_imf):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
@@ -452,6 +453,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals)
+
                 for model in aux_models:
                     resolver.add_model(model)
 

@@ -63,7 +63,7 @@ from vires.processes.util import (
 )
 from vires.processes.util.time_series import (
     ProductTimeSeries, CustomDatasetTimeSeries,
-    IndexKp10, IndexDst, IndexF107,
+    IndexKp10, IndexDst, IndexDDst, IndexF107,
     OrbitCounter, OrbitDirection, QDOrbitDirection,
 )
 from vires.processes.util.models import (
@@ -277,6 +277,7 @@ class FetchData(WPSProcess):
             }
             index_kp10 = IndexKp10(cache_path(AUX_DB_KP))
             index_dst = IndexDst(cache_path(AUX_DB_DST))
+            index_ddst = IndexDDst(cache_path(AUX_DB_DST))
             index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
             index_imf = ProductTimeSeries(
                 ProductCollection.objects.get(
@@ -337,7 +338,7 @@ class FetchData(WPSProcess):
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
-                for slave in (index_kp10, index_dst, index_f10, index_imf):
+                for slave in (index_kp10, index_dst, index_ddst, index_f10, index_imf):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
@@ -366,6 +367,7 @@ class FetchData(WPSProcess):
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals)
+
                 for model in aux_models:
                     resolver.add_model(model)
 
