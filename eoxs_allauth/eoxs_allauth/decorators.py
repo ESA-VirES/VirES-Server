@@ -31,8 +31,8 @@
 import re
 from functools import wraps
 from logging import NOTSET
-from django.utils.timezone import now
 from django.core.exceptions import PermissionDenied
+from django.views.decorators.csrf import csrf_protect
 from .models import AuthenticationToken
 
 
@@ -57,7 +57,37 @@ def authenticated_only(view_func):
     return _wrapper_
 
 
+def csrf_protect_if_authenticated(view_func):
+    """ Check CSRF token if user is authenticated.
+    This decorator enforces CSRF if the user has been already authenticated
+    (e.g., by session middleware while allows later authentication
+    without CSRF (e.g., by using HTTP Authorization Bearer header).
+    """
+    @csrf_protect
+    def protected_view_func(*args, **kwargs):
+        return view_func(*args, **kwargs)
+
+    @wraps(view_func)
+    def _wrapper_(request, *args, **kwargs):
+        return (
+            protected_view_func if request.user.is_authenticated else view_func
+        )(request, *args, **kwargs)
+    return _wrapper_
+
+
 def token_authentication(view_func):
+    """ Perform access token authentication using the default scope. """
+    return _token_authentication(view_func, AuthenticationToken.SCOPE_VIRES_APP)
+
+
+def token_authentication_with_scope(scope):
+    """ Perform access token authentication using the requested scope. """
+    def _token_authentication_with_scope(view_func):
+        return _token_authentication(view_func, scope)
+    return _token_authentication_with_scope
+
+
+def _token_authentication(view_func, scope=None):
     """ Perform access token authentication. """
     # NOTE: Make sure the HTTP server is configured so that the Authorization
     #       header is passed to the WSGI interface (WSGIPassAuthorization On).
@@ -68,22 +98,12 @@ def token_authentication(view_func):
         return match.groupdict()['token'] if match else None
 
     def _get_user(token):
-        if not token:
-            return None
-        try:
-            model = (
-                AuthenticationToken.objects
-                .select_related('owner')
-                .get(token=token)
-            )
-        except AuthenticationToken.DoesNotExist:
-            return None
-
-        if model.expires and model.expires <= now(): # check for expired token
-            model.delete()
-            return None
-
-        return model.owner
+        model = None
+        if token:
+            model = AuthenticationToken.find_object_by_token(token)
+            if scope and scope not in model.scopes:
+                return None
+        return model.owner if model else None
 
     @wraps(view_func)
     def _wrapper_(request, *args, **kwargs):

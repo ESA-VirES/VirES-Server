@@ -38,6 +38,8 @@ def get_required_permission():
 def get_user_permissions(user):
     if not user.is_authenticated:
         return set()
+    if hasattr(user, 'vires_permissions'):
+        return user.vires_permissions
     try:
         vires_account = user.socialaccount_set.get(provider=ViresProvider.id)
     except ObjectDoesNotExist:

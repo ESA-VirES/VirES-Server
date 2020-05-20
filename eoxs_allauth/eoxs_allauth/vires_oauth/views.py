@@ -59,10 +59,13 @@ class ViresOAuth2Adapter(OAuth2Adapter):
     authorize_url = '{0}/authorize/'.format(public_server_url)
     profile_url = '{0}/user/'.format(direct_server_url)
 
+    @classmethod
+    def read_profile(cls, token):
+        headers = {'Authorization': 'Bearer %s' % token}
+        return requests.get(cls.profile_url, headers=headers)
+
     def complete_login(self, request, app, token, **kwargs):
-        params = {'access_token': token.token}
-        resp = requests.get(self.profile_url, params=params)
-        extra_data = resp.json()
+        extra_data = self.read_profile(token.token).json()
         return self.get_provider().sociallogin_from_response(request, extra_data)
 
     def get_email(self, token):
