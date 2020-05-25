@@ -56,17 +56,27 @@ def access_logging_middleware(get_response):
         return ERROR
 
     def middleware(request):
-        logger = AccessLoggerAdapter(
-            logger=base_logger,
-            username=get_username(request.user),
-            remote_addr=get_remote_addr(request),
-        )
+        remote_addr = get_remote_addr(request)
+
+        # Extract username if the user has been already authenticated.
+        username = get_username(request.user)
+
         response = get_response(request)
-        logger.log(
+
+        # Update username if the authentication happened later
+        # in the middleware/decorator chain.
+        # Note that the username extraction after calling the request handler
+        # does not extract username for the logout requests.
+        username = username or get_username(request.user)
+
+        AccessLoggerAdapter(
+            logger=base_logger, username=username, remote_addr=remote_addr
+        ).log(
             get_log_level(response.status_code, request.user.is_authenticated),
             "%s %s %s %s ", request.method, request.path, response.status_code,
             response.reason_phrase,
         )
+
         return response
 
     return middleware
