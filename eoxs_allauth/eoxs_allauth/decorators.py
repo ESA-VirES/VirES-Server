@@ -88,7 +88,7 @@ def token_authentication_with_scope(scope):
     return _token_authentication_with_scope
 
 
-def _token_authentication(view_func, scope=None):
+def _token_authentication(view_func, scope):
     """ Perform access token authentication. """
     # NOTE: Make sure the HTTP server is configured so that the Authorization
     #       header is passed to the WSGI interface (WSGIPassAuthorization On).
@@ -102,8 +102,8 @@ def _token_authentication(view_func, scope=None):
         model = None
         if token:
             model = AuthenticationToken.find_object_by_token(token)
-            if scope and scope not in model.scopes:
-                return None
+            if model and scope not in model.scopes:
+                model = None
         return model.owner if model else None
 
     @wraps(view_func)
