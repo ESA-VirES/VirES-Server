@@ -56,13 +56,16 @@ class ViresProvider(OAuth2Provider):
     name = 'VirES'
     account_class = ViresAccount
 
-    def get_default_scope(self):
+    @staticmethod
+    def get_default_scope():
         return ['read_id']
 
-    def extract_uid(self, data):
+    @staticmethod
+    def extract_uid(data):
         return data['username']
 
-    def extract_common_fields(self, data):
+    @staticmethod
+    def extract_common_fields(data):
         return {
             'username': data['username'],
             'first_name': data.get('first_name'),

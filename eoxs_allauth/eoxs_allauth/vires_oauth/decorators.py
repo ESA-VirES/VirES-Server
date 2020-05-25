@@ -33,12 +33,16 @@ from logging import getLogger
 from functools import wraps
 from requests import RequestException
 from django.http import HttpResponse, HttpResponseRedirect
+from django.db import transaction
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
+from allauth.account.signals import user_signed_up
+from allauth.socialaccount.models import SocialAccount
 from .permissions import get_user_permissions, get_required_permission
 from .messages import add_message_access_denied
 from .views import ViresOAuth2Adapter
+from .provider import ViresProvider
 
 
 def oauth_token_authentication(view_func):
@@ -46,6 +50,7 @@ def oauth_token_authentication(view_func):
     # NOTE: Make sure the HTTP server is configured so that the Authorization
     #       header is passed to the WSGI interface (WSGIPassAuthorization On).
     re_bearer = re.compile(r"^Bearer (?P<token>[a-zA-Z0-9_-]{30,30})$")
+    logger = getLogger(__name__ + ".oauth_token_authentication")
 
     def _extract_token(request):
         match = re_bearer.match(request.META.get("HTTP_AUTHORIZATION", ""))
@@ -67,6 +72,25 @@ def oauth_token_authentication(view_func):
             pass
         return None
 
+    @transaction.atomic
+    def _create_new_user(profile):
+        user = User(**{
+            key: val for key, val
+            in ViresProvider.extract_common_fields(profile).items() if val
+        })
+        user.last_login = user.date_joined
+        user.save()
+        social_account = SocialAccount(
+            user=user,
+            provider=ViresProvider.id,
+            uid=ViresProvider.extract_uid(profile),
+            extra_data=profile,
+        )
+        social_account.date_joined = user.date_joined
+        social_account.last_login = user.last_login
+        social_account.save()
+        return user
+
     @wraps(view_func)
     def _wrapper_(request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -77,10 +101,23 @@ def oauth_token_authentication(view_func):
                 return HttpResponse("Bad gateway", content_type='text/plain', status=502)
             if profile:
                 user = _get_user(profile.get('username'))
+                if not user:
+                    try:
+                        user = _create_new_user(profile)
+                    except Exception as exception:
+                        logger.error(
+                            "Failed to create user %s! %s",
+                            profile.get('username'),
+                            exception, exc_info=True
+                        )
+                    else:
+                        user_signed_up.send(
+                            sender=user.__class__, request=request, user=user,
+                        )
+                        logger.debug("user %s created", user.username)
                 if user and user.is_active:
                     user.vires_permissions = set(profile.get('permissions') or [])
                     request.user = user
-                # TODO: handle new users
         return view_func(request, *args, **kwargs)
     return _wrapper_
 

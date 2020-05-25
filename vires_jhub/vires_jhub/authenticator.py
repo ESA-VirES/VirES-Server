@@ -204,7 +204,7 @@ class ViresOAuthenticator(OAuthenticator):
 
     async def _retrieve_vires_token(self, server_url, oauth_token):
         self.log.info("Retrieving access token for %s ...", server_url)
-        url = RE_VIRES_URL.sub(VIRES_TOKEN_API_PATH, server_url)
+        url = RE_VIRES_URL.sub(VIRES_TOKEN_API_PATH, server_url, count=1)
         request = HTTPRequest(
             url,
             method="POST",

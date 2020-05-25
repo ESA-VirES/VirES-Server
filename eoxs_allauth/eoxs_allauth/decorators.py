@@ -31,7 +31,7 @@
 import re
 from functools import wraps
 from logging import NOTSET
-from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_protect
 from .models import AuthenticationToken
 
@@ -51,9 +51,10 @@ def authenticated_only(view_func):
     """ Allow only authenticated users or deny access. """
     @wraps(view_func)
     def _wrapper_(request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return view_func(request, *args, **kwargs)
-        raise PermissionDenied
+        if not request.user.is_authenticated:
+            # TODO: implement a nicer error response
+            return HttpResponse("Forbidden", "text/plain", 403)
+        return view_func(request, *args, **kwargs)
     return _wrapper_
 
 
@@ -87,7 +88,7 @@ def token_authentication_with_scope(scope):
     return _token_authentication_with_scope
 
 
-def _token_authentication(view_func, scope=None):
+def _token_authentication(view_func, scope):
     """ Perform access token authentication. """
     # NOTE: Make sure the HTTP server is configured so that the Authorization
     #       header is passed to the WSGI interface (WSGIPassAuthorization On).
@@ -101,8 +102,8 @@ def _token_authentication(view_func, scope=None):
         model = None
         if token:
             model = AuthenticationToken.find_object_by_token(token)
-            if scope and scope not in model.scopes:
-                return None
+            if model and scope not in model.scopes:
+                model = None
         return model.owner if model else None
 
     @wraps(view_func)
