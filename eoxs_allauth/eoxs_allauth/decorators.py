@@ -31,7 +31,7 @@
 import re
 from functools import wraps
 from logging import NOTSET
-from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_protect
 from .models import AuthenticationToken
 
@@ -51,9 +51,10 @@ def authenticated_only(view_func):
     """ Allow only authenticated users or deny access. """
     @wraps(view_func)
     def _wrapper_(request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return view_func(request, *args, **kwargs)
-        raise PermissionDenied
+        if not request.user.is_authenticated:
+            # TODO: implement a nicer error response
+            return HttpResponse("Forbidden", "text/plain", 403)
+        return view_func(request, *args, **kwargs)
     return _wrapper_
 
 
