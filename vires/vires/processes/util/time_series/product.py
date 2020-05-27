@@ -87,9 +87,9 @@ class OmniHr1MinParameters(SwarmDefaultParameters):
     }
     VARIABLE_INTERPOLATION_KINDS = {
         'F10_INDEX': 'zero',
-        'IMF_BY_GSM': 'zero',
-        'IMF_BZ_GSM': 'zero',
-        'IMF_V': 'zero',
+        'IMF_BY_GSM': 'linear',
+        'IMF_BZ_GSM': 'linear',
+        'IMF_V': 'linear',
     }
 
 
