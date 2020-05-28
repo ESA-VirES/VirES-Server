@@ -33,6 +33,7 @@ from .aux_common import (
     SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
 )
 
+HOURS_TO_DAYS = 1.0 / 24.0
 DST_FLAGS = {b"D": 0, b"P": 1} # Definitive / Preliminary(?)
 
 
@@ -41,7 +42,9 @@ def update_dst(src_file, dst_file):
 
     def _ddst(time, dst):
         ddst = empty(dst.shape)
-        ddst[:-1] = 24.0 * abs((dst[1:] - dst[:-1]) / (time[1:] - time[:-1]))
+        ddst[:-1] = HOURS_TO_DAYS * abs(
+            (dst[1:] - dst[:-1]) / (time[1:] - time[:-1])
+        )
         ddst[-1] = nan
         return ddst
 
