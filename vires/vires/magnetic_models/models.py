@@ -194,6 +194,10 @@ MODEL_FACTORIES = {
         load_model_shc,
         [CachedModelFileWithSourceFile("MLI_SHA_2D", shc_validity_reader)]
     ),
+    "MLI_SHA_2E": ModelFactory(
+        load_model_shc,
+        [CachedModelFileWithSourceFile("MLI_SHA_2E", shc_validity_reader)]
+    ),
     "MMA_SHA_2C-Primary": ModelFactory(
         load_model_swarm_mma_2c_external,
         [CachedComposedModelFile("MMA_SHA_2C")]

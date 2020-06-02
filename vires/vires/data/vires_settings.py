@@ -36,6 +36,7 @@ CACHED_PRODUCT_FILE = {
     "MCO_SHA_2X": "SW_OPER_MCO_SHA_2X.shc",
     "MLI_SHA_2C": "SW_OPER_MLI_SHA_2C.shc",
     "MLI_SHA_2D": "SW_OPER_MLI_SHA_2D.shc",
+    "MLI_SHA_2E": "SW_OPER_MLI_SHA_2E.shc",
     "MMA_SHA_2C": "SW_OPER_MMA_SHA_2C.cdf",
     "MMA_SHA_2F": "SW_OPER_MMA_SHA_2F.cdf",
     "MIO_SHA_2C": "SW_OPER_MIO_SHA_2C.txt",
