@@ -27,6 +27,38 @@
 # pylint: disable=missing-docstring
 
 from logging import LoggerAdapter
+from datetime import datetime
+from django.utils.timezone import utc
+from django.utils.dateparse import parse_datetime
+from eoxserver.core.util.timetools import parse_duration
+
+
+def datetime_to_string(dtobj):
+    """ Format datetime object. """
+    return dtobj if dtobj is None else dtobj.isoformat('T')
+
+
+def parse_datetime_or_duration(value, now=None):
+    """ Parse input time specification provided either as ISO timestamp
+    or relative ISO duration.
+    """
+    if value is None:
+        return None
+    datetime_ = parse_datetime(value)
+    if datetime_ is not None:
+        return naive_to_utc(datetime_)
+    try:
+        return naive_to_utc((now or datetime.utcnow()) + parse_duration(value))
+    except ValueError:
+        pass
+    raise ValueError("Invalid time specification '%s'." % value)
+
+
+def naive_to_utc(dt_obj):
+    """ Convert naive `datetime.datetime` to UTC time-zone aware one. """
+    if dt_obj.tzinfo is None:
+        dt_obj = dt_obj.replace(tzinfo=utc)
+    return dt_obj.astimezone(utc)
 
 
 class AccessLoggerAdapter(LoggerAdapter):

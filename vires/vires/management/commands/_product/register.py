@@ -24,25 +24,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-many-locals, too-many-branches
-# pylint: disable=too-many-arguments, broad-except
+# pylint: disable=missing-docstring, too-few-public-methods, broad-except
 
 import sys
-from os.path import abspath, basename, splitext
-from datetime import timedelta
 from traceback import print_exc
-from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import CommandError
-from vires.swarm import SwarmProductMetadataReader
-from vires.models import Product, ProductCollection
-from vires.orbit_direction_update import DataIntegrityError
-from vires.cdf_util import cdf_open
-from .._common import Subcommand
-from .._orbit_direction.common import (
-    update_orbit_direction_tables,
-    sync_orbit_direction_tables,
-    rebuild_orbit_direction_tables,
+from vires.management.api.product import (
+    register_product, get_product_id, read_product_metadata,
+    execute_post_registration_actions,
 )
+from vires.management.api.product_collection import get_product_collection
+from .._common import Subcommand
 
 
 class RegisterProductSubcommand(Subcommand):
@@ -87,15 +80,14 @@ class RegisterProductSubcommand(Subcommand):
         )
 
     def handle(self, **kwargs):
-        self.verbosity = kwargs["verbosity"]
         data_files = kwargs["product-file"]
-        ignore_registered = kwargs["ignore_registered"]
-        ignore_overlaps = kwargs["ignore_overlaps"]
+        update_existing = not kwargs["ignore_registered"]
+        resolve_time_overlaps = not kwargs["ignore_overlaps"]
         collection_id = kwargs["collection_id"]
 
-        collection = get_collection(collection_id)
-
-        if collection is None:
+        try:
+            collection = get_product_collection(collection_id)
+        except ObjectDoesNotExist:
             raise CommandError(
                 "The product collection %s does not exist!" % collection_id
             )
@@ -104,104 +96,46 @@ class RegisterProductSubcommand(Subcommand):
 
         for data_file in read_products(kwargs["input_file"], data_files):
             product_id = get_product_id(data_file)
-            max_product_duration = collection.max_product_duration
-
             try:
-                removed, inserted, updated, product = self._register_product(
-                    collection, product_id, data_file, ignore_registered,
-                    ignore_overlaps,
+                result = register_product(
+                    collection, data_file, metadata={
+                        "identifier": product_id,
+                        **read_product_metadata(data_file),
+                    },
+                    update_existing=update_existing,
+                    resolve_time_overlaps=resolve_time_overlaps,
+                    logger=self.logger
                 )
             except Exception as error:
-                collection.max_product_duration = max_product_duration
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
                 self.error(
                     "Registration of %s/%s failed! Reason: %s",
                     collection.identifier, product_id, error
                 )
+                collection.refresh_from_db()
                 counter.failed += 1
-                product = None
+                result = None
+
             else:
-                counter.removed += len(removed)
-                if updated:
-                    counter.updated += 1
-                elif inserted:
+                counter.removed += len(result.deregistered)
+                if result.inserted:
                     counter.inserted += 1
+                elif result.updated:
+                    counter.updated += 1
                 else:
                     counter.skipped += 1
             finally:
                 counter.total += 1
 
-            if product:
-                if collection.metadata.get("calculateOrbitDirection"):
-                    self._update_orbit_direction(product)
+            if result and (result.inserted or result.updated):
+                execute_post_registration_actions(
+                    result.product, logger=self.logger
+                )
 
         counter.print_report(lambda msg: print(msg, file=sys.stderr))
 
-        sys.exit(counter.failed)
-
-    @transaction.atomic
-    def _register_product(self, collection, product_id, data_file,
-                          ignore_registered, ignore_overlaps):
-        removed, inserted, updated = [], [], []
-        metadata = read_metadata(data_file)
-
-        products = find_time_overlaps(
-            collection, metadata["begin_time"], metadata["end_time"]
-        )
-        old_product = None
-
-        for product in products:
-            if product.identifier == product_id:
-                old_product = product
-            else:
-                if ignore_overlaps and product.identifier != product_id:
-                    self.info(
-                        "product %s/%s time overlap ignored",
-                        collection.identifier, product.identifier
-                    )
-                else:
-                    delete_product(product)
-                    self.info(
-                        "product %s/%s de-registered",
-                        collection.identifier, product.identifier
-                    )
-                    removed.append(product.identifier)
-
-        if not old_product:
-            product = register_product(collection, product_id, data_file, metadata)
-            self.info(
-                "product %s/%s registered",
-                collection.identifier, product_id, log=True
-            )
-            inserted.append(product_id)
-        elif not ignore_registered:
-            product = update_product(old_product, data_file, metadata)
-            self.info(
-                "product %s/%s updated",
-                collection.identifier, product_id, log=True
-            )
-            updated.append(product_id)
-        else:
-            product = None
-            if self.verbosity > 1:
-                self.info(
-                    "product %s/%s ignored",
-                    collection.identifier, product_id
-                )
-
-        return removed, inserted, updated, product
-
-    def _update_orbit_direction(self, product):
-        try:
-            update_orbit_direction_tables(product)
-        except DataIntegrityError:
-            self.warning("Synchronizing orbit direction lookup tables ...")
-            try:
-                sync_orbit_direction_tables(product.collection, logger=self.logger)
-            except DataIntegrityError:
-                self.warning("Rebuilding orbit direction lookup tables ...")
-                rebuild_orbit_direction_tables(product.collection, logger=self.logger)
+        sys.exit(counter.failed > 0)
 
 
 class Counter():
@@ -215,7 +149,7 @@ class Counter():
         self.failed = 0
 
     def print_report(self, print_fcn):
-        if self.inserted > 0:
+        if self.inserted > 0 or self.total == 0:
             print_fcn(
                 "%d of %d product(s) registered."
                 % (self.inserted, self.total)
@@ -234,23 +168,13 @@ class Counter():
             )
 
         if self.removed > 0:
-            print_fcn("%d product(s) de-registered." % self.removed)
-
+            print_fcn("%d overlapping product(s) de-registered." % self.removed)
 
         if self.failed > 0:
             print_fcn(
                 "Failed to register %d of %d product(s)."
                 % (self.failed, self.total)
             )
-
-        if self.total == 0:
-            print_fcn("No action performed.")
-
-
-def read_metadata(data_file):
-    """ Read metadata from product. """
-    with cdf_open(data_file) as cdf:
-        return SwarmProductMetadataReader.read(cdf)
 
 
 def read_products(filename, args):
@@ -271,76 +195,3 @@ def read_products(filename, args):
 
     with open(filename) as file_:
         return _read_lines(file_)
-
-
-def get_collection(identifier):
-    """ Get collection for the given collection identifier.
-    Return None if no collection matched.
-    """
-    try:
-        return ProductCollection.objects.select_related('type').get(
-            identifier=identifier
-        )
-    except ProductCollection.DoesNotExist:
-        return None
-
-
-def get_product_id(data_file):
-    """ Get the product identifier. """
-    return splitext(basename(data_file))[0]
-
-
-def find_product(collection, product_id):
-    """ Return True if the product is already registered. """
-    try:
-        return collection.products.get(identifier=product_id)
-    except Product.DoesNotExist:
-        return None
-
-
-def find_time_overlaps(collection, begin_time, end_time):
-    """ Lookup products with the same temporal overlap."""
-    return collection.products.filter(
-        begin_time__lte=end_time,
-        begin_time__gte=(begin_time - collection.max_product_duration),
-        end_time__gte=begin_time
-    )
-
-
-def register_product(collection, identifier, data_file, metadata):
-    """ Register product. """
-    return update_product(
-        Product(identifier=identifier, collection=collection),
-        data_file, metadata
-    )
-
-
-def update_product(product, data_file, metadata):
-    """ Update and save product. """
-    product.begin_time = metadata['begin_time']
-    product.end_time = metadata['end_time']
-    product.datasets = {
-        name: {"location": abspath(data_file)}
-        for name in product.collection.type.definition['datasets']
-    }
-    product.save()
-    update_max_product_duration(
-        product.collection, product.end_time - product.begin_time
-    )
-    return product
-
-
-def update_max_product_duration(collection, duration):
-    # round the duration up to whole second + add one extra second buffer
-    duration = timedelta(
-        days=duration.days,
-        seconds=(duration.seconds + (2 if duration.microseconds > 0 else 1))
-    )
-    if duration > collection.max_product_duration:
-        collection.max_product_duration = duration
-        collection.save()
-
-
-def delete_product(product):
-    """ Delete product object. """
-    product.delete()

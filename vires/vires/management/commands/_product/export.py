@@ -29,6 +29,7 @@
 import sys
 import json
 from vires.models import Product
+from vires.management.api.product import export_product
 from .._common import JSON_OPTS, datetime_to_string
 from .common import ProductSelectionSubcommand
 
@@ -52,22 +53,25 @@ class ExportProductSubcommand(ProductSelectionSubcommand):
             **kwargs
         )
 
-        data = [serialize_product(product) for product in products]
+        data = [
+            serialize_product_record(export_product(product))
+            for product in products
+        ]
 
         filename = kwargs["file"]
         with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
             json.dump(data, file_, **JSON_OPTS)
 
 
-def serialize_product(object_):
+def serialize_product_record(record):
     return {
-        "identifier": object_.identifier,
-        "beginTime": datetime_to_string(object_.begin_time),
-        "endTime": datetime_to_string(object_.end_time),
-        "created": datetime_to_string(object_.created),
-        "updated": datetime_to_string(object_.updated),
-        "collection": object_.collection.identifier,
-        "productType": object_.collection.type.identifier,
-        "metadata": object_.metadata,
-        "datasets": object_.datasets,
+        "identifier": record['identifier'],
+        "beginTime": datetime_to_string(record['begin_time']),
+        "endTime": datetime_to_string(record['end_time']),
+        "created": datetime_to_string(record['created']),
+        "updated": datetime_to_string(record['updated']),
+        "collection": record['collection'],
+        "productType": record['product_type'],
+        "metadata": record['metadata'],
+        "datasets": record['datasets'],
     }

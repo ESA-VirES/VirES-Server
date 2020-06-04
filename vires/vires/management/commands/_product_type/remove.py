@@ -80,11 +80,11 @@ class RemoveProductTypeSubcommand(Subcommand):
                 )
             else:
                 removed_count += 1
-                self.info("product type %s removed", identifier, log=True)
+                self.logger.info("product type %s removed", identifier)
             finally:
                 total_count += 1
 
-        if removed_count:
+        if removed_count or total_count == 0:
             self.info(
                 "%d of %d matched product type%s removed.",
                 removed_count, total_count, "s" if removed_count > 1 else ""

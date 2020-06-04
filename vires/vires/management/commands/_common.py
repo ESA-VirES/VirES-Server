@@ -27,7 +27,10 @@
 # pylint: disable=missing-docstring
 
 import sys
-from logging import INFO, WARNING, ERROR
+from logging import (
+    getLogger, DEBUG, INFO, WARNING, ERROR,
+    Formatter, StreamHandler,
+)
 from datetime import datetime, time
 from django.core.management.base import BaseCommand
 from django.utils.dateparse import parse_date, parse_datetime
@@ -69,21 +72,18 @@ def time_spec(value):
 
 
 class ConsoleOutput():
-    logger = None
 
-    def info(self, message, *args, **kwargs):
-        self.print_message("INFO", message, *args, **kwargs)
+    def info(self, message, *args):
+        self.print_message("INFO", message, *args)
 
-    def warning(self, message, *args, **kwargs):
-        self.print_message("WARNING", message, *args, **kwargs)
+    def warning(self, message, *args):
+        self.print_message("WARNING", message, *args)
 
-    def error(self, message, *args, **kwargs):
-        self.print_message("ERROR", message, *args, **kwargs)
+    def error(self, message, *args):
+        self.print_message("ERROR", message, *args)
 
-    def print_message(self, label, message, *args, **kwargs):
+    def print_message(self, label, message, *args):
         print("%s: %s" % (label, message % args), file=sys.stderr)
-        if self.logger and(getattr(self, 'log', False) or kwargs.get('log')):
-            self.logger.log(_LABEL2LOGLEVEL[label], message, *args)
 
 
 class Subcommand(ConsoleOutput):
@@ -115,6 +115,9 @@ class Supercommand(ConsoleOutput, BaseCommand):
 
         for name, command in self.commands.items():
             subparser = subparsers.add_parser(name, help=command.help)
+            subparser.description = getattr(command, "description", command.help)
+            if hasattr(command, "formatter_class"):
+                subparser.formatter_class = command.formatter_class
             command.add_arguments(subparser)
 
         # .add_subparsers() in Python < 3.7 does not support required parameter
@@ -122,4 +125,26 @@ class Supercommand(ConsoleOutput, BaseCommand):
         subparsers.required = True
 
     def handle(self, *arg, **kwargs):
+        self.set_stream_handler(kwargs['verbosity'])
         return self.commands[kwargs.pop('command')].handle(**kwargs)
+
+    def set_stream_handler(self, verbosity):
+        """ Set command stream handler for the given verbosity level. """
+        if verbosity == 0:
+            self._add_stream_handler(getLogger('vires'), WARNING)
+        elif verbosity == 1:
+            self._add_stream_handler(getLogger('vires'), INFO)
+        elif verbosity == 2:
+            self._add_stream_handler(getLogger('vires'), DEBUG)
+        elif verbosity == 3:
+            self._add_stream_handler(getLogger(), DEBUG)
+
+    @staticmethod
+    def _add_stream_handler(logger, level=DEBUG):
+        """ Add stream handler to the given logger. """
+        formatter = Formatter('%(levelname)s: %(message)s')
+        handler = StreamHandler()
+        handler.setLevel(level)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(min(level, logger.level))

@@ -28,7 +28,7 @@
 
 from vires.cdf_util import CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDF_UINT2_TYPE
 from vires.aux_kp import KpReader
-from vires.aux_dst import DstReader
+from vires.aux_dst import DstReader, DDstReader
 from vires.aux_f107 import F10_2_Reader
 from .auxiliary_data import AuxiliaryDataTimeSeries
 
@@ -55,6 +55,30 @@ class IndexKp10(AuxiliaryDataTimeSeries):
         AuxiliaryDataTimeSeries.__init__(
             self, "Kp10", filename, KpReader,
             {'time': 'Timestamp', 'kp': 'Kp10'}, logger
+        )
+
+
+class IndexDDst(AuxiliaryDataTimeSeries):
+    """ Dst index time-series source class. """
+    CDF_TYPE = {'Timestamp': CDF_EPOCH_TYPE, 'Dst': CDF_DOUBLE_TYPE}
+    CDF_INTERP_TYPE = {'DDst': CDF_DOUBLE_TYPE}
+    CDF_ATTR = {
+        'Timestamp': {
+            'DESCRIPTION': 'Time stamp',
+            'UNITS': '-',
+        },
+        'dDst': {
+            'DESCRIPTION': (
+                'Temporal change rate of the disturbance storm time index'
+            ),
+            'UNITS': 'nT/hour',
+        },
+    }
+
+    def __init__(self, filename, logger=None):
+        AuxiliaryDataTimeSeries.__init__(
+            self, "dDst", filename, DDstReader,
+            {'time': 'Timestamp', 'ddst': 'dDst'}, logger
         )
 
 

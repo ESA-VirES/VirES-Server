@@ -29,6 +29,8 @@ These commands and their options are described in the following sections:
 - [Data Products](#data-products)
 - [Cached Products](#cached-products)
 - [Orbit Direction Tables](#orbit-direction-tables)
+- [Asynchronous Jobs](#asynchronous-jobs)
+
 
 ### Product Types
 
@@ -427,6 +429,7 @@ There is a predefined (hard-coded) set of cached products listed in the followin
 | `MIO_SHA_2D` | 1 | Swarm `MIO_SHA_2D` ionospheric variation model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
 | `MLI_SHA_2C` | 1 | Swarm `MLI_SHA_2C` crustal field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
 | `MLI_SHA_2D` | 1 | Swarm `MLI_SHA_2D` crustal field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
+| `MLI_SHA_2E` | 1 | Swarm `MLI_SHA_2E` crustal field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
 | `MMA_CHAOS_` | N | CHAOS magnetospheric field model |[[DTU web server](http://www.spacecenter.dk/files/magnetic-models/RC/MMA/)] |
 | `MMA_SHA_2C` | 1 | Swarm `MMA_SHA_2C` magnetospheric field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
 | `MMA_SHA_2F` | N | Swarm `MMA_SHA_2F` magnetospheric field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
@@ -505,13 +508,137 @@ $ <instance>/manage.py orbit_direction sync
 The `sycn` command checks the available products and if not yet processed the tables are updated.
 
 If necessary, the orbit direction tables can be rebuilt from scratch by the `rebuild` command either for one or more specific input collections:
-
 ```
 $ <instance>/manage.py orbit_direction rebuild SW_OPER_MAGA_LR_1B SW_OPER_MAGC_LR_1B
 ```
 
 or for all spacecrafts if no collection is specified:
-
 ```
 $ <instance>/manage.py orbit_direction rebuild
+```
+
+### Asynchronous Jobs
+
+Data downloads in VirES are performed asynchronously, i.e., the download requests are passed to an asynchronous backend (daemon) which puts them as *jobs* in a FIFO queue and processes them gradually by the employed pool of worker processes.
+
+The asynchronous backend keeps track of the jobs itself but, in order to track additional information about the asynchronous jobs, the VirES server holds additional DB record for each job.
+
+#### Listing Jobs
+
+Identifiers of all asynchronous jobs can be listed by the `list` command:
+```
+$ <instance>/manage.py job list
+```
+
+The list can can be constrained by additional selection criteria, e.g., owner, status, completion time, etc.:
+
+```
+$ <instance>/manage.py job list -u vagrant -s SUCCEEDED -s FAILED --ended-after P1D
+```
+
+For the complete list of the selection options see the command help invoked by the `--help` option:
+
+```
+$ <instance>/manage.py job list --help
+```
+
+#### Listing Loose Jobs
+
+The loose jobs are invalid job DB records for which no actual asynchronous job exists. The loose jobs should never be present on a production system, though, they might be encountered during development and testing.
+
+Identifiers of the loose asynchronous jobs can be listed by the `list` command with the `--loose` option:
+
+```
+$ <instance>/manage.py job list --loose
+```
+
+#### Listing Dangling Jobs
+
+The dangling jobs are existing asynchronous jobs for which no DB record exists. The dangling jobs should never be present on a production system, though, they might be encountered during development and testing.
+
+Identifiers of the dangling asynchronous jobs can be listed by the `dangling_job` `list` command:
+```
+$ <instance>/manage.py dangling_job list
+```
+
+For the complete list of the selection options see the command help invoked by the `--help` option:
+```
+$ <instance>/manage.py dangling_job list --help
+```
+
+#### Getting Jobs' Details
+
+Details of all asynchronous jobs can be exported by the `info` command in CSV format:
+```
+$ <instance>/manage.py job info | column -t -s , | less -S
+```
+
+Just like the list command, the info output can can be constrained by additional selection criteria, e.g., owner, status, completion time, etc.:
+```
+$ <instance>/manage.py job info -u vagrant -s SUCCEEDED -s FAILED --ended-after P1D
+```
+
+For the complete list of the selection options see the command help invoked by the `--help` option:
+```
+$ <instance>/manage.py job info --help
+```
+
+#### Getting Loose Jobs' Details
+
+Details of the loose asynchronous jobs can be listed by the `info` command with the `--loose` option:
+```
+$ <instance>/manage.py job info --loose | column -t -s , | less -S
+```
+
+#### Getting Dangling Jobs' Details
+
+Identifiers of the dangling asynchronous jobs can be listed by the `dangling_job` `info` command:
+```
+$ <instance>/manage.py dangling_job info | column -t -s , | less -S
+```
+
+For the complete list of the selection options see the command help invoked by the `--help` option:
+```
+$ <instance>/manage.py dangling_job info --help
+```
+
+#### Removing Jobs
+
+Selected asynchronous jobs can be removed by the `remove` command:
+```
+$ <instance>/manage.py job remove <job-id> <job-id> ...
+```
+
+Alternatively, all jobs matched by the selection criteria can be removed with the `--all` option:
+```
+$ <instance>/manage.py job remove --all
+```
+
+Just like the list command, the info output can can be constrained by additional selection criteria, e.g., owner, status, completion time, etc.:
+```
+$ <instance>/manage.py job remove --all -u vagrant -s SUCCEEDED -s FAILED --ended-after P1D
+```
+
+For the complete list of the selection options see the command help invoked by the `--help` option:
+```
+$ <instance>/manage.py job remove --help
+```
+
+#### Removing Loose Jobs
+
+The loose asynchronous jobs can be removed by the `remove` command with the `--loose` option:
+```
+$ <instance>/manage.py job remove --loose --all
+```
+
+#### Removing Dangling Jobs
+
+Identifiers of the dangling asynchronous jobs can be removed by the `dangling_job` `remove` command:
+```
+$ <instance>/manage.py dangling_job remove
+```
+
+For the complete list of the selection options see the command help invoked by the `--help` option:
+```
+$ <instance>/manage.py dangling_job remove --help
 ```
