@@ -84,6 +84,7 @@ class SwarmAEJLPParameters(SwarmDefaultParameters):
     VARIABLE_TRANSLATES = {
         'Timestamp': 't',
         'MLT_QD': 'MLT',
+        'J_R': 'J_r',
     }
 
 
