@@ -51,6 +51,13 @@ class SwarmDefaultParameters():
     VARIABLE_INTERPOLATION_KINDS = {}
 
 
+class MagLRParameters(SwarmDefaultParameters):
+    VARIABLE_INTERPOLATION_KINDS = {
+        "B_NEC": "linear",
+        "F": "linear",
+    }
+
+
 class AuxImf2Parameters(SwarmDefaultParameters):
     """ AUX_IMF_2_ parameters """
     INTERPOLATION_KIND = "zero"
@@ -95,6 +102,7 @@ class OmniHr1MinParameters(SwarmDefaultParameters):
 
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
+    "SW_MAGx_LR_1B": MagLRParameters,
     "SW_AUX_IMF_2_": AuxImf2Parameters,
     "OMNI_HR_1min": OmniHr1MinParameters,
 }
