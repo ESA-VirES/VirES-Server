@@ -27,9 +27,11 @@
 # pylint: disable=missing-docstring, too-many-ancestors, abstract-method
 
 import os
+import re
+import ast
 import json
 import urllib
-from traitlets import Unicode
+from traitlets import Unicode, Dict
 from tornado.auth import OAuth2Mixin
 from tornado.httpclient import HTTPRequest, AsyncHTTPClient, HTTPError
 from jupyterhub.auth import LocalAuthenticator
@@ -38,6 +40,9 @@ from oauthenticator.oauth2 import OAuthLoginHandler, OAuthenticator
 AUTHORIZE_PATH = "/authorize/"
 ACCESS_TOKEN_PATH = "/token/"
 USER_PROFILE_PATH = "/user/"
+VIRES_TOKEN_API_PATH = "/accounts/api/tokens/"
+VIRES_TOKEN_LIFESPAN = "PT15M"
+RE_VIRES_URL = re.compile('(/(ows)?)?$')
 
 
 def _join_url(base, path):
@@ -83,6 +88,24 @@ class ViresOAuthenticator(OAuthenticator):
         help="User permission required to grant JupyterHub administration right."
     )
 
+    instance_name = Unicode(
+        os.environ.get("VIRES_INSTANCE_NAME", "VirES JupyterHub"),
+        config=True,
+        help="Name of the current VirES JupyterHub instance."
+    )
+
+    data_servers = Dict(
+        ast.literal_eval(os.environ.get("VIRES_DATA_SERVERS", "{}")),
+        config=True,
+        help="A dictionary mapping VirES permissions to specific data servers."
+    )
+
+    default_data_server = Unicode(
+        os.environ.get("VIRES_DEFAULT_DATA_SERVER", ""),
+        config=True,
+        help="Url of the default  VirES data server."
+    )
+
     async def authenticate(self, handler, data=None):
         http_client = AsyncHTTPClient()
         auth_state = await self._retrieve_access_token(http_client, handler)
@@ -90,10 +113,10 @@ class ViresOAuthenticator(OAuthenticator):
             http_client, auth_state['access_token']
         )
         username = user_profile['username']
+        auth_state['permissions'] = user_profile['permissions']
         permissions = set(user_profile['permissions'])
 
-        is_authorised = self.user_permission in permissions
-        if not is_authorised:
+        if self.user_permission not in permissions:
             self.log.warning("%s is not authorised", username)
             return None
 
@@ -107,6 +130,30 @@ class ViresOAuthenticator(OAuthenticator):
             "admin": is_admin,
             "auth_state": auth_state,
         }
+
+    async def pre_spawn_start(self, user, spawner):
+        """ Pass authentication details to spawner as environment variable. """
+        auth_state = await user.get_auth_state()
+        if not auth_state:
+            self.log.warning(
+                "User state is not available. "
+                "VIRES_ACCESS_CONFIG will not be initialized."
+            )
+            return
+
+        permissions = set(auth_state["permissions"])
+
+        spawner.environment["VIRES_ACCESS_CONFIG"] = json.dumps({
+            "instance_name": self.instance_name,
+            "default_server": self.default_data_server,
+            "servers": await self._retrieve_vires_tokens(
+                [
+                    url for permission, url in self.data_servers.items()
+                    if permission in permissions
+                ],
+                auth_state["access_token"]
+            )
+        })
 
     async def _retrieve_user_profile(self, http_client, access_token):
         request = HTTPRequest(
@@ -143,6 +190,53 @@ class ViresOAuthenticator(OAuthenticator):
             )
 
         return data
+
+    async def _retrieve_vires_tokens(self, urls, oauth_token):
+        coroutines = [
+            self._retrieve_vires_token(url, oauth_token) for url in urls
+        ]
+        tokens = {}
+        for url, coroutine in zip(urls, coroutines):
+            token = await coroutine
+            if token:
+                tokens[url] = token
+        return tokens
+
+    async def _retrieve_vires_token(self, server_url, oauth_token):
+        self.log.info("Retrieving access token for %s ...", server_url)
+        url = RE_VIRES_URL.sub(VIRES_TOKEN_API_PATH, server_url, count=1)
+        request = HTTPRequest(
+            url,
+            method="POST",
+            headers={'Authorization': 'Bearer %s' % oauth_token},
+            body=json.dumps({
+                "expires": VIRES_TOKEN_LIFESPAN,
+                "purpose": "VRE JupyterHub temporary token",
+                "scopes": ["TokenMng"],
+            })
+        )
+        response = await AsyncHTTPClient().fetch(request, raise_error=False)
+
+        if response.code == 200:
+            try:
+                data = json.loads(response.body.decode("utf8", "replace"))
+                if not isinstance(data, dict):
+                    raise TypeError("Not a dictionary!")
+            except Exception as error:
+                self.log.warning(
+                    "Failed to parse POST response from %s failed! Reason: %s %s",
+                    url, error.__class__.__name__, error
+                )
+                return None
+            return {
+                "token": data.get("token"),
+                "expires": data.get("expires"),
+            }
+
+        self.log.warning(
+            "POST request to %s failed! Reason: %s %s", url,
+            response.code, response.reason,
+        )
 
 
 class LocalViresOAuthenticator(LocalAuthenticator, ViresOAuthenticator):

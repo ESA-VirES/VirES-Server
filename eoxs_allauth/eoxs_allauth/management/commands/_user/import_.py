@@ -28,6 +28,7 @@
 
 import sys
 import json
+import base64
 from traceback import print_exc
 from django.db import transaction
 from django.contrib.auth.models import User
@@ -35,6 +36,7 @@ from django.utils.dateparse import parse_datetime
 from allauth.socialaccount.models import SocialAccount
 from eoxs_allauth.models import AuthenticationToken
 from .._common import Subcommand
+from .export import binary_to_base64
 
 
 class ImportUserSubcommand(Subcommand):
@@ -106,6 +108,8 @@ PARSERS = {
     "last_login": _parse_datetime,
     "created": _parse_datetime,
     "expires": _parse_datetime,
+    "token_sha256": lambda data: base64.urlsafe_b64decode(data.encode('ascii')),
+    "scopes": lambda data: list(data or []) or None,
 }
 
 USER_FIELDS = [
@@ -156,7 +160,7 @@ def get_social_account(user, provider):
 
 #-------------------------------------------------------------------------------
 
-ACCESS_TOKEN_FIELDS = ["token", "purpose", "expires", "created"]
+ACCESS_TOKEN_FIELDS = ["token_sha256", "purpose", "expires", "created"]
 
 def set_access_tokens(user, data):
     for item in data:
@@ -164,9 +168,20 @@ def set_access_tokens(user, data):
 
 
 def set_access_token(user, data):
+    hash_token(data)
     access_token = get_access_token(user, data['identifier'])
+    access_token.scopes = None # needed for proper initialization of the scopes
     set_model(access_token, ACCESS_TOKEN_FIELDS, data, PARSERS)
     access_token.save()
+
+
+def hash_token(data):
+    if 'token_sha256' not in data:
+        token = data.get('token')
+        if token:
+            data['token_sha256'] = binary_to_base64(
+                AuthenticationToken.hash_token_sha256(token)
+            )
 
 
 def get_access_token(user, identifier):

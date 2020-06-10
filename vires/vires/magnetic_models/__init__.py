@@ -25,4 +25,9 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .models import MODEL_LIST, MODEL_CACHE, DIPOLE_MODEL
+from .models import (
+    MODEL_LIST,
+    MODEL_CACHE,
+    DIPOLE_MODEL,
+    PREDEFINED_COMPOSED_MODELS,
+)

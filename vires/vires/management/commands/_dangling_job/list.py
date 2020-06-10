@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# VirES permissions
+# List asynchronous WPS jobs without any Job DB record.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,26 +26,18 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from allauth.socialaccount import app_settings
-from django.core.exceptions import ObjectDoesNotExist
-from .provider import ViresProvider
+from vires.processes.remove_job import get_wps_async_backend
+from .common import DanglingJobSelectionSubcommand
 
 
-def get_required_permission():
-    return app_settings.PROVIDERS.get(ViresProvider.id, {}).get('PERMISSION')
+class ListDanglingJobSubcommand(DanglingJobSelectionSubcommand):
+    name = "list"
+    help = "List asynchronous jobs without any DB record."
 
+    description = "List identifiers of asynchronous jobs without any DB record."
 
-def get_user_permissions(user):
-    if not user.is_authenticated:
-        return set()
-    if hasattr(user, 'vires_permissions'):
-        return user.vires_permissions
-    try:
-        vires_account = user.socialaccount_set.get(provider=ViresProvider.id)
-    except ObjectDoesNotExist:
-        return set()
-    return get_account_permissions(vires_account)
+    def handle(self, **kwargs):
+        backend = get_wps_async_backend()
 
-
-def get_account_permissions(account):
-    return set(account.extra_data.get("permissions", []))
+        for identifier, _ in self.select_jobs(backend, **kwargs):
+            print(identifier)

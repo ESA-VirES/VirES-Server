@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# VirES permissions
+# Job management command
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,28 +24,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-few-public-methods
 
-from allauth.socialaccount import app_settings
-from django.core.exceptions import ObjectDoesNotExist
-from .provider import ViresProvider
-
-
-def get_required_permission():
-    return app_settings.PROVIDERS.get(ViresProvider.id, {}).get('PERMISSION')
+from logging import getLogger
+from ._common import Supercommand
+from ._dangling_job.list import ListDanglingJobSubcommand
+from ._dangling_job.info import InfoDanglingJobSubcommand
+from ._dangling_job.remove import RemoveDanglingJobSubcommand
 
 
-def get_user_permissions(user):
-    if not user.is_authenticated:
-        return set()
-    if hasattr(user, 'vires_permissions'):
-        return user.vires_permissions
-    try:
-        vires_account = user.socialaccount_set.get(provider=ViresProvider.id)
-    except ObjectDoesNotExist:
-        return set()
-    return get_account_permissions(vires_account)
+class Command(Supercommand):
 
+    help = "Dangling job management command."
 
-def get_account_permissions(account):
-    return set(account.extra_data.get("permissions", []))
+    commands = {
+        command.name: command(getLogger("%s.%s" % (__name__, command.name)))
+        for command in [
+            ListDanglingJobSubcommand,
+            InfoDanglingJobSubcommand,
+            RemoveDanglingJobSubcommand,
+        ]
+    }
