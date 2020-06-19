@@ -1108,7 +1108,7 @@
                         "UNITS": "hour"
                     }
                 },
-                "J": {
+                "J_NE": {
                     "dataType": "float64",
                     "dimension": [2],
                     "attributes": {
@@ -1208,7 +1208,7 @@
                 "PointType": {
                     "dataType": "uint8",
                     "attributes": {
-                        "DESCRIPTION": "Point Type: 0 - WEJ Equatorial Boundary, 1 - EEJ Equatorial Boundary, 2 - WEJ Polar Boundary, 3 - EEJ Polar Boundary, 4 - WEJ Peak (minimum), 5 - EEJ Peak (maximum)",
+                        "DESCRIPTION": "Point Type",
                         "UNITS": "-"
                     }
                 },
@@ -1270,7 +1270,7 @@
                         "UNITS": "hour"
                     }
                 },
-                "J_CF": {
+                "J_CF_NE": {
                     "dataType": "float64",
                     "dimension": [2],
                     "attributes": {
@@ -1278,7 +1278,7 @@
                         "UNITS": "A/km"
                     }
                 },
-                "J_DF": {
+                "J_DF_NE": {
                     "dataType": "float64",
                     "dimension": [2],
                     "attributes": {
@@ -1392,7 +1392,7 @@
                 "PointType": {
                     "dataType": "uint8",
                     "attributes": {
-                        "DESCRIPTION": "Point Type: 0 - WEJ Equatorial Boundary, 1 - EEJ Equatorial Boundary, 2 - WEJ Polar Boundary, 3 - EEJ Polar Boundary, 4 - WEJ Peak (minimum), 5 - EEJ Peak (maximum)",
+                        "DESCRIPTION": "Point Type",
                         "UNITS": "-"
                     }
                 },
@@ -1427,7 +1427,7 @@
                         "UNITS": "deg"
                     }
                 },
-                "B": {
+                "B_NE": {
                     "dataType": "float64",
                     "dimension": [2],
                     "attributes": {

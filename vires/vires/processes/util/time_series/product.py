@@ -85,6 +85,9 @@ class SwarmAEJLPParameters(SwarmDefaultParameters):
         'Timestamp': 't',
         'MLT_QD': 'MLT',
         'J_R': 'J_r',
+        'J_NE': 'J',
+        'J_CF_NE': 'J_CF',
+        'J_DF_NE': 'J_DF',
     }
 
 
@@ -108,6 +111,7 @@ class SwarmAEJPBSGroundMagneticDisturbanceParameters(SwarmDefaultParameters):
         'Timestamp': 'Timestamp_B',
         'Latitude': 'Latitude_B',
         'Longitude': 'Longitude_B',
+        'B_NE': 'B',
     }
 
 class OmniHr1MinParameters(SwarmDefaultParameters):
