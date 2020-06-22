@@ -51,6 +51,13 @@ class SwarmDefaultParameters():
     VARIABLE_INTERPOLATION_KINDS = {}
 
 
+class MagLRParameters(SwarmDefaultParameters):
+    VARIABLE_INTERPOLATION_KINDS = {
+        "B_NEC": "linear",
+        "F": "linear",
+    }
+
+
 class AuxImf2Parameters(SwarmDefaultParameters):
     """ AUX_IMF_2_ parameters """
     INTERPOLATION_KIND = "zero"
@@ -77,6 +84,10 @@ class SwarmAEJLPParameters(SwarmDefaultParameters):
     VARIABLE_TRANSLATES = {
         'Timestamp': 't',
         'MLT_QD': 'MLT',
+        'J_R': 'J_r',
+        'J_NE': 'J',
+        'J_CF_NE': 'J_CF',
+        'J_DF_NE': 'J_DF',
     }
 
 
@@ -100,6 +111,7 @@ class SwarmAEJPBSGroundMagneticDisturbanceParameters(SwarmDefaultParameters):
         'Timestamp': 'Timestamp_B',
         'Latitude': 'Latitude_B',
         'Longitude': 'Longitude_B',
+        'B_NE': 'B',
     }
 
 
@@ -134,6 +146,7 @@ PRODUCT_TYPE_PARAMETERS = {
     "SW_AEJxPBS_2F": SwarmAEJPBParameters,
     "SW_AEJxPBS_2F:GroundMagneticDisturbance": SwarmAEJPBSGroundMagneticDisturbanceParameters,
     "SW_AOBxFAC_2F": SwarmAEJLPParameters,
+    "SW_MAGx_LR_1B": MagLRParameters,
     "SW_AUX_IMF_2_": AuxImf2Parameters,
     "OMNI_HR_1min": OmniHr1MinParameters,
 }

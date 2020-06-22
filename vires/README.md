@@ -429,6 +429,7 @@ There is a predefined (hard-coded) set of cached products listed in the followin
 | `MIO_SHA_2D` | 1 | Swarm `MIO_SHA_2D` ionospheric variation model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
 | `MLI_SHA_2C` | 1 | Swarm `MLI_SHA_2C` crustal field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
 | `MLI_SHA_2D` | 1 | Swarm `MLI_SHA_2D` crustal field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
+| `MLI_SHA_2E` | 1 | Swarm `MLI_SHA_2E` crustal field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
 | `MMA_CHAOS_` | N | CHAOS magnetospheric field model |[[DTU web server](http://www.spacecenter.dk/files/magnetic-models/RC/MMA/)] |
 | `MMA_SHA_2C` | 1 | Swarm `MMA_SHA_2C` magnetospheric field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |
 | `MMA_SHA_2F` | N | Swarm `MMA_SHA_2F` magnetospheric field model |[[Swarm L2 Product Spec.](https://earth.esa.int/documents/10174/1514862/Swarm_L2_Product_Specification)] |

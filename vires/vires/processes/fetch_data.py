@@ -298,6 +298,7 @@ class FetchData(WPSProcess):
                 Identity("Latitude_QD", "QDLat"),
                 Identity("Longitude_QD", "QDLon"),
             ]
+
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
             ))
