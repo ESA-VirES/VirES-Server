@@ -1,11 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# WPS process fetching plasma bubbles time intervals.
+# WPS process fetching intervals of continuous segments of product data
 #
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,36 +29,33 @@
 
 import csv
 from datetime import datetime
-from numpy import concatenate
-from eoxserver.core.util.timetools import isoformat
+from eoxserver.core.util.timetools import isoformat, parse_duration
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, CDTextBuffer, FormatText
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
 from vires.time_util import naive_to_utc
-from vires.cdf_util import cdf_rawtime_to_datetime
+from vires.cdf_util import cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime
 from vires.processes.base import WPSProcess
 from vires.processes.util.time_series import ProductTimeSeries
 
+ALLOWED_COLLECTIONS = ["SW_AEJxLPL_2F", "SW_AEJxLPS_2F"]
 TIME_VARIABLE = "Timestamp"
-DATA_VARIABLE = "Bubble_Probability"
-BUBBLE_PROBABILITY_THRESHOLD = 0.1
 
 
-class RetrieveBubbleIndex(WPSProcess):
-    """ Process for retrieving information of time-spans covered by bubbles.
-    """
-    identifier = "retrieve_bubble_index"
-    title = "Retrieve filtered Swarm data."
+class RetrieveContinuousSegments(WPSProcess):
+    """ Process listing continuous segments of data. """
+    identifier = "retrieve_continuous_segments"
+    title = "Retrieve list of continuous segments of data."
     metadata = {}
     profiles = ["vires"]
 
     inputs = WPSProcess.inputs + [
         ("collection_id", LiteralData(
             'collection', str, optional=False,
-            title="Bubble index collection identifier",
-            abstract="Bubble index collection identifier",
+            title="Collection identifier",
+            abstract="Collection identifier",
         )),
         ("begin_time", LiteralData(
             'begin_time', datetime, optional=False, title="Begin time",
@@ -86,7 +82,7 @@ class RetrieveBubbleIndex(WPSProcess):
             time_series = ProductTimeSeries(
                 ProductCollection.objects
                 .select_related('type')
-                .filter(type__identifier="SW_IBIxTMS_2F")
+                .filter(type__identifier__in=ALLOWED_COLLECTIONS)
                 .get(identifier=collection_id)
             )
         except ProductCollection.DoesNotExist:
@@ -103,30 +99,34 @@ class RetrieveBubbleIndex(WPSProcess):
         )
 
         def _generate_pairs():
-            variables = [TIME_VARIABLE, DATA_VARIABLE]
+            threshold = parse_duration(
+                time_series.collection.metadata['nominalSampling']
+            )
+
+            def _output(start_time, end_time, dataset, cdf_type):
+                return (
+                    cdf_rawtime_to_datetime(start_time, cdf_type),
+                    cdf_rawtime_to_datetime(end_time, cdf_type),
+                    dataset.source
+                )
+
+            variables = [TIME_VARIABLE]
             for dataset in time_series.subset(begin_time, end_time, variables):
                 if dataset.length == 0:
                     continue
+
                 cdf_type = dataset.cdf_type[TIME_VARIABLE]
                 time = dataset[TIME_VARIABLE]
-                data = dataset[DATA_VARIABLE]
+                cdf_threshold = timedelta_to_cdf_rawtime(threshold, cdf_type)
+                breaks, = (time[1:] - time[:-1] > cdf_threshold).nonzero()
 
-                flag = (data > BUBBLE_PROBABILITY_THRESHOLD).astype('int')
-                change = flag[1:] - flag[:-1]
-                starts = (change == +1).nonzero()[0] + 1
-                ends = (change == -1).nonzero()[0]
-
-                if flag[0] == 1:
-                    starts = concatenate(([0], starts))
-                if flag[-1] == 1:
-                    ends = concatenate((ends, [flag.size - 1]))
-
-                for start, end in zip(starts, ends):
-                    yield (
-                        cdf_rawtime_to_datetime(time[start], cdf_type),
-                        cdf_rawtime_to_datetime(time[end], cdf_type),
-                        dataset.source
-                    )
+                time_segment_start = time[0]
+                for idx in breaks:
+                    time_segment_end = time[idx]
+                    yield _output(time_segment_start, time_segment_end, dataset, cdf_type)
+                    time_segment_start = time[idx + 1]
+                time_segment_end = time[-1]
+                yield _output(time_segment_start, time_segment_end, dataset, cdf_type)
 
         output = CDTextBuffer()
         writer = csv.writer(output, quoting=csv.QUOTE_ALL)
