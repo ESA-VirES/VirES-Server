@@ -35,13 +35,25 @@ from eoxserver.services.ows.wps.parameters import (
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
+from vires.cache_util import cache_path
 from vires.time_util import naive_to_utc
 from vires.cdf_util import cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime
 from vires.processes.base import WPSProcess
-from vires.processes.util.time_series import ProductTimeSeries
+from vires.processes.util.time_series import ProductTimeSeries, QDOrbitDirection
+from vires.data.vires_settings import ORBIT_DIRECTION_MAG_FILE
 
 ALLOWED_COLLECTIONS = ["SW_AEJxLPL_2F", "SW_AEJxLPS_2F"]
 TIME_VARIABLE = "Timestamp"
+
+
+def get_spacecraft_time_series(spacecraft):
+    """ Get spacecraft specific time-series. """
+    return [
+        QDOrbitDirection(
+            "QDOrbitDirection" + spacecraft,
+            cache_path(ORBIT_DIRECTION_MAG_FILE[spacecraft])
+        ),
+    ]
 
 
 class RetrieveContinuousSegments(WPSProcess):
@@ -98,43 +110,81 @@ class RetrieveContinuousSegments(WPSProcess):
             naive_to_utc(end_time).isoformat("T") if end_time else "-",
         )
 
-        def _generate_pairs():
-            threshold = parse_duration(
-                time_series.collection.metadata['nominalSampling']
+        return _write_csv(
+            CDTextBuffer(),
+            _generate_pairs(time_series, begin_time, end_time)
+        )
+
+
+def _write_csv(output, records):
+    output = CDTextBuffer()
+    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
+    writer.writerow(["starttime", "endtime", "bbox", "identifier"])
+
+    envelope = "(-90,-180,90,180)"
+
+    for start, end, id_ in records:
+        writer.writerow([isoformat(start), isoformat(end), envelope, id_])
+
+    return output
+
+
+def _generate_pairs(time_series, begin_time, end_time):
+    metadata = _Metadata(time_series.collection.metadata)
+    secondary_time_series = get_spacecraft_time_series(metadata.spacecraft)
+    variables = [TIME_VARIABLE] + list(metadata.split_by)
+
+    for dataset in time_series.subset(begin_time, end_time, variables):
+        if dataset.length == 0:
+            continue
+
+        cdf_type = dataset.cdf_type[TIME_VARIABLE]
+        times = dataset[TIME_VARIABLE]
+        mask = _get_time_split_mask(times, metadata.time_threshold, cdf_type)
+
+        for item in secondary_time_series:
+            dataset.merge(
+                item.interpolate(times, variables, {}, cdf_type)
             )
 
-            def _output(start_time, end_time, dataset, cdf_type):
-                return (
-                    cdf_rawtime_to_datetime(start_time, cdf_type),
-                    cdf_rawtime_to_datetime(end_time, cdf_type),
-                    dataset.source
-                )
+        for variable, threshold in metadata.split_by.items():
+            mask |= _get_split_mask(dataset[variable], threshold)
 
-            variables = [TIME_VARIABLE]
-            for dataset in time_series.subset(begin_time, end_time, variables):
-                if dataset.length == 0:
-                    continue
+        for start, end in _generate_time_intervals(times, mask.nonzero()[0]):
+            yield _output(start, end, dataset, cdf_type)
 
-                cdf_type = dataset.cdf_type[TIME_VARIABLE]
-                time = dataset[TIME_VARIABLE]
-                cdf_threshold = timedelta_to_cdf_rawtime(threshold, cdf_type)
-                breaks, = (time[1:] - time[:-1] > cdf_threshold).nonzero()
 
-                time_segment_start = time[0]
-                for idx in breaks:
-                    time_segment_end = time[idx]
-                    yield _output(time_segment_start, time_segment_end, dataset, cdf_type)
-                    time_segment_start = time[idx + 1]
-                time_segment_end = time[-1]
-                yield _output(time_segment_start, time_segment_end, dataset, cdf_type)
+class _Metadata():
+    def __init__(self, collection_metadata):
+        self.spacecraft = collection_metadata['spacecraft']
+        self.split_by = collection_metadata.get('splitBy', {})
+        self.time_threshold = parse_duration(
+            collection_metadata['nominalSampling']
+        )
 
-        output = CDTextBuffer()
-        writer = csv.writer(output, quoting=csv.QUOTE_ALL)
-        writer.writerow(["starttime", "endtime", "bbox", "identifier"])
 
-        envelope = "(-90,-180,90,180)"
+def _output(start_time, end_time, dataset, cdf_type):
+    return (
+        cdf_rawtime_to_datetime(start_time, cdf_type),
+        cdf_rawtime_to_datetime(end_time, cdf_type),
+        dataset.source
+    )
 
-        for start, end, id_ in _generate_pairs():
-            writer.writerow([isoformat(start), isoformat(end), envelope, id_])
 
-        return output
+def _get_split_mask(values, threshold):
+    return abs(values[1:] - values[:-1]) > threshold
+
+
+def _get_time_split_mask(times, time_threshold, cdf_type):
+    threshold = timedelta_to_cdf_rawtime(time_threshold, cdf_type)
+    return times[1:] - times[:-1] > threshold
+
+
+def _generate_time_intervals(times, breaks):
+    time_start = times[0]
+    for idx in breaks:
+        time_end = times[idx]
+        yield time_start, time_end
+        time_start = times[idx + 1]
+    time_end = times[-1]
+    yield time_start, time_end
