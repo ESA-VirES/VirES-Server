@@ -148,19 +148,22 @@
         "name": "SW_OPER_AEJALPL_2F",
         "productType": "SW_AEJxLPL_2F",
         "spacecraft": "A",
-        "nominalSampling": "PT16S"
+        "nominalSampling": "PT16S",
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJBLPL_2F",
         "productType": "SW_AEJxLPL_2F",
         "spacecraft": "B",
-        "nominalSampling": "PT16S"
+        "nominalSampling": "PT16S",
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJCLPL_2F",
         "productType": "SW_AEJxLPL_2F",
         "spacecraft": "C",
-        "nominalSampling": "PT16S"
+        "nominalSampling": "PT16S",
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJAPBL_2F",
@@ -181,19 +184,22 @@
         "name": "SW_OPER_AEJALPS_2F",
         "productType": "SW_AEJxLPS_2F",
         "spacecraft": "A",
-        "nominalSampling": "PT1S"
+        "nominalSampling": "PT1S",
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJBLPS_2F",
         "productType": "SW_AEJxLPS_2F",
         "spacecraft": "B",
-        "nominalSampling": "PT1S"
+        "nominalSampling": "PT1S",
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJCLPS_2F",
         "productType": "SW_AEJxLPS_2F",
         "spacecraft": "C",
-        "nominalSampling": "PT1S"
+        "nominalSampling": "PT1S",
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJAPBS_2F",
