@@ -27,7 +27,7 @@
 
 from logging import getLogger, LoggerAdapter
 from numpy import empty, diff, concatenate, in1d, arange, inf
-from vires.interpolate import Interp1D
+from vires.interpolate import NearestNeighbour1DInterpolator
 from .base import Filter
 from .utils import merge_indices
 
@@ -149,7 +149,9 @@ class ExtraSampler(Filter):
         return merge_indices(index, self._filter(dataset[self.variable]))
 
     def _filter(self, data):
-        """ Sampler to add additional sample from the extra time-series. """
+        """ Sampler inserting extra samples to contain samples of the given
+        dataset.
+        """
         gap_threshold = inf
         segment_neighbourhood = 0
 
@@ -158,11 +160,9 @@ class ExtraSampler(Filter):
         if dataset.length == 0:
             return empty(0, 'int64')
 
-        _, _, index = Interp1D(
+        return NearestNeighbour1DInterpolator(
             data, dataset[self.variable], gap_threshold, segment_neighbourhood
-        ).indices_nearest
-
-        return index
+        ).index
 
     def __str__(self):
         return "%s: ExtraSampler(%s)" % (self.variable, self.label)
