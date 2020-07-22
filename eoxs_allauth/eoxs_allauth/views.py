@@ -133,7 +133,9 @@ def workspace(parse_client_state=None):
                     if _url.startswith('data:'):
                         data = parse_data_url(_url)
                         if data.content_type == "application/json":
-                            raw_client_state = str(data.data, "utf-8")
+                            raw_client_state = data.data
+                            if isinstance(raw_client_state, bytes):
+                                raw_client_state = raw_client_state.decode("ascii")
                         elif data.content_type == "application/json+gzip":
                             raw_client_state = GzipFile(
                                 fileobj=BytesIO(data.data)
@@ -144,7 +146,7 @@ def workspace(parse_client_state=None):
 
                 if raw_client_state is not None:
                     client_state = parse_client_state(raw_client_state)
-            except ValueError:
+            except (ValueError, TypeError):
                 # TODO: implement a nicer error response
                 return HttpResponse("Bad Request", "text/plain", 400)
 
