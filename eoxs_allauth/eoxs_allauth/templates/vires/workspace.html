@@ -6,21 +6,26 @@
 
 {% block content %}
 
-{% if client_state %}
+{% load staticfiles %}
+<script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
+
+{% if client_state or client_state_url %}
   <script type="text/javascript">
-    (function (config) {
+    var _saveClientState = function (config) {
       var key;
       localStorage.clear();
       for (key in config) {
         localStorage.setItem(key, JSON.stringify(config[key]));
       }
-    })(JSON.parse("{{ client_state|escapejs }}"));
+      window.location.replace(window.location.href.split("?")[0]);
+    };
+   {% if client_state %}_saveClientState(JSON.parse("{{ client_state|escapejs }}"));{% endif %}
+   {% if client_state_url %}$.ajax({url: "{{ client_state_url }}", dataType: 'json', success: _saveClientState, async: false}); {% endif %}
   </script>
 {% endif %}
 
 {% if user.is_authenticated %}
 
-  {% load staticfiles %}
   {% load account %}
   {% load vires_oauth %}
   {% load vre_jhub %}
@@ -589,9 +594,7 @@
     </ul>
 
     <!-- script references -->
-    {% load staticfiles %}
 
-    <script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
     <script src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js'%}"></script>
     <script src="{% static 'js/landing_page.js' %}"></script>
 
