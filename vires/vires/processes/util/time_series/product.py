@@ -239,7 +239,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
     @property
     def variables(self):
         type_def = self.collection.type.definition
-        dataset_id = type_def['defaultDatadaset']
+        dataset_id = type_def['defaultDataset']
         return [
             self.translate_bw.get(variable, variable)
             for variable in type_def['datasets'][dataset_id]
