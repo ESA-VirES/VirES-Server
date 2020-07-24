@@ -27,31 +27,20 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from numpy import array, empty, isnan, floor, ceil
-from django.contrib.gis.geos import Polygon, MultiPolygon
 from vires.time_util import naive_to_utc
 from vires.cdf_util import cdf_rawtime_to_datetime
 
 
 class SwarmProductMetadataReader():
 
-    LATLON_KEYS = [
-        ("Longitude", "Latitude"),
-        ("longitude", "latitude"),
-    ]
-
-    TIME_KEYS = [
-        "Timestamp",
-        "timestamp",
-        "Epoch"
-    ]
+    TIME_VARIABLES = ["Timestamp", "timestamp", "Epoch", "t"]
 
     @classmethod
-    def get_time_range_and_size(cls, data):
+    def get_time_range_and_size(cls, cdf):
         # iterate possible time keys and try to extract the values
-        for time_key in cls.TIME_KEYS:
+        for time_variable in cls.TIME_VARIABLES:
             try:
-                times = data.raw_var(time_key)
+                times = cdf.raw_var(time_variable)
             except KeyError:
                 continue
             else:
@@ -69,59 +58,12 @@ class SwarmProductMetadataReader():
         )
 
     @classmethod
-    def get_coords(cls, data):
-        # iterate possible lat/lon keys and try to extract the values
-        for lat_key, lon_key in cls.LATLON_KEYS:
-            try:
-                lat_data = data[lat_key][:]
-                lon_data = data[lon_key][:]
-            except KeyError:
-                continue
-            else:
-                coords = empty((len(lon_data), 2))
-                coords[:, 0] = lon_data
-                coords[:, 1] = lat_data
-                break
-        else:
-            # values not extracted assume global product
-            coords = array([(-180.0, -90.0), (+180.0, +90.0)])
-
-        return coords
-
-    @classmethod
-    def coords_to_bounding_box(cls, coords):
-        coords = coords[~isnan(coords).any(1)]
-        if coords.size:
-            lon_min, lat_min = floor(coords.min(0))
-            lon_max, lat_max = ceil(coords.max(0))
-        else:
-            lon_min, lat_min, lon_max, lat_max = -180, -90, 180, 90
-        return (lon_min, lat_min, lon_max, lat_max)
-
-    @classmethod
-    def bounding_box_to_geometry(cls, bbox):
-        return MultiPolygon(
-            Polygon((
-                (bbox[0], bbox[1]), (bbox[2], bbox[1]),
-                (bbox[2], bbox[3]), (bbox[0], bbox[3]),
-                (bbox[0], bbox[1]),
-            ))
-        )
-
-    @classmethod
     def read(cls, data):
-        # NOTE: For sake of simplicity we take geocentric (ITRF) coordinates
-        #       as geodetic coordinates.
         begin_time, end_time, n_times = cls.get_time_range_and_size(data)
-        coords = cls.get_coords(data)
-        bbox = cls.coords_to_bounding_box(coords)
-        footprint = cls.bounding_box_to_geometry(bbox)
 
         return {
-            "format": "CDF",
+            "format": "CDF-Swarm",
             "size": (n_times, 0),
-            "extent": bbox,
-            "footprint": footprint,
             "begin_time": begin_time,
             "end_time": end_time,
         }
