@@ -182,7 +182,7 @@ def _parse_collection_ids(ids, custom_dataset, permissions):
 
         type_def = collection.type.definition
         if not dataset_id:
-            dataset_id = type_def["defaultDatadaset"]
+            dataset_id = type_def["defaultDataset"]
 
         if dataset_id not in type_def["datasets"]:
             raise ValueError("Invalid dataset identifier %r!" % dataset_id)

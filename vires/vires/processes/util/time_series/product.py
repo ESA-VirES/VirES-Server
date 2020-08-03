@@ -257,7 +257,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
         if isinstance(collection, str):
             collection = self._get_collection(collection)
 
-        default_dataset_id = collection.type.definition["defaultDatadaset"]
+        default_dataset_id = collection.type.definition["defaultDataset"]
         if not dataset_id:
             dataset_id = default_dataset_id
 
