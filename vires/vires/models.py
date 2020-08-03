@@ -199,5 +199,5 @@ class Product(Model):
 
     def get_location(self, dataset_id=None):
         if dataset_id is None:
-            dataset_id = self.collection.type.definition['defaultDatadaset']
+            dataset_id = self.collection.type.definition['defaultDataset']
         return self.datasets[dataset_id]['location']

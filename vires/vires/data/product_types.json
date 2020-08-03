@@ -1,7 +1,7 @@
 [
     {
         "name": "SW_MAGx_LR_1B",
-        "defaultDatadaset": "MDR_MAG_LR",
+        "defaultDataset": "MDR_MAG_LR",
         "datasets": {
             "MDR_MAG_LR": {
                 "Timestamp": {
@@ -171,7 +171,7 @@
     },
     {
         "name": "SW_MAGx_HR_1B",
-        "defaultDatadaset": "MDR_MAG_HR",
+        "defaultDataset": "MDR_MAG_HR",
         "datasets": {
             "MDR_MAG_HR": {
                 "Timestamp": {
@@ -299,7 +299,7 @@
     },
     {
         "name": "SW_EFIx_LP_1B",
-        "defaultDatadaset": "MDR_EFI_LP",
+        "defaultDataset": "MDR_EFI_LP",
         "datasets": {
             "MDR_EFI_LP": {
                 "Timestamp": {
@@ -420,7 +420,7 @@
     },
     {
         "name": "SW_IBIxTMS_2F",
-        "defaultDatadaset": "IBI_TMS",
+        "defaultDataset": "IBI_TMS",
         "datasets": {
             "IBI_TMS": {
                 "Timestamp": {
@@ -499,7 +499,7 @@
     },
     {
         "name": "SW_EEFxTMS_2F",
-        "defaultDatadaset": "EEF_TMS",
+        "defaultDataset": "EEF_TMS",
         "datasets": {
             "EEF_TMS": {
                 "Timestamp": {
@@ -558,7 +558,7 @@
     },
     {
         "name": "SW_FACxTMS_2F",
-        "defaultDatadaset": "FAC_TMS",
+        "defaultDataset": "FAC_TMS",
         "datasets": {
             "FAC_TMS": {
                 "Timestamp": {
@@ -651,7 +651,7 @@
     },
     {
         "name": "SW_TECxTMS_2F",
-        "defaultDatadaset": "TEC_TMS",
+        "defaultDataset": "TEC_TMS",
         "datasets": {
             "TEC_TMS": {
                 "Timestamp": {
@@ -806,7 +806,7 @@
     },
     {
         "name": "SW_IPDxIRR_2F",
-        "defaultDatadaset": "IPD_IRR",
+        "defaultDataset": "IPD_IRR",
         "datasets": {
             "IPD_IRR": {
                 "Timestamp": {
@@ -1018,7 +1018,7 @@
     },
     {
         "name": "SW_AUX_IMF_2_",
-        "defaultDatadaset": "AUX_IMF",
+        "defaultDataset": "AUX_IMF",
         "datasets": {
             "AUX_IMF": {
                 "Epoch": {
@@ -1520,7 +1520,7 @@
     },
     {
         "name": "OMNI_HR_1min",
-        "defaultDatadaset": "OMNI_HR_1min",
+        "defaultDataset": "OMNI_HR_1min",
         "datasets": {
             "OMNI_HR_1min": {
                 "Epoch": {
