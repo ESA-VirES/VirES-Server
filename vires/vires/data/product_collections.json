@@ -156,5 +156,15 @@
     {
         "name": "OMNI_HR_1min_avg20min_delay10min",
         "productType": "OMNI_HR_1min"
+    },
+    {
+        "name": "SW_OPER_AUX_OBSS2_",
+        "productType": "SW_AUX_OBSx2_",
+        "groupSamples": true
+    },
+    {
+        "name": "SW_OPER_AUX_OBSM2_",
+        "productType": "SW_AUX_OBSx2_",
+        "groupSamples": true
     }
 ]

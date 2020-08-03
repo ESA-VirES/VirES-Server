@@ -33,7 +33,11 @@ from vires.cdf_util import cdf_rawtime_to_datetime
 
 class SwarmProductMetadataReader():
 
-    TIME_VARIABLES = ["Timestamp", "timestamp", "Epoch", "t"]
+    TIME_KEYS = [
+        "Timestamp",
+        "timestamp",
+        "Epoch"
+    ]
 
     @classmethod
     def get_time_range_and_size(cls, cdf):
@@ -66,4 +70,52 @@ class SwarmProductMetadataReader():
             "size": (n_times, 0),
             "begin_time": begin_time,
             "end_time": end_time,
+        }
+
+
+class ObsProductMetadataReader():
+
+    TIME_VARIABLE = "Timestamp"
+    OBS_CODES_ATTR = "IAGA_CODES"
+    OBS_RANGES_ATTR = "INDEX_RANGES"
+
+    @classmethod
+    def get_time_range_and_size(cls, cdf):
+        try:
+            time_var = cdf.raw_var(cls.TIME_VARIABLE)
+        except KeyError:
+            time_var = None
+        else:
+            cdf_type = time_var.type()
+            times = time_var[...]
+
+        if time_var is None:
+            raise KeyError("Temporal variable not found!")
+
+        if len(times.shape) != 1:
+            raise ValueError("Incorrect dimension of the time-stamp array!")
+
+        return (
+            naive_to_utc(cdf_rawtime_to_datetime(times.min(), cdf_type)),
+            naive_to_utc(cdf_rawtime_to_datetime(times.max(), cdf_type)),
+            times.shape[0]
+        )
+
+    @classmethod
+    def read_obs_ranges(cls, cdf):
+        return dict(zip(list(cdf.attrs[cls.OBS_CODES_ATTR]), [
+            (int(start), int(stop))
+            for start, stop in list(cdf.attrs[cls.OBS_RANGES_ATTR])
+        ]))
+
+    @classmethod
+    def read(cls, cdf):
+        begin_time, end_time, n_times = cls.get_time_range_and_size(cdf)
+
+        return {
+            "format": "CDF-OBS",
+            "size": (n_times, 0),
+            "begin_time": begin_time,
+            "end_time": end_time,
+            "dataset_ranges": cls.read_obs_ranges(cdf),
         }

@@ -1117,5 +1117,66 @@
                 }
             }
         }
+    },
+    {
+        "name": "SW_AUX_OBSx2_",
+        "defaultDataset": "__all__",
+        "strictDatasetCheck": false,
+        "unsortedDatasets": ["__all__"],
+        "datasets": {
+            "__all__": {
+                "IAGA_code": {
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "IAGA three letter observatory identification code",
+                        "UNITS": "-"
+                    }
+                },
+                "Quality": {
+                    "dataType": "char1",
+                    "attributes": {
+                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
+                        "UNITS": "-"
+                    }
+                },
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic field vector, NEC frame",
+                        "UNITS": "nT"
+                    }
+                }
+            }
+        }
     }
 ]

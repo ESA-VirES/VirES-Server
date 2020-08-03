@@ -32,7 +32,7 @@ from datetime import timedelta
 from django.db import transaction
 from vires.util import AttributeDict
 from vires.models import Product
-from vires.swarm import SwarmProductMetadataReader
+from vires.swarm import SwarmProductMetadataReader, ObsProductMetadataReader
 from vires.cdf_util import cdf_open
 from .product_collection import get_product_collection
 from .orbit_direction import (
@@ -45,7 +45,10 @@ from .orbit_direction import (
 LOG_FORMAT = "product %s/%s %s"
 
 DEFAULT_METADATA_READER = SwarmProductMetadataReader
-METADATA_READER = {}
+METADATA_READER = {
+    "SW_AUX_OBSx2_": ObsProductMetadataReader,
+}
+
 
 def get_product_id(data_file):
     """ Get the product identifier. """
@@ -313,8 +316,8 @@ def _set_product(product, data_file, **metadata):
     """ Update and save product. """
     product.begin_time = metadata['begin_time']
     product.end_time = metadata['end_time']
-    product.datasets = _get_datasets_from_product_type(
-        abspath(data_file), product.collection.type
+    product.datasets = _get_datasets(
+        data_file, product.collection.type, metadata
     )
     product.save()
     update_max_product_duration(
@@ -323,11 +326,33 @@ def _set_product(product, data_file, **metadata):
     return product
 
 
-def _get_datasets_from_product_type(data_file, product_type):
-    return  {
-        name: {"location": data_file}
-        for name in product_type.definition['datasets']
+def _get_datasets(data_file, product_type, metadata):
+    datasets = _get_datasets_from_product_type(abspath(data_file), product_type)
+    if "dataset_ranges" in metadata:
+        datasets.update(_get_datasets_from_dataset_ranges(
+            abspath(data_file), metadata["dataset_ranges"]
+        ))
+    return datasets
+
+
+def _get_datasets_from_dataset_ranges(data_file, dataset_ranges):
+    return {
+        name: {
+            "location": data_file,
+            "indexRange": [start, stop]
+        } for name, (start, stop) in dataset_ranges.items() if name
     }
+
+
+def _get_datasets_from_product_type(data_file, product_type):
+    datasets = {
+        name: {
+            "location": data_file,
+        } for name in product_type.definition['datasets']
+    }
+    for name in product_type.definition.get('unsortedDatasets') or []:
+        (datasets.get(name) or {})["isSorted"] = False
+    return datasets
 
 
 def _deregister_time_overlaps(collection, product_id, begin_time, end_time):
