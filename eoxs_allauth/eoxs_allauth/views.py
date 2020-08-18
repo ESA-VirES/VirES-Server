@@ -137,12 +137,17 @@ def workspace(parse_client_state=None):
                             if isinstance(raw_client_state, bytes):
                                 raw_client_state = raw_client_state.decode("ascii")
                         elif data.content_type == "application/json+gzip":
-                            raw_client_state = GzipFile(
-                                fileobj=BytesIO(data.data)
-                            ).read()
-
-                    elif _url.startswith('http://') or _url.startswith('https://'):
-                        client_state_url = _url
+                            try:
+                                raw_client_state = GzipFile(
+                                    fileobj=BytesIO(data.data)
+                                ).read()
+                            except Exception:
+                                pass
+                    else:
+                        for prefix in ['http://', 'https://', '/']:
+                            if _url.startswith(prefix):
+                                client_state_url = _url
+                                break
 
                 if raw_client_state is not None:
                     client_state = parse_client_state(raw_client_state)
