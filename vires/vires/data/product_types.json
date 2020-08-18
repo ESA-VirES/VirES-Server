@@ -1062,7 +1062,7 @@
     },
     {
         "name": "SW_AEJxLPL_2F",
-        "defaultDatadaset": "AEJ_LPL",
+        "defaultDataset": "AEJ_LPL",
         "datasets": {
             "AEJ_LPL": {
                 "Timestamp": {
@@ -1152,7 +1152,7 @@
     },
     {
         "name": "SW_AEJxPBL_2F",
-        "defaultDatadaset": "AEJ_PBL",
+        "defaultDataset": "AEJ_PBL",
         "datasets": {
             "AEJ_PBL": {
                 "Timestamp": {
@@ -1224,7 +1224,7 @@
     },
     {
         "name": "SW_AEJxLPS_2F",
-        "defaultDatadaset": "AEJ_LPS",
+        "defaultDataset": "AEJ_LPS",
         "datasets": {
             "AEJ_LPS": {
                 "Timestamp": {
@@ -1336,7 +1336,7 @@
     },
     {
         "name": "SW_AEJxPBS_2F",
-        "defaultDatadaset": "AEJ_PBS",
+        "defaultDataset": "AEJ_PBS",
         "datasets": {
             "AEJ_PBS": {
                 "Timestamp": {
@@ -1440,7 +1440,7 @@
     },
     {
         "name": "SW_AOBxFAC_2F",
-        "defaultDatadaset": "AOB_FAC",
+        "defaultDataset": "AOB_FAC",
         "datasets": {
             "AOB_FAC": {
                 "Timestamp": {
