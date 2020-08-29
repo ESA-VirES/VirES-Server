@@ -155,7 +155,9 @@ def _parse_collection_ids(ids, custom_dataset, permissions):
     for id_ in ids:
         if not isinstance(id_, str):
             raise TypeError("Invalid collection identifier %r!" % id_)
-        collection_id, _, dataset_id = id_.partition(':')
+        collection_id, separator, dataset_id = id_.partition(':')
+        if not separator:
+            dataset_id = None
         collection_dataset_ids.append((collection_id, dataset_id))
 
     available_collections = {
@@ -180,11 +182,11 @@ def _parse_collection_ids(ids, custom_dataset, permissions):
         if not collection:
             raise ValueError("Invalid collection identifier %r!" % collection_id)
 
-        type_def = collection.type.definition
-        if not dataset_id:
-            dataset_id = type_def["defaultDataset"]
+        dataset_id = collection.type.get_dataset_id(dataset_id)
+        if dataset_id is None:
+            raise ValueError("Missing mandatory dataset identifier!")
 
-        if dataset_id not in type_def["datasets"]:
+        if not collection.type.is_valid_dataset_id(dataset_id):
             raise ValueError("Invalid dataset identifier %r!" % dataset_id)
 
         collections.append((collection, dataset_id))

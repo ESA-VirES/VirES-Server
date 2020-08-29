@@ -32,7 +32,7 @@ from datetime import timedelta
 from django.db import transaction
 from vires.util import AttributeDict
 from vires.models import Product
-from vires.swarm import SwarmProductMetadataReader
+from vires.swarm import SwarmProductMetadataReader, ObsProductMetadataReader
 from vires.cdf_util import cdf_open
 from .product_collection import get_product_collection
 from .orbit_direction import (
@@ -43,6 +43,11 @@ from .orbit_direction import (
 )
 
 LOG_FORMAT = "product %s/%s %s"
+
+DEFAULT_METADATA_READER = SwarmProductMetadataReader
+METADATA_READER = {
+    "SW_AUX_OBSx2_": ObsProductMetadataReader,
+}
 
 
 def get_product_id(data_file):
@@ -62,10 +67,13 @@ def update_max_product_duration(collection, duration):
         collection.save()
 
 
-def read_product_metadata(data_file):
+def read_product_metadata(data_file, product_type):
     """ Read metadata from product. """
+    metadata_reader = (
+        METADATA_READER.get(product_type.identifier) or DEFAULT_METADATA_READER
+    )
     with cdf_open(data_file) as cdf:
-        return SwarmProductMetadataReader.read(cdf)
+        return metadata_reader.read(cdf)
 
 
 def get_product(collection_id, product_id):
@@ -110,7 +118,7 @@ def import_product(record, update_existing=True, **kwargs):
       record -      imported record dictionary, mandatory keys:
           identifier -  string, product identifier
           collection -  string, collection identifier
-          begin_time -  datetime acquisition/validity start
+          begin_time -  datetime, acquisition/validity start
           end_time -    datetime, acquisition/validity end
           datasets -    dictionary, dataset definition
       update_existing -
@@ -308,15 +316,43 @@ def _set_product(product, data_file, **metadata):
     """ Update and save product. """
     product.begin_time = metadata['begin_time']
     product.end_time = metadata['end_time']
-    product.datasets = {
-        name: {"location": abspath(data_file)}
-        for name in product.collection.type.definition['datasets']
-    }
+    product.datasets = _get_datasets(
+        data_file, product.collection.type, metadata
+    )
     product.save()
     update_max_product_duration(
         product.collection, product.end_time - product.begin_time
     )
     return product
+
+
+def _get_datasets(data_file, product_type, metadata):
+    datasets = _get_datasets_from_product_type(abspath(data_file), product_type)
+    if "dataset_ranges" in metadata:
+        datasets.update(_get_datasets_from_dataset_ranges(
+            abspath(data_file), metadata["dataset_ranges"]
+        ))
+    return datasets
+
+
+def _get_datasets_from_dataset_ranges(data_file, dataset_ranges):
+    return {
+        name: {
+            "location": data_file,
+            "indexRange": [start, stop]
+        } for name, (start, stop) in dataset_ranges.items() if name
+    }
+
+
+def _get_datasets_from_product_type(data_file, product_type):
+    datasets = {
+        name: {
+            "location": data_file,
+        } for name in product_type.definition['datasets']
+    }
+    for name in product_type.definition.get('unsortedDatasets') or []:
+        (datasets.get(name) or {})["isSorted"] = False
+    return datasets
 
 
 def _deregister_time_overlaps(collection, product_id, begin_time, end_time):

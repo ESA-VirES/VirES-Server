@@ -28,8 +28,9 @@
 
 import sys
 from vires.models import ProductCollection
+from vires.management.api.orbit_direction import rebuild_orbit_direction_tables
 from .._common import Subcommand
-from .common import Counter, rebuild_orbit_direction_tables
+from .common import Counter
 
 
 class RebuildOrbitDirectionSubcommand(Subcommand):

@@ -43,8 +43,6 @@ TIMEDELTA_MAX = timedelta(seconds=1.5)
 TIMEDELTA_MIN = timedelta(seconds=0.5)
 
 
-
-
 def sync_orbit_direction_tables(collection, logger=None, counter=None):
     """ Sync orbit direction lookup tables for the given collection. """
 
@@ -250,7 +248,7 @@ def list_collection(collection):
 
 def get_data_file(product):
     """ Get product data file. """
-    return product.get_location()
+    return product.get_location(product.collection.type.default_dataset_id)
 
 
 def get_collection(collection_id):
