@@ -100,7 +100,7 @@ class RegisterProductSubcommand(Subcommand):
                 result = register_product(
                     collection, data_file, metadata={
                         "identifier": product_id,
-                        **read_product_metadata(data_file),
+                        **read_product_metadata(data_file, collection.type),
                     },
                     update_existing=update_existing,
                     resolve_time_overlaps=resolve_time_overlaps,

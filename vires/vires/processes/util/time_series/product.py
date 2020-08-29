@@ -257,11 +257,15 @@ class ProductTimeSeries(BaseProductTimeSeries):
         if isinstance(collection, str):
             collection = self._get_collection(collection)
 
-        default_dataset_id = collection.type.definition["defaultDataset"]
-        if not dataset_id:
-            dataset_id = default_dataset_id
+        dataset_id = collection.type.get_dataset_id(dataset_id)
 
-        is_default_dataset = (dataset_id == default_dataset_id)
+        if dataset_id is None:
+            raise ValueError("Missing mandatory dataset identifier!")
+
+        if not collection.type.is_valid_dataset_id(dataset_id):
+            raise ValueError("Invalid dataset identifier %r!" % dataset_id)
+
+        is_default_dataset = (dataset_id == collection.type.default_dataset_id)
 
         params = PRODUCT_TYPE_PARAMETERS.get(
             self._get_id(collection.type.identifier, dataset_id, is_default_dataset),
@@ -301,9 +305,10 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
     @property
     def variables(self):
-        dataset = self.collection.type.definition['datasets'][self.dataset_id]
         return [
-            self.translate_bw.get(variable, variable) for variable in dataset
+            self.translate_bw.get(variable, variable)
+            for variable
+            in self.collection.type.get_dataset_definition(self.dataset_id)
         ]
 
     def _extract_dataset(self, cdf, extracted_variables, idx_low, idx_high):
@@ -324,6 +329,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
     def _get_empty_dataset(self, variables):
         """ Get empty dataset. """
+        # FIXE: generate empty response from the type definition
         self.logger.debug("empty dataset")
         self.logger.debug("extracted variables %s", variables)
 
@@ -342,9 +348,11 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 "Empty product collection %s!" % self.collection.identifier
             )
         else:
+            location = product.get_location(self.collection.type.default_dataset_id)
             # generate an empty dataset from the sample product
-            self.logger.debug("template product: %s ", product.identifier)
-            with cdf_open(product.get_location()) as cdf:
+            self.logger.debug("template product: %s", product.identifier)
+            self.logger.debug("reading file: %s", location)
+            with cdf_open(location) as cdf:
                 return self._extract_dataset(cdf, variables, 0, 0)
 
 
@@ -401,31 +409,37 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
         counter = 0
         for product in self._subset_qs(start, stop).order_by('begin_time'):
+            source_dataset = product.get_dataset(self.dataset_id)
+
+            if not source_dataset:
+                continue
+
             self.logger.debug("product: %s ", product.identifier)
+            self.logger.debug(
+                "product time span: %s/%s", product.begin_time, product.end_time
+            )
 
             self.product_set.add(product.identifier) # record source product
 
-            with cdf_open(product.get_location()) as cdf:
+            start_index, stop_index = source_dataset.get('indexRange') or [0, None]
+
+            if source_dataset.get('isSorted', True):
+                extract_time_subset = self._extract_time_subset_sorted
+            else:
+                extract_time_subset = self._extract_time_subset_unsorted
+
+            with cdf_open(source_dataset['location']) as cdf:
                 # temporal sub-setting
                 temp_var = cdf.raw_var(
                     self.translate_fw.get(self.time_variable, self.time_variable)
                 )
                 times, time_type = temp_var[:], temp_var.type()
 
-                self.logger.debug(
-                    "product time span %s %s",
-                    cdf_rawtime_to_datetime(times[0], time_type),
-                    cdf_rawtime_to_datetime(times[-1], time_type),
-                )
-
-                low, high = searchsorted(times, [
+                dataset = extract_time_subset(
+                    cdf, variables, times, start_index, stop_index,
                     datetime_to_cdf_rawtime(start, time_type),
                     datetime_to_cdf_rawtime(stop, time_type),
-                ], 'left')
-
-                self.logger.debug("product slice %s:%s", low, high)
-
-                dataset = self._extract_dataset(cdf, variables, low, high)
+                )
 
             self.logger.debug("dataset length: %s ", dataset.length)
 
@@ -439,6 +453,45 @@ class ProductTimeSeries(BaseProductTimeSeries):
             dataset = self._get_empty_dataset(variables)
             if dataset:
                 yield dataset
+
+    def _extract_time_subset_sorted(self, cdf, variables, times,
+                                    start_index, stop_index,
+                                    start_time, stop_time):
+        start, stop = searchsorted(
+            times[start_index:stop_index], [start_time, stop_time], 'left'
+        )
+        start += start_index
+        stop += start_index
+        self.logger.debug("product slice %s:%s", start, stop)
+        return self._extract_dataset(cdf, variables, start, stop)
+
+    def _extract_time_subset_unsorted(self, cdf, variables, times,
+                                      start_index, stop_index,
+                                      start_time, stop_time):
+        index = times[start_index:stop_index].argsort(kind='stable')
+        if start_index > 0:
+            index += start_index
+        start, stop = searchsorted(times[index], [start_time, stop_time], 'left')
+        index = index[start:stop]
+        if index.size > 0:
+            start, stop = index.min(), index.max() + 1
+        else:
+            start, stop = 0, 0
+        self.logger.debug("product slice %s:%s", start, stop)
+        dataset = self._extract_dataset(cdf, variables, start, stop)
+        if start > 0:
+            index -= start
+        return dataset.subset(index)
+
+    def _extract_dataset_by_index(self, cdf, extracted_variables, index):
+        index = asarray(index)
+        if index.size > 0:
+            start, stop = index.min(), index.max()
+        else:
+            start, stop = 0, 0
+        dataset = self._extract_dataset(cdf, extracted_variables, start, stop)
+        return dataset.subset(index - start)
+
 
     def _subset_qs(self, start, stop):
         """ Subset Django query set. """
