@@ -29,11 +29,12 @@
 import sys
 from traceback import print_exc
 from vires.util import unique
-from .._common import Subcommand
-from .common import (
-    DataIntegrityError, Counter, find_product_by_id,
+from vires.management.api.orbit_direction import (
+    DataIntegrityError, find_product_by_id,
     update_orbit_direction_tables, sync_orbit_direction_tables,
 )
+from .._common import Subcommand
+from .common import Counter
 
 
 class UpdateOrbitDirectionSubcommand(Subcommand):
@@ -66,8 +67,8 @@ class UpdateOrbitDirectionSubcommand(Subcommand):
                     "Processing of %s failed! Product not found in any allowed "
                     "collections!", product_id,
                 )
-                counter.increment_failed()
-                counter.increment()
+                counter.failed += 1
+                counter.total += 1
                 continue
 
             try:
@@ -83,18 +84,18 @@ class UpdateOrbitDirectionSubcommand(Subcommand):
                 self.error(
                     "Processing of %s failed! Reason: %s", product_id, error
                 )
-                counter.increment_failed()
+                counter.failed += 1
             else:
                 if processed:
-                    counter.increment_processed()
+                    counter.processed += 1
                     self.info(
                         "%s orbit direction lookup table extracted", product_id
                     )
                 else:
-                    counter.increment_skipped()
+                    counter.skipped += 1
                     self.info(
                         "%s orbit direction lookup table extraction skipped",
                         product_id
                     )
             finally:
-                counter.increment()
+                counter.total += 1

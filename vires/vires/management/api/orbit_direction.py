@@ -43,8 +43,6 @@ TIMEDELTA_MAX = timedelta(seconds=1.5)
 TIMEDELTA_MIN = timedelta(seconds=0.5)
 
 
-
-
 def sync_orbit_direction_tables(collection, logger=None, counter=None):
     """ Sync orbit direction lookup tables for the given collection. """
 
