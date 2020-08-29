@@ -50,6 +50,7 @@ from vires.time_util import (
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
     timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE, cdf_open,
+    CDF_CHAR_TYPE,
 )
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
@@ -675,10 +676,16 @@ class FetchFilteredDataAsync(WPSProcess):
                     )
 
                     for variable in inserted: # create the initial datasets
-                        shape = (record_count,) + dataset[variable].shape[1:]
+                        cdf_type = dataset.cdf_type.get(variable)
+                        data_array = dataset[variable]
+                        if cdf_type == CDF_CHAR_TYPE:
+                            itemsize, nodata = data_array.dtype.itemsize, b""
+                        else:
+                            itemsize, nodata = 1, nan
+                        shape = (record_count,) + data_array.shape[1:]
                         cdf.new(
-                            variable, full(shape, nan),
-                            dataset.cdf_type.get(variable)
+                            variable, full(shape, nodata),
+                            cdf_type, n_elements=itemsize
                         )
                         cdf[variable].attrs.update(
                             dataset.cdf_attr.get(variable, {})
