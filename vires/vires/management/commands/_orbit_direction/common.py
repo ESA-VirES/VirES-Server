@@ -252,7 +252,7 @@ def list_collection(collection):
 
 def get_data_file(product):
     """ Get product data file. """
-    return product.get_location()
+    return product.get_location(product.collection.type.default_dataset_id)
 
 
 def get_collection(collection_id):

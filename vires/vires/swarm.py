@@ -33,7 +33,7 @@ from vires.cdf_util import cdf_rawtime_to_datetime
 
 class SwarmProductMetadataReader():
 
-    TIME_KEYS = [
+    TIME_VARIABLES = [
         "Timestamp",
         "timestamp",
         "Epoch"
