@@ -27,18 +27,11 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from numpy import array, empty, isnan, floor, ceil
-from django.contrib.gis.geos import Polygon, MultiPolygon
 from vires.time_util import naive_to_utc
 from vires.cdf_util import cdf_rawtime_to_datetime
 
 
 class SwarmProductMetadataReader():
-
-    LATLON_KEYS = [
-        ("Longitude", "Latitude"),
-        ("longitude", "latitude"),
-    ]
 
     TIME_KEYS = [
         "Timestamp",
@@ -47,11 +40,11 @@ class SwarmProductMetadataReader():
     ]
 
     @classmethod
-    def get_time_range_and_size(cls, data):
+    def get_time_range_and_size(cls, cdf):
         # iterate possible time keys and try to extract the values
-        for time_key in cls.TIME_KEYS:
+        for time_variable in cls.TIME_VARIABLES:
             try:
-                times = data.raw_var(time_key)
+                times = cdf.raw_var(time_variable)
             except KeyError:
                 continue
             else:
@@ -69,59 +62,60 @@ class SwarmProductMetadataReader():
         )
 
     @classmethod
-    def get_coords(cls, data):
-        # iterate possible lat/lon keys and try to extract the values
-        for lat_key, lon_key in cls.LATLON_KEYS:
-            try:
-                lat_data = data[lat_key][:]
-                lon_data = data[lon_key][:]
-            except KeyError:
-                continue
-            else:
-                coords = empty((len(lon_data), 2))
-                coords[:, 0] = lon_data
-                coords[:, 1] = lat_data
-                break
-        else:
-            # values not extracted assume global product
-            coords = array([(-180.0, -90.0), (+180.0, +90.0)])
+    def read(cls, data):
+        begin_time, end_time, n_times = cls.get_time_range_and_size(data)
 
-        return coords
+        return {
+            "format": "CDF-Swarm",
+            "size": (n_times, 0),
+            "begin_time": begin_time,
+            "end_time": end_time,
+        }
+
+
+class ObsProductMetadataReader():
+
+    TIME_VARIABLE = "Timestamp"
+    OBS_CODES_ATTR = "IAGA_CODES"
+    OBS_RANGES_ATTR = "INDEX_RANGES"
 
     @classmethod
-    def coords_to_bounding_box(cls, coords):
-        coords = coords[~isnan(coords).any(1)]
-        if coords.size:
-            lon_min, lat_min = floor(coords.min(0))
-            lon_max, lat_max = ceil(coords.max(0))
+    def get_time_range_and_size(cls, cdf):
+        try:
+            time_var = cdf.raw_var(cls.TIME_VARIABLE)
+        except KeyError:
+            time_var = None
         else:
-            lon_min, lat_min, lon_max, lat_max = -180, -90, 180, 90
-        return (lon_min, lat_min, lon_max, lat_max)
+            cdf_type = time_var.type()
+            times = time_var[...]
 
-    @classmethod
-    def bounding_box_to_geometry(cls, bbox):
-        return MultiPolygon(
-            Polygon((
-                (bbox[0], bbox[1]), (bbox[2], bbox[1]),
-                (bbox[2], bbox[3]), (bbox[0], bbox[3]),
-                (bbox[0], bbox[1]),
-            ))
+        if time_var is None:
+            raise KeyError("Temporal variable not found!")
+
+        if len(times.shape) != 1:
+            raise ValueError("Incorrect dimension of the time-stamp array!")
+
+        return (
+            naive_to_utc(cdf_rawtime_to_datetime(times.min(), cdf_type)),
+            naive_to_utc(cdf_rawtime_to_datetime(times.max(), cdf_type)),
+            times.shape[0]
         )
 
     @classmethod
-    def read(cls, data):
-        # NOTE: For sake of simplicity we take geocentric (ITRF) coordinates
-        #       as geodetic coordinates.
-        begin_time, end_time, n_times = cls.get_time_range_and_size(data)
-        coords = cls.get_coords(data)
-        bbox = cls.coords_to_bounding_box(coords)
-        footprint = cls.bounding_box_to_geometry(bbox)
+    def read_obs_ranges(cls, cdf):
+        return dict(zip(list(cdf.attrs[cls.OBS_CODES_ATTR]), [
+            (int(start), int(stop))
+            for start, stop in list(cdf.attrs[cls.OBS_RANGES_ATTR])
+        ]))
+
+    @classmethod
+    def read(cls, cdf):
+        begin_time, end_time, n_times = cls.get_time_range_and_size(cdf)
 
         return {
-            "format": "CDF",
+            "format": "CDF-OBS",
             "size": (n_times, 0),
-            "extent": bbox,
-            "footprint": footprint,
             "begin_time": begin_time,
             "end_time": end_time,
+            "dataset_ranges": cls.read_obs_ranges(cdf),
         }
