@@ -36,7 +36,8 @@ class SwarmProductMetadataReader():
     TIME_VARIABLES = [
         "Timestamp",
         "timestamp",
-        "Epoch"
+        "Epoch",
+        "t",
     ]
 
     @classmethod

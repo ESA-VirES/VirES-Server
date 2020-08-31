@@ -71,6 +71,7 @@ from vires.processes.util.models import (
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
     IndexKpFromKp10,
+    Identity,
     BnecToF,
 )
 from vires.processes.util.filters import (
@@ -292,6 +293,11 @@ class FetchData(WPSProcess):
             model_subsol = SubSolarPoint()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
+            copied_variables = [
+                Identity("MLT_QD", "MLT"),
+                Identity("Latitude_QD", "QDLat"),
+                Identity("Longitude_QD", "QDLon"),
+            ]
 
             sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
@@ -366,7 +372,7 @@ class FetchData(WPSProcess):
                     model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
-                ), models_with_residuals)
+                ), models_with_residuals, copied_variables)
 
                 for model in aux_models:
                     resolver.add_model(model)

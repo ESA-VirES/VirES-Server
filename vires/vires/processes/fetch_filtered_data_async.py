@@ -73,6 +73,7 @@ from vires.processes.util.models import (
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
     IndexKpFromKp10,
+    Identity,
     BnecToF,
 )
 from vires.processes.util.filters import (
@@ -376,6 +377,11 @@ class FetchFilteredDataAsync(WPSProcess):
             model_subsol = SubSolarPoint()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
+            copied_variables = [
+                Identity("MLT_QD", "MLT"),
+                Identity("Latitude_QD", "QDLat"),
+                Identity("Longitude_QD", "QDLon"),
+            ]
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
@@ -453,7 +459,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
-                ), models_with_residuals)
+                ), models_with_residuals, copied_variables)
 
                 for model in aux_models:
                     resolver.add_model(model)
@@ -605,7 +611,8 @@ class FetchFilteredDataAsync(WPSProcess):
         #result_basename = "%s_%s_%s_Filtered" % (
         temp_basename = "%s_%s_%s_Filtered" % (
             "_".join(
-                s.collection_identifier for l in sources.values() for s in l
+                s.collection_identifier.replace(":", "-")
+                for l in sources.values() for s in l
             ),
             begin_time.strftime("%Y%m%dT%H%M%S"),
             end_time.strftime("%Y%m%dT%H%M%S"),
