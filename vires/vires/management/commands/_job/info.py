@@ -27,9 +27,9 @@
 # pylint: disable=missing-docstring
 
 from argparse import RawTextHelpFormatter
+from vires.util import datetime_to_string
 from vires.models import Job
 from vires.processes.remove_job import get_wps_async_backend
-from .._common import datetime_to_string
 from .common import JobSelectionSubcommand
 
 STATUS_TO_STR = dict(Job.STATUS_CHOICES)

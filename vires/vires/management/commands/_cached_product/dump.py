@@ -30,14 +30,14 @@ import sys
 import json
 from os.path import getmtime
 from datetime import datetime
-from vires.util import unique, include
+from vires.util import unique, include, datetime_to_string
 from vires.cdf_util import cdf_open, CDFError
 from vires.cache_util import cache_path
 from vires.time_util import naive_to_utc
 from vires.data.vires_settings import (
     SPACECRAFTS, AUX_DB_DST, AUX_DB_KP, CACHED_PRODUCT_FILE,
 )
-from .._common import Subcommand, JSON_OPTS, datetime_to_string
+from .._common import Subcommand, JSON_OPTS
 
 
 class DumpCachedProductSubcommand(Subcommand):

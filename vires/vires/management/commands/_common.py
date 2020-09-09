@@ -52,10 +52,6 @@ JSON_OPTS = {
 }
 
 
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')
-
-
 def time_spec(value):
     """ CLI time specification parser. """
     date_ = parse_date(value)
