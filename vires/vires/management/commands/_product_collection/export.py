@@ -29,8 +29,9 @@
 import sys
 import json
 from vires.models import ProductCollection
+from vires.util import datetime_to_string
 from vires.time_util import timedelta_to_iso_duration
-from .._common import Subcommand, JSON_OPTS, datetime_to_string
+from .._common import Subcommand, JSON_OPTS
 
 
 class ExportProductCollectionSubcommand(Subcommand):

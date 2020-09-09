@@ -28,9 +28,10 @@
 
 import sys
 import json
+from vires.util import datetime_to_string
 from vires.models import Product
 from vires.management.api.product import export_product
-from .._common import JSON_OPTS, datetime_to_string
+from .._common import JSON_OPTS
 from .common import ProductSelectionSubcommand
 
 

@@ -93,7 +93,7 @@ class GetTimeDataProcess(WPSProcess):
             "request: collection: %s, toi: (%s, %s)",
             collection_id,
             naive_to_utc(begin_time).isoformat("T") if begin_time else "-",
-            naive_to_utc(end_time) if end_time else "-",
+            naive_to_utc(end_time).isoformat("T") if end_time else "-",
         )
 
         query = collection.products.order_by('begin_time')

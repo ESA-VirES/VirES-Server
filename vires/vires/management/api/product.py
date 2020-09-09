@@ -30,7 +30,7 @@ from functools import wraps
 from os.path import splitext, basename, abspath
 from datetime import timedelta
 from django.db import transaction
-from vires.util import AttributeDict
+from vires.util import AttributeDict, datetime_to_string
 from vires.models import Product
 from vires.swarm import SwarmProductMetadataReader, ObsProductMetadataReader
 from vires.cdf_util import cdf_open
@@ -328,19 +328,25 @@ def _set_product(product, data_file, **metadata):
 
 def _get_datasets(data_file, product_type, metadata):
     datasets = _get_datasets_from_product_type(abspath(data_file), product_type)
-    if "dataset_ranges" in metadata:
-        datasets.update(_get_datasets_from_dataset_ranges(
-            abspath(data_file), metadata["dataset_ranges"]
+    if "datasets" in metadata:
+        datasets.update(_get_datasets_from_datasets_metadata(
+            abspath(data_file), metadata["datasets"]
         ))
     return datasets
 
 
-def _get_datasets_from_dataset_ranges(data_file, dataset_ranges):
+def _get_datasets_from_datasets_metadata(data_file, datasets):
+    def _sanitize(record):
+        return {
+            key: value for key, value in record.items() if value is not None
+        }
     return {
-        name: {
+        name: _sanitize({
             "location": data_file,
-            "indexRange": [start, stop]
-        } for name, (start, stop) in dataset_ranges.items() if name
+            "indexRange": metadata.get('index_range'),
+            "beginTime": datetime_to_string(metadata.get('begin_time')),
+            "endTime": datetime_to_string(metadata.get('end_time')),
+        }) for name, metadata in datasets.items()
     }
 
 

@@ -80,8 +80,12 @@ class ObsProductMetadataReader():
     OBS_CODES_ATTR = "IAGA_CODES"
     OBS_RANGES_ATTR = "INDEX_RANGES"
 
+    @staticmethod
+    def epoch_to_datetime(time, cdf_type):
+        return naive_to_utc(cdf_rawtime_to_datetime(time, cdf_type))
+
     @classmethod
-    def get_time_range_and_size(cls, cdf):
+    def read_times(cls, cdf):
         try:
             time_var = cdf.raw_var(cls.TIME_VARIABLE)
         except KeyError:
@@ -96,27 +100,46 @@ class ObsProductMetadataReader():
         if len(times.shape) != 1:
             raise ValueError("Incorrect dimension of the time-stamp array!")
 
-        return (
-            naive_to_utc(cdf_rawtime_to_datetime(times.min(), cdf_type)),
-            naive_to_utc(cdf_rawtime_to_datetime(times.max(), cdf_type)),
-            times.shape[0]
-        )
+        return times, cdf_type
+
 
     @classmethod
-    def read_obs_ranges(cls, cdf):
+    def read_obs_index_ranges(cls, cdf):
         return dict(zip(list(cdf.attrs[cls.OBS_CODES_ATTR]), [
             (int(start), int(stop))
             for start, stop in list(cdf.attrs[cls.OBS_RANGES_ATTR])
         ]))
 
     @classmethod
+    def get_obs_info(cls, cdf):
+        index_ranges = cls.read_obs_index_ranges(cdf)
+        times, cdf_type = cls.read_times(cdf)
+
+        datasets = {
+            code: {
+                'index_range': (start, stop),
+                'begin_time': cls.epoch_to_datetime(times[start], cdf_type),
+                'end_time': cls.epoch_to_datetime(times[stop - 1], cdf_type),
+            }
+            for code, (start, stop) in index_ranges.items()
+
+        }
+
+        return (
+            cls.epoch_to_datetime(times.min(), cdf_type),
+            cls.epoch_to_datetime(times.max(), cdf_type),
+            times.shape[0],
+            datasets,
+        )
+
+    @classmethod
     def read(cls, cdf):
-        begin_time, end_time, n_times = cls.get_time_range_and_size(cdf)
+        begin_time, end_time, n_times, datasets = cls.get_obs_info(cdf)
 
         return {
             "format": "CDF-OBS",
             "size": (n_times, 0),
             "begin_time": begin_time,
             "end_time": end_time,
-            "dataset_ranges": cls.read_obs_ranges(cdf),
+            "datasets": datasets,
         }
