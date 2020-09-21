@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Import user permissions from a JSON file
+# Import and registered OAuth applications from a JSON file
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,90 +28,120 @@
 
 import sys
 import json
-from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
-from django.core.management.base import BaseCommand
-from ...models import Permission
-from ...data import DEFAULT_PERMISSIONS
-from ._common import ConsoleOutput
+from django.utils.dateparse import parse_datetime
+from django.contrib.auth.models import User
+from oauth2_provider.models import Application
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
-
-    help = "Import user permissions from a JSON file."
+class ImportAppSubcommand(Subcommand):
+    name = "import"
+    help = "Import and registered OAuth applications from a JSON file."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "-f", "--file", dest="filename", default="-", help=(
-                "Optional input file-name. "
-                "The standard input is used by default."
+                "Optional file-name the output is written to. "
+                "By default it is written to the standard output."
             )
         )
-        parser.add_argument(
-            "-d", "--default", dest="load_defaults", action="store_true",
-            default=False, help="Re-load default set of permissions."
-        )
 
-    def handle(self, filename, load_defaults, **kwargs):
+    def handle(self, **kwargs):
 
-        if load_defaults:
-            self.info("Loading default permissions ...")
-            filename = DEFAULT_PERMISSIONS
-
+        filename = kwargs['filename']
         with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
             data = json.load(file_)
 
         failed_count = 0
         created_count = 0
         updated_count = 0
+
         for item in data:
-            name = item['name']
+            name = item['client_id']
+            if item.get('name'):
+                name += " (%s)" % item['name']
+
             try:
-                is_updated = save_permission(item)
+                is_updated = save_app(item)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
-                self.error("Failed to write permission %s! %s", name, error)
+                self.error(
+                    "Failed to create or update the app %s! %s",
+                    name, error
+                )
             else:
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "permission %s updated" if is_updated else
-                    "permission %s created", name, log=True
+                    "app %s updated" if is_updated else
+                    "app %s created", name, log=True
                 )
 
         if created_count:
             self.info(
-                "%d of %d permission%s updated.", created_count, len(data),
+                "%d of %d app%s updated.", created_count, len(data),
                 "s" if created_count > 1 else ""
             )
 
         if updated_count:
             self.info(
-                "%d of %d permission%s updated.", updated_count, len(data),
+                "%d of %d app%s updated.", updated_count, len(data),
                 "s" if updated_count > 1 else ""
             )
 
         if failed_count:
             self.info(
-                "%d of %d permission%s failed ", failed_count, len(data),
+                "%d of %d app%s failed ", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
 
+
+KEY_PARSERS = {
+    "created": parse_datetime,
+    "updated": parse_datetime,
+    "redirect_uris": lambda uris: " ".join(str(uri) for uri in uris),
+    "skip_authorization": bool,
+}
+
+APP_KEYS = [
+    "name",
+    "client_secret",
+    "client_type",
+    "authorization_grant_type",
+    "skip_authorization",
+    "created",
+    "updated",
+    "redirect_uris",
+]
+
+
 @transaction.atomic
-def save_permission(item):
-    name = item['name']
+def save_app(item):
+    client_id = item['client_id']
+
     try:
-        permission = Permission.objects.get(name=name)
+        app = Application.objects.get(client_id=client_id)
         is_updated = True
-    except Permission.DoesNotExist:
-        permission = Permission(name=name)
+    except Application.DoesNotExist:
+        app = Application(client_id=client_id)
         is_updated = False
 
-    permission.description = item['description']
-    permission.save()
+    if 'owner' in item:
+        app.user = get_user(item['owner'])
+
+    for key in APP_KEYS:
+        value = item.get(key)
+        if value is not None:
+            setattr(app, key, KEY_PARSERS.get(key, str)(value))
+
+    app.save()
 
     return is_updated
+
+
+def get_user(username):
+    return None if username is None else User.objects.get(username=username)

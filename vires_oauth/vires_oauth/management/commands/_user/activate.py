@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Export social providers configuration in JSON format.
+# User management - insert users in a group
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,41 +26,21 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-import sys
-import json
-from django.core.management.base import BaseCommand
-from allauth.socialaccount.models import SocialApp
-from ._common import ConsoleOutput, JSON_OPTS
+from django.contrib.auth.models import User
+from .common import UserSelectionSubcommandProtected
 
 
-class Command(ConsoleOutput, BaseCommand):
-    help = "Export social network providers configuration in JSON format."
+class ActivateUserSubcommand(UserSelectionSubcommandProtected):
+    name = "activate"
+    help = "Activate inactive users."
 
-    def add_arguments(self, parser):
-        parser.add_argument("providers", nargs="*", help="Selected providers.")
-        parser.add_argument(
-            "-f", "--file", dest="filename", default="-",
-            help="Output filename."
-        )
+    def handle(self, **kwargs):
+        users = self.select_users(User.objects.all(), **kwargs)
 
-    def handle(self, providers, filename, **kwargs):
-        query = SocialApp.objects
-        if not providers:
-            query = query.all()
-        else:
-            query = query.filter(provider__in=providers)
-
-        data = [extract_social_provider(app) for app in query]
-
-        with sys.stdout if filename == "-" else open(filename, "w") as file_:
-            json.dump(data, file_, **JSON_OPTS)
-
-
-def extract_social_provider(app):
-    return {
-        "provider": app.provider,
-        "name": app.name,
-        "client_id": app.client_id,
-        "secret": app.secret,
-        "key": app.key,
-    }
+        for user in users:
+            if not user.is_active:
+                user.is_active = True
+                user.save()
+                self.info("user %s activated", user.username, log=True)
+            else:
+                self.info("user %s is already active", user.username)

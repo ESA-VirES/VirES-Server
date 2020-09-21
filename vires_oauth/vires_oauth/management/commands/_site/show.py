@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Print current site.
+# Command showing the current site configuration.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,14 +26,15 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.contrib.sites.models import Site
-from ._common import ConsoleOutput
+from django.core.management.base import CommandError
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    help = "Print current site configuration."
+class ShowSiteSubcommand(Subcommand):
+    name = "show"
+    help = "Show the current site configuration."
 
     def handle(self, **kwargs):
         try:

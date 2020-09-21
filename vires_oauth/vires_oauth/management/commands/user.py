@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Export user permissions in JSON format.
+# User management command
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2020 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,44 +26,30 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-import sys
-import json
-from django.core.management.base import BaseCommand
-from ...models import Permission
-from ._common import ConsoleOutput, JSON_OPTS
+from logging import getLogger
+from ._common import Supercommand
+from ._user.list import ListUserSubcommand
+from ._user.export import ExportUserSubcommand
+from ._user.activate import ActivateUserSubcommand
+from ._user.deactivate import DeactivateUserSubcommand
+from ._user.import_ import ImportUserSubcommand
+from ._user.set_group import SetUserGroupSubcommand
+from ._user.unset_group import UnsetUserGroupSubcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    help = (
-        "Export user permissions in JSON format. The exported permissions "
-        "can be selected by names."
-    )
+class Command(Supercommand):
 
-    def add_arguments(self, parser):
-        parser.add_argument("permissions", nargs="*", help="Selected permissions.")
-        parser.add_argument(
-            "-f", "--file-name", dest="filename", default="-", help=(
-                "Optional output file-name. "
-                "By default it is written to the standard output."
-            )
-        )
+    help = "User management command."
 
-    def handle(self, permissions, filename, **kwargs):
-        query = Permission.objects
-
-        if not permissions:
-            query = query.all()
-        else:
-            query = query.filter(name__in=permissions)
-
-        data = [extract_permission(item) for item in query]
-
-        with sys.stdout if filename == "-" else open(filename, "w") as file_:
-            json.dump(data, file_, **JSON_OPTS)
-
-
-def extract_permission(permission):
-    return {
-        "name": permission.name,
-        "description": permission.description,
+    commands = {
+        command.name: command(getLogger("%s.%s" % (__name__, command.name)))
+        for command in [
+            ListUserSubcommand,
+            ExportUserSubcommand,
+            ImportUserSubcommand,
+            ActivateUserSubcommand,
+            DeactivateUserSubcommand,
+            SetUserGroupSubcommand,
+            UnsetUserGroupSubcommand,
+        ]
     }

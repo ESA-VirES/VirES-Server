@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Import the social providers from a JSON file
+# Import social network providers from a JSON file
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,20 +28,17 @@
 
 import sys
 import json
-from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
-from django.core.management.base import BaseCommand
-from django.utils.dateparse import parse_datetime
-from django.contrib.auth.models import User
-from oauth2_provider.models import Application
-from ._common import ConsoleOutput
+from django.conf import settings
+from django.contrib.sites.models import Site
+from allauth.socialaccount.models import SocialApp
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
-
-    help = "Import registered applications from a JSON file."
+class ImportProviderSubcommand(Subcommand):
+    name = "import"
+    help = "Import social network providers configuration from a JSON file."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -49,99 +46,79 @@ class Command(ConsoleOutput, BaseCommand):
             help="Input filename."
         )
 
-    def handle(self, filename, **kwargs):
+    def handle(self, **kwargs):
 
+        filename = kwargs['filename']
         with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
             data = json.load(file_)
+
+        self.save_providers(data, **kwargs)
+
+    def save_providers(self, data, **kwargs):
+        sites = get_sites()
 
         failed_count = 0
         created_count = 0
         updated_count = 0
 
         for item in data:
-            name = item['client_id']
-            if item.get('name'):
-                name += " (%s)" % item['name']
-
+            name = item['provider']
             try:
-                is_updated = save_app(item)
+                is_updated = save_social_provider(item, sites)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
                 self.error(
-                    "Failed to create or update app %s! %s",
+                    "Failed to create or update social provider %s! %s",
                     name, error
                 )
             else:
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "app %s updated" if is_updated else
-                    "app %s created", name, log=True
+                    "social provider %s updated" if is_updated else
+                    "social provider %s created", name, log=True
                 )
 
         if created_count:
             self.info(
-                "%d of %d app%s updated.", created_count, len(data),
+                "%d of %d social provider%s updated.", created_count, len(data),
                 "s" if created_count > 1 else ""
             )
 
         if updated_count:
             self.info(
-                "%d of %d app%s updated.", updated_count, len(data),
+                "%d of %d social provider%s updated.", updated_count, len(data),
                 "s" if updated_count > 1 else ""
             )
 
         if failed_count:
             self.info(
-                "%d of %d app%s failed ", failed_count, len(data),
+                "%d of %d social provider%s failed ", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
 
 
-KEY_PARSERS = {
-    "created": parse_datetime,
-    "updated": parse_datetime,
-    "redirect_uris": lambda uris: " ".join(str(uri) for uri in uris),
-    "skip_authorization": bool,
-}
-
-APP_KEYS = [
-    "name",
-    "client_secret",
-    "client_type",
-    "authorization_grant_type",
-    "skip_authorization",
-    "created",
-    "updated",
-    "redirect_uris",
-]
-
+def get_sites():
+    return list(Site.objects.filter(id=settings.SITE_ID))
 
 @transaction.atomic
-def save_app(item):
-    client_id = item['client_id']
-
+def save_social_provider(data, sites):
+    provider = data['provider']
     try:
-        app = Application.objects.get(client_id=client_id)
+        app = SocialApp.objects.get(provider=provider)
         is_updated = True
-    except Application.DoesNotExist:
-        app = Application(client_id=client_id)
+    except SocialApp.DoesNotExist:
+        app = SocialApp(provider=provider)
         is_updated = False
 
-    if 'owner' in item:
-        app.user = get_user(item['owner'])
-
-    for key in APP_KEYS:
-        value = item.get(key)
+    for field in ['name', 'client_id', 'secret', 'key']:
+        value = data.get(field)
         if value is not None:
-            setattr(app, key, KEY_PARSERS.get(key, str)(value))
+            setattr(app, field, value)
 
     app.save()
+    app.sites.set(sites)
 
     return is_updated
-
-
-def get_user(username):
-    return None if username is None else User.objects.get(username=username)
