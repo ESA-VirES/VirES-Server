@@ -31,7 +31,7 @@ from os.path import splitext, basename, abspath
 from datetime import timedelta
 from django.db import transaction
 from vires.util import AttributeDict, datetime_to_string
-from vires.models import Product
+from vires.models import Product, ProductLocation
 from vires.swarm import SwarmProductMetadataReader, ObsProductMetadataReader
 from vires.cdf_util import cdf_open
 from .product_collection import get_product_collection
@@ -83,6 +83,13 @@ def get_product(collection_id, product_id):
     return Product.objects.get(
         collection__identifier=collection_id, identifier=product_id,
     )
+
+
+def find_products_by_location(data_file):
+    """ Return query-set for products matched by the given data file location.
+    """
+    locations = ProductLocation.objects.filter(location=data_file)
+    return Product.objects.filter(id__in=locations.values('product_id'))
 
 
 def _log_registered_products(command):

@@ -36,6 +36,7 @@ from django.db.models import (
     TextField, Index, DurationField, Q,
     CASCADE as ON_DELETE_CASCADE,
     PROTECT as ON_DELETE_PROTECT,
+    DO_NOTHING as ON_DELETE_DO_NOTHING,
 )
 from django.contrib.postgres.fields import JSONField
 from django.contrib.auth.models import User
@@ -54,6 +55,7 @@ INDEXED = dict(db_index=True)
 
 CASCADE = dict(on_delete=ON_DELETE_CASCADE)
 PROTECT = dict(on_delete=ON_DELETE_PROTECT)
+DO_NOTHING = dict(on_delete=ON_DELETE_DO_NOTHING)
 
 
 def get_user(username):
@@ -232,3 +234,19 @@ class Product(Model):
 
     def get_index_range(self, dataset_id):
         return self.get_dataset(dataset_id).get('indexRange') or [0, None]
+
+
+class ProductLocation(Model):
+    id = BigIntegerField(primary_key=True)
+    product = ForeignKey(Product, related_name='+', **DO_NOTHING)
+    location = CharField(max_length=1024)
+
+    def save(self, *args, **kwargs):
+        pass
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    class Meta:
+        managed = False
+        db_table = 'vires_productlocation'

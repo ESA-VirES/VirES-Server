@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 
 from os.path import isfile
+from vires.models import ProductLocation
 from .._common import Subcommand, time_spec
 
 
@@ -51,6 +52,14 @@ class ProductSelectionSubcommand(Subcommand):
                 "Multiple product collection are allowed."
             )
         )
+        parser.add_argument(
+            "-l", "--location", "--product-location",
+            dest="product_location", action="store_true", default=False,
+            help=(
+                "Select products by the data file location rather than "
+                "by the product identifier."
+            )
+        ),
         parser.add_argument(
             "--after", type=time_spec, required=False,
             help="Select products after the given date."
@@ -118,6 +127,14 @@ class ProductSelectionSubcommand(Subcommand):
     def _select_products_by_id(self, query, **kwargs):
         identifiers = set(kwargs['identifier'])
         if identifiers:
+            query = self._select_listed_product(query, identifiers, **kwargs)
+        return query
+
+    def _select_listed_product(self, query, identifiers, **kwargs):
+        if kwargs['product_location']:
+            subquery = ProductLocation.objects.filter(location__in=identifiers)
+            query = query.filter(id__in=subquery.values('product_id'))
+        else:
             query = query.filter(identifier__in=identifiers)
         return query
 
@@ -135,7 +152,7 @@ class ProductSelectionSubcommandProtected(ProductSelectionSubcommand):
     def _select_products_by_id(self, query, **kwargs):
         identifiers = set(kwargs['identifier'])
         if not (kwargs['select_all'] or kwargs['invalid_only']):
-            query = query.filter(identifier__in=identifiers)
+            query = self._select_listed_product(query, identifiers, **kwargs)
             if not identifiers:
                 self.warning(
                     "No identifier selected and no product will be removed. "

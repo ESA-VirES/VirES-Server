@@ -41,7 +41,7 @@ class ExportProductCollectionSubcommand(Subcommand):
     def add_arguments(self, parser):
         parser.add_argument("identifier", nargs="*")
         parser.add_argument(
-            "-f", "--file-name", dest="file", default="-", help=(
+            "-f", "--file", dest="filename", default="-", help=(
                 "Optional file-name the output is written to. "
                 "By default it is written to the standard output."
             )
@@ -66,7 +66,7 @@ class ExportProductCollectionSubcommand(Subcommand):
 
         data = [serialize_collection(collection) for collection in query.all()]
 
-        filename = kwargs["file"]
+        filename = kwargs["filename"]
         with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
             json.dump(data, file_, **JSON_OPTS)
 
