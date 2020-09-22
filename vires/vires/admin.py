@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# VirES specific Djnago admin WebUI
+# VirES specific Django admin WebUI
 #
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #          Martin Paces <martin.paces@eox.at>
@@ -25,76 +25,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-few-public-methods
-
-#FIXME
-
-##from django.contrib.gis import forms
-#from django.contrib.gis import admin
-#from eoxserver.resources.coverages.admin import (
-#    CoverageAdmin, CollectionAdmin, EOObjectInline, CollectionInline,
-#    DataItemInline
-#)
-#from vires.models import Product, ProductCollection, Job
-#
-#
-#class JobAdmin(admin.ModelAdmin):
-#    model = Job
-#    fields = (
-#        'owner',
-#        'process_id',
-#        'identifier',
-#        'status',
-#        'created',
-#        'started',
-#        'stopped',
-#        'response_url',
-#    )
-#    search_fields = ['owner__username', 'process_id', 'identifier', 'status']
-#
-#    def has_add_permission(self, request):
-#        # suppress creation of a Job via the Django admin interface
-#        return False
-#
-#    def has_delete_permission(self, request, obj=None):
-#        # suppress removal of a Job via the Django admin interface
-#        return False
-#
-#    def get_readonly_fields(self, request, obj=None):
-#        # suppress editing of a Job via the Django admin interface
-#        return self.fields
-#
-#admin.site.register(Job, JobAdmin)
-#
-#
-#class ProductAdmin(CoverageAdmin):
-#    fieldsets = (
-#        (None, {
-#            'fields': ('identifier', )
-#        }),
-#        ('Metadata', {
-#            'fields': (
-#                'range_type',
-#                ('begin_time', 'end_time'),
-#                'footprint',
-#            ),
-#            'description': 'Geospatial metadata'
-#        }),
-#    )
-#
-#admin.site.register(Product, ProductAdmin)
-#
-#
-#class ProductCollectionAdmin(CollectionAdmin):
-#    model = ProductCollection
-#    fieldsets = (
-#        (None, {
-#            'fields': ('identifier',)
-#        }),
-#        ('Metadata', {
-#            'fields': (('begin_time', 'end_time'), 'footprint')
-#        }),
-#    )
-#    inlines = (EOObjectInline, CollectionInline)
-#
-#admin.site.register(ProductCollection, ProductCollectionAdmin)
