@@ -28,37 +28,43 @@
 
 import sys
 import json
-from django.core.management.base import BaseCommand
 from oauth2_provider.models import Application
-from ._common import ConsoleOutput, datetime_to_string, JSON_OPTS
+from vires_oauth.time_utils import datetime_to_string
+from .._common import Subcommand, JSON_OPTS
 
 
-class Command(ConsoleOutput, BaseCommand):
-    help = "Export registered applications in JSON format."
+class ExportAppSubcommand(Subcommand):
+    name = "export"
+    help = "Export registered OAuth applications in JSON format."
 
     def add_arguments(self, parser):
         parser.add_argument("apps", nargs="*", help="Selected applications.")
         parser.add_argument(
-            "-f", "--file", dest="filename", default="-",
-            help="Output filename."
+            "-f", "--file", dest="filename", default="-", help=(
+                "Optional file-name the output is written to. "
+                "By default it is written to the standard output."
+            )
         )
 
-    def handle(self, apps, filename, **kwargs):
-        query = Application.objects
-        if not apps:
-            query = query.all()
-        else:
-            query = (
-                query.filter(name__in=apps) | query.filter(client_id__in=apps)
-            )
+    def handle(self, **kwargs):
+        apps = self.select_apps(Application.objects.all(), **kwargs)
 
-        data = [extract_app(app) for app in query]
+        data = [serialize_app(app) for app in apps]
 
+        filename = kwargs['filename']
         with sys.stdout if filename == "-" else open(filename, "w") as file_:
             json.dump(data, file_, **JSON_OPTS)
 
+    def select_apps(self, query, **kwargs):
+        apps = kwargs['apps']
+        if apps:
+            query = (
+                query.filter(name__in=apps) | query.filter(client_id__in=apps)
+            )
+        return query
 
-def extract_app(app):
+
+def serialize_app(app):
     return {
         "owner": None if app.user is None else app.user.username,
         "name": app.name,

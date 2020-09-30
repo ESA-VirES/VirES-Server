@@ -26,14 +26,15 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.contrib.sites.models import Site
-from ._common import ConsoleOutput
+from django.core.management.base import CommandError
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    help = "Print current site configuration."
+class SetSiteSubcommand(Subcommand):
+    name = "set"
+    help = "Set current site parameters."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -43,7 +44,10 @@ class Command(ConsoleOutput, BaseCommand):
             "-d", "--domain", dest="domain", default=None, help="Site domain."
         )
 
-    def handle(self, name, domain, **kwargs):
+    def handle(self, **kwargs):
+
+        name = kwargs['name']
+        domain = kwargs['domain']
 
         try:
             site = Site.objects.get(id=settings.SITE_ID)

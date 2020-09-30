@@ -24,50 +24,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,unused-import
+# pylint: disable=missing-docstring
 
 import sys
 import json
 from functools import partial
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from ._common import ConsoleOutput, datetime_to_string, JSON_OPTS
-from ...models import UserProfile, Permission
+from vires_oauth.models import UserProfile, Permission
+from vires_oauth.time_utils import datetime_to_string
+from .._common import JSON_OPTS
+from .._common import JSON_OPTS, strip_blanks
+from .common import UserSelectionSubcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    "Export user in JSON format."
+class ExportUserSubcommand(UserSelectionSubcommand):
+    name = "export"
+    help = "Export users in JSON format."
 
     def add_arguments(self, parser):
-        parser.add_argument("users", nargs="*", help="Selected users.")
+        super().add_arguments(parser)
         parser.add_argument(
-            "-f", "--file-name", dest="filename", default="-",
-            help="Optional output file name."
+            "-f", "--file", dest="filename", default="-", help=(
+                "Optional file-name the output is written to. "
+                "By default it is written to the standard output."
+            )
         )
 
-    def handle(self, users, filename, **kwargs):
-        query = User.objects.order_by('username')
+    def handle(self, **kwargs):
+        users = self.select_users(User.objects.order_by("username"), **kwargs)
 
-        if not users:
-            query = query.all()
-        else:
-            query = query.filter(username__in=users)
+        data = [serialize_user(user) for user in users]
 
-        data = [serialize_user(user) for user in query]
-
-        with sys.stdout if filename == "-" else open(filename, "w") as file_:
+        filename = kwargs["filename"]
+        with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
             json.dump(data, file_, **JSON_OPTS)
-
-
-def strip_blanks(func):
-    """ Decorator removing blank fields from the serialized objects """
-    def _strip_blanks_(*args, **kwargs):
-        return {
-            key: value
-            for key, value in func(*args, **kwargs).items()
-            if value not in (None, "")
-        }
-    return _strip_blanks_
 
 
 @strip_blanks

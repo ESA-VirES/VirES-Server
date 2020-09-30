@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# User management - insert users in groups
+# User management - insert users to one or more user groups
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,67 +26,67 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, too-few-public-methods
 
-from logging import getLogger
 from django.db import transaction
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
-from ...models import UserProfile
-from ._common import ConsoleOutput
+from .common import UserSelectionSubcommandProtected
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
+class SelectGroupMixIn():
 
-    help = (
-        "Insert selected users to a group. The users are selected either by the "
-        "provided user names (no user name - no output) or by the '--all' "
-        "option. "
-    )
+    def select_groups(self, query, **kwargs):
+        groups_requested = set(kwargs['groups'])
+        groups = list(query.filter(name__in=groups_requested))
+        groups_missing = groups_requested - {group.name for group in groups}
+        for group_name in groups_missing:
+            self.warning("User group %s does not exist!", group_name)
+        return groups
 
-    def add_arguments(self, parser):
-        parser.add_argument("users", nargs="*", help="Selected users.")
-        parser.add_argument(
-            "-g", "--group", dest="groups", required=True, nargs="+",
-            help="Target group."
-        )
-        parser.add_argument(
-            "-a", "--all", dest="all_users", action="store_true", default=False,
-            help="Select all users."
-        )
-
-    def handle(self, groups, users, all_users, **kwargs):
-        groups = list(Group.objects.filter(name__in=groups))
-
-        if not groups:
-            return
-
-        group_string = "group%s %s" % (
+    def get_groups_string(self, groups):
+        return "group%s %s" % (
             "s" if len(groups) > 1 else "",
             ", ".join(group.name for group in groups)
         )
 
-        query = User.objects
-        if all_users:
-            query = query.all()
-        else:
-            if not users:
-                self.warning(
-                    "No user name has been provided! Use '--help' to get more "
-                    "information of the command usage."
-                )
-            query = query.filter(username__in=users)
 
-        for user in query:
+class SetUserGroupSubcommand(UserSelectionSubcommandProtected, SelectGroupMixIn):
+    name = "set_group"
+    help = "Insert users to one or more groups."
+
+    def add_arguments(self, parser):
+        super().add_arguments(parser)
+        parser.add_argument(
+            "-g", "--group", dest="groups", action='append',
+            required=True, help="Target user group."
+        )
+
+    def handle(self, **kwargs):
+        users = self.select_users(User.objects.all(), **kwargs)
+        groups = self.select_groups(Group.objects.all(), **kwargs)
+
+        if not groups:
+            self.warning("No valid group selected. No action is performed!")
+            return
+
+        self.set_groups(users, groups)
+
+    def set_groups(self, users, groups):
+        groups_string = self.get_groups_string(groups)
+        for user in users:
             try:
-                with transaction.atomic():
-                    for group in groups:
-                        user.groups.add(group)
+                set_user_groups(user, groups)
             except Exception as error:
                 self.error(
-                    "Failed to add %s user in %s! %s", user.username,
-                    group_string, error
+                    "Failed to add %s user to %s! %s", user.username,
+                    groups_string, error
                 )
             else:
                 self.info(
-                    "user %s added in %s", user.username, group_string, log=True
+                    "user %s added to %s", user.username,
+                    groups_string, log=True
                 )
+
+
+@transaction.atomic
+def set_user_groups(user, groups):
+    for group in groups:
+        user.groups.add(group)

@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Export product types in JSON format.
+# User management - list usernames
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,46 +24,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-few-public-methods
 
-import sys
-import json
-from vires.util import datetime_to_string
-from vires.models import ProductType
-from .._common import Subcommand, JSON_OPTS
+from django.contrib.auth.models import User
+from .common import UserSelectionSubcommand
 
 
-class ExportProductTypeSubcommand(Subcommand):
-    name = "export"
-    help = "Export product type definitions as a JSON file."
-
-    def add_arguments(self, parser):
-        parser.add_argument("identifier", nargs="*")
-        parser.add_argument(
-            "-f", "--file", dest="filename", default="-", help=(
-                "Optional file-name the output is written to. "
-                "By default it is written to the standard output."
-            )
-        )
+class ListUserSubcommand(UserSelectionSubcommand):
+    name = "list"
+    help = "List usernames."
 
     def handle(self, **kwargs):
-        query = ProductType.objects.order_by('identifier')
+        users = self.select_users(User.objects.all(), **kwargs)
 
-        identifiers = kwargs['identifier']
-        if identifiers:
-            query = query.filter(identifier__in=identifiers)
-
-        data = [serialize_type(ptype) for ptype in query.all()]
-
-        filename = kwargs["filename"]
-        with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
-            json.dump(data, file_, **JSON_OPTS)
-
-
-def serialize_type(object_):
-    return {
-        "name": object_.identifier,
-        "created": datetime_to_string(object_.created),
-        "updated": datetime_to_string(object_.updated),
-        **object_.definition,
-    }
+        for user in users.all():
+            print(user.username)

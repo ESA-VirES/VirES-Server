@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Export user groups in JSON format.
+# Export user permissions in JSON format.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,20 +28,19 @@
 
 import sys
 import json
-from django.core.management.base import BaseCommand
-from django.contrib.auth.models import Group
-from ...models import GroupInfo
-from ._common import ConsoleOutput, JSON_OPTS
+from vires_oauth.models import Permission
+from .._common import Subcommand, JSON_OPTS
 
 
-class Command(ConsoleOutput, BaseCommand):
+class ExportPermissionSubcommand(Subcommand):
+    name = "export"
     help = (
-        "Export user groups in JSON format. The exported groups can be "
-        "selected by the provided group names."
+        "Export user permissions in JSON format. The exported permissions "
+        "can be selected by names."
     )
 
     def add_arguments(self, parser):
-        parser.add_argument("groups", nargs="*", help="Selected groups.")
+        parser.add_argument("permissions", nargs="*", help="Selected permissions.")
         parser.add_argument(
             "-f", "--file-name", dest="filename", default="-", help=(
                 "Optional output file-name. "
@@ -49,38 +48,24 @@ class Command(ConsoleOutput, BaseCommand):
             )
         )
 
-    def handle(self, groups, filename, **kwargs):
-        query = Group.objects.select_related('groupinfo')
+    def handle(self, **kwargs):
+        permissions = self.select_permissions(Permission.objects.all(), **kwargs)
 
-        if not groups:
-            query = query.all()
-        else:
-            query = query.filter(name__in=groups)
+        data = [serialize_permission(permission) for permission in permissions]
 
-        data = [extract_group(group) for group in query]
-
+        filename = kwargs['filename']
         with sys.stdout if filename == "-" else open(filename, "w") as file_:
             json.dump(data, file_, **JSON_OPTS)
 
+    def select_permissions(self, query, **kwargs):
+        permissions = kwargs['permissions']
+        if permissions:
+            query = query.filter(name__in=permissions)
+        return query
 
-def extract_group(group):
-    """ Extract group data from a model. """
 
-    data = {
-        "name": group.name,
-        "permissions": [
-            permission.name for permission in group.oauth_user_permissions.all()
-        ],
-    }
-    try:
-        group_info = group.groupinfo
-        data.update({
-            "title": group_info.title,
-            "description": group_info.description,
-        })
-    except GroupInfo.DoesNotExist:
-        pass
-
+def serialize_permission(permission):
     return {
-        key: value for key, value in data.items() if value not in (None, "")
+        "name": permission.name,
+        "description": permission.description,
     }

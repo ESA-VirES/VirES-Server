@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Import the social providers from a JSON file
+# Import user permissions from a JSON file
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,93 +28,92 @@
 
 import sys
 import json
-from logging import getLogger
 from traceback import print_exc
 from django.db import transaction
-from django.core.management.base import BaseCommand
-from django.conf import settings
-from django.contrib.sites.models import Site
-from allauth.socialaccount.models import SocialApp
-from ._common import ConsoleOutput
+from vires_oauth.models import Permission
+from vires_oauth.data import DEFAULT_PERMISSIONS
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
-
-    help = "Import social network providers configuration from a JSON file."
+class ImportPermissionSubcommand(Subcommand):
+    name = "import"
+    help = "Import user permissions from a JSON file."
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "-f", "--file", dest="filename", default="-",
-            help="Input filename."
+            "-f", "--file", dest="filename", default="-", help=(
+                "Optional input file-name. "
+                "The standard input is used by default."
+            )
+        )
+        parser.add_argument(
+            "-d", "--default", dest="load_defaults", action="store_true",
+            default=False, help="Re-load default set of permissions."
         )
 
-    def handle(self, filename, **kwargs):
+    def handle(self, **kwargs):
+
+        filename = kwargs['filename']
+        if kwargs['load_defaults']:
+            self.info("Loading default permissions ...")
+            filename = DEFAULT_PERMISSIONS
 
         with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
             data = json.load(file_)
 
-        sites = list(Site.objects.filter(id=settings.SITE_ID))
+        self.save_permissions(data, **kwargs)
 
+    def save_permissions(self, data, **kwargs):
         failed_count = 0
         created_count = 0
         updated_count = 0
-
         for item in data:
-            name = item['provider']
+            name = item['name']
             try:
-                is_updated = save_social_provider(item, sites)
+                is_updated = save_permission(item)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
-                self.error(
-                    "Failed to create or update social provider %s! %s",
-                    name, error
-                )
+                self.error("Failed to write permission %s! %s", name, error)
             else:
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "social provider %s updated" if is_updated else
-                    "social provider %s created", name, log=True
+                    "permission %s updated" if is_updated else
+                    "permission %s created", name, log=True
                 )
 
         if created_count:
             self.info(
-                "%d of %d provider%s updated.", created_count, len(data),
+                "%d of %d permission%s updated.", created_count, len(data),
                 "s" if created_count > 1 else ""
             )
 
         if updated_count:
             self.info(
-                "%d of %d provider%s updated.", updated_count, len(data),
+                "%d of %d permission%s updated.", updated_count, len(data),
                 "s" if updated_count > 1 else ""
             )
 
         if failed_count:
             self.info(
-                "%d of %d provider%s failed ", failed_count, len(data),
+                "%d of %d permission%s failed ", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
 
 
 @transaction.atomic
-def save_social_provider(data, sites):
-    provider = data['provider']
+def save_permission(item):
+    name = item['name']
     try:
-        app = SocialApp.objects.get(provider=provider)
+        permission = Permission.objects.get(name=name)
         is_updated = True
-    except SocialApp.DoesNotExist:
-        app = SocialApp(provider=provider)
+    except Permission.DoesNotExist:
+        permission = Permission(name=name)
         is_updated = False
 
-    for field in ['name', 'client_id', 'secret', 'key']:
-        value = data.get(field)
-        if value is not None:
-            setattr(app, field, value)
-
-    app.save()
-    app.sites.set(sites)
+    permission.description = item['description']
+    permission.save()
 
     return is_updated

@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Import user groups from a JSON file
+# Import user groups from a JSON file.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -28,27 +28,25 @@
 
 import sys
 import json
-from logging import getLogger
 from traceback import print_exc
 from contextlib import suppress
 from django.db import transaction
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
-from ...models import GroupInfo, Permission
-from ...data import DEFAULT_GROUPS
-from ._common import ConsoleOutput
+from vires_oauth.models import GroupInfo, Permission
+from vires_oauth.data import DEFAULT_GROUPS
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
-
-    help = "Import groups from a JSON file."
+class ImportGroupSubcommand(Subcommand):
+    name = "import"
+    help = "Import user groups from a JSON file."
 
     def add_arguments(self, parser):
+        parser.add_argument("groups", nargs="*", help="Selected groups.")
         parser.add_argument(
             "-f", "--file", dest="filename", default="-", help=(
-                "Optional input file-name. "
-                "By default it is read from the standard input."
+                "Optional file-name the output is written to. "
+                "By default it is written to the standard output."
             )
         )
         parser.add_argument(
@@ -56,15 +54,17 @@ class Command(ConsoleOutput, BaseCommand):
             default=False, help="Re-load default set of groups."
         )
 
-    def handle(self, filename, load_defaults, **kwargs):
+    def handle(self, **kwargs):
 
-        if load_defaults:
+        filename = kwargs['filename']
+        if kwargs['load_defaults']:
             self.info("Loading default groups ...")
             filename = DEFAULT_GROUPS
 
         with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
-            data = json.load(file_)
+            self.save_groups(json.load(file_))
 
+    def save_groups(self, data, **kwargs):
         permissions = get_permissions()
 
         failed_count = 0
@@ -105,6 +105,7 @@ class Command(ConsoleOutput, BaseCommand):
                 "s" if failed_count > 1 else ""
             )
 
+
 @transaction.atomic
 def save_group(item, permissions):
     name = item['name']
@@ -133,6 +134,7 @@ def save_group(item, permissions):
         group_info.save()
 
     return is_updated
+
 
 def get_permissions():
     return {

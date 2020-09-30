@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Export product collections in JSON format.
+# Export user groups in JSON format.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2020 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,55 +28,64 @@
 
 import sys
 import json
-from vires.models import ProductCollection
-from vires.util import datetime_to_string
-from vires.time_util import timedelta_to_iso_duration
-from .._common import Subcommand, JSON_OPTS
+from django.contrib.auth.models import Group
+from vires_oauth.models import GroupInfo
+from .._common import JSON_OPTS, Subcommand, strip_blanks
 
 
-class ExportProductCollectionSubcommand(Subcommand):
+class ExportGroupSubcommand(Subcommand):
     name = "export"
-    help = "Export product collection definitions as a JSON file."
+    help = "Export user groups in JSON format."
 
     def add_arguments(self, parser):
-        parser.add_argument("identifier", nargs="*")
+        parser.add_argument("groups", nargs="*", help="Selected groups.")
         parser.add_argument(
             "-f", "--file", dest="filename", default="-", help=(
                 "Optional file-name the output is written to. "
                 "By default it is written to the standard output."
             )
         )
-        parser.add_argument(
-            "-t", "--product-type", dest="product_type", action='append', help=(
-                "Optional filter on the collection product types. "
-                "Multiple product types are allowed."
-            )
-        )
 
     def handle(self, **kwargs):
-        query = ProductCollection.objects.prefetch_related('type').order_by('identifier')
+        groups = self.select_groups(
+            Group.objects.select_related('groupinfo'), **kwargs
+        )
 
-        product_types = set(kwargs['product_type'] or [])
-        if product_types:
-            query = query.filter(type__identifier__in=product_types)
-
-        identifiers = set(kwargs['identifier'])
-        if identifiers:
-            query = query.filter(identifier__in=identifiers)
-
-        data = [serialize_collection(collection) for collection in query.all()]
+        data = [serialize_group(group) for group in groups]
 
         filename = kwargs["filename"]
-        with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
+        with sys.stdout if filename == "-" else open(filename, "w") as file_:
             json.dump(data, file_, **JSON_OPTS)
 
 
-def serialize_collection(object_):
+    def select_groups(self, query, **kwargs):
+        groups = kwargs['groups']
+        if not groups:
+            query = query.all()
+        else:
+            query = query.filter(name__in=groups)
+        return query
+
+
+@strip_blanks
+def serialize_group(group):
+    """ Extract group data from a model. """
+    data = {
+        "name": group.name,
+        "permissions": [
+            permission.name for permission in group.oauth_user_permissions.all()
+        ],
+    }
+    try:
+        data.update(serialize_group_info(group.groupinfo))
+    except GroupInfo.DoesNotExist:
+        pass
+    return data
+
+
+def serialize_group_info(group_info):
+    """ Extract group info data from a model. """
     return {
-        "name": object_.identifier,
-        "productType": object_.type.identifier,
-        "created": datetime_to_string(object_.created),
-        "updated": datetime_to_string(object_.updated),
-        "maxProductDuration": timedelta_to_iso_duration(object_.max_product_duration),
-        **object_.metadata
+        "title": group_info.title,
+        "description": group_info.description,
     }
