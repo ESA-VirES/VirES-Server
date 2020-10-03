@@ -57,7 +57,7 @@ class RetrieveBubbleIndex(WPSProcess):
 
     inputs = WPSProcess.inputs + [
         ("collection_id", LiteralData(
-            'collection_id', str, optional=False,
+            'collection', str, optional=False,
             title="Bubble index collection identifier",
             abstract="Bubble index collection identifier",
         )),
@@ -73,7 +73,7 @@ class RetrieveBubbleIndex(WPSProcess):
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Output data",
+            'times', title="Output data",
             formats=(FormatText('text/csv'), FormatText('text/plain'))
         )),
     ]

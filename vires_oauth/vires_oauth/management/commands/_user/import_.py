@@ -28,44 +28,45 @@
 
 import sys
 import json
-from logging import getLogger
 from traceback import print_exc
-from django.db import transaction
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.db import transaction
 from django.contrib.auth.models import User, Group
 from django.utils.dateparse import parse_datetime
 from allauth.account.models import EmailAddress
 from allauth.socialaccount.models import SocialAccount
-from ...models import UserProfile
-from ._common import ConsoleOutput
+from vires_oauth.models import UserProfile
+from .._common import Subcommand
 
 
-class Command(ConsoleOutput, BaseCommand):
-    logger = getLogger(__name__)
-
+class ImportUserSubcommand(Subcommand):
+    name = "import"
     help = "Import users from a JSON file."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "-f", "--file", dest="filename", default="-", help=(
-                "Optional input file-name. "
-                "By default it is read from the standard input."
+                "Optional input JSON file-name. "
+                "By default, the users' definitions are read from standard "
+                "input."
             )
         )
 
-    def handle(self, filename, **kwargs):
+    def handle(self, **kwargs):
+        filename = kwargs['filename']
 
-        with sys.stdin.buffer if filename == "-" else open(filename, "rb") as file_:
-            data = json.load(file_)
+        with sys.stdin if filename == "-" else open(filename, "rb") as file_:
+            self.save_users(json.load(file_), **kwargs)
 
+
+    def save_users(self, data, **kwargs):
         failed_count = 0
         created_count = 0
         updated_count = 0
         for item in data:
             name = item.get("username")
             try:
-                is_updated = save_user(item)
+                is_updated = save_user(item, self)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
@@ -75,29 +76,30 @@ class Command(ConsoleOutput, BaseCommand):
                 updated_count += is_updated
                 created_count += not is_updated
                 self.info(
-                    "user %s updated" if is_updated else
-                    "user %s created", name, log=True
+                    "user %s updated" if is_updated else "user %s created",
+                    name, log=True
                 )
 
         if created_count:
             self.info(
-                "%d of %d user%s updated.", created_count, len(data),
+                "%d of %d user%s created", created_count, len(data),
                 "s" if created_count > 1 else ""
             )
 
         if updated_count:
             self.info(
-                "%d of %d user%s updated.", updated_count, len(data),
+                "%d of %d user%s updated", updated_count, len(data),
                 "s" if updated_count > 1 else ""
             )
 
         if failed_count:
             self.info(
-                "%d of %d user%s failed ", failed_count, len(data),
+                "%d of %d user%s failed to be imported", failed_count, len(data),
                 "s" if failed_count > 1 else ""
             )
+        sys.exit(failed_count)
 
-#-------------------------------------------------------------------------------
+
 
 def _parse_datetime(value):
     return None if value is None else parse_datetime(value)
@@ -114,7 +116,7 @@ USER_FIELDS = [
 
 
 @transaction.atomic
-def save_user(data):
+def save_user(data, logger):
     is_updated, user = get_user(data["username"])
     set_model(user, USER_FIELDS, data, PARSERS)
     user.save()
@@ -131,7 +133,7 @@ def save_user(data):
         if not is_updated:
             groups.extend(getattr(settings, "VIRES_OAUTH_DEFAULT_GROUPS", []))
 
-    set_groups(user, groups)
+    set_groups(user, groups, logger)
 
     return is_updated
 
@@ -143,25 +145,25 @@ def get_user(username):
         return False, User(username=username)
 
 
-def set_groups(user, group_names):
+def set_groups(user, group_names, logger):
     all_groups = get_groups()
 
     for group in list(user.groups.exclude(name__in=group_names)):
         try:
             user.groups.remove(group)
         except KeyError:
-            ConsoleOutput.warning(
-                "Failed to remove user %s from the group %s!"
-                % (user.username, group.name)
+            logger.warning(
+                "Failed to remove user %s from the group %s!",
+                user.username, group.name, log=True
             )
 
     for group_name in group_names:
         try:
             user.groups.add(all_groups[group_name])
         except KeyError:
-            ConsoleOutput.warning(
+            logger.warning(
                 "User %s cannot be assigned to a group %s. "
-                "The group does not exist" % (user.username, group_name)
+                "The group does not exist", user.username, group_name, log=True
             )
 
 def get_groups():

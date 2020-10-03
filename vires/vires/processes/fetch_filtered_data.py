@@ -52,6 +52,7 @@ from vires.time_util import (
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
     timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE, cdf_open,
+    CDF_CHAR_TYPE,
 )
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
@@ -74,6 +75,7 @@ from vires.processes.util.models import (
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
     IndexKpFromKp10,
+    Identity,
     BnecToF,
 )
 from vires.processes.util.filters import (
@@ -282,6 +284,11 @@ class FetchFilteredData(WPSProcess):
             model_subsol = SubSolarPoint()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
+            copied_variables = [
+                Identity("MLT_QD", "MLT"),
+                Identity("Latitude_QD", "QDLat"),
+                Identity("Longitude_QD", "QDLon"),
+            ]
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
@@ -359,7 +366,7 @@ class FetchFilteredData(WPSProcess):
                     model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
-                ), models_with_residuals)
+                ), models_with_residuals, copied_variables)
 
                 for model in aux_models:
                     resolver.add_model(model)
@@ -488,7 +495,8 @@ class FetchFilteredData(WPSProcess):
         temp_basename = join(workspace_dir, "vires_" + uuid4().hex)
         result_basename = "%s_%s_%s_Filtered" % (
             "_".join(
-                s.collection_identifier for l in sources.values() for s in l
+                s.collection_identifier.replace(":", "-")
+                for l in sources.values() for s in l
             ),
             begin_time.strftime("%Y%m%dT%H%M%S"),
             (end_time - timedelta(seconds=1)).strftime("%Y%m%dT%H%M%S"),
@@ -559,10 +567,16 @@ class FetchFilteredData(WPSProcess):
                     )
 
                     for variable in inserted: # create the initial datasets
-                        shape = (record_count,) + dataset[variable].shape[1:]
+                        cdf_type = dataset.cdf_type.get(variable)
+                        data_array = dataset[variable]
+                        if cdf_type == CDF_CHAR_TYPE:
+                            itemsize, nodata = data_array.dtype.itemsize, b""
+                        else:
+                            itemsize, nodata = 1, nan
+                        shape = (record_count,) + data_array.shape[1:]
                         cdf.new(
-                            variable, full(shape, nan),
-                            dataset.cdf_type.get(variable)
+                            variable, full(shape, nodata),
+                            cdf_type, n_elements=itemsize
                         )
                         cdf[variable].attrs.update(
                             dataset.cdf_attr.get(variable, {})

@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Export product types in JSON format.
+# Variable Identity - special "model" class creating a copy of a variable.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,46 +24,46 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
-import sys
-import json
-from vires.util import datetime_to_string
-from vires.models import ProductType
-from .._common import Subcommand, JSON_OPTS
+from logging import getLogger, LoggerAdapter
+from vires.dataset import Dataset
+from .base import Model
 
 
-class ExportProductTypeSubcommand(Subcommand):
-    name = "export"
-    help = "Export product type definitions as a JSON file."
+class Identity(Model):
+    """ Special simple model copying a variable and publishing it under
+    a new name.
+    """
 
-    def add_arguments(self, parser):
-        parser.add_argument("identifier", nargs="*")
-        parser.add_argument(
-            "-f", "--file", dest="filename", default="-", help=(
-                "Optional file-name the output is written to. "
-                "By default it is written to the standard output."
-            )
+    class _LoggerAdapter(LoggerAdapter):
+        def process(self, msg, kwargs):
+            return 'Identity: %s' % msg, kwargs
+
+    def __init__(self, variable_source, variable_target, logger=None):
+        super(Identity, self).__init__()
+        self._source = variable_source
+        self._target = variable_target
+        self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
+
+    @property
+    def required_variables(self):
+        return [self._source]
+
+    @property
+    def variables(self):
+        return [self._target]
+
+    def eval(self, dataset, variables=None, **kwargs):
+        output_ds = Dataset()
+        variables = (
+            self.variables if variables is None or self._target in variables
+            else []
         )
-
-    def handle(self, **kwargs):
-        query = ProductType.objects.order_by('identifier')
-
-        identifiers = kwargs['identifier']
-        if identifiers:
-            query = query.filter(identifier__in=identifiers)
-
-        data = [serialize_type(ptype) for ptype in query.all()]
-
-        filename = kwargs["filename"]
-        with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
-            json.dump(data, file_, **JSON_OPTS)
-
-
-def serialize_type(object_):
-    return {
-        "name": object_.identifier,
-        "created": datetime_to_string(object_.created),
-        "updated": datetime_to_string(object_.updated),
-        **object_.definition,
-    }
+        if variables:
+            self.logger.debug("copying %s to %s", self._source, self._target)
+            output_ds.set(
+                self._target, dataset[self._source],
+                dataset.cdf_type.get(self._source),
+                dataset.cdf_attr.get(self._source),
+            )
+        return output_ds

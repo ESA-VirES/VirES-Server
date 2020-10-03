@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Models - computed data sources
+# User management - list usernames
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,16 +24,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, too-few-public-methods
 
-from .base import Model
-from .magnetic_model import (
-    MagneticModelResidual, SourceMagneticModel, ComposedMagneticModel,
-)
-from .magnetic_coordinates import QuasiDipoleCoordinates, MagneticLocalTime
-from .magnetic_dipole import MagneticDipole, DipoleTiltAngle
-from .sun_ephemeris import SunPosition, SubSolarPoint
-from .label import Label, SpacecraftLabel
-from .spacecraft_subtraction import SatSatSubtraction
-from .indices import IndexKpFromKp10
-from .identity import Identity
-from .vector_intensity import VectorIntensity, BnecToF
+from django.contrib.auth.models import User
+from .common import UserSelectionSubcommand
+
+
+class ListUserSubcommand(UserSelectionSubcommand):
+    name = "list"
+    help = "List usernames."
+
+    def handle(self, **kwargs):
+        users = self.select_users(User.objects.all(), **kwargs)
+
+        for user in users.all():
+            print(user.username)

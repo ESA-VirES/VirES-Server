@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Export product collections in JSON format.
+# Export social providers configuration in JSON format.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2020 EOX IT Services GmbH
+# Copyright (C) 2019 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,59 +24,48 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-few-public-methods
 
 import sys
 import json
-from vires.models import ProductCollection
-from vires.util import datetime_to_string
-from vires.time_util import timedelta_to_iso_duration
+from allauth.socialaccount.models import SocialApp
 from .._common import Subcommand, JSON_OPTS
 
 
-class ExportProductCollectionSubcommand(Subcommand):
+class ExportProviderSubcommand(Subcommand):
     name = "export"
-    help = "Export product collection definitions as a JSON file."
+    help = "Export social network providers configuration in JSON format."
 
     def add_arguments(self, parser):
-        parser.add_argument("identifier", nargs="*")
+        parser.add_argument("providers", nargs="*", help="Selected providers.")
         parser.add_argument(
             "-f", "--file", dest="filename", default="-", help=(
                 "Optional file-name the output is written to. "
                 "By default it is written to the standard output."
             )
         )
-        parser.add_argument(
-            "-t", "--product-type", dest="product_type", action='append', help=(
-                "Optional filter on the collection product types. "
-                "Multiple product types are allowed."
-            )
-        )
 
     def handle(self, **kwargs):
-        query = ProductCollection.objects.prefetch_related('type').order_by('identifier')
+        providers = self.select_providers(SocialApp.objects.all(), **kwargs)
 
-        product_types = set(kwargs['product_type'] or [])
-        if product_types:
-            query = query.filter(type__identifier__in=product_types)
-
-        identifiers = set(kwargs['identifier'])
-        if identifiers:
-            query = query.filter(identifier__in=identifiers)
-
-        data = [serialize_collection(collection) for collection in query.all()]
+        data = [serialize_social_provider(provider) for provider in providers]
 
         filename = kwargs["filename"]
-        with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
+        with sys.stdout if filename == "-" else open(filename, "w") as file_:
             json.dump(data, file_, **JSON_OPTS)
 
+    def select_providers(self, query, **kwargs):
+        providers = kwargs['providers']
+        if providers:
+            query = query.filter(provider__in=providers)
+        return query
 
-def serialize_collection(object_):
+
+def serialize_social_provider(app):
     return {
-        "name": object_.identifier,
-        "productType": object_.type.identifier,
-        "created": datetime_to_string(object_.created),
-        "updated": datetime_to_string(object_.updated),
-        "maxProductDuration": timedelta_to_iso_duration(object_.max_product_duration),
-        **object_.metadata
+        "provider": app.provider,
+        "name": app.name,
+        "client_id": app.client_id,
+        "secret": app.secret,
+        "key": app.key,
     }

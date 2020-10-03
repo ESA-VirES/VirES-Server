@@ -30,14 +30,14 @@ import sys
 import json
 from os.path import getmtime
 from datetime import datetime
-from vires.util import unique, include
+from vires.util import unique, include, datetime_to_string
 from vires.cdf_util import cdf_open, CDFError
 from vires.cache_util import cache_path
 from vires.time_util import naive_to_utc
 from vires.data.vires_settings import (
     SPACECRAFTS, AUX_DB_DST, AUX_DB_KP, CACHED_PRODUCT_FILE,
 )
-from .._common import Subcommand, JSON_OPTS, datetime_to_string
+from .._common import Subcommand, JSON_OPTS
 
 
 class DumpCachedProductSubcommand(Subcommand):
@@ -50,7 +50,7 @@ class DumpCachedProductSubcommand(Subcommand):
             #choices=list(sorted(CACHED_PRODUCTS)),
         )
         parser.add_argument(
-            "-f", "--file-name", dest="file", default="-", help=(
+            "-f", "--file", dest="filename", default="-", help=(
                 "Optional file-name the output is written to. "
                 "By default it is written to the standard output."
             )
@@ -67,7 +67,7 @@ class DumpCachedProductSubcommand(Subcommand):
             for name in include(unique(product_types), CACHED_PRODUCTS)
         ]
 
-        filename = kwargs["file"]
+        filename = kwargs["filename"]
         with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
             json.dump(data, file_, **JSON_OPTS)
 

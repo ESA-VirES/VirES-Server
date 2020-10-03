@@ -36,6 +36,7 @@ from django.db.models import (
     TextField, Index, DurationField, Q,
     CASCADE as ON_DELETE_CASCADE,
     PROTECT as ON_DELETE_PROTECT,
+    DO_NOTHING as ON_DELETE_DO_NOTHING,
 )
 from django.contrib.postgres.fields import JSONField
 from django.contrib.auth.models import User
@@ -54,6 +55,7 @@ INDEXED = dict(db_index=True)
 
 CASCADE = dict(on_delete=ON_DELETE_CASCADE)
 PROTECT = dict(on_delete=ON_DELETE_PROTECT)
+DO_NOTHING = dict(on_delete=ON_DELETE_DO_NOTHING)
 
 
 def get_user(username):
@@ -150,6 +152,30 @@ class ProductType(Model):
         verbose_name = "Product Type"
         verbose_name_plural = "Product Types"
 
+    def get_dataset_id(self, dataset_id=None):
+        """ Get dataset identifier. If the dataset_id parameters is omitted
+        or set to None then the default dataset identifier is returned.
+        """
+        return self.default_dataset_id if dataset_id is None else dataset_id
+
+    def is_valid_dataset_id(self, dataset_id):
+        """ Return true for a valid dataset identifier. """
+        return (
+            not self.definition.get('strictDatasetCheck', True) or
+            dataset_id in self.definition['datasets']
+        )
+
+    def get_dataset_definition(self, dataset_id):
+        """ Get dataset definition matched by the given identifier. """
+        datasets = self.definition['datasets']
+        return (
+            datasets.get(dataset_id) or datasets.get(self.default_dataset_id)
+        )
+
+    @property
+    def default_dataset_id(self):
+        return self.definition.get('defaultDataset')
+
 
 class ProductCollection(Model):
     identifier = CharField(max_length=256, validators=[ID_VALIDATOR], **MANDATORY, **UNIQUE)
@@ -197,7 +223,30 @@ class Product(Model):
         _dataset['location'] = location
         self.datasets = _datasets
 
-    def get_location(self, dataset_id=None):
-        if dataset_id is None:
-            dataset_id = self.collection.type.definition['defaultDatadaset']
-        return self.datasets[dataset_id]['location']
+    def has_dataset(self, dataset_id):
+        return dataset_id in self.datasets
+
+    def get_dataset(self, dataset_id):
+        return self.datasets.get(dataset_id) or {}
+
+    def get_location(self, dataset_id):
+        return self.get_dataset(dataset_id).get('location')
+
+    def get_index_range(self, dataset_id):
+        return self.get_dataset(dataset_id).get('indexRange') or [0, None]
+
+
+class ProductLocation(Model):
+    id = BigIntegerField(primary_key=True)
+    product = ForeignKey(Product, related_name='+', **DO_NOTHING)
+    location = CharField(max_length=1024)
+
+    def save(self, *args, **kwargs):
+        pass
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    class Meta:
+        managed = False
+        db_table = 'vires_productlocation'

@@ -28,6 +28,8 @@
 # pylint: disable=missing-docstring, too-few-public-methods, too-many-ancestors
 
 import json
+from io import BytesIO
+from gzip import GzipFile
 from logging import INFO, WARNING
 from django.conf import settings
 from django.urls import reverse_lazy
@@ -52,6 +54,7 @@ from .vires_oauth.decorators import (
     authorized_only, logout_unauthorized, redirect_unauthorized,
     oauth_token_authentication,
 )
+from .data_url import parse_data_url
 
 
 class JsonResponse(HttpResponse):
@@ -115,16 +118,42 @@ def workspace(parse_client_state=None):
     @logout_unauthorized
     @csrf_exempt
     def _workspace_view(request):
-        if request.method == "POST" and parse_client_state:
+
+        client_state = None
+        client_state_url = None
+
+        if parse_client_state:
+            raw_client_state = None
             try:
-                client_state = parse_client_state(
-                    request.POST.get("client_state", "")
-                )
-            except ValueError:
+                if request.method == "POST":
+                    raw_client_state = request.POST.get("client_state", "")
+                else:
+                    _url = request.GET.get("ws", "")
+
+                    if _url.startswith('data:'):
+                        data = parse_data_url(_url)
+                        if data.content_type == "application/json":
+                            raw_client_state = data.data
+                            if isinstance(raw_client_state, bytes):
+                                raw_client_state = raw_client_state.decode("ascii")
+                        elif data.content_type == "application/json+gzip":
+                            try:
+                                raw_client_state = GzipFile(
+                                    fileobj=BytesIO(data.data)
+                                ).read()
+                            except Exception:
+                                pass
+                    else:
+                        for prefix in ['http://', 'https://', '/']:
+                            if _url.startswith(prefix):
+                                client_state_url = _url
+                                break
+
+                if raw_client_state is not None:
+                    client_state = parse_client_state(raw_client_state)
+            except (ValueError, TypeError):
                 # TODO: implement a nicer error response
                 return HttpResponse("Bad Request", "text/plain", 400)
-        else:
-            client_state = None
 
         return render(
             request, getattr(
@@ -133,6 +162,7 @@ def workspace(parse_client_state=None):
                 "client_state": (
                     None if client_state is None else json.dumps(client_state)
                 ),
+                "client_state_url": client_state_url,
             }
         )
 
