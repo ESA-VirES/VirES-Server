@@ -105,7 +105,7 @@ class UserSelectionSubcommandProtected(UserSelectionSubcommand):
 
     def _select_users_by_id(self, query, **kwargs):
         usernames = kwargs['username']
-        if not kwargs['select_all']:
+        if usernames or not kwargs['select_all']:
             query = query.filter(username__in=usernames)
             if not usernames:
                 self.warning(

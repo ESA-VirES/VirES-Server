@@ -113,7 +113,7 @@ class DanglingJobSelectionSubcommandProtected(DanglingJobSelectionSubcommand):
     def _select_jobs_by_id(self, backend, **kwargs):
         identifiers = list(unique(kwargs['identifier']))
         query = Job.objects
-        if not kwargs['select_all']:
+        if identifiers or not kwargs['select_all']:
             query = query.filter(identifier__in=identifiers)
             if not identifiers:
                 self.warning(
