@@ -26,6 +26,8 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+from django.contrib.postgres.aggregates import BoolAnd, BoolOr
+from allauth.account.models import EmailAddress
 from .._common import Subcommand, time_spec
 
 
@@ -62,6 +64,28 @@ class UserSelectionSubcommand(Subcommand):
             "--joined-before", type=time_spec, required=False,
             help="Select user whose last logging occurred before the given date."
         )
+        parser.add_argument(
+            "--verified-primary-email",
+            dest="has_verified_primary_email",
+            action="store_true", default=None,
+            help="Select users with verified primary e-mail."
+        )
+        parser.add_argument(
+            "--not-verified-primary-email",
+            dest="has_verified_primary_email",
+            action="store_false", default=None,
+            help="Select users with unverified primary e-mail."
+        )
+        parser.add_argument(
+            "--verified-email", dest="has_verified_email",
+            choices=("ANY", "ALL"), default=None,
+            help="Select users with ANY|ALL verified e-mail(s)."
+        )
+        parser.add_argument(
+            "--not-verified-email", dest="has_unverified_email",
+            choices=("ANY", "ALL"), default=None,
+            help="Select users with ANY|ALL unverified e-mail(s)."
+        )
 
     def select_users(self, query, **kwargs):
 
@@ -83,7 +107,37 @@ class UserSelectionSubcommand(Subcommand):
         if kwargs['joined_before']:
             query = query.filter(date_joined__lt=kwargs['joined_before'])
 
+        query = self._select_emails(query, **kwargs)
         query = self._select_users_by_id(query, **kwargs)
+
+        return query
+
+    def _select_emails(self, query, **kwargs):
+
+        if kwargs['has_verified_primary_email'] is not None:
+            query = query.filter(
+                emailaddress__primary=True,
+                emailaddress__verified=kwargs['has_verified_primary_email'],
+            )
+
+        if kwargs['has_verified_email'] or kwargs['has_unverified_email']:
+
+            if kwargs['has_verified_email'] == 'ALL':
+                aggregate, value = BoolAnd, True
+            elif kwargs['has_verified_email'] == 'ANY':
+                aggregate, value = BoolOr, True
+            elif kwargs['has_unverified_email'] == 'ALL':
+                aggregate, value = BoolOr, False
+            elif kwargs['has_unverified_email'] == 'ANY':
+                aggregate, value = BoolAnd, False
+
+            query = query.filter(id__in=(
+                EmailAddress.objects
+                .annotate(aggregate=aggregate('verified'))
+                .filter(aggregate=value)
+                .values('user__id')
+            ))
+
         return query
 
     def _select_users_by_id(self, query, **kwargs):
