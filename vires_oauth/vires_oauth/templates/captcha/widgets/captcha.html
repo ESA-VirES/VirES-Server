@@ -1,0 +1,11 @@
+{% load i18n %}
+{% spaceless %}
+<div class="input-group">
+    <span class="input-group-addon" style="padding:0;">
+    {% if audio %}<a title="{% trans "Play CAPTCHA as audio file" %}" href="{{ audio }}">{% endif %}
+    <img src="{{ image }}" alt="captcha" class="captcha">
+    {% if audio %}</a>{% endif %}
+    </span>
+    {% include "django/forms/widgets/multiwidget.html" %}
+</div>
+{% endspaceless %}

@@ -34,6 +34,7 @@ from django.forms import Form, CharField, Textarea
 from django_countries import countries
 from django_countries.fields import LazyTypedChoiceField
 from django_countries.widgets import CountrySelectWidget
+from captcha.fields import CaptchaField, CaptchaTextInput
 from .models import UserProfile
 
 # Regular expression matching invalid user-name characters.
@@ -93,6 +94,11 @@ class UserProfileForm(Form):
 
 
 class SignupForm(Form):
+    captcha = CaptchaField(
+        widget=CaptchaTextInput(attrs={
+            'placeholder': 'Fill in letters from the displayed captcha image',
+        })
+    )
     title = CharField(max_length=100, required=False)
     first_name = CharField(max_length=30, required=False)
     last_name = CharField(max_length=30, required=False)
