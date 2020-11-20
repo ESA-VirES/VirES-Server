@@ -1,13 +1,14 @@
 # `eoxs-allauth`
 
-The `eoxs-allauth` is a [Django](https://www.djangoproject.com/) app used as an authentication and authorization layer above the VirES-Server data server and/or [EOxServer](https://github.com/EOxServer/eoxserver) in general.
+`eoxs-allauth` is a [Django](https://www.djangoproject.com/) app used as an authentication and authorization layer above the VirES-Server data server and/or [EOxServer](https://github.com/EOxServer/eoxserver) in general.
 It based on the [`django-allauth`](http://www.intenct.nl/projects/django-allauth) authentication package.
+
 
 ## Configuration
 
 ### URLs
-The authentication layer is added to an API view via the `wrap_protected_api` wrapper (can be also used as a decorator). The landing page is added via the `workspace` view in the `urls.py`:
 
+The authentication layer is added to an API view via the `wrap_protected_api` wrapper (can be also used as a decorator). The landing page is added via the `workspace` view in the `urls.py`:
 ```
 from eoxs_allauth.views import wrap_protected_api, workspace
 from your_app.views import api
@@ -20,9 +21,10 @@ urlpatterns = [
 ]
 ```
 
-### Applications
-Required application settings (defined in this order) in the `settings.py`:
 
+### Applications
+
+These are the required Django application settings (defined in this order) in the `settings.py`:
 ```
 INSTALLED_APPS = [
     ...
@@ -36,10 +38,10 @@ INSTALLED_APPS = [
 ]
 ```
 
+
 ### Middlewares
 
-The defines following middlewares which should be set in the `settings.py`:
-
+The defines following Django middlewares which should be set in the `settings.py`:
 ```
 MIDDLEWARE = [
     ...
@@ -49,11 +51,10 @@ MIDDLEWARE = [
 ]
 ```
 
+
 ### Logging
 
-
-The logging middleware access logging logs messages with additional information about the authenticated users and remote IP address using the `access.*` loggers and the logging setting may look like:
-
+Beside the regular Django logging, the *access logging middleware* logs messages with additional information about the authenticated users and remote IP address using the `access.*` loggers. The logging setting may look like:
 ```
 LOGGING = {
     'version': 1,
@@ -100,10 +101,10 @@ LOGGING = {
     }
 ```
 
+
 ### VirES-Oauth specific setting
 
-This is the `settings.py`configuration of VirES-OAuth server "social account" provider in case of deployment on separate machines:
-
+This is the `settings.py` configuration of VirES-OAuth server *social account provider* when deployed on a separate machine:
 ```
 SOCIALACCOUNT_PROVIDERS = {
     'vires': {
@@ -114,8 +115,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 ```
 
-This is the configuration of VirES-OAuth server "social account" provider in case of deployment behind a reverse proxy:
-
+This is the configuration of VirES-OAuth server *social account provider* when deployed on the same machine behind a reverse proxy:
 ```
 SOCIALACCOUNT_PROVIDERS = {
     'vires': {
@@ -127,9 +127,10 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 ```
 
+
 ### Other options
 
-These are the `settings.py` configuration options:
+These are additional `settings.py` configuration options used by this Django app:
 
 `WORKSPACE_TEMPLATE` - Custom workspace (landing page) template location.
 
@@ -139,12 +140,13 @@ These are the `settings.py` configuration options:
 
 `PROFILE_UPDATE_SUCCESS_MESSAGE` - Message to be displayed after successful profile update.
 
+
+
 ## Managment CLI
 
 The content of the server is managed vi the Django `manage.py` command.
 
 The available commands can be listed by
-
 ```
 $ <instance>/manage.py --help
 ...
@@ -159,12 +161,13 @@ These commands and their options are described in the following sections:
 - [User](#users)
 - [Social Providers](#social-providers)
 
+
+
 ### Users
 
 #### List
 
 The usernames of the existing users can be listed by the `list` command:
-
 ```
 $ <instance>/manage.py user list
 ```
@@ -185,10 +188,10 @@ By default, all users are listed. The listed users can be restricted by the foll
 $ <instance>/manage.py user list --active --last-login-after=-PT24H --joined-before=2018-01-01
 ```
 
+
 #### Export
 
 The full user profiles of one or more users the existing users can be exported in JSON format by the `export` command:
-
 ```
 $ <instance>/manage.py user export <username> ...
 ```
@@ -199,10 +202,10 @@ $ <instance>/manage.py user export > users.json
 ```
 
 The exported users can be restricted by the same options as the `list` command:
-
 ```
 $ <instance>/manage.py user export --active --last-login-after=-PT24H --joined-before=2018-01-01
 ```
+
 
 #### Import
 
@@ -215,7 +218,6 @@ $ <instance>/manage.py user import < users.json
 #### Activate/Deactivate
 
 One or more user accounts can be deactivated (access denial) by the `deactivate` command
-
 ```
 $ <instance>/manage.py user deactivate <username> ...
 ```
@@ -223,34 +225,32 @@ $ <instance>/manage.py user deactivate <username> ...
 The deactivation causes immediate blocking of new requests and termination of the active sessions.
 
 The access can be enabled by the `activate` command
-
 ```
 $ <instance>/manage.py user activate <username> ...
 ```
 
 All accounts can be activated/deactivated by the `--all` option
-
 ```
 $ <instance>/manage.py user deactivate --all
 $ <instance>/manage.py user activate --all
 ```
 
+
 #### Connecting Existing Users to the VirES-Oauth Server
 
-When migrating from local setup to the VirES-Outh setup without removing the existing users the users have to be connected to the VirES-Oauth while the other details social apps and personal data have to be cleared.
+When migrating from a local setup to the VirES-Outh setup without removing the existing users the users have to be connected to the VirES-Oauth provider while the other details social providers and personal data have to be cleared.
 
 This one-off action can be performed by the `connect_to_vires_oauth` command:
-
 ```
 $ <instance>/manage.py user connect_to_vires_oauth --all
 ```
+
 
 ### Social Providers
 
 #### Export
 
 One or more  registered social providers can be exported in JSON format by the `export` command, e.g.:
-
 ```
 $ <instance>/manage.py social_provider export vires
 [
@@ -269,6 +269,7 @@ If no provider name is specified all providers are exported:
 $ <instance>/manage.py social_provider export > social_providers.json
 
 ```
+
 
 #### Import
 
