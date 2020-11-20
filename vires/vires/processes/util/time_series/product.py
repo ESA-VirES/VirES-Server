@@ -114,6 +114,7 @@ class SwarmAEJPBSGroundMagneticDisturbanceParameters(SwarmDefaultParameters):
         'B_NE': 'B',
     }
 
+
 class OmniHr1MinParameters(SwarmDefaultParameters):
     """ AUX_IMF_2_ parameters """
     INTERPOLATION_KIND = "zero"
