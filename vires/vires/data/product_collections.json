@@ -253,5 +253,10 @@
         "name": "SW_OPER_AUX_OBSM2_",
         "productType": "SW_AUX_OBSx2_",
         "groupSamples": true
+    },
+    {
+        "name": "SW_OPER_AUX_OBSH2_",
+        "productType": "SW_AUX_OBSH2_",
+        "groupSamples": true
     }
 ]

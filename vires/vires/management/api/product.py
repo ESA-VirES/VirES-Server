@@ -47,6 +47,7 @@ LOG_FORMAT = "product %s/%s %s"
 DEFAULT_METADATA_READER = SwarmProductMetadataReader
 METADATA_READER = {
     "SW_AUX_OBSx2_": ObsProductMetadataReader,
+    "SW_AUX_OBSH2_": ObsProductMetadataReader,
 }
 
 
