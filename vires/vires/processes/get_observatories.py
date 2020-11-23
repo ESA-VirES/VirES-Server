@@ -40,6 +40,9 @@ from vires.time_util import naive_to_utc
 from vires.processes.base import WPSProcess
 
 
+ALLOWED_PRODUCT_TYPES = ["SW_AUX_OBSx2_", "SW_AUX_OBSH2_"]
+
+
 class GetObservatories(WPSProcess):
     """ Process for retrieving list of available magnetic observatories.
     """
@@ -81,7 +84,7 @@ class GetObservatories(WPSProcess):
             collection = (
                 ProductCollection.objects
                 .select_related('type')
-                .filter(type__identifier="SW_AUX_OBSx2_")
+                .filter(type__identifier__in=ALLOWED_PRODUCT_TYPES)
                 .get(identifier=collection_id)
             )
         except ProductCollection.DoesNotExist:
