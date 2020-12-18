@@ -30,3 +30,4 @@ from .collections import parse_collections
 from .models import parse_model_expression, parse_model_list
 from .filters import parse_filters
 from .variables import parse_variables, get_subtracted_variables
+from .locations import parse_locations

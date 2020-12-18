@@ -30,6 +30,7 @@ from .parsers import (
     parse_model_expression, parse_model_list,
     parse_filters,
     parse_variables, get_subtracted_variables,
+    parse_locations,
 )
 from .png_output import data_to_png, array_to_png
 from .resolver import VariableResolver, extract_product_names
