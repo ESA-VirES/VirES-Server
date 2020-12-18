@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities
+#  Process Utilities - input parsers
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -25,15 +25,8 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .parsers import (
-    parse_style, parse_collections,
-    parse_model_expression, parse_model_list,
-    parse_filters,
-    parse_variables, get_subtracted_variables,
-)
-from .png_output import data_to_png, array_to_png
-from .resolver import VariableResolver, extract_product_names
-from .spacecraft_subtraction import group_subtracted_variables
-from .magnetic_model_renderer import (
-    get_extra_model_parameters, render_model, ALLOWED_VARIABLES,
-)
+from .style import parse_style
+from .collections import parse_collections
+from .models import parse_model_expression, parse_model_list
+from .filters import parse_filters
+from .variables import parse_variables, get_subtracted_variables

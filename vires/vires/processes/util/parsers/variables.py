@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities
+# Process Utilities - variables input parsers
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,16 +24,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-branches,unused-argument
 
-from .parsers import (
-    parse_style, parse_collections,
-    parse_model_expression, parse_model_list,
-    parse_filters,
-    parse_variables, get_subtracted_variables,
-)
-from .png_output import data_to_png, array_to_png
-from .resolver import VariableResolver, extract_product_names
-from .spacecraft_subtraction import group_subtracted_variables
-from .magnetic_model_renderer import (
-    get_extra_model_parameters, render_model, ALLOWED_VARIABLES,
-)
+import re
+
+RE_SUBTRACTED_VARIABLE = re.compile(r'(.+)_(?:res|diff)([ABC])([ABC])')
+
+
+def parse_variables(input_id, variables_strings):
+    """ Variable parsers.  """
+    variables_strings = str(variables_strings.strip())
+    return [
+        var.strip() for var in variables_strings.split(',')
+    ] if variables_strings else []
+
+
+def get_subtracted_variables(variables):
+    """ Extract subtracted variables from a list of all variables. """
+    return [
+        (variable, match.groups()) for variable, match in (
+            (var, RE_SUBTRACTED_VARIABLE.match(var)) for var in variables
+        ) if match
+    ]

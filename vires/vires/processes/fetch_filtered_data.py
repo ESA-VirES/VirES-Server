@@ -61,7 +61,7 @@ from vires.data.vires_settings import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_model_list, parse_variables, parse_filters2,
+    parse_collections, parse_model_list, parse_variables, parse_filters,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
     extract_product_names
 )
@@ -205,7 +205,7 @@ class FetchFilteredData(WPSProcess):
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
         )
-        filters = parse_filters2("filters", filters)
+        filters = parse_filters("filters", filters)
         requested_variables = parse_variables(
             'requested_variables', requested_variables
         )

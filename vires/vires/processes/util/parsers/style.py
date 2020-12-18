@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities
+# Process Utilities - style input parser
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,16 +24,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-branches,unused-argument
 
-from .parsers import (
-    parse_style, parse_collections,
-    parse_model_expression, parse_model_list,
-    parse_filters,
-    parse_variables, get_subtracted_variables,
-)
-from .png_output import data_to_png, array_to_png
-from .resolver import VariableResolver, extract_product_names
-from .spacecraft_subtraction import group_subtracted_variables
-from .magnetic_model_renderer import (
-    get_extra_model_parameters, render_model, ALLOWED_VARIABLES,
-)
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from vires.colormaps import get_colormap
+
+
+def parse_style(input_id, style):
+    """ Parse style value and return the corresponding colour-map object. """
+    if style is None:
+        return None
+    try:
+        return get_colormap(style)
+    except ValueError:
+        raise InvalidInputValueError(
+            input_id, "Invalid style identifier %r!" % style
+        )
