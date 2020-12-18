@@ -35,7 +35,7 @@ from numpy import nan, full
 import msgpack
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, BoundingBoxData, ComplexData, FormatText, FormatJSON,
-    CDFileWrapper, FormatBinaryRaw, CDObject, RequestParameter,
+    CDFileWrapper, FormatBinaryRaw, CDObject, RequestParameter, AllowedRange,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
@@ -134,6 +134,11 @@ class FetchData(WPSProcess):
             'end_time', datetime, optional=False, title="End time",
             abstract="End of the selection time interval",
         )),
+        ("sampling_step", LiteralData(
+            'sampling_step', timedelta, optional=True, title="Sampling step",
+            allowed_values=AllowedRange(timedelta(0), None, dtype=timedelta),
+            abstract="Optional output data sampling step.",
+        )),
         ("bbox", BoundingBoxData(
             "bbox", crss=(4326,), optional=True, title="Bounding box",
             abstract="Optional selection bounding box.", default=None,
@@ -180,7 +185,7 @@ class FetchData(WPSProcess):
     ]
 
     def execute(self, user, permissions, collection_ids, begin_time, end_time,
-                bbox, requested_variables, model_ids, shc,
+                sampling_step, bbox, requested_variables, model_ids, shc,
                 csv_time_format, output, **kwargs):
         """ Execute process """
         access_logger = self.get_access_logger(**kwargs)
@@ -245,13 +250,14 @@ class FetchData(WPSProcess):
         self.logger.debug("relative area: %s", relative_area)
         self.logger.debug("relative time: %s", relative_time)
 
-        min_step = timedelta(0) if relative_time <= 1 else BASE_MIN_STEP
-        sampling_step = timedelta(seconds=(
-            relative_area * (
-                min_step.total_seconds() +
-                relative_time * (BASE_SAMPLIG_STEP - min_step).total_seconds()
-            )
-        ))
+        if sampling_step is None:
+            min_step = timedelta(0) if relative_time <= 1 else BASE_MIN_STEP
+            sampling_step = timedelta(seconds=(
+                relative_area * (
+                    min_step.total_seconds() +
+                    relative_time * (BASE_SAMPLIG_STEP - min_step).total_seconds()
+                )
+            ))
 
         self.logger.debug("sampling step: %s", sampling_step)
 
