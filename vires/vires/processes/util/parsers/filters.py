@@ -50,7 +50,23 @@ def parse_filters(input_id, filter_string):
             variable, int(component), vmin, vmax
         )
 
-    return [
-        _get_filter(name, vmin, vmax) for name, (vmin, vmax)
-        in parse_filters(input_id, filter_string).items()
-    ]
+    try:
+        return [
+            _get_filter(name, vmin, vmax) for name, (vmin, vmax)
+            in _parse_filter_string(filter_string)
+        ]
+    except ValueError as exc:
+        raise InvalidInputValueError(input_id, exc)
+
+
+def _parse_filter_string(filter_string):
+    if filter_string.strip():
+        for item in filter_string.split(";"):
+            name, bounds = item.split(":")
+            name = name.strip()
+            if not name:
+                raise ValueError("Invalid empty filter name!")
+            lower, upper = [float(v) for v in bounds.split(",")]
+            if name in filters:
+                raise ValueError("Duplicate filter %r!" % name)
+            yield name, (lower, upper)
