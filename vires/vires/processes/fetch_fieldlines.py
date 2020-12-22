@@ -2,11 +2,8 @@
 #
 # WPS process calculating magnetic field-lines from models.
 #
-# Deprecated. Replaced by vires:fetch_fieldlines process.
-# To be removed after the completed client transition to the new process.
-#
-# Authors: Daniel Santillan <daniel.santillan@eox.at>
-#          Martin Paces <martin.paces@eox.at>
+# Authors: Martin Paces <martin.paces@eox.at>
+#          Daniel Santillan <daniel.santillan@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2014 EOX IT Services GmbH
 #
@@ -41,24 +38,26 @@ from eoxmagmod import (
     trace_field_line, convert, vnorm,
 )
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, BoundingBoxData, ComplexData, CDFileWrapper, CDObject,
-    FormatText, FormatJSON, FormatBinaryRaw, AllowedRange,
+    LiteralData, ComplexData, CDFileWrapper, CDObject,
+    FormatText, FormatJSON, FormatBinaryRaw,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
 from vires.time_util import datetime_to_mjd2000, naive_to_utc
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
-from vires.processes.util import parse_model_list, get_extra_model_parameters
+from vires.processes.util import (
+    parse_model_list, get_extra_model_parameters, parse_locations,
+)
 
 EARTH_RADIUS_M = EARTH_RADIUS * 1e3 # mean Earth radius in meters
 TRACE_OPTIONS = {'max_radius': 25 * EARTH_RADIUS}
 
 
-class RetrieveFieldLines(WPSProcess):
+class FetchFieldlines(WPSProcess):
     """ This process generates a set of field lines passing trough the given
-    area of interest.
+    set of points.
     """
-    identifier = "retrieve_field_lines"
+    identifier = "vires:fetch_fieldlines"
     title = "Generate field lines"
     metadata = {}
     profiles = ["vires"]
@@ -82,31 +81,16 @@ class RetrieveFieldLines(WPSProcess):
             'time', datetime, optional=False,
             abstract="Time at which the fields lines are calculated.",
         )),
-        ("height", LiteralData(
-            "height", float, optional=True, uoms=(("km", 1.0), ("m", 1e-3)),
-            default=0.0, allowed_values=AllowedRange(-1., 1000., dtype=float),
+        ("locations", ComplexData(
+            'locations', optional=False,
+            title="Set of geocentric spherical coordinates in ITRF frame.",
             abstract=(
-                "Height above the mean Earth radius at which the staring points"
-                " are located."
+                "Set of geocentric Latitude (deg), Longitude (deg) and Radius "
+                "(m) coordinates in ITRF frame.",
             ),
-        )),
-        ("bbox", BoundingBoxData(
-            "bbox", crss=(4326,), optional=False, title="Area of interest",
-            abstract="Mandatory area of interest encoded as WPS bounding box.",
-        )),
-        ("lines_per_col", LiteralData(
-            'lines_per_col', int, optional=True, default=4, title="Resolution",
-            abstract=(
-                "This parameter sets the number of the generated field "
-                "lines per northing extent of the bounding box."
-            ),
-        )),
-        ("lines_per_row", LiteralData(
-            'lines_per_row', int, optional=True, default=4, title="Resolution",
-            abstract=(
-                "This parameter sets the number of the generated field "
-                "lines per easing extent of the bounding box."
-            ),
+            formats=[
+                FormatText('text/csv'),
+            ],
         )),
     ]
 
@@ -122,8 +106,7 @@ class RetrieveFieldLines(WPSProcess):
         )),
     ]
 
-    def execute(self, model_ids, shc, time, height, bbox, lines_per_col,
-                lines_per_row, output, **kwargs):
+    def execute(self, model_ids, shc, time, locations, output, **kwargs):
         """ Execute process. """
         access_logger = self.get_access_logger(**kwargs)
 
@@ -133,27 +116,18 @@ class RetrieveFieldLines(WPSProcess):
         # fix the time-zone of the naive date-time
         mjd2000 = datetime_to_mjd2000(naive_to_utc(time))
 
+        locations = parse_locations("locations", locations.mime_type, locations.data)
+
         access_logger.info(
-            "request: toi: %s, aoi: %s, elevation: %g, "
-            "models: (%s), grid: (%d, %d)",
-            time.isoformat("T"),
-            bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180), height,
+            "request: time: %s, locations: %s, models: (%s)",
+            time.isoformat("T"), locations,
             ", ".join(
                 "%s = %s" % (model.name, model.full_expression)
                 for model in models
             ),
-            lines_per_col, lines_per_row,
         )
 
         def generate_field_lines():
-            n_lines = lines_per_row * lines_per_col
-            coord_geo = empty((lines_per_col, lines_per_row, 3))
-            coord_geo[..., 1], coord_geo[..., 0] = meshgrid(
-                linspace(bbox.lower[1], bbox.upper[1], lines_per_row),
-                linspace(bbox.lower[0], bbox.upper[0], lines_per_col)
-            )
-            coord_geo[..., 2] = height + EARTH_RADIUS
-
             total_count = 0
             for model in models:
                 model_count = 0
@@ -167,14 +141,14 @@ class RetrieveFieldLines(WPSProcess):
                     model.name, model.full_expression, options
                 )
 
-                for point in coord_geo.reshape((n_lines, 3)):
+                for point in locations:
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
                             "%s=%s field line " % (model.name, model.full_expression),
                             self.logger
                         ) as etl:
                         line_coords, line_field = trace_field_line(
-                            model.model, mjd2000, point,
+                            model.model, mjd2000, point * [1, 1, 1e-3],
                             GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN,
                             trace_options=TRACE_OPTIONS, model_options=options,
                         )
@@ -188,13 +162,14 @@ class RetrieveFieldLines(WPSProcess):
 
                 access_logger.info(
                     "model: %s=%s, lines: %d, points: %d",
-                    model.name, model.full_expression, n_lines, model_count,
+                    model.name, model.full_expression,
+                    len(locations), model_count,
                 )
                 total_count += model_count
 
             access_logger.info(
                 "response: lines: %d, points: %d, mime-type: %s",
-                n_lines * len(models), total_count, output['mime_type'],
+                len(locations) * len(models), total_count, output['mime_type'],
             )
 
         # data colouring
@@ -202,10 +177,7 @@ class RetrieveFieldLines(WPSProcess):
         info = {
             'time': time.isoformat('T') + "Z",
             'models': {model.name: model.full_expression for model in models},
-            'bbox': bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
-            'height': height*1e3,
-            'rows': lines_per_col,
-            'cols': lines_per_row,
+            'locations': [tuple(location) for location in locations]
         }
 
         if output['mime_type'] == "application/json":
