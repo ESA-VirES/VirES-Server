@@ -60,6 +60,7 @@ def parse_filters(input_id, filter_string):
 
 
 def _parse_filter_string(filter_string):
+    filters = set()
     if filter_string.strip():
         for item in filter_string.split(";"):
             name, bounds = item.split(":")
@@ -69,4 +70,5 @@ def _parse_filter_string(filter_string):
             lower, upper = [float(v) for v in bounds.split(",")]
             if name in filters:
                 raise ValueError("Duplicate filter %r!" % name)
+            filters.add(name)
             yield name, (lower, upper)
