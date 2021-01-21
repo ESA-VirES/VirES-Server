@@ -29,7 +29,7 @@
 from django.conf import settings
 
 def vires_oauth(request):
-    permissions = request.user.oauth_user_permissions
+    permissions = getattr(request.user, 'oauth_user_permissions', ())
     return {
         "vires_apps": [
             app for app in getattr(settings, "VIRES_APPS", []) if (
