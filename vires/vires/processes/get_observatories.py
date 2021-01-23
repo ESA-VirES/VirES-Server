@@ -40,7 +40,7 @@ from vires.time_util import naive_to_utc
 from vires.processes.base import WPSProcess
 
 
-ALLOWED_PRODUCT_TYPES = ["SW_AUX_OBSx2_", "SW_AUX_OBSH2_"]
+ALLOWED_PRODUCT_TYPES = ["SW_AUX_OBSx2_", "SW_AUX_OBSH2_", "SW_VOBS_xM_2_"]
 
 
 class GetObservatories(WPSProcess):
@@ -54,8 +54,8 @@ class GetObservatories(WPSProcess):
     inputs = WPSProcess.inputs + [
         ("collection_id", LiteralData(
             'collection_id', str, optional=False,
-            title="AUX_OBS collection identifier",
-            abstract="AUX_OBS collection identifier",
+            title="AUX_OBS or VOBS collection identifier",
+            abstract="AUX_OBS or VOBS collection identifier",
         )),
         ("begin_time", LiteralData(
             'begin_time', datetime, optional=True, title="Begin time",
@@ -141,7 +141,7 @@ class GetObservatories(WPSProcess):
     @classmethod
     def _csv_output(cls, data, output):
         output_fobj = StringIO(newline="\r\n")
-        print("IAGACode,startTime,endTime", file=output_fobj)
+        print("site,startTime,endTime", file=output_fobj)
         for code in sorted(data):
             begin_time, end_time = data[code]
             print("%s,%s,%s" % (code, begin_time, end_time), file=output_fobj)

@@ -32,7 +32,11 @@ from datetime import timedelta
 from django.db import transaction
 from vires.util import AttributeDict, datetime_to_string
 from vires.models import Product, ProductLocation
-from vires.swarm import SwarmProductMetadataReader, ObsProductMetadataReader
+from vires.swarm import (
+    SwarmProductMetadataReader,
+    ObsProductMetadataReader,
+    VObsProductMetadataReader,
+)
 from vires.cdf_util import cdf_open
 from .product_collection import get_product_collection
 from .orbit_direction import (
@@ -48,8 +52,9 @@ DEFAULT_METADATA_READER = SwarmProductMetadataReader
 METADATA_READER = {
     "SW_AUX_OBSx2_": ObsProductMetadataReader,
     "SW_AUX_OBSH2_": ObsProductMetadataReader,
+    "SW_AUX_OBSH2_": ObsProductMetadataReader,
+    "SW_VOBS_xM_2_": VObsProductMetadataReader,
 }
-
 
 def get_product_id(data_file):
     """ Get the product identifier. """

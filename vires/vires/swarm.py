@@ -143,3 +143,7 @@ class ObsProductMetadataReader():
             "end_time": end_time,
             "datasets": datasets,
         }
+
+
+class VObsProductMetadataReader(ObsProductMetadataReader):
+    OBS_CODES_ATTR = "SITE_CODES"
