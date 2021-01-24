@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Process Utilities
+# Process Utilities - get applicable time limit based on the requested sampling
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -25,17 +25,36 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .parsers import (
-    parse_style, parse_collections,
-    parse_model_expression, parse_model_list,
-    parse_filters,
-    parse_variables, get_subtracted_variables,
-    parse_locations,
-)
-from .png_output import data_to_png, array_to_png
-from .resolver import VariableResolver, extract_product_names
-from .spacecraft_subtraction import group_subtracted_variables
-from .magnetic_model_renderer import (
-    get_extra_model_parameters, render_model, ALLOWED_VARIABLES,
-)
-from .time_limit import get_time_limit
+from datetime import timedelta
+from eoxserver.core.util.timetools import parse_duration
+
+
+DEFAULT_SAMPLING = parse_duration("PT1S")
+MAX_LIMIT = timedelta(days=999999999)
+
+
+def get_time_limit(sources, requested_sampling, selection_limit):
+    """ Get time-selection limit adapted to the requested data sampling. """
+
+    if sources:
+        sampling = min([
+            parse_duration(value) if value else DEFAULT_SAMPLING
+            for value in (
+                collection_list[0].metadata.get('nominalSampling')
+                for collection_list in sources.values()
+            )
+        ])
+    else:
+        sampling = DEFAULT_SAMPLING
+
+    if requested_sampling is not None and sampling > requested_sampling:
+        sampling = requested_sampling
+
+    # ignore sampling below the default 1 sec
+    if sampling < DEFAULT_SAMPLING:
+        sampling = DEFAULT_SAMPLING
+
+    return timedelta(seconds=min(
+        MAX_LIMIT.total_seconds(),
+        selection_limit.total_seconds() * sampling.total_seconds()
+    ))
