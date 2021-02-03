@@ -1709,7 +1709,7 @@
         "name": "SW_VOBS_xM_2_",
         "defaultDataset": "__all__",
         "strictDatasetCheck": false,
-        "unsortedDatasets": ["__all__"],
+        "unsortedDatasets": ["__all__", "SecularVariation"],
         "datasets": {
             "__all__": {
                 "SiteCode": {
@@ -1778,6 +1778,60 @@
                     "attributes": {
                         "DESCRIPTION": "Observed field estimated error",
                         "UNITS": "nT"
+                    }
+                }
+            },
+            "SecularVariation": {
+                "SiteCode": {
+                    "dataType": "char7",
+                    "attributes": {
+                        "DESCRIPTION": "Seven letter virtual observatory identification code",
+                        "UNITS": "-"
+                    }
+                },
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_SV": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Secular variation field vector, NEC frame spherical coordinates",
+                        "UNITS": "nT/yr"
+                    }
+                },
+                "sigma_SV": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Secular variation field estimated error",
+                        "UNITS": "nT/yr"
                     }
                 }
             }

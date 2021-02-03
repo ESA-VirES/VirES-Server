@@ -27,6 +27,7 @@
 # pylint: disable=no-self-use,unused-argument
 
 
+import re
 from io import StringIO
 from datetime import datetime
 from eoxserver.services.ows.wps.parameters import (
@@ -80,18 +81,28 @@ class GetObservatories(WPSProcess):
         """ Execute process. """
         access_logger = self.get_access_logger(**kwargs)
 
+        base_collection_id, _, dataset_id = collection_id.partition(':')
+
         try:
             collection = (
                 ProductCollection.objects
                 .select_related('type')
                 .filter(type__identifier__in=ALLOWED_PRODUCT_TYPES)
-                .get(identifier=collection_id)
+                .get(identifier=base_collection_id)
             )
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
                 "collection_id",
                 "Invalid collection identifier %r!" % collection_id
             )
+
+        if dataset_id and dataset_id != collection.type.get_base_dataset_id(dataset_id):
+            raise InvalidInputValueError(
+                "collection_id",
+                "Invalid collection identifier %r!" % collection_id
+            )
+
+        base_datasets = set(collection.type.definition['datasets'])
 
         access_logger.info(
             "request: collection: %s, toi: (%s, %s)",
@@ -109,7 +120,7 @@ class GetObservatories(WPSProcess):
                 begin_time__gte=(begin_time - collection.max_product_duration),
             )
 
-        result = self._collect_observatories(query)
+        result = self._collect_observatories(query, dataset_id, base_datasets)
 
         if output['mime_type'] == "text/csv":
             return self._csv_output(result, output)
@@ -122,12 +133,21 @@ class GetObservatories(WPSProcess):
         )
 
     @classmethod
-    def _collect_observatories(cls, query):
+    def _collect_observatories(cls, query, dataset_id, base_datasets):
+
+        re_filter = re.compile("^%s([^:]+)$" % (
+            "%s:" % dataset_id if dataset_id else ""
+        ))
+
         result = {}
         for datasets in query.values_list("datasets", flat=True):
-            for code, record in datasets.items():
-                if code == "__all__":
+            for key, record in datasets.items():
+                if key in base_datasets:
                     continue
+                match = re_filter.match(key)
+                if not match:
+                    continue
+                code = match.groups()[0]
                 begin_time, end_time = record['beginTime'], record['endTime']
                 begin_time_min, end_time_max = (
                     result.get(code) or (begin_time, end_time)
