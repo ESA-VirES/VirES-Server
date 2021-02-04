@@ -210,11 +210,17 @@ class FetchData(WPSProcess):
         begin_time = naive_to_utc(begin_time)
         end_time = max(naive_to_utc(end_time), begin_time)
 
+        # fixed selection time-limit
+        time_limit = MAX_TIME_SELECTION
+        self.logger.debug(
+            "time-selection limit: %s", timedelta_to_iso_duration(time_limit)
+        )
+
         # check the time-selection limit
-        if (end_time - begin_time) > MAX_TIME_SELECTION:
+        if (end_time - begin_time) > time_limit:
             message = (
                 "Time selection limit (%s) has been exceeded!" %
-                timedelta_to_iso_duration(MAX_TIME_SELECTION)
+                timedelta_to_iso_duration(time_limit)
             )
             access_logger.warning(message)
             raise InvalidInputValueError('end_time', message)

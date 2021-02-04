@@ -61,7 +61,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names
+    extract_product_names, get_time_limit,
 )
 from vires.processes.util.time_series import (
     ProductTimeSeries,
@@ -87,7 +87,8 @@ MAX_ACTIVE_JOBS = 2
 # Limit response size (equivalent to 50 daily SWARM LR products).
 MAX_SAMPLES_COUNT = 4320000
 
-# maximum allowed time selection period (~100years >> mission life-time)
+# maximum allowed time selection period for 1 second sampled data
+# 35525 days is ~100 years >> mission life-time
 MAX_TIME_SELECTION = timedelta(days=35525)
 
 # set of the minimum required variables
@@ -310,11 +311,17 @@ class FetchFilteredDataAsync(WPSProcess):
         begin_time = naive_to_utc(begin_time)
         end_time = max(naive_to_utc(end_time), begin_time)
 
+        # adjust the time limit to the data sampling
+        time_limit = get_time_limit(sources, sampling_step, MAX_TIME_SELECTION)
+        self.logger.debug(
+            "time-selection limit: %s", timedelta_to_iso_duration(time_limit)
+        )
+
         # check the time-selection limit
-        if (end_time - begin_time) > MAX_TIME_SELECTION:
+        if (end_time - begin_time) > time_limit:
             message = (
                 "Time selection limit (%s) has been exceeded!" %
-                timedelta_to_iso_duration(MAX_TIME_SELECTION)
+                timedelta_to_iso_duration(time_limit)
             )
             access_logger.warning(message)
             raise InvalidInputValueError('end_time', message)

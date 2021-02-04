@@ -136,6 +136,16 @@ class OmniHr1MinParameters(SwarmDefaultParameters):
     }
 
 
+class VObsSecularVariationParameters(SwarmDefaultParameters):
+    """ VOBS secular variation. """
+    VARIABLE_TRANSLATES = {
+        'Timestamp': 'Timestamp_SV',
+        'Latitude': 'Latitude_SV',
+        'Longitude': 'Longitude_SV',
+        'Radius': 'Radius_SV',
+    }
+
+
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
     "SW_AEJxLPL_2F": SwarmAEJLPParameters,
@@ -149,6 +159,7 @@ PRODUCT_TYPE_PARAMETERS = {
     "SW_MAGx_LR_1B": MagLRParameters,
     "SW_AUX_IMF_2_": AuxImf2Parameters,
     "OMNI_HR_1min": OmniHr1MinParameters,
+    "SW_VOBS_xM_2_:SecularVariation": VObsSecularVariationParameters,
 }
 
 
@@ -243,8 +254,8 @@ class ProductTimeSeries(BaseProductTimeSeries):
     """ Product time-series class. """
 
     @staticmethod
-    def _get_id(base_id, dataset_id, is_default_dataset):
-        if is_default_dataset:
+    def _get_id(base_id, dataset_id, default_dataset_id):
+        if dataset_id == default_dataset_id:
             return base_id
         return "%s:%s" % (base_id, dataset_id)
 
@@ -259,6 +270,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             collection = self._get_collection(collection)
 
         dataset_id = collection.type.get_dataset_id(dataset_id)
+        default_dataset_id = collection.type.default_dataset_id
 
         if dataset_id is None:
             raise ValueError("Missing mandatory dataset identifier!")
@@ -266,16 +278,20 @@ class ProductTimeSeries(BaseProductTimeSeries):
         if not collection.type.is_valid_dataset_id(dataset_id):
             raise ValueError("Invalid dataset identifier %r!" % dataset_id)
 
-        is_default_dataset = (dataset_id == collection.type.default_dataset_id)
-
         params = PRODUCT_TYPE_PARAMETERS.get(
-            self._get_id(collection.type.identifier, dataset_id, is_default_dataset),
-            DEFAULT_PRODUCT_TYPE_PARAMETERS
+            self._get_id(
+                collection.type.identifier,
+                collection.type.get_base_dataset_id(dataset_id),
+                default_dataset_id,
+            ),
+            DEFAULT_PRODUCT_TYPE_PARAMETERS,
         )
 
         super().__init__(
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
-                "collection_id": self._get_id(collection.identifier, dataset_id, is_default_dataset),
+                "collection_id": self._get_id(
+                    collection.identifier, dataset_id, default_dataset_id
+                ),
             }),
             time_variable=params.TIME_VARIABLE,
             time_tolerance=params.TIME_TOLERANCE,
@@ -287,7 +303,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
         self.collection = collection
         self.dataset_id = dataset_id
-        self.is_default_dataset = is_default_dataset
+        self.default_dataset_id = default_dataset_id
 
         self.translate_fw = dict(params.VARIABLE_TRANSLATES)
         self.translate_bw = dict((v, k) for k, v in self.translate_fw.items())
@@ -301,7 +317,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
     def collection_identifier(self):
         """ Get collection identifier. """
         return self._get_id(
-            self.collection.identifier, self.dataset_id, self.is_default_dataset
+            self.collection.identifier, self.dataset_id, self.default_dataset_id
         )
 
     @property
