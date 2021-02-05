@@ -139,6 +139,7 @@ class OmniHr1MinParameters(SwarmDefaultParameters):
 class VObsSecularVariationParameters(SwarmDefaultParameters):
     """ VOBS secular variation. """
     VARIABLE_TRANSLATES = {
+        'SiteCode': 'SiteCode_SV',
         'Timestamp': 'Timestamp_SV',
         'Latitude': 'Latitude_SV',
         'Longitude': 'Longitude_SV',
