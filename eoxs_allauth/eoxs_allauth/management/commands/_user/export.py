@@ -33,7 +33,7 @@ from functools import partial
 from collections import OrderedDict
 from django.contrib.auth.models import User
 from eoxs_allauth.models import UserProfile
-from eoxs_allauth.utils import datetime_to_string
+from eoxs_allauth.time_utils import format_datetime
 from .._common import JSON_OPTS
 from .common import UserSelectionSubcommand
 
@@ -93,8 +93,8 @@ def serialize_user(object_):
         ("username", object_.username),
         ("password", object_.password),
         ("is_active", object_.is_active),
-        ("date_joined", datetime_to_string(object_.date_joined)),
-        ("last_login", datetime_to_string(object_.last_login)),
+        ("date_joined", format_datetime(object_.date_joined)),
+        ("last_login", format_datetime(object_.last_login)),
         ("first_name", object_.first_name),
         ("last_name", object_.last_name),
         ("email", object_.email), # copy of the primary e-mail
@@ -131,8 +131,8 @@ def serialize_social_account(object_):
     return OrderedDict([
         ("uid", object_.uid),
         ("provider", object_.provider),
-        ("date_joined", datetime_to_string(object_.date_joined)),
-        ("last_login", datetime_to_string(object_.last_login)),
+        ("date_joined", format_datetime(object_.date_joined)),
+        ("last_login", format_datetime(object_.last_login)),
         ("extra_data", object_.extra_data),
         ("provider", object_.provider),
     ])
@@ -144,8 +144,8 @@ def serialize_access_token(object_):
         ("identifier", object_.identifier),
         ("token_sha256", binary_to_base64(object_.token_sha256)),
         ("purpose", object_.purpose),
-        ("expires", object_.expires and datetime_to_string(object_.expires)),
-        ("created", datetime_to_string(object_.created)),
+        ("expires", object_.expires and format_datetime(object_.expires)),
+        ("created", format_datetime(object_.created)),
         ("scope", list(object_.scopes)),
     ])
 

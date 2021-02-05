@@ -30,7 +30,8 @@ from functools import wraps
 from os.path import splitext, basename, abspath
 from datetime import timedelta
 from django.db import transaction
-from vires.util import AttributeDict, datetime_to_string
+from vires.util import AttributeDict
+from vires.time_util import format_datetime
 from vires.models import Product, ProductLocation
 from vires.swarm import (
     SwarmProductMetadataReader,
@@ -357,8 +358,8 @@ def _get_datasets_from_datasets_metadata(data_file, datasets):
         name: _sanitize({
             "location": data_file,
             "indexRange": metadata.get('index_range'),
-            "beginTime": datetime_to_string(metadata.get('begin_time')),
-            "endTime": datetime_to_string(metadata.get('end_time')),
+            "beginTime": format_datetime(metadata.get('begin_time')),
+            "endTime": format_datetime(metadata.get('end_time')),
         }) for name, metadata in datasets.items()
     }
 

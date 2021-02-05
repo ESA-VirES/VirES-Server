@@ -46,9 +46,7 @@ from vires.models import ProductCollection
 from vires.config import SystemConfigReader
 from vires.util import unique, exclude, include
 from vires.access_util import get_vires_permissions
-from vires.time_util import (
-    naive_to_utc, timedelta_to_iso_duration,
-)
+from vires.time_util import naive_to_utc, format_timedelta, format_datetime
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
     timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE, cdf_open,
@@ -220,14 +218,14 @@ class FetchFilteredData(WPSProcess):
         # adjust the time limit to the data sampling
         time_limit = get_time_limit(sources, sampling_step, MAX_TIME_SELECTION)
         self.logger.debug(
-            "time-selection limit: %s", timedelta_to_iso_duration(time_limit)
+            "time-selection limit: %s", format_timedelta(time_limit)
         )
 
         # check the time-selection limit
         if (end_time - begin_time) > time_limit:
             message = (
                 "Time selection limit (%s) has been exceeded!" %
-                timedelta_to_iso_duration(time_limit)
+                format_timedelta(time_limit)
             )
             access_logger.warning(message)
             raise InvalidInputValueError('end_time', message)
@@ -236,7 +234,7 @@ class FetchFilteredData(WPSProcess):
         access_logger.info(
             "request parameters: toi: (%s, %s), collections: (%s), "
             "models: (%s), filters: {%s}",
-            begin_time.isoformat("T"), end_time.isoformat("T"),
+            format_datetime(begin_time), format_datetime(end_time),
             ", ".join(
                 s.collection_identifier for l in sources.values() for s in l
             ),
@@ -604,7 +602,7 @@ class FetchFilteredData(WPSProcess):
                 cdf.attrs.update({
                     "TITLE": result_filename,
                     "DATA_TIMESPAN": ("%s/%s" % (
-                        begin_time.isoformat(), end_time.isoformat()
+                        format_datetime(begin_time), format_datetime(end_time),
                     )).replace("+00:00", "Z"),
                     "DATA_FILTERS": [str(f) for f in filters],
                     "MAGNETIC_MODELS": [

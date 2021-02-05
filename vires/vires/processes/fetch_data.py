@@ -43,9 +43,7 @@ from eoxserver.services.ows.wps.exceptions import (
 from vires.models import ProductCollection
 from vires.util import unique, exclude
 from vires.access_util import get_user, get_vires_permissions
-from vires.time_util import (
-    naive_to_utc, timedelta_to_iso_duration,
-)
+from vires.time_util import naive_to_utc, format_timedelta, format_datetime
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
     timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE,
@@ -213,14 +211,14 @@ class FetchData(WPSProcess):
         # fixed selection time-limit
         time_limit = MAX_TIME_SELECTION
         self.logger.debug(
-            "time-selection limit: %s", timedelta_to_iso_duration(time_limit)
+            "time-selection limit: %s", format_timedelta(time_limit)
         )
 
         # check the time-selection limit
         if (end_time - begin_time) > time_limit:
             message = (
                 "Time selection limit (%s) has been exceeded!" %
-                timedelta_to_iso_duration(time_limit)
+                format_timedelta(time_limit)
             )
             access_logger.warning(message)
             raise InvalidInputValueError('end_time', message)
@@ -229,7 +227,7 @@ class FetchData(WPSProcess):
         access_logger.info(
             "request: toi: (%s, %s), aoi: %s, collections: (%s), "
             "models: (%s), ",
-            begin_time.isoformat("T"), end_time.isoformat("T"),
+            format_datetime(begin_time), format_datetime(end_time),
             bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
             ", ".join(
                 s.collection_identifier for l in sources.values() for s in l

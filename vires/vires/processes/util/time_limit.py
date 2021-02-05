@@ -26,10 +26,10 @@
 #-------------------------------------------------------------------------------
 
 from datetime import timedelta
-from eoxserver.core.util.timetools import parse_duration
+from vires.time_util import parse_duration
 
 
-DEFAULT_SAMPLING = parse_duration("PT1S")
+DEFAULT_SAMPLING = timedelta(seconds=1)
 MAX_LIMIT = timedelta(days=999999999)
 
 

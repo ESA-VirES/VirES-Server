@@ -34,8 +34,7 @@ from logging import (
 from datetime import datetime, time
 from django.core.management.base import BaseCommand
 from django.utils.dateparse import parse_date, parse_datetime
-from eoxserver.core.util.timetools import parse_duration
-from vires.time_util import naive_to_utc
+from vires.time_util import naive_to_utc, parse_duration
 
 
 _LABEL2LOGLEVEL = {

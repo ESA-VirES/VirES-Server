@@ -45,7 +45,7 @@ from eoxserver.services.ows.wps.parameters import (
     FormatText, FormatJSON, FormatBinaryRaw, AllowedRange,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
-from vires.time_util import datetime_to_mjd2000, naive_to_utc
+from vires.time_util import datetime_to_mjd2000, naive_to_utc, format_datetime
 from vires.perf_util import ElapsedTimeLogger
 from vires.processes.base import WPSProcess
 from vires.processes.util import parse_model_list, get_extra_model_parameters
@@ -136,7 +136,7 @@ class RetrieveFieldLines(WPSProcess):
         access_logger.info(
             "request: toi: %s, aoi: %s, elevation: %g, "
             "models: (%s), grid: (%d, %d)",
-            time.isoformat("T"),
+            format_datetime(time),
             bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180), height,
             ", ".join(
                 "%s = %s" % (model.name, model.full_expression)
@@ -200,7 +200,7 @@ class RetrieveFieldLines(WPSProcess):
         # data colouring
         field_lines = generate_field_lines()
         info = {
-            'time': time.isoformat('T') + "Z",
+            'time': format_datetime(naive_to_utc(time)),
             'models': {model.name: model.full_expression for model in models},
             'bbox': bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
             'height': height*1e3,

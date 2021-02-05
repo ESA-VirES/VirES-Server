@@ -37,7 +37,7 @@ from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
 )
 from vires.models import ProductCollection
-from vires.time_util import naive_to_utc
+from vires.time_util import naive_to_utc, format_datetime
 from vires.processes.base import WPSProcess
 
 
@@ -107,8 +107,8 @@ class GetObservatories(WPSProcess):
         access_logger.info(
             "request: collection: %s, toi: (%s, %s)",
             collection_id,
-            naive_to_utc(begin_time).isoformat("T") if begin_time else "-",
-            naive_to_utc(end_time).isoformat("T") if end_time else "-",
+            format_datetime(naive_to_utc(begin_time)) if begin_time else "-",
+            format_datetime(naive_to_utc(end_time)) if end_time else "-",
         )
 
         query = collection.products.order_by('begin_time')
