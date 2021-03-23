@@ -32,7 +32,9 @@ from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, FormatJSON, CDFileWrapper, CDObject,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
-from vires.time_util import mjd2000_to_datetime, decimal_year_to_mjd2000
+from vires.time_util import (
+    mjd2000_to_datetime, decimal_year_to_mjd2000, naive_to_utc, format_datetime,
+)
 from vires.magnetic_models import MODEL_LIST
 from vires.processes.base import WPSProcess
 from vires.processes.util import parse_model_list
@@ -150,4 +152,4 @@ class GetModelInfo(WPSProcess):
     @staticmethod
     def _format_time(time):
         tobj = mjd2000_to_datetime(max(MIN_MJD2000, min(MAX_MJD2000, time)))
-        return tobj.isoformat() + "Z"
+        return format_datetime(naive_to_utc(tobj))

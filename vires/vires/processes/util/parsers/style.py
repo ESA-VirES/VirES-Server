@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django context processors
+# Process Utilities - style input parser
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,17 +24,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=too-many-branches,unused-argument
 
-from django.conf import settings
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from vires.colormaps import get_colormap
 
-def vires_oauth(request):
-    permissions = getattr(request.user, 'oauth_user_permissions', ())
-    return {
-        "vires_apps": [
-            app for app in getattr(settings, "VIRES_APPS", []) if (
-                app.get('required_permission') is None
-                or app['required_permission'] in permissions
-            )
-        ],
-    }
+
+def parse_style(input_id, style):
+    """ Parse style value and return the corresponding colour-map object. """
+    if style is None:
+        return None
+    try:
+        return get_colormap(style)
+    except ValueError:
+        raise InvalidInputValueError(
+            input_id, "Invalid style identifier %r!" % style
+        )

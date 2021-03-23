@@ -34,7 +34,9 @@ from eoxserver.services.ows.wps.parameters import (
     FormatText, FormatBinaryRaw, FormatBinaryBase64,
     LiteralData, AllowedRange
 )
-from vires.time_util import datetime_to_mjd2000, mjd2000_to_datetime, naive_to_utc
+from vires.time_util import (
+    datetime_to_mjd2000, mjd2000_to_datetime, naive_to_utc, format_datetime,
+)
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_model_expression, parse_style,
@@ -139,7 +141,7 @@ class EvalModel(WPSProcess):
         access_logger.info(
             "request: time: %s, aoi: %s, elevation: %g, "
             "model: %s, variable: %s, image-size: (%d, %d), mime-type: %s",
-            naive_to_utc(mjd2000_to_datetime(mean_time)).isoformat("T"),
+            format_datetime(naive_to_utc(mjd2000_to_datetime(mean_time))),
             bbox[0] + bbox[1], elevation, model.full_expression,
             variable, width, height, output['mime_type'],
         )

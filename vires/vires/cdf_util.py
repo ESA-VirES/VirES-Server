@@ -42,7 +42,7 @@ from spacepy.pycdf import CDFError, lib
 from . import FULL_PACKAGE_NAME
 from .time_util import (
     mjd2000_to_decimal_year, year_to_day2k, days_per_year,
-    datetime, naive_to_utc, utc_to_naive,
+    datetime, naive_to_utc, utc_to_naive, format_datetime,
 )
 
 GZIP_COMPRESSION = pycdf.const.GZIP_COMPRESSION
@@ -143,7 +143,7 @@ def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
             if dtype == dt_float64:
                 return lambda v: "%.14g" % v
             if dtype == dt_object:
-                return lambda v: v.isoformat("T") + "Z"
+                return lambda v: format_datetime(naive_to_utc(v))
             return str
         if cdf_type == CDF_CHAR_TYPE:
             return lambda v: v.decode('utf-8')
@@ -182,9 +182,9 @@ def cdf_open(filename, mode="r"):
             # add extra attributes
             cdf.attrs.update({
                 "CREATOR": CDF_CREATOR,
-                "CREATED": naive_to_utc(
+                "CREATED": format_datetime(naive_to_utc(
                     datetime.utcnow().replace(microsecond=0)
-                ).isoformat().replace("+00:00", "Z"),
+                ))
             })
     else:
         raise ValueError("Invalid mode value %r!" % mode)

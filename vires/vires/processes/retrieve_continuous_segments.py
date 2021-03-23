@@ -29,14 +29,13 @@
 
 import csv
 from datetime import datetime
-from eoxserver.core.util.timetools import isoformat, parse_duration
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, CDTextBuffer, FormatText
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
 from vires.cache_util import cache_path
-from vires.time_util import naive_to_utc
+from vires.time_util import naive_to_utc, format_datetime, parse_duration
 from vires.cdf_util import cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime
 from vires.processes.base import WPSProcess
 from vires.processes.util.time_series import ProductTimeSeries, QDOrbitDirection
@@ -106,8 +105,8 @@ class RetrieveContinuousSegments(WPSProcess):
         access_logger.info(
             "request: collection: %s, toi: (%s, %s)",
             collection_id,
-            naive_to_utc(begin_time).isoformat("T") if begin_time else "-",
-            naive_to_utc(end_time).isoformat("T") if end_time else "-",
+            format_datetime(naive_to_utc(begin_time)) if begin_time else "-",
+            format_datetime(naive_to_utc(end_time)) if end_time else "-",
         )
 
         return _write_csv(
@@ -124,7 +123,11 @@ def _write_csv(output, records):
     envelope = "(-90,-180,90,180)"
 
     for start, end, id_ in records:
-        writer.writerow([isoformat(start), isoformat(end), envelope, id_])
+        writer.writerow([
+            format_datetime(naive_to_utc(start)),
+            format_datetime(naive_to_utc(end)),
+            envelope, id_
+        ])
 
     return output
 

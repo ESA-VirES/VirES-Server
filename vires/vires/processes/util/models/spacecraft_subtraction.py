@@ -35,6 +35,7 @@ from vires.cdf_util import (
     cdf_rawtime_to_datetime, seconds_to_cdf_rawtime, cdf_rawtime_to_seconds,
 )
 from vires.util import include
+from vires.time_util import format_datetime, naive_to_utc
 from vires.dataset import Dataset
 from vires.cache_util import cache_path
 from vires.data.vires_settings import ORBIT_COUNTER_FILE
@@ -181,8 +182,8 @@ class SatSatSubtraction(Model):
                 " %s/%s! The time interval is not covered by the spacecraft %s "
                 "orbit counter file!" %
                 (
-                    start_time.isoformat("T") + "Z",
-                    stop_time.isoformat("T") + "Z",
+                    format_datetime(naive_to_utc(start_time)),
+                    format_datetime(naive_to_utc(stop_time)),
                     self._master_spacecraft
                 )
             )

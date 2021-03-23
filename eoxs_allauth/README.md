@@ -238,7 +238,7 @@ $ <instance>/manage.py user activate --all
 
 #### Connecting Existing Users to the VirES-Oauth Server
 
-When migrating from a local setup to the VirES-Outh setup without removing the existing users the users have to be connected to the VirES-Oauth provider while the other details social providers and personal data have to be cleared.
+When migrating from a local database to the VirES-Outh setup without removing the existing users the users have to be connected to the VirES-Oauth provider while the other details, social providers and personal data have to be cleared.
 
 This one-off action can be performed by the `connect_to_vires_oauth` command:
 ```
@@ -250,7 +250,7 @@ $ <instance>/manage.py user connect_to_vires_oauth --all
 
 #### Export
 
-One or more  registered social providers can be exported in JSON format by the `export` command, e.g.:
+One or more registered social providers can be exported in JSON format by the `export` command, e.g.:
 ```
 $ <instance>/manage.py social_provider export vires
 [

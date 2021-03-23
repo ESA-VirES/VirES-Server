@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Process Utilities - Input Parsers
+# Process Utilities - models input parsers
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -26,26 +26,17 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-branches,unused-argument
 
-import re
-from collections import OrderedDict
 from itertools import chain
 from eoxmagmod import load_model_shc
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
-from vires.colormaps import get_colormap
-from vires.models import ProductCollection
 from vires.magnetic_models import MODEL_CACHE, PREDEFINED_COMPOSED_MODELS
 from vires.parsers.exceptions import ParserError
 from vires.parsers.model_list_parser import get_model_list_parser
 from vires.parsers.model_list_lexer import get_model_list_lexer
 from vires.parsers.model_expression_parser import get_model_expression_parser
 from vires.parsers.model_expression_lexer import get_model_expression_lexer
-from .time_series import ProductTimeSeries, CustomDatasetTimeSeries
-from .models import SourceMagneticModel, ComposedMagneticModel
-from .filters import ScalarRangeFilter, VectorComponentRangeFilter
+from ..models import SourceMagneticModel, ComposedMagneticModel
 
-
-RE_FILTER_NAME = re.compile(r'(^[^[]+)(?:\[([0-9])\])?$')
-RE_SUBTRACTED_VARIABLE = re.compile(r'(.+)_(?:res|diff)([ABC])([ABC])')
 
 PREDEFINED_MODELS = {}
 
@@ -63,135 +54,6 @@ PREDEFINED_MODELS.update(
     (model_id, lazy_model_loader(model_id, model_expression))
     for model_id, model_expression in PREDEFINED_COMPOSED_MODELS.items()
 )
-
-
-def parse_style(input_id, style):
-    """ Parse style value and return the corresponding colour-map object. """
-    if style is None:
-        return None
-    try:
-        return get_colormap(style)
-    except ValueError:
-        raise InvalidInputValueError(
-            input_id, "Invalid style identifier %r!" % style
-        )
-
-
-def parse_collections(input_id, source, permissions,
-                      custom_dataset=None, user=None):
-    """ Parse input collections definitions. """
-    result = {}
-
-    if not isinstance(source, dict):
-        raise InvalidInputValueError(
-            input_id, "JSON object expected!"
-        )
-
-    for label, collection_ids in source.items():
-        try:
-            result[label] = _parse_collection_ids(
-                collection_ids, custom_dataset, permissions
-            )
-        except (ValueError, TypeError) as error:
-            raise InvalidInputValueError("label %r: %s" % (label, str(error)))
-
-    master_ptype = None
-    for label, collections in result.items():
-        if collections == custom_dataset:
-            continue
-
-        # master (first collection) must be always defined
-        if len(collections) < 1:
-            raise InvalidInputValueError(
-                input_id, "Collection list must have at least one item!"
-                " (label: %r)" % label
-            )
-        # master (first collection) must be always of the same product type
-        collection, dataset_id = collections[0]
-        if master_ptype is None:
-            master_dataset = (collection.type.identifier, dataset_id)
-        else:
-            if master_dataset != (collection.type.identifier, dataset_id):
-                raise InvalidInputValueError(
-                    input_id, "Master collection product type mismatch!"
-                    " (label: %r; )" % label
-                )
-
-        # slaves are optional
-        # slaves' order does not matter
-
-        # collect slave product-types
-        slave_datasets = set()
-
-        # for one label multiple collections of the same range-type not allowed
-        for collection, dataset_id in collections[1:]:
-            dataset = (collection.type.identifier, dataset_id)
-            if dataset == master_dataset or dataset in slave_datasets:
-                raise InvalidInputValueError(
-                    input_id, "Multiple collections of the same type "
-                    "are not allowed! (label: %r; )" % label
-                )
-            slave_datasets.add(dataset)
-
-    # convert collections to product time-series
-    return {
-        label: (
-            [
-                CustomDatasetTimeSeries(user)
-            ] if collections == custom_dataset else [
-                ProductTimeSeries(collection, dataset_id)
-                for collection, dataset_id in collections
-            ]
-        ) for label, collections in result.items()
-    }
-
-
-def _parse_collection_ids(ids, custom_dataset, permissions):
-
-    if not isinstance(ids, (list, tuple)):
-        raise TypeError("Invalid list of collection identifiers! %r" % ids)
-
-    collection_dataset_ids = []
-    for id_ in ids:
-        if not isinstance(id_, str):
-            raise TypeError("Invalid collection identifier %r!" % id_)
-        collection_id, separator, dataset_id = id_.partition(':')
-        if not separator:
-            dataset_id = None
-        collection_dataset_ids.append((collection_id, dataset_id))
-
-    available_collections = {
-        collection.identifier: collection for collection
-        in ProductCollection.select_permitted(permissions).filter(
-            identifier__in=set(cid for cid, _ in collection_dataset_ids)
-        )
-    }
-
-    collections = []
-    for collection_id, dataset_id in collection_dataset_ids:
-
-        if collection_id == custom_dataset:
-            if dataset_id:
-                raise ValueError(
-                    "Custom dataset does not allow dataset identifier "
-                    "specification!"
-                )
-            return custom_dataset
-
-        collection = available_collections.get(collection_id)
-        if not collection:
-            raise ValueError("Invalid collection identifier %r!" % collection_id)
-
-        dataset_id = collection.type.get_dataset_id(dataset_id)
-        if dataset_id is None:
-            raise ValueError("Missing mandatory dataset identifier!")
-
-        if not collection.type.is_valid_dataset_id(dataset_id):
-            raise ValueError("Invalid dataset identifier %r!" % dataset_id)
-
-        collections.append((collection, dataset_id))
-
-    return collections
 
 
 def parse_model_expression(input_id, model_input, shc=None, shc_input_id="shc"):
@@ -399,61 +261,3 @@ class ModelInputParser:
             return parser.parse(model_list_string, lexer=lexer)
         except ParserError as error:
             raise self.ParsingError("Invalid model list! %s" % error)
-
-
-def parse_filters(input_id, filter_string):
-    """ Parse filters' string. """
-    try:
-        filters = OrderedDict()
-        if filter_string.strip():
-            for item in filter_string.split(";"):
-                name, bounds = item.split(":")
-                name = name.strip()
-                if not name:
-                    raise ValueError("Invalid empty filter name!")
-                lower, upper = [float(v) for v in bounds.split(",")]
-                if name in filters:
-                    raise ValueError("Duplicate filter %r!" % name)
-                filters[name] = (lower, upper)
-    except ValueError as exc:
-        raise InvalidInputValueError(input_id, exc)
-    return filters
-
-
-def parse_filters2(input_id, filter_string):
-    """ Parse filters' string and return list of the filter objects. """
-
-    def _get_filter(name, vmin, vmax):
-        match = RE_FILTER_NAME.match(name)
-        if match is None:
-            raise InvalidInputValueError(
-                input_id, "Invalid filter name %r" % name
-            )
-        variable, component = match.groups()
-        if component is None:
-            return ScalarRangeFilter(variable, vmin, vmax)
-        return VectorComponentRangeFilter(
-            variable, int(component), vmin, vmax
-        )
-
-    return [
-        _get_filter(name, vmin, vmax) for name, (vmin, vmax)
-        in parse_filters(input_id, filter_string).items()
-    ]
-
-
-def parse_variables(input_id, variables_strings):
-    """ Variable parsers.  """
-    variables_strings = str(variables_strings.strip())
-    return [
-        var.strip() for var in variables_strings.split(',')
-    ] if variables_strings else []
-
-
-def get_subtracted_variables(variables):
-    """ Extract subtracted variables from a list of all variables. """
-    return [
-        (variable, match.groups()) for variable, match in (
-            (var, RE_SUBTRACTED_VARIABLE.match(var)) for var in variables
-        ) if match
-    ]

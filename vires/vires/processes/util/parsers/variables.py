@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django context processors
+# Process Utilities - variables input parsers
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,17 +24,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=too-many-branches,unused-argument
 
-from django.conf import settings
+import re
 
-def vires_oauth(request):
-    permissions = getattr(request.user, 'oauth_user_permissions', ())
-    return {
-        "vires_apps": [
-            app for app in getattr(settings, "VIRES_APPS", []) if (
-                app.get('required_permission') is None
-                or app['required_permission'] in permissions
-            )
-        ],
-    }
+RE_SUBTRACTED_VARIABLE = re.compile(r'(.+)_(?:res|diff)([ABC])([ABC])')
+
+
+def parse_variables(input_id, variables_strings):
+    """ Variable parsers.  """
+    variables_strings = str(variables_strings.strip())
+    return [
+        var.strip() for var in variables_strings.split(',')
+    ] if variables_strings else []
+
+
+def get_subtracted_variables(variables):
+    """ Extract subtracted variables from a list of all variables. """
+    return [
+        (variable, match.groups()) for variable, match in (
+            (var, RE_SUBTRACTED_VARIABLE.match(var)) for var in variables
+        ) if match
+    ]

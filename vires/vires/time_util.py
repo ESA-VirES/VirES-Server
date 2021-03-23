@@ -41,12 +41,23 @@ TZ_UTC = utc
 RE_ZULU = re.compile(r'\+00:00$')
 
 
+RE_ISO_8601_DURATION = re.compile(
+    r"^(?P<sign>[+-])?P"
+    r"(?:(?P<years>\d+(\.\d+)?)Y)?"
+    r"(?:(?P<months>\d+(\.\d+)?)M)?"
+    r"(?:(?P<days>\d+(\.\d+)?)D)?"
+    r"T?(?:(?P<hours>\d+(\.\d+)?)H)?"
+    r"(?:(?P<minutes>\d+(\.\d+)?)M)?"
+    r"(?:(?P<seconds>\d+(\.\d+)?)S)?$"
+)
+
+
 def format_datetime(dtobj):
     """ Convert datetime to an ISO-8601 date/time string. """
-    return RE_ZULU.sub('Z', dtobj.isoformat('T'))
+    return dtobj if dtobj is None else RE_ZULU.sub('Z', dtobj.isoformat('T'))
 
 
-def timedelta_to_iso_duration(tdobj):
+def format_timedelta(tdobj):
     """ Convert `datetime.timedelta` object to ISO-8601 duration string. """
     days = "%dD" % tdobj.days if tdobj.days != 0 else ""
     if tdobj.microseconds != 0:
@@ -56,6 +67,34 @@ def timedelta_to_iso_duration(tdobj):
     else:
         seconds = ""
     return "P%s%s" % (days, seconds)
+
+
+def parse_duration(value):
+    ''' Parses an ISO 8601 duration string into a python timedelta object.
+    Raises a `ValueError` if the conversion was not possible.
+    '''
+    if isinstance(value, timedelta):
+        return value
+
+    match = RE_ISO_8601_DURATION.match(value)
+    if not match:
+        raise ValueError(
+            "Could not parse ISO 8601 duration from '%s'." % value
+        )
+    match = match.groupdict()
+
+    sign = -1 if match['sign'] == '-' else 1
+    days = float(match['days'] or 0)
+    days += float(match['months'] or 0) * 30  # ?!
+    days += float(match['years'] or 0) * 365  # ?!
+    fsec = float(match['seconds'] or 0)
+    fsec += float(match['minutes'] or 0) * 60
+    fsec += float(match['hours'] or 0) * 3600
+
+    if sign < 0:
+        raise ValueError('Duration %s must not be negative!' % value)
+
+    return timedelta(days, fsec)
 
 
 def datetime_mean(start, stop):

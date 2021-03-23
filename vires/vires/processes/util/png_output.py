@@ -28,7 +28,9 @@
 from matplotlib.cm import ScalarMappable
 from numpy import array, isnan
 from numpy.ma import masked_where
-from eoxserver.contrib import gdal
+from osgeo import gdal
+
+gdal.UseExceptions()
 
 
 def data_to_png(filename, data, norm, cmap=None, ignore_alpha=None):

@@ -35,7 +35,7 @@ from numpy import nan, full
 import msgpack
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, BoundingBoxData, ComplexData, FormatText, FormatJSON,
-    CDFileWrapper, FormatBinaryRaw, CDObject, RequestParameter,
+    CDFileWrapper, FormatBinaryRaw, CDObject, RequestParameter, AllowedRange,
 )
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
@@ -43,9 +43,7 @@ from eoxserver.services.ows.wps.exceptions import (
 from vires.models import ProductCollection
 from vires.util import unique, exclude
 from vires.access_util import get_user, get_vires_permissions
-from vires.time_util import (
-    naive_to_utc, timedelta_to_iso_duration,
-)
+from vires.time_util import naive_to_utc, format_timedelta, format_datetime
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
     timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE,
@@ -134,6 +132,11 @@ class FetchData(WPSProcess):
             'end_time', datetime, optional=False, title="End time",
             abstract="End of the selection time interval",
         )),
+        ("sampling_step", LiteralData(
+            'sampling_step', timedelta, optional=True, title="Sampling step",
+            allowed_values=AllowedRange(timedelta(0), None, dtype=timedelta),
+            abstract="Optional output data sampling step.",
+        )),
         ("bbox", BoundingBoxData(
             "bbox", crss=(4326,), optional=True, title="Bounding box",
             abstract="Optional selection bounding box.", default=None,
@@ -180,7 +183,7 @@ class FetchData(WPSProcess):
     ]
 
     def execute(self, user, permissions, collection_ids, begin_time, end_time,
-                bbox, requested_variables, model_ids, shc,
+                sampling_step, bbox, requested_variables, model_ids, shc,
                 csv_time_format, output, **kwargs):
         """ Execute process """
         access_logger = self.get_access_logger(**kwargs)
@@ -205,11 +208,17 @@ class FetchData(WPSProcess):
         begin_time = naive_to_utc(begin_time)
         end_time = max(naive_to_utc(end_time), begin_time)
 
+        # fixed selection time-limit
+        time_limit = MAX_TIME_SELECTION
+        self.logger.debug(
+            "time-selection limit: %s", format_timedelta(time_limit)
+        )
+
         # check the time-selection limit
-        if (end_time - begin_time) > MAX_TIME_SELECTION:
+        if (end_time - begin_time) > time_limit:
             message = (
                 "Time selection limit (%s) has been exceeded!" %
-                timedelta_to_iso_duration(MAX_TIME_SELECTION)
+                format_timedelta(time_limit)
             )
             access_logger.warning(message)
             raise InvalidInputValueError('end_time', message)
@@ -218,7 +227,7 @@ class FetchData(WPSProcess):
         access_logger.info(
             "request: toi: (%s, %s), aoi: %s, collections: (%s), "
             "models: (%s), ",
-            begin_time.isoformat("T"), end_time.isoformat("T"),
+            format_datetime(begin_time), format_datetime(end_time),
             bbox[0]+bbox[1] if bbox else (-90, -180, 90, 180),
             ", ".join(
                 s.collection_identifier for l in sources.values() for s in l
@@ -245,13 +254,14 @@ class FetchData(WPSProcess):
         self.logger.debug("relative area: %s", relative_area)
         self.logger.debug("relative time: %s", relative_time)
 
-        min_step = timedelta(0) if relative_time <= 1 else BASE_MIN_STEP
-        sampling_step = timedelta(seconds=(
-            relative_area * (
-                min_step.total_seconds() +
-                relative_time * (BASE_SAMPLIG_STEP - min_step).total_seconds()
-            )
-        ))
+        if sampling_step is None:
+            min_step = timedelta(0) if relative_time <= 1 else BASE_MIN_STEP
+            sampling_step = timedelta(seconds=(
+                relative_area * (
+                    min_step.total_seconds() +
+                    relative_time * (BASE_SAMPLIG_STEP - min_step).total_seconds()
+                )
+            ))
 
         self.logger.debug("sampling step: %s", sampling_step)
 

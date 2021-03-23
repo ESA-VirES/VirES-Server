@@ -45,7 +45,7 @@ from django.forms.models import modelform_factory
 from django.utils.timezone import now
 from django_countries.widgets import CountrySelectWidget
 from .models import UserProfile, AuthenticationToken
-from .utils import datetime_to_string, parse_datetime_or_duration
+from .time_utils import format_datetime, parse_datetime_or_duration
 from .decorators import (
     log_access, authenticated_only, token_authentication,
     token_authentication_with_scope, csrf_protect_if_authenticated,
@@ -337,8 +337,8 @@ class AccessTokenAPI:
     def serialize_token(token):
         return {
             "identifier": token.identifier,
-            "created": datetime_to_string(token.created),
-            "expires": datetime_to_string(token.expires),
+            "created": format_datetime(token.created),
+            "expires": format_datetime(token.expires),
             "purpose": token.purpose,
             "scopes": list(token.scopes),
         }

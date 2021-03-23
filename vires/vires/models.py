@@ -153,10 +153,22 @@ class ProductType(Model):
         verbose_name_plural = "Product Types"
 
     def get_dataset_id(self, dataset_id=None):
-        """ Get dataset identifier. If the dataset_id parameters is omitted
-        or set to None then the default dataset identifier is returned.
+        """ Get dataset identifier.  If the dataset_id parameter is set to None
+        then the default dataset identifier is returned.
         """
         return self.default_dataset_id if dataset_id is None else dataset_id
+
+    def get_base_dataset_id(self, dataset_id):
+        """ Get base dataset identifier. The base dataset defines the product
+        variables.  If the dataset_id parameters is omitted
+        or set to None then the default dataset identifier is returned.
+        """
+        if dataset_id is not None:
+            base_dataset_id, _, _ = dataset_id.partition(':')
+            datasets = self.definition['datasets']
+            if base_dataset_id in datasets:
+                return base_dataset_id
+        return self.default_dataset_id
 
     def is_valid_dataset_id(self, dataset_id):
         """ Return true for a valid dataset identifier. """
@@ -168,9 +180,7 @@ class ProductType(Model):
     def get_dataset_definition(self, dataset_id):
         """ Get dataset definition matched by the given identifier. """
         datasets = self.definition['datasets']
-        return (
-            datasets.get(dataset_id) or datasets.get(self.default_dataset_id)
-        )
+        return datasets.get(self.get_base_dataset_id(dataset_id))
 
     @property
     def default_dataset_id(self):

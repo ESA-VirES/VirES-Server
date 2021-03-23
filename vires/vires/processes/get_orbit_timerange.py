@@ -33,6 +33,7 @@ from vires.time_util import mjd2000_to_datetime
 from vires.orbit_counter import get_orbit_timerange
 from vires.processes.base import WPSProcess
 from vires.cache_util import cache_path
+from vires.time_util import format_datetime, naive_to_utc
 from vires.data.vires_settings import ORBIT_COUNTER_FILE
 
 
@@ -91,8 +92,8 @@ class GetOrbitTimeRange(WPSProcess):
             "spacecraft": spacecraft,
             "start_orbit": start_orbit,
             "end_orbit": end_orbit,
-            "start_time": mjd2000_to_datetime(start_time).isoformat("T") + "Z",
-            "end_time": mjd2000_to_datetime(end_time).isoformat("T") + "Z",
+            "start_time": format_datetime(naive_to_utc(mjd2000_to_datetime(start_time))),
+            "end_time": format_datetime(naive_to_utc(mjd2000_to_datetime(end_time))),
         }
 
         return CDObject(output, format=FormatJSON(), **kwargs['orbit_timerange'])

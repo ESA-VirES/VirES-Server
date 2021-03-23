@@ -28,14 +28,13 @@
 
 import csv
 from datetime import datetime
-from eoxserver.core.util.timetools import isoformat
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, CDTextBuffer, FormatText, RequestParameter,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
 from vires.access_util import get_vires_permissions
-from vires.time_util import naive_to_utc
+from vires.time_util import naive_to_utc, format_datetime
 from vires.processes.base import WPSProcess
 
 
@@ -92,8 +91,8 @@ class GetTimeDataProcess(WPSProcess):
         access_logger.info(
             "request: collection: %s, toi: (%s, %s)",
             collection_id,
-            naive_to_utc(begin_time).isoformat("T") if begin_time else "-",
-            naive_to_utc(end_time).isoformat("T") if end_time else "-",
+            format_datetime(naive_to_utc(begin_time)) if begin_time else "-",
+            format_datetime(naive_to_utc(end_time)) if end_time else "-",
         )
 
         query = collection.products.order_by('begin_time')
@@ -113,6 +112,8 @@ class GetTimeDataProcess(WPSProcess):
         envelope = "(-90,-180,90,180)"
 
         for start, end, id_ in query:
-            writer.writerow([isoformat(start), isoformat(end), envelope, id_])
+            writer.writerow([
+                format_datetime(start), format_datetime(end), envelope, id_
+            ])
 
         return output

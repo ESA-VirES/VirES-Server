@@ -29,7 +29,7 @@
 from logging import getLogger
 from eoxserver.services.ows.wps.v10.encoders.execute_response_raw import ResultAlt
 from eoxserver.core.decoders import InvalidParameterException
-from vires.time_util import datetime_to_mjd2000, naive_to_utc
+from vires.time_util import datetime_to_mjd2000, naive_to_utc, format_datetime
 from vires.access_util import AccessLoggerAdapter, get_username, get_remote_addr
 from vires.processes.util import parse_style, render_model
 from .parsers import (
@@ -67,7 +67,7 @@ def render_wms_response(layers, srid, bbox, elevation, time, width, height,
     logger.info(
         "request: time: %s, aoi: %s, elevation: %g, "
         "model: %s, variable: %s, image-size: (%d, %d), mime-type: %s",
-        naive_to_utc(time).isoformat("T"),
+        format_datetime(naive_to_utc(time)),
         bbox, elevation, models[-1].full_expression,
         variable, width, height, response_format,
     )
@@ -139,9 +139,9 @@ def select_models(layers, models):
 
 def encode_response(payload, content_type, headers=None, filename=None):
     """ Encode raw complex data."""
-    return ResultAlt(
+    return (ResultAlt(
         payload, content_type=content_type, filename=filename, headers=headers,
-    ),
+    ),)
 
 
 def get_access_logger(request):

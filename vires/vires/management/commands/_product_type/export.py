@@ -28,7 +28,7 @@
 
 import sys
 import json
-from vires.util import datetime_to_string
+from vires.time_util import format_datetime
 from vires.models import ProductType
 from .._common import Subcommand, JSON_OPTS
 
@@ -63,7 +63,7 @@ class ExportProductTypeSubcommand(Subcommand):
 def serialize_type(object_):
     return {
         "name": object_.identifier,
-        "created": datetime_to_string(object_.created),
-        "updated": datetime_to_string(object_.updated),
+        "created": format_datetime(object_.created),
+        "updated": format_datetime(object_.updated),
         **object_.definition,
     }

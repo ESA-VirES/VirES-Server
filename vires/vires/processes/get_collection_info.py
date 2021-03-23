@@ -36,6 +36,7 @@ from eoxserver.services.ows.wps.parameters import (
 from eoxserver.services.ows.wps.exceptions import InvalidOutputDefError
 from vires.models import ProductCollection
 from vires.util import unique
+from vires.time_util import format_datetime
 from vires.access_util import get_vires_permissions
 from vires.processes.base import WPSProcess
 
@@ -128,8 +129,8 @@ class GetCollectionInfo(WPSProcess):
                 collection['identifier'],
                 collection['type__identifier'],
                 collection['product_count'],
-                cls._format_time(collection['begin_time']),
-                cls._format_time(collection['end_time']),
+                format_datetime(collection['begin_time']) or "",
+                format_datetime(collection['end_time']) or "",
             ), file=output_fobj)
         return CDFileWrapper(output_fobj, **output)
 
@@ -139,8 +140,8 @@ class GetCollectionInfo(WPSProcess):
         def _get_collection_info(collection):
             time_extent = {} if collection['product_count'] == 0 else {
                 'timeExtent': {
-                    'start': cls._format_time(collection['begin_time']),
-                    'end': cls._format_time(collection['end_time']),
+                    'start': format_datetime(collection['begin_time']),
+                    'end': format_datetime(collection['end_time']),
                 },
             }
             return {
@@ -153,7 +154,3 @@ class GetCollectionInfo(WPSProcess):
         return CDObject([
             _get_collection_info(collection) for collection in collections
         ], format=FormatJSON(), **output)
-
-    @staticmethod
-    def _format_time(timestamp):
-        return "" if timestamp is None else timestamp.isoformat()

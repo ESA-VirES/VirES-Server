@@ -31,6 +31,7 @@ from eoxserver.services.ows.wps.parameters import (
 )
 from vires.models import Job
 from vires.access_util import get_user
+from vires.time_util import format_datetime
 from vires.processes.base import WPSProcess
 
 STATUS_TO_STRING = dict(Job.STATUS_CHOICES)
@@ -67,9 +68,9 @@ class ListJobs(WPSProcess):
             job_list.setdefault(job.process_id, []).append({
                 "id": str(job.identifier),
                 "url": str(job.response_url),
-                "created": job.created.isoformat("T"),
-                "started": job.started.isoformat("T") if job.started else None,
-                "stopped": job.stopped.isoformat("T") if job.stopped else None,
+                "created": format_datetime(job.created),
+                "started": format_datetime(job.started),
+                "stopped": format_datetime(job.stopped),
                 "status": STATUS_TO_STRING[job.status],
             })
 

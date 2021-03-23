@@ -27,7 +27,7 @@
 # pylint: disable=missing-docstring
 
 from argparse import RawTextHelpFormatter
-from vires.util import datetime_to_string
+from vires.time_util import format_datetime
 from vires.models import Job
 from vires.processes.remove_job import get_wps_async_backend
 from .common import JobSelectionSubcommand
@@ -87,9 +87,9 @@ def print_db_job(job, info):
         job.identifier,
         job.owner.username if job.owner else "",
         STATUS_TO_STR[job.status],
-        datetime_to_string(job.created) or "",
-        datetime_to_string(job.started) or "",
-        datetime_to_string(job.stopped) or "",
+        format_datetime(job.created) or "",
+        format_datetime(job.started) or "",
+        format_datetime(job.stopped) or "",
         str(bool(info)),
         str(info.get('response_exists', False)),
         str(info.get('is_finished', False)),

@@ -3,6 +3,7 @@
         "name": "SW_OPER_MAGA_LR_1B",
         "productType": "SW_MAGx_LR_1B",
         "spacecraft": "A",
+        "nominalSampling": "PT1S",
         "subtractableCollections": {
             "C": "SW_OPER_MAGC_LR_1B"
         },
@@ -11,12 +12,14 @@
     {
         "name": "SW_OPER_MAGB_LR_1B",
         "productType": "SW_MAGx_LR_1B",
+        "nominalSampling": "PT1S",
         "spacecraft": "B",
         "calculateOrbitDirection": true
     },
     {
         "name": "SW_OPER_MAGC_LR_1B",
         "productType": "SW_MAGx_LR_1B",
+        "nominalSampling": "PT1S",
         "spacecraft": "C",
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_LR_1B"
@@ -26,6 +29,7 @@
     {
         "name": "SW_OPER_MAGA_HR_1B",
         "productType": "SW_MAGx_HR_1B",
+        "nominalSampling": "PT0.02S",
         "spacecraft": "A",
         "subtractableCollections": {
             "C": "SW_OPER_MAGC_HR_1B"
@@ -34,11 +38,13 @@
     {
         "name": "SW_OPER_MAGB_HR_1B",
         "productType": "SW_MAGx_HR_1B",
+        "nominalSampling": "PT0.02S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_MAGC_HR_1B",
         "productType": "SW_MAGx_HR_1B",
+        "nominalSampling": "PT0.02S",
         "spacecraft": "C",
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_HR_1B"
@@ -46,102 +52,121 @@
     },
     {
         "name": "SW_OPER_EFIA_LP_1B",
+        "nominalSampling": "PT0.5S",
         "productType": "SW_EFIx_LP_1B",
         "spacecraft": "A"
     },
     {
         "name": "SW_OPER_EFIB_LP_1B",
+        "nominalSampling": "PT0.5S",
         "productType": "SW_EFIx_LP_1B",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_EFIC_LP_1B",
+        "nominalSampling": "PT0.5S",
         "productType": "SW_EFIx_LP_1B",
         "spacecraft": "C"
     },
     {
         "name": "SW_OPER_IBIATMS_2F",
         "productType": "SW_IBIxTMS_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "A"
     },
     {
         "name": "SW_OPER_IBIBTMS_2F",
         "productType": "SW_IBIxTMS_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_IBICTMS_2F",
         "productType": "SW_IBIxTMS_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "C"
     },
     {
         "name": "SW_OPER_TECATMS_2F",
         "productType": "SW_TECxTMS_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "A",
         "groupSamples": true
     },
     {
         "name": "SW_OPER_TECBTMS_2F",
         "productType": "SW_TECxTMS_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "B",
         "groupSamples": true
     },
     {
         "name": "SW_OPER_TECCTMS_2F",
         "productType": "SW_TECxTMS_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "C",
         "groupSamples": true
     },
     {
         "name": "SW_OPER_FACATMS_2F",
         "productType": "SW_FACxTMS_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "A"
     },
     {
         "name": "SW_OPER_FACBTMS_2F",
         "productType": "SW_FACxTMS_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_FACCTMS_2F",
         "productType": "SW_FACxTMS_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "C"
     },
     {
         "name": "SW_OPER_FAC_TMS_2F",
-        "productType": "SW_FACxTMS_2F"
+        "productType": "SW_FACxTMS_2F",
+        "nominalSampling": "PT1S"
     },
     {
         "name": "SW_OPER_EEFATMS_2F",
         "productType": "SW_EEFxTMS_2F",
+        "nominalSampling": "PT5616S",
         "spacecraft": "A",
         "extraSampled": true
     },
     {
         "name": "SW_OPER_EEFBTMS_2F",
         "productType": "SW_EEFxTMS_2F",
+        "nominalSampling": "PT5616S",
         "spacecraft": "B",
         "extraSampled": true
     },
     {
         "name": "SW_OPER_EEFCTMS_2F",
         "productType": "SW_EEFxTMS_2F",
+        "nominalSampling": "PT5616S",
         "spacecraft": "C",
         "extraSampled": true
     },
     {
         "name": "SW_OPER_IPDAIRR_2F",
         "productType": "SW_IPDxIRR_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "A"
     },
     {
         "name": "SW_OPER_IPDBIRR_2F",
         "productType": "SW_IPDxIRR_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_IPDCIRR_2F",
         "productType": "SW_IPDxIRR_2F",
+        "nominalSampling": "PT1S",
         "spacecraft": "C"
     },
     {
@@ -168,16 +193,19 @@
     {
         "name": "SW_OPER_AEJAPBL_2F",
         "productType": "SW_AEJxPBL_2F",
+        "nominalSampling": "PT1404S",
         "spacecraft": "A"
     },
     {
         "name": "SW_OPER_AEJBPBL_2F",
         "productType": "SW_AEJxPBL_2F",
+        "nominalSampling": "PT1404S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_AEJCPBL_2F",
         "productType": "SW_AEJxPBL_2F",
+        "nominalSampling": "PT1404S",
         "spacecraft": "C"
     },
     {
@@ -204,54 +232,107 @@
     {
         "name": "SW_OPER_AEJAPBS_2F",
         "productType": "SW_AEJxPBS_2F",
+        "nominalSampling": "PT1404S",
         "spacecraft": "A"
     },
     {
         "name": "SW_OPER_AEJBPBS_2F",
         "productType": "SW_AEJxPBS_2F",
+        "nominalSampling": "PT1404S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_AEJCPBS_2F",
         "productType": "SW_AEJxPBS_2F",
+        "nominalSampling": "PT1404S",
         "spacecraft": "C"
     },
     {
         "name": "SW_OPER_AOBAFAC_2F",
         "productType": "SW_AOBxFAC_2F",
+        "nominalSampling": "PT1404S",
         "spacecraft": "A"
     },
     {
         "name": "SW_OPER_AOBBFAC_2F",
         "productType": "SW_AOBxFAC_2F",
+        "nominalSampling": "PT1404S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_AOBCFAC_2F",
         "productType": "SW_AOBxFAC_2F",
+        "nominalSampling": "PT1404S",
         "spacecraft": "C"
     },
     {
         "name": "SW_OPER_AUX_IMF_2_",
         "productType": "SW_AUX_IMF_2_",
+        "nominalSampling": "PT3600S",
         "requiredPermission": "__restricted__"
     },
     {
         "name": "OMNI_HR_1min",
+        "nominalSampling": "PT60S",
         "productType": "OMNI_HR_1min"
     },
     {
         "name": "OMNI_HR_1min_avg20min_delay10min",
+        "nominalSampling": "PT60S",
         "productType": "OMNI_HR_1min"
     },
     {
         "name": "SW_OPER_AUX_OBSS2_",
         "productType": "SW_AUX_OBSx2_",
+        "nominalSampling": "PT1S",
         "groupSamples": true
     },
     {
         "name": "SW_OPER_AUX_OBSM2_",
         "productType": "SW_AUX_OBSx2_",
+        "nominalSampling": "PT60S",
         "groupSamples": true
+    },
+    {
+        "name": "SW_OPER_AUX_OBSH2_",
+        "productType": "SW_AUX_OBSH2_",
+        "nominalSampling": "PT3600S",
+        "groupSamples": true
+    },
+    {
+        "name": "SW_OPER_VOBS_1M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "nominalSampling": "P31D",
+        "groupSamples": true
+    },
+    {
+        "name": "SW_OPER_VOBS_4M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "nominalSampling": "P122D",
+        "groupSamples": true
+    },
+    {
+        "name": "CH_OPER_VOBS_4M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "groupSamples": true,
+        "nominalSampling": "P122D"
+    },
+    {
+        "name": "CR_OPER_VOBS_4M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "groupSamples": true,
+        "nominalSampling": "P122D"
+    },
+    {
+        "name": "OR_OPER_VOBS_4M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "groupSamples": true,
+        "nominalSampling": "P122D"
+    },
+    {
+        "name": "CO_OPER_VOBS_4M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "groupSamples": true,
+        "nominalSampling": "P122D"
     }
 ]

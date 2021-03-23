@@ -32,6 +32,7 @@ from unittest import TestCase, main
 from matplotlib.colors import Colormap
 from vires.colormaps import get_colormap
 
+
 class TestColormaps(TestCase):
 
     COLORMAPS = [

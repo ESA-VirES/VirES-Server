@@ -77,17 +77,17 @@ class SwarmProductMetadataReader():
 class ObsProductMetadataReader():
 
     TIME_VARIABLE = "Timestamp"
-    OBS_CODES_ATTR = "IAGA_CODES"
-    OBS_RANGES_ATTR = "INDEX_RANGES"
+    SITE_CODES_ATTR = "IAGA_CODES"
+    INDEX_RANGES_ATTR = "INDEX_RANGES"
 
     @staticmethod
     def epoch_to_datetime(time, cdf_type):
         return naive_to_utc(cdf_rawtime_to_datetime(time, cdf_type))
 
     @classmethod
-    def read_times(cls, cdf):
+    def read_times(cls, cdf, time_variable):
         try:
-            time_var = cdf.raw_var(cls.TIME_VARIABLE)
+            time_var = cdf.raw_var(time_variable)
         except KeyError:
             time_var = None
         else:
@@ -104,16 +104,18 @@ class ObsProductMetadataReader():
 
 
     @classmethod
-    def read_obs_index_ranges(cls, cdf):
-        return dict(zip(list(cdf.attrs[cls.OBS_CODES_ATTR]), [
+    def read_obs_index_ranges(cls, cdf, codes_attr_name, ranges_attr_name):
+        return dict(zip(list(cdf.attrs[codes_attr_name]), [
             (int(start), int(stop))
-            for start, stop in list(cdf.attrs[cls.OBS_RANGES_ATTR])
+            for start, stop in list(cdf.attrs[ranges_attr_name])
         ]))
 
     @classmethod
     def get_obs_info(cls, cdf):
-        index_ranges = cls.read_obs_index_ranges(cdf)
-        times, cdf_type = cls.read_times(cdf)
+        index_ranges = cls.read_obs_index_ranges(
+            cdf, cls.SITE_CODES_ATTR, cls.INDEX_RANGES_ATTR,
+        )
+        times, cdf_type = cls.read_times(cdf, cls.TIME_VARIABLE)
 
         datasets = {
             code: {
@@ -143,3 +145,48 @@ class ObsProductMetadataReader():
             "end_time": end_time,
             "datasets": datasets,
         }
+
+
+class VObsProductMetadataReader(ObsProductMetadataReader):
+    TIME_VARIABLE_SV = "Timestamp_SV"
+    SITE_CODES_ATTR = "SITE_CODES"
+    INDEX_RANGES_ATTR = "INDEX_RANGES"
+    INDEX_RANGES_SV_ATTR = "INDEX_RANGES_SV"
+    SV_DATASET = "SecularVariation"
+
+    @classmethod
+    def get_obs_info(cls, cdf):
+        index_ranges = cls.read_obs_index_ranges(
+            cdf, cls.SITE_CODES_ATTR, cls.INDEX_RANGES_ATTR,
+        )
+        index_ranges_sv = cls.read_obs_index_ranges(
+            cdf, cls.SITE_CODES_ATTR, cls.INDEX_RANGES_SV_ATTR,
+        )
+        times, cdf_type = cls.read_times(cdf, cls.TIME_VARIABLE)
+        times_sv, _ = cls.read_times(cdf, cls.TIME_VARIABLE_SV)
+
+        datasets = {
+            **{
+                code: {
+                    'index_range': (start, stop),
+                    'begin_time': cls.epoch_to_datetime(times[start], cdf_type),
+                    'end_time': cls.epoch_to_datetime(times[stop - 1], cdf_type),
+                }
+                for code, (start, stop) in index_ranges.items()
+            },
+            **{
+                f'{cls.SV_DATASET}:{code}': {
+                    'index_range': (start, stop),
+                    'begin_time': cls.epoch_to_datetime(times_sv[start], cdf_type),
+                    'end_time': cls.epoch_to_datetime(times_sv[stop - 1], cdf_type),
+                }
+                for code, (start, stop) in index_ranges_sv.items()
+            },
+        }
+
+        return (
+            cls.epoch_to_datetime(times.min(), cdf_type),
+            cls.epoch_to_datetime(times.max(), cdf_type),
+            times.shape[0],
+            datasets,
+        )
