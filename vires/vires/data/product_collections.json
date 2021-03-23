@@ -310,5 +310,29 @@
         "productType": "SW_VOBS_xM_2_",
         "nominalSampling": "P122D",
         "groupSamples": true
+    },
+    {
+        "name": "CH_OPER_VOBS_4M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "groupSamples": true,
+        "nominalSampling": "P122D"
+    },
+    {
+        "name": "CR_OPER_VOBS_4M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "groupSamples": true,
+        "nominalSampling": "P122D"
+    },
+    {
+        "name": "OR_OPER_VOBS_4M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "groupSamples": true,
+        "nominalSampling": "P122D"
+    },
+    {
+        "name": "CO_OPER_VOBS_4M_2_",
+        "productType": "SW_VOBS_xM_2_",
+        "groupSamples": true,
+        "nominalSampling": "P122D"
     }
 ]
