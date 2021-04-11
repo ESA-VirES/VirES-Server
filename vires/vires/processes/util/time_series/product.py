@@ -339,7 +339,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             else: # NRV variable
                 value = asarray(cdf_var[...])
                 size = max(0, idx_high - idx_low)
-                data = broadcast_to(value, (size,) + value.shape[1:])
+                data = broadcast_to(value, (size,) + value.shape)
             dataset.set(
                 variable, data, cdf_type_map(cdf_var.type()), cdf_var.attrs
             )
