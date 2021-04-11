@@ -158,9 +158,9 @@ $ <instance>/manage.py --help
 
 These commands and their options are described in the following sections:
 
-- [User](#users)
+- [Users](#users)
 - [Social Providers](#social-providers)
-
+- [Authentication Tokens](#authentication-tokens)
 
 
 ### Users
@@ -276,4 +276,14 @@ $ <instance>/manage.py social_provider export > social_providers.json
 The social providers exported by the `export` command can be imported by the `import` command:
 ```
 $ <instance>/manage.py social_provider import < social_providers.json
+```
+
+### Authentication Tokens
+
+#### Remove Expired Tokens
+
+The expired authentication tokens can be purged from the system by the following
+command:
+```
+$ <instance>/manage.py token clear
 ```

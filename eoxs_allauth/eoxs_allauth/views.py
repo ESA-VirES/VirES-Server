@@ -42,10 +42,9 @@ from django.views.generic.base import View
 from django.views.generic.edit import UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.forms.models import modelform_factory
-from django.utils.timezone import now
 from django_countries.widgets import CountrySelectWidget
 from .models import UserProfile, AuthenticationToken
-from .time_utils import format_datetime, parse_datetime_or_duration
+from .time_utils import format_datetime, parse_datetime_or_duration, now
 from .decorators import (
     log_access, authenticated_only, token_authentication,
     token_authentication_with_scope, csrf_protect_if_authenticated,
