@@ -44,6 +44,11 @@ RE_ISO_8601_DURATION = re.compile(
 )
 
 
+def now():
+    """ Get current time. """
+    return naive_to_utc(datetime.utcnow())
+
+
 def format_datetime(dtobj):
     """ Convert datetime to an ISO-8601 date/time string. """
     return dtobj if dtobj is None else RE_ZULU.sub('Z', dtobj.isoformat('T'))
