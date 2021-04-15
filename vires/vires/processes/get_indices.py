@@ -40,6 +40,7 @@ from vires.aux_dst import DstReader, DDstReader
 from vires.aux_f107 import F10_2_Reader
 from vires.time_util import (
     mjd2000_to_datetime, mjd2000_to_unix_epoch, naive_to_utc,
+    format_datetime,
 )
 from vires.processes.base import WPSProcess
 from vires.cache_util import cache_path
@@ -127,7 +128,7 @@ class GetIndices(WPSProcess):
 
         access_logger.info(
             "request: index: %s, toi: (%s, %s)",
-            index_id, begin_time.isoformat("T"), end_time.isoformat("T"),
+            index_id, format_datetime(begin_time), format_datetime(end_time),
         )
 
         reader, fields, lessen, data_format = AUX_INDEX[index_id]

@@ -30,10 +30,10 @@ import sys
 import json
 from os.path import getmtime
 from datetime import datetime
-from vires.util import unique, include, datetime_to_string
+from vires.util import unique, include
 from vires.cdf_util import cdf_open, CDFError
 from vires.cache_util import cache_path
-from vires.time_util import naive_to_utc
+from vires.time_util import naive_to_utc, format_datetime
 from vires.data.vires_settings import (
     SPACECRAFTS, AUX_DB_DST, AUX_DB_KP, CACHED_PRODUCT_FILE,
 )
@@ -98,7 +98,7 @@ def read_info_file(filename):
         sources = []
 
     return {
-        "updated": datetime_to_string(last_modified),
+        "updated": format_datetime(last_modified),
         "sources": sources,
     }
 

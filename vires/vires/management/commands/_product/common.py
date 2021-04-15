@@ -151,7 +151,7 @@ class ProductSelectionSubcommandProtected(ProductSelectionSubcommand):
 
     def _select_products_by_id(self, query, **kwargs):
         identifiers = set(kwargs['identifier'])
-        if not (kwargs['select_all'] or kwargs['invalid_only']):
+        if identifiers or not (kwargs['select_all'] or kwargs['invalid_only']):
             query = self._select_listed_product(query, identifiers, **kwargs)
             if not identifiers:
                 self.warning(

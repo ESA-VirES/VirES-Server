@@ -34,10 +34,6 @@ from math import ceil, floor
 from itertools import filterfalse
 
 
-def datetime_to_string(dtobj):
-    return dtobj if dtobj is None else dtobj.isoformat('T')
-
-
 def format_exception():
     """ Custom exception formatting. """
     type_, exception, traceback_ = exc_info()

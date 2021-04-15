@@ -138,7 +138,11 @@ def get_user(username):
 
 #-------------------------------------------------------------------------------
 
-SOCIAL_ACCOUNT_FIELDS = ["uid", "date_joined", "last_login", "extra_data"]
+SOCIAL_ACCOUNT_FIELDS = ["uid", "extra_data"]
+
+# NOTE: The SocialAccount date_joined and last_login fields are merely
+#       automatic creation and last update time-stamps. Their names are
+#       misleading as any DB insert of update, not just login, changes them.
 
 
 def set_social_accounts(user, data):
@@ -160,7 +164,7 @@ def get_social_account(user, provider):
 
 #-------------------------------------------------------------------------------
 
-ACCESS_TOKEN_FIELDS = ["token_sha256", "purpose", "expires", "created"]
+ACCESS_TOKEN_FIELDS = ["token_sha256", "purpose", "expires", "created", "scopes"]
 
 def set_access_tokens(user, data):
     for item in data:

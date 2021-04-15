@@ -33,7 +33,7 @@ from functools import partial
 from collections import OrderedDict
 from django.contrib.auth.models import User
 from eoxs_allauth.models import UserProfile
-from eoxs_allauth.utils import datetime_to_string
+from eoxs_allauth.time_utils import format_datetime, now
 from .._common import JSON_OPTS
 from .common import UserSelectionSubcommand
 
@@ -52,7 +52,7 @@ class ExportUserSubcommand(UserSelectionSubcommand):
         )
 
     def handle(self, **kwargs):
-        users = self.select_users(User.objects.all(), **kwargs)
+        users = self.select_users(User.objects.order_by("username"), **kwargs)
 
         data = [serialize_user(user) for user in users]
 
@@ -93,8 +93,8 @@ def serialize_user(object_):
         ("username", object_.username),
         ("password", object_.password),
         ("is_active", object_.is_active),
-        ("date_joined", datetime_to_string(object_.date_joined)),
-        ("last_login", datetime_to_string(object_.last_login)),
+        ("date_joined", format_datetime(object_.date_joined)),
+        ("last_login", format_datetime(object_.last_login)),
         ("first_name", object_.first_name),
         ("last_name", object_.last_name),
         ("email", object_.email), # copy of the primary e-mail
@@ -112,7 +112,7 @@ def serialize_user(object_):
         ),
         (
             "access_tokens",
-            serialize_access_tokens(object_.tokens.all())
+            serialize_access_tokens(object_.tokens.order_by('created'))
         ),
     ])
 
@@ -126,16 +126,21 @@ def serialize_email_address(object_):
     ])
 
 
+# NOTE: The SocialAccount date_joined and last_login fields are merely
+#       automatic creation and last update time-stamps. Their names are
+#       misleading as any DB insert of update, not just login, changes them.
+
 @strip_blanks
 def serialize_social_account(object_):
     return OrderedDict([
         ("uid", object_.uid),
         ("provider", object_.provider),
-        ("date_joined", datetime_to_string(object_.date_joined)),
-        ("last_login", datetime_to_string(object_.last_login)),
+        ("created", format_datetime(object_.date_joined)),
+        ("updated", format_datetime(object_.last_login)),
         ("extra_data", object_.extra_data),
         ("provider", object_.provider),
     ])
+
 
 
 @strip_blanks
@@ -144,19 +149,27 @@ def serialize_access_token(object_):
         ("identifier", object_.identifier),
         ("token_sha256", binary_to_base64(object_.token_sha256)),
         ("purpose", object_.purpose),
-        ("expires", object_.expires and datetime_to_string(object_.expires)),
-        ("created", datetime_to_string(object_.created)),
-        ("scope", list(object_.scopes)),
+        ("expires", object_.expires and format_datetime(object_.expires)),
+        ("created", format_datetime(object_.created)),
+        ("scopes", list(object_.scopes)),
+        ("is_expired", object_.expires <= now() if object_.expires else False),
     ])
-
-
-def serialize_list(funct, objects):
-    return [funct(object_) for object_ in objects]
 
 
 def binary_to_base64(data):
     return base64.urlsafe_b64encode(data).decode('ascii')
 
+
+def serialize_access_tokens(objects):
+    return [
+        data for data in (
+            serialize_access_token(object_) for object_ in objects
+        ) if not data.pop("is_expired") # only non-expired tokens are exported
+    ]
+
+
+def serialize_list(funct, objects):
+    return [funct(object_) for object_ in objects]
+
 serialize_email_addresses = partial(serialize_list, serialize_email_address)
 serialize_social_accounts = partial(serialize_list, serialize_social_account)
-serialize_access_tokens = partial(serialize_list, serialize_access_token)

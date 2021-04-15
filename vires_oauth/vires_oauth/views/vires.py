@@ -66,7 +66,7 @@ def api_user_view(request, *args, **kwargs):
     }
     getLogger(__name__).debug("%s", data)
     if "read_email" in scopes:
-        data["email"] = user.emial
+        data["email"] = user.email
     if "read_permissions" in scopes:
         data["permissions"] = list(Permission.get_user_permissions(user))
     return HttpResponse(json.dumps(data), content_type="application/json")

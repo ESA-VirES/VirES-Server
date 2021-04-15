@@ -44,9 +44,7 @@ from eoxserver.services.ows.wps.exceptions import (
 from vires.models import ProductCollection, Job, get_user
 from vires.util import unique, exclude, include
 from vires.access_util import get_vires_permissions
-from vires.time_util import (
-    naive_to_utc, timedelta_to_iso_duration,
-)
+from vires.time_util import naive_to_utc, format_timedelta, format_datetime
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
     timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE, cdf_open,
@@ -59,9 +57,9 @@ from vires.data.vires_settings import (
 )
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
-    parse_collections, parse_model_list, parse_variables, parse_filters2,
+    parse_collections, parse_model_list, parse_variables, parse_filters,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names
+    extract_product_names, get_time_limit,
 )
 from vires.processes.util.time_series import (
     ProductTimeSeries,
@@ -87,7 +85,8 @@ MAX_ACTIVE_JOBS = 2
 # Limit response size (equivalent to 50 daily SWARM LR products).
 MAX_SAMPLES_COUNT = 4320000
 
-# maximum allowed time selection period (~100years >> mission life-time)
+# maximum allowed time selection period for 1 second sampled data
+# 35525 days is ~100 years >> mission life-time
 MAX_TIME_SELECTION = timedelta(days=35525)
 
 # set of the minimum required variables
@@ -298,7 +297,7 @@ class FetchFilteredDataAsync(WPSProcess):
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
         )
-        filters = parse_filters2("filters", filters)
+        filters = parse_filters("filters", filters)
         requested_variables = parse_variables(
             'requested_variables', requested_variables
         )
@@ -310,11 +309,17 @@ class FetchFilteredDataAsync(WPSProcess):
         begin_time = naive_to_utc(begin_time)
         end_time = max(naive_to_utc(end_time), begin_time)
 
+        # adjust the time limit to the data sampling
+        time_limit = get_time_limit(sources, sampling_step, MAX_TIME_SELECTION)
+        self.logger.debug(
+            "time-selection limit: %s", format_timedelta(time_limit)
+        )
+
         # check the time-selection limit
-        if (end_time - begin_time) > MAX_TIME_SELECTION:
+        if (end_time - begin_time) > time_limit:
             message = (
                 "Time selection limit (%s) has been exceeded!" %
-                timedelta_to_iso_duration(MAX_TIME_SELECTION)
+                format_timedelta(time_limit)
             )
             access_logger.warning(message)
             raise InvalidInputValueError('end_time', message)
@@ -323,7 +328,7 @@ class FetchFilteredDataAsync(WPSProcess):
         access_logger.info(
             "request parameters: toi: (%s, %s), collections: (%s), "
             "models: (%s), filters: {%s}",
-            begin_time.isoformat("T"), end_time.isoformat("T"),
+            format_datetime(begin_time), format_datetime(end_time),
             ", ".join(
                 s.collection_identifier for l in sources.values() for s in l
             ),
@@ -714,7 +719,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 cdf.attrs.update({
                     "TITLE": result_filename,
                     "DATA_TIMESPAN": ("%s/%s" % (
-                        begin_time.isoformat(), end_time.isoformat()
+                        format_datetime(begin_time), format_datetime(end_time),
                     )).replace("+00:00", "Z"),
                     "DATA_FILTERS": [str(f) for f in filters],
                     "MAGNETIC_MODELS": [

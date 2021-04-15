@@ -1636,5 +1636,205 @@
                 }
             }
         }
+    },
+    {
+        "name": "SW_AUX_OBSH2_",
+        "defaultDataset": "__all__",
+        "strictDatasetCheck": false,
+        "unsortedDatasets": ["__all__"],
+        "datasets": {
+            "__all__": {
+                "IAGA_code": {
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "IAGA three letter observatory identification code",
+                        "UNITS": "-"
+                    }
+                },
+                "ObsIndex": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Digit from the 4-character observatory code.",
+                        "UNITS": "-"
+                    }
+                },
+                "Quality": {
+                    "dataType": "char1",
+                    "attributes": {
+                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
+                        "UNITS": "-"
+                    }
+                },
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic field vector, NEC frame",
+                        "UNITS": "nT"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_VOBS_xM_2_",
+        "defaultDataset": "__all__",
+        "strictDatasetCheck": false,
+        "unsortedDatasets": ["__all__", "SecularVariation"],
+        "datasets": {
+            "__all__": {
+                "SiteCode": {
+                    "dataType": "char7",
+                    "attributes": {
+                        "DESCRIPTION": "Seven letter virtual observatory identification code",
+                        "UNITS": "-"
+                    }
+                },
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_CF": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Core magnetic field vector, NEC frame spherical coordinates",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_OB": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Observed magnetic field vector, NEC frame spherical coordinates",
+                        "UNITS": "nT"
+                    }
+                },
+                "sigma_CF": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Core field estimated error",
+                        "UNITS": "nT"
+                    }
+                },
+                "sigma_OB": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Observed field estimated error",
+                        "UNITS": "nT"
+                    }
+                }
+            },
+            "SecularVariation": {
+                "SiteCode": {
+                    "dataType": "char7",
+                    "attributes": {
+                        "DESCRIPTION": "Seven letter virtual observatory identification code",
+                        "UNITS": "-"
+                    }
+                },
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_SV": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Secular variation field vector, NEC frame spherical coordinates",
+                        "UNITS": "nT/yr"
+                    }
+                },
+                "sigma_SV": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Secular variation field estimated error",
+                        "UNITS": "nT/yr"
+                    }
+                }
+            }
+        }
     }
 ]

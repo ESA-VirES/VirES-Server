@@ -121,7 +121,7 @@ def save_user(data, logger):
     set_model(user, USER_FIELDS, data, PARSERS)
     user.save()
 
-    set_user_profile(user, data.get("user_profile"))
+    set_user_profile(user, data.get("user_profile", {}))
     set_email_addresses(user, data.get("email_addresses", []))
     set_social_accounts(user, data.get("social_accounts", []))
 

@@ -50,12 +50,11 @@ class RemoveProductTypeSubcommand(Subcommand):
         identifiers = kwargs['identifier']
         if identifiers or not kwargs['select_all']:
             query = query.filter(identifier__in=identifiers)
-
-        if not identifiers and not kwargs['select_all']:
-            self.warning(
-                "No identifier selected and no type will be removed. "
-                "Use the --all option to remove all matched items."
-            )
+            if not identifiers:
+                self.warning(
+                    "No identifier selected and no type will be removed. "
+                    "Use the --all option to remove all matched items."
+                )
 
         self.remove_product_types(query.all(), **kwargs)
 

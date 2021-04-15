@@ -27,26 +27,36 @@
 
 from os.path import join
 from glob import glob
+from matplotlib.pyplot import colormaps
+from matplotlib.cm import get_cmap, register_cmap
 from matplotlib import cm as matplotlib_colormaps
 import vires.contrib.colormaps as contrib_colormaps
 from .loader import load_colormap
 
-__all__ = ['COLORMAPS', 'get_colormap']
+__all__ = ['get_colormap', 'list_colormaps']
 
-COLORMAPS = {}
-COLORMAPS.update(
-    (name.lower(), colormap) for name, colormap
-    in matplotlib_colormaps.cmap_d.items()
-)
-COLORMAPS.update(contrib_colormaps.cmaps)
-COLORMAPS.update(
+
+COLORMAP_NAME_MAP = {name.lower(): name for name in colormaps()}
+
+def _register_cmaps(items):
+    for name, cmap in items:
+        COLORMAP_NAME_MAP[name.lower()] = name
+        register_cmap(name=name, cmap=cmap)
+
+_register_cmaps(contrib_colormaps.cmaps.items())
+_register_cmaps(
     load_colormap(filename) for filename in glob(join(__path__[0], "*.cm"))
 )
 
 
+def list_colormaps():
+    """ Get list of available colormaps. """
+    return list(COLORMAP_NAME_MAP)
+
+
 def get_colormap(name):
     """ Get colormap. """
-    colormap = COLORMAPS.get(name.lower())
-    if colormap is None:
-        raise ValueError("Invalid colormap %s!" % name)
-    return colormap
+    try:
+        return get_cmap(COLORMAP_NAME_MAP.get(name.lower(), name))
+    except ValueError:
+        raise ValueError("Invalid colormap %s!" % name) from None

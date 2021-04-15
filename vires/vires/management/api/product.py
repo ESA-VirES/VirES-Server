@@ -30,9 +30,14 @@ from functools import wraps
 from os.path import splitext, basename, abspath
 from datetime import timedelta
 from django.db import transaction
-from vires.util import AttributeDict, datetime_to_string
+from vires.util import AttributeDict
+from vires.time_util import format_datetime
 from vires.models import Product, ProductLocation
-from vires.swarm import SwarmProductMetadataReader, ObsProductMetadataReader
+from vires.swarm import (
+    SwarmProductMetadataReader,
+    ObsProductMetadataReader,
+    VObsProductMetadataReader,
+)
 from vires.cdf_util import cdf_open
 from .product_collection import get_product_collection
 from .orbit_direction import (
@@ -47,8 +52,10 @@ LOG_FORMAT = "product %s/%s %s"
 DEFAULT_METADATA_READER = SwarmProductMetadataReader
 METADATA_READER = {
     "SW_AUX_OBSx2_": ObsProductMetadataReader,
+    "SW_AUX_OBSH2_": ObsProductMetadataReader,
+    "SW_AUX_OBSH2_": ObsProductMetadataReader,
+    "SW_VOBS_xM_2_": VObsProductMetadataReader,
 }
-
 
 def get_product_id(data_file):
     """ Get the product identifier. """
@@ -351,8 +358,8 @@ def _get_datasets_from_datasets_metadata(data_file, datasets):
         name: _sanitize({
             "location": data_file,
             "indexRange": metadata.get('index_range'),
-            "beginTime": datetime_to_string(metadata.get('begin_time')),
-            "endTime": datetime_to_string(metadata.get('end_time')),
+            "beginTime": format_datetime(metadata.get('begin_time')),
+            "endTime": format_datetime(metadata.get('end_time')),
         }) for name, metadata in datasets.items()
     }
 
