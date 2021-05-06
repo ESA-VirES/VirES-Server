@@ -109,8 +109,8 @@ By default, all users are listed. The listed users can be restricted by the foll
 | `--no-login` | select users who never logged in |
 | `--verified-primary-email` | select users with verified primary e-mail address |
 | `--not-verified-primary-email` | select users with non-verified primary e-mail address |
-| `--verified-email ANY|ALL` | select users with ANY\|ALL verified primary e-mail address(es) |
-| `--not-verified-email ANY|ALL` | select users with ANY\|ALL non-verified primary e-mail address(es) |
+| `--verified-email ANY\|ALL` | select users with ANY\|ALL verified primary e-mail address(es) |
+| `--not-verified-email ANY\|ALL` | select users with ANY\|ALL non-verified primary e-mail address(es) |
 | `--last-login-before <time-spec>`| select users who logged in last time before the given time, accepting ISO-8601 timestamps or duration relative to the current time |
 | `--last-login-after <time-spec>`| select users who logged in last time after the given specification, accepting ISO-8601 timestamps or duration relative to the current time |
 | `--joined-before <time-spec>`| select users whose account was created before the given time, accepting ISO-8601 timestamps or duration relative to the current time |
