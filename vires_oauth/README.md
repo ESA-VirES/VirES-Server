@@ -186,7 +186,7 @@ $ <instance>/manage.py user unset_group -g <group> -g <group> <username>  ...
 The `set_group`/`unset_group` commands accept the `--all` and other user
 selectors listed for the [`list` command](#list)
 
-### Emails
+### E-mails
 
 #### List E-mails
 
