@@ -1836,5 +1836,692 @@
                 }
             }
         }
+    },
+    {
+        "name": "SW_MITx_LP_2F",
+        "defaultDataset": "MIT_minimum",
+        "datasets": {
+            "MIT_minimum": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Counter": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Swarm orbit counter and quarter orbit (four per Swarm orbit) counter",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric latitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric longitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time (QD)",
+                        "UNITS": "hour"
+                    }
+                },
+                "L_value": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "L-value",
+                        "UNITS": "-"
+                    }
+                },
+                "SZA": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "Ne": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LP electron density",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "Te": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LP electron temperature",
+                        "UNITS": "K"
+                    }
+                },
+                "Depth": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Depth of the MIT",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "DR": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Relative change in density within the MIT",
+                        "UNITS": "%"
+                    }
+                },
+                "Width": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Width of the MIT calculated from QD latitudes",
+                        "UNITS": "deg"
+                    }
+                },
+                "dL": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Width of the MIT calculated from L-values",
+                        "UNITS": "-"
+                    }
+                },
+                "PW_Gradient": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Change in log electron density at the poleward wall of the MIT divided by QD latitude difference",
+                        "UNITS": "log(cm^-3)/deg"
+                    }
+                },
+                "EW_Gradient": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Change in log electron density at the equatorward wall of the MIT divided by QD latitude difference",
+                        "UNITS": "log(cm^-3)/deg"
+                    }
+                },
+                "Quality": {
+                    "dataType": "int8",
+                    "dimension": [8],
+                    "attributes": {
+                        "DESCRIPTION": "Characterizes the detection quality of the MIT as a whole",
+                        "UNITS": "-"
+                    }
+                }
+            },
+            "ID": {
+                "Timestamp": {
+                    "source": "Timestamp_ID",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "source": "Latitude_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric latitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "source": "Longitude_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric longitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "source": "Radius_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time (QD)",
+                        "UNITS": "hour"
+                    }
+                },
+                "L_value": {
+                    "source": "L_value_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "L-value",
+                        "UNITS": "-"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "Ne": {
+                    "source": "Ne_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LP electron density",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "Te": {
+                    "source": "Te_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LP electron temperature",
+                        "UNITS": "K"
+                    }
+                },
+                "Position_Quality": {
+                    "source": "Position_Quality_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Indicator characterizing the detection quality of the position",
+                        "UNITS": "-"
+                    }
+                },
+                "PointType": {
+                    "source": "PointType_ID",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Point Type",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_MITxTEC_2F",
+        "defaultDataset": "MIT_minimum",
+        "datasets": {
+            "MIT_minimum": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Counter": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Swarm orbit counter and quarter orbit (four per Swarm orbit) counter",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric latitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric longitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time (QD)",
+                        "UNITS": "hour"
+                    }
+                },
+                "L_value": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "L-value",
+                        "UNITS": "-"
+                    }
+                },
+                "SZA": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "TEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Total electron content",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Depth": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Depth of the MIT",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "DR": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Relative change in density within the MIT",
+                        "UNITS": "%"
+                    }
+                },
+                "Width": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Width of the MIT calculated from QD latitudes",
+                        "UNITS": "deg"
+                    }
+                },
+                "dL": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Width of the MIT calculated from L-values",
+                        "UNITS": "-"
+                    }
+                },
+                "PW_Gradient": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Change in TEC at the poleward wall of the MIT divided by QD latitude difference",
+                        "UNITS": "TECU/deg"
+                    }
+                },
+                "EW_Gradient": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Change in TEC at the equatorward wall of the MIT divided by QD latitude difference",
+                        "UNITS": "TECU/deg"
+                    }
+                },
+                "Quality": {
+                    "dataType": "int8",
+                    "dimension": [8],
+                    "attributes": {
+                        "DESCRIPTION": "Characterizes the detection quality of the MIT as a whole",
+                        "UNITS": "-"
+                    }
+                }
+            },
+            "ID": {
+                "Timestamp": {
+                    "source": "Timestamp_ID",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "source": "Latitude_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric latitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "source": "Longitude_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric longitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "source": "Radius_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time (QD)",
+                        "UNITS": "hour"
+                    }
+                },
+                "L_value": {
+                    "source": "L_value_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "L-value",
+                        "UNITS": "-"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "TEC": {
+                    "source": "TEC_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Total electron content",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Position_Quality": {
+                    "source": "Position_Quality_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Indicator characterizing the detection quality of the position",
+                        "UNITS": "-"
+                    }
+                },
+                "PointType": {
+                    "source": "PointType_ID",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Point Type",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_PPIxFAC_2F",
+        "defaultDataset": "SSFAC_boundary",
+        "datasets": {
+            "SSFAC_boundary": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Counter": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Swarm orbit counter and quarter orbit (four per Swarm orbit) counter",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric latitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric longitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time (QD)",
+                        "UNITS": "hour"
+                    }
+                },
+                "L_value": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "L-value",
+                        "UNITS": "-"
+                    }
+                },
+                "SZA": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "dL": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Width of the MIT calculated from L-values",
+                        "UNITS": "-"
+                    }
+                },
+                "Sigma": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Standard deviation of the linear fit of S at the boundary [RD-2]",
+                        "UNITS": "TECU"
+                    }
+                },
+                "PPI": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Midnight Plasmapause index",
+                        "UNITS": "R_E"
+                    }
+                },
+                "Quality": {
+                    "dataType": "int8",
+                    "dimension": [7],
+                    "attributes": {
+                        "DESCRIPTION": "Characterizes the detection quality of the MIT as a whole",
+                        "UNITS": "-"
+                    }
+                }
+            },
+            "ID": {
+                "Timestamp": {
+                    "source": "Timestamp_ID",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "source": "Latitude_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric latitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "source": "Longitude_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric longitude in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "source": "Radius_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius in ITRF",
+                        "UNITS": "deg"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time (QD)",
+                        "UNITS": "hour"
+                    }
+                },
+                "L_value": {
+                    "source": "L_value_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "L-value",
+                        "UNITS": "-"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "Position_Quality": {
+                    "source": "Position_Quality_ID",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Indicator characterizing the detection quality of the position",
+                        "UNITS": "-"
+                    }
+                },
+                "PointType": {
+                    "source": "PointType_ID",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Point Type",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
     }
 ]
