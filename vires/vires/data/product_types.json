@@ -1852,6 +1852,7 @@
                 },
                 "Counter": {
                     "dataType": "uint32",
+                    "dimension": [2],
                     "attributes": {
                         "DESCRIPTION": "Swarm orbit counter and quarter orbit (four per Swarm orbit) counter",
                         "UNITS": "-"
@@ -1989,6 +1990,15 @@
                         "UNITS": "-"
                     }
                 },
+                "Counter": {
+                    "source": "Counter_ID",
+                    "dataType": "uint32",
+                    "dimension": [2],
+                    "attributes": {
+                        "DESCRIPTION": "Swarm orbit counter and quarter orbit (four per Swarm orbit) counter",
+                        "UNITS": "-"
+                    }
+                },
                 "Latitude": {
                     "source": "Latitude_ID",
                     "dataType": "float64",
@@ -2103,6 +2113,7 @@
                 },
                 "Counter": {
                     "dataType": "uint32",
+                    "dimension": [2],
                     "attributes": {
                         "DESCRIPTION": "Swarm orbit counter and quarter orbit (four per Swarm orbit) counter",
                         "UNITS": "-"
@@ -2233,6 +2244,15 @@
                         "UNITS": "-"
                     }
                 },
+                "Counter": {
+                    "source": "Counter_ID",
+                    "dataType": "uint32",
+                    "dimension": [2],
+                    "attributes": {
+                        "DESCRIPTION": "Swarm orbit counter and quarter orbit (four per Swarm orbit) counter",
+                        "UNITS": "-"
+                    }
+                },
                 "Latitude": {
                     "source": "Latitude_ID",
                     "dataType": "float64",
@@ -2339,6 +2359,7 @@
                 },
                 "Counter": {
                     "dataType": "uint32",
+                    "dimension": [2],
                     "attributes": {
                         "DESCRIPTION": "Swarm orbit counter and quarter orbit (four per Swarm orbit) counter",
                         "UNITS": "-"
@@ -2438,6 +2459,15 @@
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
                         "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Counter": {
+                    "source": "Counter_ID",
+                    "dataType": "uint32",
+                    "dimension": [2],
+                    "attributes": {
+                        "DESCRIPTION": "Swarm orbit counter and quarter orbit (four per Swarm orbit) counter",
                         "UNITS": "-"
                     }
                 },
