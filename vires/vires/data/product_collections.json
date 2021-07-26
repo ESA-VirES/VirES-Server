@@ -1,20 +1,39 @@
 [
     {
+        "name": "SW_OPER_MODA_SC_1B",
+        "productType": "SW_MODx_SC_1B",
+        "spacecraft": "A",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true
+    },
+    {
+        "name": "SW_OPER_MODB_SC_1B",
+        "productType": "SW_MODx_SC_1B",
+        "spacecraft": "B",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true
+    },
+    {
+        "name": "SW_OPER_MODC_SC_1B",
+        "productType": "SW_MODx_SC_1B",
+        "spacecraft": "C",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true
+    },
+    {
         "name": "SW_OPER_MAGA_LR_1B",
         "productType": "SW_MAGx_LR_1B",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
         "subtractableCollections": {
             "C": "SW_OPER_MAGC_LR_1B"
-        },
-        "calculateOrbitDirection": true
+        }
     },
     {
         "name": "SW_OPER_MAGB_LR_1B",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
-        "spacecraft": "B",
-        "calculateOrbitDirection": true
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_MAGC_LR_1B",
@@ -23,8 +42,7 @@
         "spacecraft": "C",
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_LR_1B"
-        },
-        "calculateOrbitDirection": true
+        }
     },
     {
         "name": "SW_OPER_MAGA_HR_1B",
