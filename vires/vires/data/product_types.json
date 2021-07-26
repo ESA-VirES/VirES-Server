@@ -1,5 +1,42 @@
 [
     {
+        "name": "SW_MODx_SC_1B",
+        "defaultDataset": "MOD",
+        "datasets": {
+            "MOD": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_MAGx_LR_1B",
         "defaultDataset": "MDR_MAG_LR",
         "datasets": {
