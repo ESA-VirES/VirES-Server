@@ -43,7 +43,7 @@ from .base import Model
 
 
 class SatSatSubtraction(Model):
-    """ Calculation of the inter-spacecraft difference. """
+    """ Calculation of the Swarm inter-spacecraft difference. """
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -53,10 +53,10 @@ class SatSatSubtraction(Model):
                  grouped_collections, logger=None):
         super().__init__()
 
-        if master_spacecraft not in ORBIT_COUNTER_FILE:
+        if ("Swarm", master_spacecraft) not in ORBIT_COUNTER_FILE:
             raise ValueError("Invalid master spacecraft %s!" % master_spacecraft)
 
-        if slave_spacecraft not in ORBIT_COUNTER_FILE:
+        if ("Swarm", slave_spacecraft) not in ORBIT_COUNTER_FILE:
             raise ValueError("Invalid slave spacecraft %s!" % slave_spacecraft)
 
         self._master_spacecraft = master_spacecraft
@@ -64,12 +64,12 @@ class SatSatSubtraction(Model):
         self._collections = grouped_collections
 
         self._master_orbit_counter = OrbitCounterReader(
-            cache_path(ORBIT_COUNTER_FILE[self._master_spacecraft]),
+            cache_path(ORBIT_COUNTER_FILE[("Swarm", self._master_spacecraft)]),
             self.product_set
         )
 
         self._slave_orbit_counter = OrbitCounterReader(
-            cache_path(ORBIT_COUNTER_FILE[self._slave_spacecraft]),
+            cache_path(ORBIT_COUNTER_FILE[("Swarm", self._slave_spacecraft)]),
             self.product_set
         )
 

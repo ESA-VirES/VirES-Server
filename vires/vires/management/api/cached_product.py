@@ -30,6 +30,7 @@ from vires.aux_kp import update_kp
 from vires.aux_dst import update_dst
 from vires.aux_f107 import update_aux_f107_2_
 from vires.orbit_counter import update_orbit_counter_file
+from vires.orbit_counter_grace import update_grace_orbit_counter_file
 from vires.model_mma import (
     merge_mma_sha_2f, filter_mma_sha_2f, merge_mma_sha_2c, filter_mma_sha_2c,
 )
@@ -125,33 +126,35 @@ def get_cached_product_configuration():
         tmp_extension=".tmp.cdf"
     )
 
-    for spacecraft in SPACECRAFTS:
-        _configure_cached_product(
-            "AUX%sORBCNT" % spacecraft,
-            label="Swarm %s orbit counter" % spacecraft,
-            updater=simple_cached_product_updater(update_orbit_counter_file),
-            tmp_extension=".tmp.cdf"
-        )
-        cached_products.pop("AUX%sODBGEO" % spacecraft)
-        cached_products.pop("AUX%sODBMAG" % spacecraft)
+    for mission, spacecraft in SPACECRAFTS:
 
-        #_configure_cached_product(
-        #    "AUX%sODBGEO" % spacecraft,
-        #    label=(
-        #        "Swarm %s orbit directions in geographic coordinates"
-        #        % spacecraft
-        #    ),
-        #    tmp_extension=".tmp.cdf"
-        #)
-
-        #_configure_cached_product(
-        #    "AUX%sODBMAG" % spacecraft,
-        #    label=(
-        #        "Swarm %s orbit directions in magnetic (QD) coordinates"
-        #        % spacecraft
-        #    ),
-        #    tmp_extension=".tmp.cdf"
-        #)
+        if mission == "Swarm":
+            _configure_cached_product(
+                "AUX%sORBCNT" % spacecraft,
+                label="Swarm %s orbit counter" % spacecraft,
+                updater=simple_cached_product_updater(update_orbit_counter_file),
+                tmp_extension=".tmp.cdf"
+            )
+            cached_products.pop("AUX%sODBGEO" % spacecraft)
+            cached_products.pop("AUX%sODBMAG" % spacecraft)
+        elif mission == "GRACE":
+            _configure_cached_product(
+                "GR%s_ORBCNT" % spacecraft,
+                label="GRACE-%s orbit counter" % spacecraft,
+                updater=simple_cached_product_updater(update_grace_orbit_counter_file),
+                tmp_extension=".tmp.cdf"
+            )
+            cached_products.pop("GR%s_ODBGEO" % spacecraft)
+            cached_products.pop("GR%s_ODBMAG" % spacecraft)
+        elif mission == "GRACE-FO":
+            _configure_cached_product(
+                "GF%s_ORBCNT" % spacecraft,
+                label="GRACE-%s orbit counter" % spacecraft,
+                updater=simple_cached_product_updater(update_grace_orbit_counter_file),
+                tmp_extension=".tmp.cdf"
+            )
+            cached_products.pop("GF%s_ODBGEO" % spacecraft)
+            cached_products.pop("GF%s_ODBMAG" % spacecraft)
 
     return cached_products
 
