@@ -74,6 +74,11 @@ class InputData(namedtuple("InputData", ["times", "lats", "lons", "rads"])):
         """ Concatenate tuple of lists. """
         return cls(*_join_data(args, concatenate))
 
+    def __getitem__(self, selection):
+        if isinstance(selection, int):
+            return super().__getitem__(selection)
+        return self.__class__(*tuple(item[selection] for item in self))
+
 
 class OutputData(namedtuple("OutputData", ["times", "odirs", "flags"])):
     """ Output data container class. """
