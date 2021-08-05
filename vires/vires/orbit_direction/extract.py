@@ -90,10 +90,8 @@ def find_inversion_points(times, lats):
     inverted.
     """
     index = lookup_extrema(lats)
-    ascending_pass = lats[index] < 0
-    extrema_times = find_extrema(
-        times.astype('float64'), lats, index
-    ).astype(times.dtype)
+    tmp, ascending_pass = find_extrema(times.astype('float64'), lats, index)
+    extrema_times = tmp.astype(times.dtype)
     return extrema_times, ascending_pass
 
 
@@ -111,4 +109,7 @@ def find_extrema(x, y, idx):
     a1, a2 = x[idx1] - x0, x[idx2] - x0
     b1, b2 = y[idx1] - y0, y[idx2] - y0
     a1b2, a2b1 = a1*b2, a2*b1
-    return x0 + 0.5*(a1*a1b2 - a2*a2b1)/(a1b2 - a2b1)
+    return (
+        x0 + 0.5*(a1*a1b2 - a2*a2b1)/(a1b2 - a2b1),
+        ((b2/a2 - b1/a1) / (a2 - a1)) > 0
+    )
