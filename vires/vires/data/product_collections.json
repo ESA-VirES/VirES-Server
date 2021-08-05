@@ -384,5 +384,12 @@
         "calculateOrbitDirection": true,
         "mission": "GRACE-FO",
         "spacecraft": "2"
+    },
+    {
+        "name": "CS_OPER_MAG",
+        "productType": "CS_MAG",
+        "nominalSampling": "PT4S",
+        "calculateOrbitDirection": true,
+        "mission": "CryoSat-2"
     }
 ]

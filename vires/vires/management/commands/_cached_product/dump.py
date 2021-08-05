@@ -166,3 +166,7 @@ for mission, spacecraft in SPACECRAFTS:
         configure_cached_product("GF%s_ORBCNT" % spacecraft, info_reader=read_info_cdf)
         configure_cached_product("GF%s_ODBGEO" % spacecraft, info_reader=read_info_cdf)
         configure_cached_product("GF%s_ODBMAG" % spacecraft, info_reader=read_info_cdf)
+    elif mission == "CryoSat-2":
+        configure_cached_product("CS2_ORBCNT", info_reader=read_info_cdf)
+        configure_cached_product("CS2_ODBGEO", info_reader=read_info_cdf)
+        configure_cached_product("CS2_ODBMAG", info_reader=read_info_cdf)

@@ -149,12 +149,21 @@ def get_cached_product_configuration():
         elif mission == "GRACE-FO":
             _configure_cached_product(
                 "GF%s_ORBCNT" % spacecraft,
-                label="GRACE-%s orbit counter" % spacecraft,
+                label="GRACE-FO-%s orbit counter" % spacecraft,
                 updater=simple_cached_product_updater(update_grace_orbit_counter_file),
                 tmp_extension=".tmp.cdf"
             )
             cached_products.pop("GF%s_ODBGEO" % spacecraft)
             cached_products.pop("GF%s_ODBMAG" % spacecraft)
+        elif mission == "CryoSat-2":
+            _configure_cached_product(
+                "CS2_ORBCNT",
+                label="CryoSat-2 orbit counter",
+                updater=simple_cached_product_updater(update_orbit_counter_file),
+                tmp_extension=".tmp.cdf"
+            )
+            cached_products.pop("CS2_ODBGEO")
+            cached_products.pop("CS2_ODBMAG")
 
     return cached_products
 

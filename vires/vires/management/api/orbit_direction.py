@@ -53,7 +53,7 @@ def sync_orbit_direction_tables(collection, logger=None, counter=None):
     od_tables = OrbitDirectionTables(
         *get_orbit_direction_tables(
             collection.metadata.get('mission', 'Swarm'),
-            collection.metadata.get('spacecraft', '-'),
+            collection.metadata.get('spacecraft'),
         ),
         logger=logger
     )
@@ -98,7 +98,7 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
     od_tables = OrbitDirectionTables(
         *get_orbit_direction_tables(
             collection.metadata.get('mission', 'Swarm'),
-            collection.metadata.get('spacecraft', '-'),
+            collection.metadata.get('spacecraft'),
         ),
         reset=True, logger=logger
     )
@@ -155,7 +155,7 @@ def update_orbit_direction_tables(product):
     od_tables = OrbitDirectionTables(
         *get_orbit_direction_tables(
             collection.metadata.get('mission', 'Swarm'),
-            collection.metadata.get('spacecraft', '-'),
+            collection.metadata.get('spacecraft'),
         ),
         logger=getLogger(__name__)
     )

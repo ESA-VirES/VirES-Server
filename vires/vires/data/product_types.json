@@ -2089,5 +2089,128 @@
                 }
             }
         }
+    },
+    {
+        "name": "CS_MAG",
+        "defaultDataset": "MDR_MAG",
+        "datasets": {
+            "MDR_MAG": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_FGM1": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated magnetic vector from FGM1, in instrument frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_FGM2": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated magnetic vector from FGM2, in instrument frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_FGM3": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated magnetic vector from FGM3, in instrument frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC1": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector from FGM1, in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC2": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector from FGM2, in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC3": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector from FGM3, in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector in NEC (North, East, Center) frame, 5 sample (i.e. 20 second) robust average of all 3 FGM",
+                        "UNITS": "nT"
+                    }
+                },
+                "F": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "magnetic field intensity determined from B_NEC",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_mod_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "CHAOS-6 model field (core, crust + magnetosphere), in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_NEC_CRF": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: NEC <- CRF",
+                        "UNITS": "-"
+                    }
+                },
+                "q_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "experimental error indicator of attitude given in Quaternion q_NEC_CRF. Bad attitude if > approx 40",
+                        "UNITS": "mdeg"
+                    }
+                }
+            }
+        }
     }
 ]
