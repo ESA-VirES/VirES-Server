@@ -1873,5 +1873,221 @@
                 }
             }
         }
+    },
+    {
+        "name": "GRACE_x_MAG",
+        "defaultDataset": "MDR_MAG",
+        "datasets": {
+            "MDR_MAG": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated magnetic vector from FGM, in instrument frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC_raw": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector in NEC (North, East, Center) frame, 11 sample (i.e. 11 second) robust average",
+                        "UNITS": "nT"
+                    }
+                },
+                "F": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "magnetic field intensity determined from B_NEC",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_mod_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "CHAOS-7 model field (core, crust + magnetosphere), in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_NEC_CRF": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: NEC <- CRF",
+                        "UNITS": "-"
+                    }
+                },
+                "q_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "experimental error indicator of attitude given in Quaternion q_NEC_CRF. Bad attitude if > approx 40",
+                        "UNITS": "mdeg"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GFx_FGM_ACAL",
+        "defaultDataset": "MDR_FGM_ACAL",
+        "datasets": {
+            "MDR_FGM_ACAL": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, FGM, aligned, vector-vector calibrated and corrected for satellite disturbances, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, FGM, aligned, vector-vector calibrated and corrected for satellite disturbances, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_NEC_FGM": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: NEC ... FGM",
+                        "UNITS": "-"
+                    }
+                },
+
+                "dB_MTQ_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to magnetorquer, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_XI_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 2nd order non-linearities, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_NY_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 3rd order non-linearities, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BT_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of offsets, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_ST_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of scale factors, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_SA_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to solar array currents, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BAT_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to battery currents, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_FLAG": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
     }
 ]

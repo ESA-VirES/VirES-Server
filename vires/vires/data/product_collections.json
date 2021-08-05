@@ -352,5 +352,37 @@
         "productType": "SW_VOBS_xM_2_",
         "groupSamples": true,
         "nominalSampling": "P122D"
+    },
+    {
+        "name": "GRACE_A_MAG",
+        "productType": "GRACE_x_MAG",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true,
+        "mission": "GRACE",
+        "spacecraft": "1"
+    },
+    {
+        "name": "GRACE_B_MAG",
+        "productType": "GRACE_x_MAG",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true,
+        "mission": "GRACE",
+        "spacecraft": "2"
+    },
+    {
+        "name": "GF1_OPER_FGM_ACAL_CORR",
+        "productType": "GFx_FGM_ACAL",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true,
+        "mission": "GRACE-FO",
+        "spacecraft": "1"
+    },
+    {
+        "name": "GF2_OPER_FGM_ACAL_CORR",
+        "productType": "GFx_FGM_ACAL",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true,
+        "mission": "GRACE-FO",
+        "spacecraft": "2"
     }
 ]

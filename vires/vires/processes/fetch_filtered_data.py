@@ -54,7 +54,7 @@ from vires.cdf_util import (
 )
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
-    CACHED_PRODUCT_FILE, AUX_DB_KP, AUX_DB_DST, SPACECRAFTS,
+    CACHED_PRODUCT_FILE, AUX_DB_KP, AUX_DB_DST, SPACECRAFTS, DEFAULT_MISSION,
     ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
 )
 from vires.processes.base import WPSProcess
@@ -257,15 +257,15 @@ class FetchFilteredData(WPSProcess):
             orbit_info = {
                 spacecraft: [
                     OrbitCounter(
-                        "OrbitCounter" + spacecraft,
+                        ":".join(["OrbitCounter", spacecraft[0], spacecraft[1] or ""]),
                         cache_path(ORBIT_COUNTER_FILE[spacecraft])
                     ),
                     OrbitDirection(
-                        "OrbitDirection" + spacecraft,
+                        ":".join(["OrbitDirection", spacecraft[0], spacecraft[1] or ""]),
                         cache_path(ORBIT_DIRECTION_GEO_FILE[spacecraft])
                     ),
                     QDOrbitDirection(
-                        "QDOrbitDirection" + spacecraft,
+                        ":".join(["QDOrbitDirection", spacecraft[0], spacecraft[1] or ""]),
                         cache_path(ORBIT_DIRECTION_MAG_FILE[spacecraft])
                     ),
                 ]
@@ -344,26 +344,31 @@ class FetchFilteredData(WPSProcess):
                     resolver.add_slave(slave, 'Timestamp')
 
                 # satellite specific slaves
-                spacecraft = master.metadata.get('spacecraft')
-                resolver.add_model(SpacecraftLabel(spacecraft or '-'))
+                spacecraft = (
+                    master.metadata.get('mission') or DEFAULT_MISSION,
+                    master.metadata.get('spacecraft')
+                )
+                #TODO: add mission label
+                resolver.add_model(SpacecraftLabel(spacecraft[1] or '-'))
 
                 for item in orbit_info.get(spacecraft, []):
                     resolver.add_slave(item, 'Timestamp')
 
-                # prepare spacecraft to spacecraft differences
-                subtracted_variables = get_subtracted_variables(unique(chain(
-                    requested_variables, chain.from_iterable(
-                        filter_.required_variables for filter_ in filters
+                if spacecraft[0] == "Swarm" and spacecraft[1] in ('A', 'B', 'C'):
+                    # prepare spacecraft to spacecraft differences
+                    subtracted_variables = get_subtracted_variables(unique(chain(
+                        requested_variables, chain.from_iterable(
+                            filter_.required_variables for filter_ in filters
+                        )
+                    )))
+                    self.logger.debug("residual variables: %s", ", ".join(
+                        var for var, _ in subtracted_variables
+                    ))
+                    grouped_diff_vars = group_subtracted_variables(
+                        product_sources, subtracted_variables
                     )
-                )))
-                self.logger.debug("residual variables: %s", ", ".join(
-                    var for var, _ in subtracted_variables
-                ))
-                grouped_diff_vars = group_subtracted_variables(
-                    product_sources, subtracted_variables
-                )
-                for (msc, ssc), cols in grouped_diff_vars.items():
-                    resolver.add_model(SatSatSubtraction(msc, ssc, cols))
+                    for (msc, ssc), cols in grouped_diff_vars.items():
+                        resolver.add_model(SatSatSubtraction(msc, ssc, cols))
 
                 # models
                 aux_models = chain((
@@ -416,7 +421,7 @@ class FetchFilteredData(WPSProcess):
             # empty output
             output_variables = ()
 
-            self.logger.debug("output variables: %s", ", ".join(output_variables))
+        self.logger.debug("output variables: %s", ", ".join(output_variables))
 
         def _generate_data_():
             total_count = 0

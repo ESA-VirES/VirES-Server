@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=import-error,no-self-use
 
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, AllowedRange, FormatJSON, CDObject,
 )
@@ -34,7 +35,20 @@ from vires.orbit_counter import get_orbit_timerange
 from vires.processes.base import WPSProcess
 from vires.cache_util import cache_path
 from vires.time_util import format_datetime, naive_to_utc
-from vires.data.vires_settings import ORBIT_COUNTER_FILE
+from vires.data.vires_settings import ORBIT_COUNTER_FILE, DEFAULT_MISSION
+
+MISSIONS = sorted(set(mission for mission, _ in ORBIT_COUNTER_FILE))
+SPACECRAFTS = sorted(set(
+    spacecraft for _, spacecraft in ORBIT_COUNTER_FILE if spacecraft
+))
+
+MISSION_SPACECRAFTS = {
+    mission: sorted([
+        spacecraft for key, spacecraft in ORBIT_COUNTER_FILE
+        if key == mission and spacecraft
+    ])
+    for mission in MISSIONS
+}
 
 
 class GetOrbitTimeRange(WPSProcess):
@@ -46,10 +60,15 @@ class GetOrbitTimeRange(WPSProcess):
     profiles = ["vires"]
 
     inputs = WPSProcess.inputs + [
+        ("mission", LiteralData(
+            'mission', str, optional=True, default=DEFAULT_MISSION,
+            abstract="Mission identifier",
+            allowed_values=MISSIONS,
+        )),
         ("spacecraft", LiteralData(
-            'spacecraft', str, optional=False,
+            'spacecraft', str, optional=True,
             abstract="Spacecraft identifier",
-            allowed_values=list(ORBIT_COUNTER_FILE),
+            allowed_values=SPACECRAFTS,
         )),
         ("start_orbit", LiteralData(
             'start_orbit', int, optional=False,
@@ -70,26 +89,41 @@ class GetOrbitTimeRange(WPSProcess):
         )),
     ]
 
-    def execute(self, spacecraft, start_orbit, end_orbit, **kwargs):
+    def execute(self, mission, spacecraft, start_orbit, end_orbit, **kwargs):
         """ Execute process. """
-        access_logger = self.get_access_logger(**kwargs)
+
+        try:
+            orbit_counter_file = ORBIT_COUNTER_FILE[(mission, spacecraft or None)]
+        except KeyError:
+            raise InvalidInputValueError("spacecraft", (
+                (
+                    f"Invalid {mission} spacecraft identifier {spacecraft}. Possible values are: "
+                    f"{','.join(MISSION_SPACECRAFTS[mission])}"
+                    if spacecraft else
+                    f"Missing mandatory {mission} spacecraft identifier. Possible values are: "
+                    f"{','.join(MISSION_SPACECRAFTS[mission])}"
+                )
+                if MISSION_SPACECRAFTS[mission] else
+                f"There is no spacecraft identifier allowed for the {mission} "
+                "mission!"
+            )) from None
 
         if end_orbit < start_orbit:
             start_orbit, end_orbit = end_orbit, start_orbit
 
-        orbit_counter_file = cache_path(ORBIT_COUNTER_FILE[spacecraft])
-
+        access_logger = self.get_access_logger(**kwargs)
         access_logger.info(
-            "request: spacecraft: %s, start_orbit: %s, end_orbit %s",
-            spacecraft, start_orbit, end_orbit,
+            "request: mission: %s, spacecraft: %s, start_orbit: %s, end_orbit %s",
+            mission, spacecraft or '-', start_orbit, end_orbit,
         )
 
         start_orbit, end_orbit, start_time, end_time = get_orbit_timerange(
-            orbit_counter_file, start_orbit, end_orbit
+            cache_path(orbit_counter_file), start_orbit, end_orbit
         )
 
         output = {
-            "spacecraft": spacecraft,
+            "mission": mission,
+            "spacecraft": spacecraft or None,
             "start_orbit": start_orbit,
             "end_orbit": end_orbit,
             "start_time": format_datetime(naive_to_utc(mjd2000_to_datetime(start_time))),
