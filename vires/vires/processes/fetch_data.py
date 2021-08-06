@@ -326,6 +326,10 @@ class FetchData(WPSProcess):
                     models_with_residuals.append(
                         MagneticModelResidual(model.name, variable)
                     )
+                for variable in MagneticModelResidual.MODEL_VARIABLES:
+                    models_with_residuals.append(
+                        MagneticModelResidual(model.name, variable)
+                    )
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.items():

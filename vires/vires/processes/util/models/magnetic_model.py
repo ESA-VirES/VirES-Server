@@ -38,6 +38,11 @@ from .base import Model
 
 class MagneticModelResidual(Model):
     """ Residual evaluation. """
+    MODEL_VARIABLES = {
+        "B_NEC1": "B_NEC",
+        "B_NEC2": "B_NEC",
+        "B_NEC3": "B_NEC",
+    }
 
     @cached_property
     def variables(self):
@@ -45,7 +50,7 @@ class MagneticModelResidual(Model):
 
     @cached_property
     def required_variables(self):
-        return [self.variable, "%s_%s" % (self.variable, self.model_name)]
+        return [self.variable, "%s_%s" % (self.model_variable, self.model_name)]
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -55,6 +60,7 @@ class MagneticModelResidual(Model):
         super().__init__()
         self.model_name = model_name
         self.variable = variable
+        self.model_variable = self.MODEL_VARIABLES.get(variable, variable)
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "residual_name": self.variables[0],
         })

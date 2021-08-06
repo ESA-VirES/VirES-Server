@@ -304,6 +304,10 @@ class FetchFilteredData(WPSProcess):
                     models_with_residuals.append(
                         MagneticModelResidual(model.name, variable)
                     )
+                for variable in MagneticModelResidual.MODEL_VARIABLES:
+                    models_with_residuals.append(
+                        MagneticModelResidual(model.name, variable)
+                    )
             # optional sub-sampling filters
             if sampling_step:
                 sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
