@@ -1,5 +1,42 @@
 [
     {
+        "name": "SW_MODx_SC_1B",
+        "defaultDataset": "MOD",
+        "datasets": {
+            "MOD": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_MAGx_LR_1B",
         "defaultDataset": "MDR_MAG_LR",
         "datasets": {
@@ -1519,325 +1556,6 @@
         }
     },
     {
-        "name": "OMNI_HR_1min",
-        "defaultDataset": "OMNI_HR_1min",
-        "datasets": {
-            "OMNI_HR_1min": {
-                "Epoch": {
-                    "dataType": "timestamp",
-                    "dataSubtype": "CDF_EPOCH",
-                    "attributes": {
-                        "DESCRIPTION": "Epoch time",
-                        "UNITS": "-"
-                    }
-                },
-                "BY_GSM": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "1AU IP By (nT), GSM",
-                        "UNITS": "nT"
-                    }
-                },
-                "BZ_GSM": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "1AU IP Bz (nT), GSM",
-                        "UNITS": "nT"
-                    }
-                },
-                "Vx": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Vx Velocity, GSE",
-                        "UNITS": "km/s"
-                    }
-                },
-                "Vy": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Vy Velocity, GSE",
-                        "UNITS": "km/s"
-                    }
-                },
-                "Vz": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Vz Velocity, GSE",
-                        "UNITS": "km/s"
-                    }
-                },
-                "flow_speed": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "flow speed, GSE",
-                        "UNITS": "km/s"
-                    }
-                }
-            }
-        }
-    },
-    {
-        "name": "SW_AUX_OBSx2_",
-        "defaultDataset": "__all__",
-        "strictDatasetCheck": false,
-        "unsortedDatasets": ["__all__"],
-        "datasets": {
-            "__all__": {
-                "IAGA_code": {
-                    "dataType": "char3",
-                    "attributes": {
-                        "DESCRIPTION": "IAGA three letter observatory identification code",
-                        "UNITS": "-"
-                    }
-                },
-                "Quality": {
-                    "dataType": "char1",
-                    "attributes": {
-                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
-                        "UNITS": "-"
-                    }
-                },
-                "Timestamp": {
-                    "dataType": "timestamp",
-                    "dataSubtype": "CDF_EPOCH",
-                    "attributes": {
-                        "DESCRIPTION": "Time stamp",
-                        "UNITS": "-"
-                    }
-                },
-                "Latitude": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Position in ITRF - Latitude",
-                        "UNITS": "deg"
-                    }
-                },
-                "Longitude": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Position in ITRF - Longitude",
-                        "UNITS": "deg"
-                    }
-                },
-                "Radius": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Position in ITRF - Radius",
-                        "UNITS": "m"
-                    }
-                },
-                "B_NEC": {
-                    "dataType": "float64",
-                    "dimension": [3],
-                    "attributes": {
-                        "DESCRIPTION": "Magnetic field vector, NEC frame",
-                        "UNITS": "nT"
-                    }
-                }
-            }
-        }
-    },
-    {
-        "name": "SW_AUX_OBSH2_",
-        "defaultDataset": "__all__",
-        "strictDatasetCheck": false,
-        "unsortedDatasets": ["__all__"],
-        "datasets": {
-            "__all__": {
-                "IAGA_code": {
-                    "dataType": "char3",
-                    "attributes": {
-                        "DESCRIPTION": "IAGA three letter observatory identification code",
-                        "UNITS": "-"
-                    }
-                },
-                "ObsIndex": {
-                    "dataType": "uint8",
-                    "attributes": {
-                        "DESCRIPTION": "Digit from the 4-character observatory code.",
-                        "UNITS": "-"
-                    }
-                },
-                "Quality": {
-                    "dataType": "char1",
-                    "attributes": {
-                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
-                        "UNITS": "-"
-                    }
-                },
-                "Timestamp": {
-                    "dataType": "timestamp",
-                    "dataSubtype": "CDF_EPOCH",
-                    "attributes": {
-                        "DESCRIPTION": "Time stamp",
-                        "UNITS": "-"
-                    }
-                },
-                "Latitude": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Latitude",
-                        "UNITS": "deg"
-                    }
-                },
-                "Longitude": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Longitude",
-                        "UNITS": "deg"
-                    }
-                },
-                "Radius": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Radius",
-                        "UNITS": "m"
-                    }
-                },
-                "B_NEC": {
-                    "dataType": "float64",
-                    "dimension": [3],
-                    "attributes": {
-                        "DESCRIPTION": "Magnetic field vector, NEC frame",
-                        "UNITS": "nT"
-                    }
-                }
-            }
-        }
-    },
-    {
-        "name": "SW_VOBS_xM_2_",
-        "defaultDataset": "__all__",
-        "strictDatasetCheck": false,
-        "unsortedDatasets": ["__all__", "SecularVariation"],
-        "datasets": {
-            "__all__": {
-                "SiteCode": {
-                    "dataType": "char7",
-                    "attributes": {
-                        "DESCRIPTION": "Seven letter virtual observatory identification code",
-                        "UNITS": "-"
-                    }
-                },
-                "Timestamp": {
-                    "dataType": "timestamp",
-                    "dataSubtype": "CDF_EPOCH",
-                    "attributes": {
-                        "DESCRIPTION": "Time of observation",
-                        "UNITS": "-"
-                    }
-                },
-                "Latitude": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Geocetric latitude",
-                        "UNITS": "deg"
-                    }
-                },
-                "Longitude": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Geocetric longitude",
-                        "UNITS": "deg"
-                    }
-                },
-                "Radius": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Radius",
-                        "UNITS": "m"
-                    }
-                },
-                "B_CF": {
-                    "dataType": "float64",
-                    "dimension": [3],
-                    "attributes": {
-                        "DESCRIPTION": "Core magnetic field vector, NEC frame spherical coordinates",
-                        "UNITS": "nT"
-                    }
-                },
-                "B_OB": {
-                    "dataType": "float64",
-                    "dimension": [3],
-                    "attributes": {
-                        "DESCRIPTION": "Observed magnetic field vector, NEC frame spherical coordinates",
-                        "UNITS": "nT"
-                    }
-                },
-                "sigma_CF": {
-                    "dataType": "float64",
-                    "dimension": [3],
-                    "attributes": {
-                        "DESCRIPTION": "Core field estimated error",
-                        "UNITS": "nT"
-                    }
-                },
-                "sigma_OB": {
-                    "dataType": "float64",
-                    "dimension": [3],
-                    "attributes": {
-                        "DESCRIPTION": "Observed field estimated error",
-                        "UNITS": "nT"
-                    }
-                }
-            },
-            "SecularVariation": {
-                "SiteCode": {
-                    "dataType": "char7",
-                    "attributes": {
-                        "DESCRIPTION": "Seven letter virtual observatory identification code",
-                        "UNITS": "-"
-                    }
-                },
-                "Timestamp": {
-                    "dataType": "timestamp",
-                    "dataSubtype": "CDF_EPOCH",
-                    "attributes": {
-                        "DESCRIPTION": "Time of observation",
-                        "UNITS": "-"
-                    }
-                },
-                "Latitude": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Geocetric latitude",
-                        "UNITS": "deg"
-                    }
-                },
-                "Longitude": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Geocetric longitude",
-                        "UNITS": "deg"
-                    }
-                },
-                "Radius": {
-                    "dataType": "float64",
-                    "attributes": {
-                        "DESCRIPTION": "Radius",
-                        "UNITS": "m"
-                    }
-                },
-                "B_SV": {
-                    "dataType": "float64",
-                    "dimension": [3],
-                    "attributes": {
-                        "DESCRIPTION": "Secular variation field vector, NEC frame spherical coordinates",
-                        "UNITS": "nT/yr"
-                    }
-                },
-                "sigma_SV": {
-                    "dataType": "float64",
-                    "dimension": [3],
-                    "attributes": {
-                        "DESCRIPTION": "Secular variation field estimated error",
-                        "UNITS": "nT/yr"
-                    }
-                }
-            }
-        }
-    },
-    {
         "name": "SW_MITx_LP_2F",
         "defaultDataset": "MIT_minimum",
         "datasets": {
@@ -2549,6 +2267,664 @@
                     "attributes": {
                         "DESCRIPTION": "Point Type",
                         "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "OMNI_HR_1min",
+        "defaultDataset": "OMNI_HR_1min",
+        "datasets": {
+            "OMNI_HR_1min": {
+                "Epoch": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Epoch time",
+                        "UNITS": "-"
+                    }
+                },
+                "BY_GSM": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "1AU IP By (nT), GSM",
+                        "UNITS": "nT"
+                    }
+                },
+                "BZ_GSM": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "1AU IP Bz (nT), GSM",
+                        "UNITS": "nT"
+                    }
+                },
+                "Vx": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Vx Velocity, GSE",
+                        "UNITS": "km/s"
+                    }
+                },
+                "Vy": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Vy Velocity, GSE",
+                        "UNITS": "km/s"
+                    }
+                },
+                "Vz": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Vz Velocity, GSE",
+                        "UNITS": "km/s"
+                    }
+                },
+                "flow_speed": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "flow speed, GSE",
+                        "UNITS": "km/s"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_AUX_OBSx2_",
+        "defaultDataset": "__all__",
+        "strictDatasetCheck": false,
+        "unsortedDatasets": ["__all__"],
+        "datasets": {
+            "__all__": {
+                "IAGA_code": {
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "IAGA three letter observatory identification code",
+                        "UNITS": "-"
+                    }
+                },
+                "Quality": {
+                    "dataType": "char1",
+                    "attributes": {
+                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
+                        "UNITS": "-"
+                    }
+                },
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic field vector, NEC frame",
+                        "UNITS": "nT"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_AUX_OBSH2_",
+        "defaultDataset": "__all__",
+        "strictDatasetCheck": false,
+        "unsortedDatasets": ["__all__"],
+        "datasets": {
+            "__all__": {
+                "IAGA_code": {
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "IAGA three letter observatory identification code",
+                        "UNITS": "-"
+                    }
+                },
+                "ObsIndex": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Digit from the 4-character observatory code.",
+                        "UNITS": "-"
+                    }
+                },
+                "Quality": {
+                    "dataType": "char1",
+                    "attributes": {
+                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
+                        "UNITS": "-"
+                    }
+                },
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic field vector, NEC frame",
+                        "UNITS": "nT"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_VOBS_xM_2_",
+        "defaultDataset": "__all__",
+        "strictDatasetCheck": false,
+        "unsortedDatasets": ["__all__", "SecularVariation"],
+        "datasets": {
+            "__all__": {
+                "SiteCode": {
+                    "dataType": "char7",
+                    "attributes": {
+                        "DESCRIPTION": "Seven letter virtual observatory identification code",
+                        "UNITS": "-"
+                    }
+                },
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_CF": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Core magnetic field vector, NEC frame spherical coordinates",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_OB": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Observed magnetic field vector, NEC frame spherical coordinates",
+                        "UNITS": "nT"
+                    }
+                },
+                "sigma_CF": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Core field estimated error",
+                        "UNITS": "nT"
+                    }
+                },
+                "sigma_OB": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Observed field estimated error",
+                        "UNITS": "nT"
+                    }
+                }
+            },
+            "SecularVariation": {
+                "SiteCode": {
+                    "dataType": "char7",
+                    "attributes": {
+                        "DESCRIPTION": "Seven letter virtual observatory identification code",
+                        "UNITS": "-"
+                    }
+                },
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocetric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_SV": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Secular variation field vector, NEC frame spherical coordinates",
+                        "UNITS": "nT/yr"
+                    }
+                },
+                "sigma_SV": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Secular variation field estimated error",
+                        "UNITS": "nT/yr"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GRACE_x_MAG",
+        "defaultDataset": "MDR_MAG",
+        "datasets": {
+            "MDR_MAG": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated magnetic vector from FGM, in instrument frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC_raw": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector in NEC (North, East, Center) frame, 11 sample (i.e. 11 second) robust average",
+                        "UNITS": "nT"
+                    }
+                },
+                "F": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "magnetic field intensity determined from B_NEC",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_mod_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "CHAOS-7 model field (core, crust + magnetosphere), in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_NEC_CRF": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: NEC <- CRF",
+                        "UNITS": "-"
+                    }
+                },
+                "q_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "experimental error indicator of attitude given in Quaternion q_NEC_CRF. Bad attitude if > approx 40",
+                        "UNITS": "mdeg"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GFx_FGM_ACAL",
+        "defaultDataset": "MDR_FGM_ACAL",
+        "datasets": {
+            "MDR_FGM_ACAL": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, FGM, aligned, vector-vector calibrated and corrected for satellite disturbances, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, FGM, aligned, vector-vector calibrated and corrected for satellite disturbances, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_NEC_FGM": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: NEC ... FGM",
+                        "UNITS": "-"
+                    }
+                },
+
+                "dB_MTQ_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to magnetorquer, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_XI_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 2nd order non-linearities, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_NY_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 3rd order non-linearities, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BT_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of offsets, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_ST_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of scale factors, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_SA_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to solar array currents, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BAT_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to battery currents, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_FLAG": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "CS_MAG",
+        "defaultDataset": "MDR_MAG",
+        "datasets": {
+            "MDR_MAG": {
+                "Timestamp": {
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_FGM1": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated magnetic vector from FGM1, in instrument frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_FGM2": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated magnetic vector from FGM2, in instrument frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_FGM3": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated magnetic vector from FGM3, in instrument frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC1": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector from FGM1, in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC2": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector from FGM2, in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC3": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector from FGM3, in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "calibrated and aligned magnetic vector in NEC (North, East, Center) frame, 5 sample (i.e. 20 second) robust average of all 3 FGM",
+                        "UNITS": "nT"
+                    }
+                },
+                "F": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "magnetic field intensity determined from B_NEC",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_mod_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "CHAOS-6 model field (core, crust + magnetosphere), in NEC (North, East, Center) frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_NEC_CRF": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: NEC <- CRF",
+                        "UNITS": "-"
+                    }
+                },
+                "q_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "experimental error indicator of attitude given in Quaternion q_NEC_CRF. Bad attitude if > approx 40",
+                        "UNITS": "mdeg"
                     }
                 }
             }

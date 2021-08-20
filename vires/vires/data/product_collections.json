@@ -1,20 +1,39 @@
 [
     {
+        "name": "SW_OPER_MODA_SC_1B",
+        "productType": "SW_MODx_SC_1B",
+        "spacecraft": "A",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true
+    },
+    {
+        "name": "SW_OPER_MODB_SC_1B",
+        "productType": "SW_MODx_SC_1B",
+        "spacecraft": "B",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true
+    },
+    {
+        "name": "SW_OPER_MODC_SC_1B",
+        "productType": "SW_MODx_SC_1B",
+        "spacecraft": "C",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true
+    },
+    {
         "name": "SW_OPER_MAGA_LR_1B",
         "productType": "SW_MAGx_LR_1B",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
         "subtractableCollections": {
             "C": "SW_OPER_MAGC_LR_1B"
-        },
-        "calculateOrbitDirection": true
+        }
     },
     {
         "name": "SW_OPER_MAGB_LR_1B",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
-        "spacecraft": "B",
-        "calculateOrbitDirection": true
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_MAGC_LR_1B",
@@ -23,8 +42,7 @@
         "spacecraft": "C",
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_LR_1B"
-        },
-        "calculateOrbitDirection": true
+        }
     },
     {
         "name": "SW_OPER_MAGA_HR_1B",
@@ -266,6 +284,60 @@
         "spacecraft": "C"
     },
     {
+        "name": "SW_OPER_MITA_LP_2F",
+        "productType": "SW_MITx_LP_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_MITB_LP_2F",
+        "productType": "SW_MITx_LP_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_MITC_LP_2F",
+        "productType": "SW_MITx_LP_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "C"
+    },
+    {
+        "name": "SW_OPER_MITATEC_2F",
+        "productType": "SW_MITxTEC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_MITBTEC_2F",
+        "productType": "SW_MITxTEC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_MITCTEC_2F",
+        "productType": "SW_MITxTEC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "C"
+    },
+    {
+        "name": "SW_OPER_PPIAFAC_2F",
+        "productType": "SW_PPIxFAC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_PPIBFAC_2F",
+        "productType": "SW_PPIxFAC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_PPICFAC_2F",
+        "productType": "SW_PPIxFAC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "C"
+    },
+    {
         "name": "SW_OPER_AUX_IMF_2_",
         "productType": "SW_AUX_IMF_2_",
         "nominalSampling": "PT3600S",
@@ -336,57 +408,42 @@
         "nominalSampling": "P122D"
     },
     {
-        "name": "SW_OPER_MITA_LP_2F",
-        "productType": "SW_MITx_LP_2F",
-        "nominalSampling": "PT1404S",
-        "spacecraft": "A"
+        "name": "GRACE_A_MAG",
+        "productType": "GRACE_x_MAG",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true,
+        "mission": "GRACE",
+        "spacecraft": "1"
     },
     {
-        "name": "SW_OPER_MITB_LP_2F",
-        "productType": "SW_MITx_LP_2F",
-        "nominalSampling": "PT1404S",
-        "spacecraft": "B"
+        "name": "GRACE_B_MAG",
+        "productType": "GRACE_x_MAG",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true,
+        "mission": "GRACE",
+        "spacecraft": "2"
     },
     {
-        "name": "SW_OPER_MITC_LP_2F",
-        "productType": "SW_MITx_LP_2F",
-        "nominalSampling": "PT1404S",
-        "spacecraft": "C"
+        "name": "GF1_OPER_FGM_ACAL_CORR",
+        "productType": "GFx_FGM_ACAL",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true,
+        "mission": "GRACE-FO",
+        "spacecraft": "1"
     },
     {
-        "name": "SW_OPER_MITATEC_2F",
-        "productType": "SW_MITxTEC_2F",
-        "nominalSampling": "PT1404S",
-        "spacecraft": "A"
+        "name": "GF2_OPER_FGM_ACAL_CORR",
+        "productType": "GFx_FGM_ACAL",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true,
+        "mission": "GRACE-FO",
+        "spacecraft": "2"
     },
     {
-        "name": "SW_OPER_MITBTEC_2F",
-        "productType": "SW_MITxTEC_2F",
-        "nominalSampling": "PT1404S",
-        "spacecraft": "B"
-    },
-    {
-        "name": "SW_OPER_MITCTEC_2F",
-        "productType": "SW_MITxTEC_2F",
-        "nominalSampling": "PT1404S",
-        "spacecraft": "C"
-    },
-    {
-        "name": "SW_OPER_PPIAFAC_2F",
-        "productType": "SW_PPIxFAC_2F",
-        "nominalSampling": "PT1404S",
-        "spacecraft": "A"
-    },
-    {
-        "name": "SW_OPER_PPIBFAC_2F",
-        "productType": "SW_PPIxFAC_2F",
-        "nominalSampling": "PT1404S",
-        "spacecraft": "B"
-    },
-    {
-        "name": "SW_OPER_PPICFAC_2F",
-        "productType": "SW_PPIxFAC_2F",
-        "nominalSampling": "PT1404S",
-        "spacecraft": "C"
+        "name": "CS_OPER_MAG",
+        "productType": "CS_MAG",
+        "nominalSampling": "PT4S",
+        "calculateOrbitDirection": true,
+        "mission": "CryoSat-2"
     }
 ]

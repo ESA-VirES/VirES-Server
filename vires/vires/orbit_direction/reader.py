@@ -24,10 +24,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,too-few-public-methods,
 
 from numpy import abs as aabs, asarray, searchsorted
-from .aux_common import CdfEpochTimeMixIn, BaseReader
+from ..aux_common import CdfEpochTimeMixIn, BaseReader
 
 
 class OrbitDirectionReader(CdfEpochTimeMixIn, BaseReader):
