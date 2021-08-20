@@ -255,6 +255,16 @@ class ProductTimeSeries(BaseProductTimeSeries):
     """ Product time-series class. """
 
     @staticmethod
+    def _get_variable_mapping(dataset_definition):
+        return {
+            variable: source
+            for variable, source in (
+                (variable, type_info.get('source'))
+                for variable, type_info in dataset_definition.items()
+            ) if source
+        }
+
+    @staticmethod
     def _get_id(base_id, dataset_id, default_dataset_id):
         if dataset_id == default_dataset_id:
             return base_id
@@ -306,8 +316,12 @@ class ProductTimeSeries(BaseProductTimeSeries):
         self.dataset_id = dataset_id
         self.default_dataset_id = default_dataset_id
 
-        self.translate_fw = dict(params.VARIABLE_TRANSLATES)
-        self.translate_bw = dict((v, k) for k, v in self.translate_fw.items())
+        self.translate_fw = {
+            **params.VARIABLE_TRANSLATES, # TODO: remove
+            **self._get_variable_mapping(
+                self.collection.type.get_dataset_definition(self.dataset_id)
+            )
+        }
 
     @property
     def metadata(self):
@@ -323,11 +337,9 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
     @property
     def variables(self):
-        return [
-            self.translate_bw.get(variable, variable)
-            for variable
-            in self.collection.type.get_dataset_definition(self.dataset_id)
-        ]
+        return list(
+            self.collection.type.get_dataset_definition(self.dataset_id)
+        )
 
     def _extract_dataset(self, cdf, extracted_variables, idx_low, idx_high):
         """ Extract dataset from a product. """

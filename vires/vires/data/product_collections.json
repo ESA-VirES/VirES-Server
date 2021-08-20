@@ -284,6 +284,60 @@
         "spacecraft": "C"
     },
     {
+        "name": "SW_OPER_MITA_LP_2F",
+        "productType": "SW_MITx_LP_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_MITB_LP_2F",
+        "productType": "SW_MITx_LP_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_MITC_LP_2F",
+        "productType": "SW_MITx_LP_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "C"
+    },
+    {
+        "name": "SW_OPER_MITATEC_2F",
+        "productType": "SW_MITxTEC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_MITBTEC_2F",
+        "productType": "SW_MITxTEC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_MITCTEC_2F",
+        "productType": "SW_MITxTEC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "C"
+    },
+    {
+        "name": "SW_OPER_PPIAFAC_2F",
+        "productType": "SW_PPIxFAC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_PPIBFAC_2F",
+        "productType": "SW_PPIxFAC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_PPICFAC_2F",
+        "productType": "SW_PPIxFAC_2F",
+        "nominalSampling": "PT1404S",
+        "spacecraft": "C"
+    },
+    {
         "name": "SW_OPER_AUX_IMF_2_",
         "productType": "SW_AUX_IMF_2_",
         "nominalSampling": "PT3600S",
