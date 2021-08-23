@@ -128,30 +128,45 @@ def configure_cached_product(product_type, **kwargs):
 
 
 CACHED_PRODUCTS = {
-    product_type: {
-        "filename": cache_path(filename),
-        "info_reader": read_info_file,
-    }
-    for product_type, filename in CACHED_PRODUCT_FILE.items()
+    **{
+        product_type: {
+            "filename": cache_path(filename),
+            "info_reader": read_info_file,
+        }
+        for product_type, filename in CACHED_PRODUCT_FILE.items()
+    },
+    **{
+        "GFZ_AUX_DST": {
+            "filename": cache_path(AUX_DB_DST),
+            "info_reader": read_info_cdf,
+        },
+        "GFZ_AUX_KP": {
+            "filename": cache_path(AUX_DB_KP),
+            "info_reader": read_info_cdf,
+        },
+    },
 }
+
 
 configure_cached_product("MMA_CHAOS_", info_reader=read_info_cdf)
 configure_cached_product("MMA_SHA_2C", info_reader=read_info_cdf)
 configure_cached_product("MMA_SHA_2F", info_reader=read_info_cdf)
 configure_cached_product("AUX_F10_2_", info_reader=read_info_cdf)
 
-for spacecraft in SPACECRAFTS:
-    configure_cached_product("AUX%sORBCNT" % spacecraft, info_reader=read_info_cdf)
-    #configure_cached_product("AUX%sODBGEO" % spacecraft, info_reader=read_info_cdf)
-    #configure_cached_product("AUX%sODBMAG" % spacecraft, info_reader=read_info_cdf)
-
-CACHED_PRODUCTS.update({
-    "GFZ_AUX_DST": {
-        "filename": cache_path(AUX_DB_DST),
-        "info_reader": read_info_cdf,
-    },
-    "GFZ_AUX_KP": {
-        "filename": cache_path(AUX_DB_KP),
-        "info_reader": read_info_cdf,
-    },
-})
+for mission, spacecraft in SPACECRAFTS:
+    if mission == "Swarm":
+        configure_cached_product("AUX%sORBCNT" % spacecraft, info_reader=read_info_cdf)
+        configure_cached_product("AUX%sODBGEO" % spacecraft, info_reader=read_info_cdf)
+        configure_cached_product("AUX%sODBMAG" % spacecraft, info_reader=read_info_cdf)
+    elif mission == "GRACE":
+        configure_cached_product("GR%s_ORBCNT" % spacecraft, info_reader=read_info_cdf)
+        configure_cached_product("GR%s_ODBGEO" % spacecraft, info_reader=read_info_cdf)
+        configure_cached_product("GR%s_ODBMAG" % spacecraft, info_reader=read_info_cdf)
+    elif mission == "GRACE-FO":
+        configure_cached_product("GF%s_ORBCNT" % spacecraft, info_reader=read_info_cdf)
+        configure_cached_product("GF%s_ODBGEO" % spacecraft, info_reader=read_info_cdf)
+        configure_cached_product("GF%s_ODBMAG" % spacecraft, info_reader=read_info_cdf)
+    elif mission == "CryoSat-2":
+        configure_cached_product("CS2_ORBCNT", info_reader=read_info_cdf)
+        configure_cached_product("CS2_ODBGEO", info_reader=read_info_cdf)
+        configure_cached_product("CS2_ODBMAG", info_reader=read_info_cdf)

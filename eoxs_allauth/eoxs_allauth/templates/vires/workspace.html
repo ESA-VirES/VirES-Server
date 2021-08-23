@@ -285,8 +285,8 @@
       </div>
 
         <p class="lead current-version text-center">
-          <strong>Version 3.5.0</strong> (<a href="/changelog">Changelog</a>)<br>
-          <em>April 2021</em>
+          <strong>Version 3.6.0</strong> (<a href="/changelog">Changelog</a>)<br>
+          <em>August 2021</em>
         </p>
 
         <p class="lead text-center">
@@ -430,14 +430,42 @@
                Aurora oval boundaries derived from the Field-Aligned Currents data
                (<a target="_blank" href="https://earth.esa.int/eogateway/activities/swarm-aebs">AOBxFAC_2F</a>)
             </li>
+            <li style="list-style-type: circle;">
+               Mid-latitude ionospheric trough (MIT) boundaries and minima based on the Langmuir probe electron density and temperature measurements
+               (<a target="_blank" href="https://earth.esa.int/eogateway/activities/plasmapause-related-boundaries-in-the-topside-ionosphere-as-derived-from-swarm-measurements">MITx_LP_2F</a>),
+               accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
+            </li>
+            <li style="list-style-type: circle;">
+               Mid-latitude ionospheric trough (MIT) boundaries and minima derived from the GPS TEC estimate
+               (<a target="_blank" href="https://earth.esa.int/eogateway/activities/plasmapause-related-boundaries-in-the-topside-ionosphere-as-derived-from-swarm-measurements">MITxTEC_2F</a>),
+               accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
+            </li>
+            <li style="list-style-type: circle;">
+               Midnight plasma-pause index (PPI) and the associated SSFAC boundaries
+               (<a target="_blank" href="https://earth.esa.int/eogateway/activities/plasmapause-related-boundaries-in-the-topside-ionosphere-as-derived-from-swarm-measurements">PPIxFAC_2F</a>),
+               accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
+            </li>
+            <li style="list-style-type: circle;">
+               Swarm spacecrafts' positions (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MODx_SC_1B">MODx_SC_1B</a>)
+            </li>
           </ul>
 
+          <p>The VirES API also provides access to:</a>
+          <ul>
+            <li style="list-style-type: circle;">
+              Hourly, 1 minute and 1 second ground magnetic observatory data (AUX_OBS) from
+              <a target="_blank" href="https://intermagnet.org/index-eng.php">INTERMAGNET</a> and
+              <a target="_blank" href="http://www.wdc.bgs.ac.uk/">WDC</a>
+            </li>
+            <li style="list-style-type: circle;">
+              1 and 4 months Virtual Observatory data (VOBS) from the
+              <a href="https://www.space.dtu.dk/english/research/projects/project-descriptions/geomagnetic-virtual-observatories" target="_blank">GVO project</a>.
+            </li>
+            <li style="list-style-type: circle;">
+              Vector magnetic field measurements acquired by the CryoSat-2, GRACE and GRACE-FO missions.
+            </li>
+          </ul>
           <p>
-            The VirES API also provides access to the hourly, 1 minute and 1 second ground magnetic observatory data (AUX_OBS) from
-            <a target="_blank" href="https://intermagnet.org/index-eng.php">INTERMAGNET</a> and
-            <a target="_blank" href="http://www.wdc.bgs.ac.uk/">WDC</a>,
-            as well as, the 1 and 4 months Virtual Observatory data (VOBS) from the
-            <a href="https://www.space.dtu.dk/english/research/projects/project-descriptions/geomagnetic-virtual-observatories" target="_blank">GVO project</a>.
             These datasets can be accessed with the
             <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">VirES Python client</a>,
             readily available in <a target="_blank" href="https://vre.vires.services">VRE</a>.

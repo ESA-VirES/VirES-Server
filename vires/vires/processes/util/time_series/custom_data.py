@@ -44,6 +44,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     """ Custom dataset time-series class. """
     # fake collection metadata
     metadata = {
+        "mission": None,
         "spacecraft": "U",
     }
     COLLECTION_IDENTIFIER = "USER_DATA"

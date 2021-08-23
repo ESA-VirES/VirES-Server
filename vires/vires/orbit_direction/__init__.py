@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Update orbit tables from MAGx_LR products - common subroutines
+# Orbit direction file handling
 #
-# Authors: Martin Paces martin.paces@eox.at
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -24,40 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=missing-docstring,too-few-public-methods
 
-from vires.management.api.orbit_direction import Counter as BaseCounter
-
-
-class Counter(BaseCounter):
-
-    def __init__(self):
-        super().__init__()
-        self.failed = 0
-
-    def print_report(self, print_fcn):
-        if self.processed > 0:
-            print_fcn(
-                "%d of %d product(s) processed."
-                % (self.processed, self.total)
-            )
-
-        if self.skipped > 0:
-            print_fcn(
-                "%d of %d product(s) skipped."
-                % (self.skipped, self.total)
-            )
-
-        if self.failed > 0:
-            print_fcn(
-                "Failed to process %d of %d product(s)."
-                % (self.failed, self.total)
-            )
-
-        if self.removed > 0:
-            print_fcn(
-                "%d old product(s) removed from lookup tables." % self.removed
-            )
-
-        if self.total == 0:
-            print_fcn("No file processed.")
+from .reader import OrbitDirectionReader
+from .exceptions import DataIntegrityError
+from .update import OrbitDirectionTables

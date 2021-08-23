@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------------------
 #
-# Update orbit tables from MAGx_LR products - common subroutines
+# Orbit direction - common settings
 #
-# Authors: Martin Paces martin.paces@eox.at
+# Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
 # Copyright (C) 2019 EOX IT Services GmbH
 #
@@ -24,40 +24,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=missing-docstring,too-few-public-methods
+# pylint: disable=
 
-from vires.management.api.orbit_direction import Counter as BaseCounter
+from numpy import int8, timedelta64
 
+# point type values
+FLAG_START = int8(1)
+FLAG_END = int8(-1)
+FLAG_MIDDLE = int8(0)
 
-class Counter(BaseCounter):
+# orbit direction values
+FLAG_ASCENDING = int8(1)
+FLAG_DESCENDING = int8(-1)
+FLAG_UNDEFINED = int8(0)
 
-    def __init__(self):
-        super().__init__()
-        self.failed = 0
+# gap detection threshold
+GAP_THRESHOLD = timedelta64(15000, 'ms')
 
-    def print_report(self, print_fcn):
-        if self.processed > 0:
-            print_fcn(
-                "%d of %d product(s) processed."
-                % (self.processed, self.total)
-            )
-
-        if self.skipped > 0:
-            print_fcn(
-                "%d of %d product(s) skipped."
-                % (self.skipped, self.total)
-            )
-
-        if self.failed > 0:
-            print_fcn(
-                "Failed to process %d of %d product(s)."
-                % (self.failed, self.total)
-            )
-
-        if self.removed > 0:
-            print_fcn(
-                "%d old product(s) removed from lookup tables." % self.removed
-            )
-
-        if self.total == 0:
-            print_fcn("No file processed.")
+# nominal sampling interval
+NOMINAL_SAMPLING = timedelta64(1000, 'ms')

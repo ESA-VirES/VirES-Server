@@ -33,6 +33,8 @@ from vires.cdf_util import cdf_rawtime_to_datetime
 
 class SwarmProductMetadataReader():
 
+    TIME_EXTENT_ATTRIBUTE = "TIME_EXTENT"
+
     TIME_VARIABLES = [
         "Timestamp",
         "timestamp",
@@ -40,8 +42,24 @@ class SwarmProductMetadataReader():
         "t",
     ]
 
+    @staticmethod
+    def _read_time_extent(attr):
+        attr._raw = True # pylint: disable=protected-access
+        cdf_type = attr.type(0)
+        begin_time, end_time = attr[0]
+        return (
+            naive_to_utc(cdf_rawtime_to_datetime(begin_time, cdf_type)),
+            naive_to_utc(cdf_rawtime_to_datetime(end_time, cdf_type)),
+        )
+
     @classmethod
-    def get_time_range_and_size(cls, cdf):
+    def get_time_range(cls, cdf):
+
+        try:
+            return cls._read_time_extent(cdf.attrs[cls.TIME_EXTENT_ATTRIBUTE])
+        except (KeyError, IndexError, ValueError):
+            pass # fallback to extraction from the Timestamp array
+
         # iterate possible time keys and try to extract the values
         for time_variable in cls.TIME_VARIABLES:
             try:
@@ -59,16 +77,14 @@ class SwarmProductMetadataReader():
         return (
             naive_to_utc(cdf_rawtime_to_datetime(times[0], times.type())),
             naive_to_utc(cdf_rawtime_to_datetime(times[-1], times.type())),
-            times.shape[0]
         )
 
     @classmethod
     def read(cls, data):
-        begin_time, end_time, n_times = cls.get_time_range_and_size(data)
+        begin_time, end_time = cls.get_time_range(data)
 
         return {
             "format": "CDF-Swarm",
-            "size": (n_times, 0),
             "begin_time": begin_time,
             "end_time": end_time,
         }
@@ -130,17 +146,15 @@ class ObsProductMetadataReader():
         return (
             cls.epoch_to_datetime(times.min(), cdf_type),
             cls.epoch_to_datetime(times.max(), cdf_type),
-            times.shape[0],
             datasets,
         )
 
     @classmethod
     def read(cls, cdf):
-        begin_time, end_time, n_times, datasets = cls.get_obs_info(cdf)
+        begin_time, end_time, datasets = cls.get_obs_info(cdf)
 
         return {
             "format": "CDF-OBS",
-            "size": (n_times, 0),
             "begin_time": begin_time,
             "end_time": end_time,
             "datasets": datasets,
@@ -187,6 +201,5 @@ class VObsProductMetadataReader(ObsProductMetadataReader):
         return (
             cls.epoch_to_datetime(times.min(), cdf_type),
             cls.epoch_to_datetime(times.max(), cdf_type),
-            times.shape[0],
             datasets,
         )

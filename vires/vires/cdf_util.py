@@ -160,7 +160,7 @@ def is_cdf_file(filename):
         return False
 
 
-def cdf_open(filename, mode="r"):
+def cdf_open(filename, mode="r", backward_compatible=True):
     """ Open a new or existing  CDF file.
     Allowed modes are 'r' (read-only) and 'w' (read-write).
     A new CDF file is created if the 'w' mode is chosen and the file does not
@@ -178,6 +178,7 @@ def cdf_open(filename, mode="r"):
             cdf = pycdf.CDF(filename)
             cdf.readonly(False)
         else:
+            pycdf.lib.set_backward(backward_compatible)
             cdf = pycdf.CDF(filename, "")
             # add extra attributes
             cdf.attrs.update({
