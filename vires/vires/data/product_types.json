@@ -1058,7 +1058,8 @@
         "defaultDataset": "AUX_IMF",
         "datasets": {
             "AUX_IMF": {
-                "Epoch": {
+                "Timestamp": {
+                    "source": "Epoch",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1066,21 +1067,24 @@
                         "UNITS": "-"
                     }
                 },
-                "BY_GSM": {
+                "IMF_BY_GSM": {
+                    "source": "BY_GSM",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP By (nT), GSM",
                         "UNITS": "nT"
                     }
                 },
-                "BZ_GSM": {
+                "IMF_BZ_GSM": {
+                    "source": "BZ_GSM",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP Bz (nT), GSM",
                         "UNITS": "nT"
                     }
                 },
-                "V": {
+                "IMF_V": {
+                    "source": "V",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP plasma flow speed (km/s)",
@@ -1103,6 +1107,7 @@
         "datasets": {
             "AEJ_LPL": {
                 "Timestamp": {
+                    "source": "t",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1139,6 +1144,7 @@
                     }
                 },
                 "MLT_QD": {
+                    "source": "MLT",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Magnetic local time (QD)",
@@ -1146,6 +1152,7 @@
                     }
                 },
                 "J_NE": {
+                    "source": "J",
                     "dataType": "float64",
                     "dimension": [2],
                     "attributes": {
@@ -1163,6 +1170,7 @@
             },
             "Quality": {
                 "Timestamp": {
+                    "source": "t_qual",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1229,6 +1237,7 @@
                     }
                 },
                 "MLT_QD": {
+                    "source": "MLT",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Magnetic local time (QD)",
@@ -1265,6 +1274,7 @@
         "datasets": {
             "AEJ_LPS": {
                 "Timestamp": {
+                    "source": "t",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1301,6 +1311,7 @@
                     }
                 },
                 "MLT_QD": {
+                    "source": "MLT",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Magnetic local time (QD)",
@@ -1308,6 +1319,7 @@
                     }
                 },
                 "J_CF_NE": {
+                    "source": "J_CF",
                     "dataType": "float64",
                     "dimension": [2],
                     "attributes": {
@@ -1316,6 +1328,7 @@
                     }
                 },
                 "J_DF_NE": {
+                    "source": "J_DF",
                     "dataType": "float64",
                     "dimension": [2],
                     "attributes": {
@@ -1338,6 +1351,7 @@
                     }
                 },
                 "J_R": {
+                    "source": "J_r",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Radial ionospheric current density at 110 km altitude in SemiQD frame",
@@ -1347,6 +1361,7 @@
             },
             "Quality": {
                 "Timestamp": {
+                    "source": "t_qual",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1413,6 +1428,7 @@
                     }
                 },
                 "MLT_QD": {
+                    "source": "MLT",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Magnetic local time (QD)",
@@ -1443,6 +1459,7 @@
             },
             "GroundMagneticDisturbance": {
                 "Timestamp": {
+                    "source": "Timestamp_B",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1451,6 +1468,7 @@
                     }
                 },
                 "Latitude": {
+                    "source": "Latitude_B",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geodetic latitude of peaks in ground magnetic field disturbance",
@@ -1458,6 +1476,7 @@
                     }
                 },
                 "Longitude": {
+                    "source": "Longitude_B",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geodetic longitude of peaks in ground magnetic field disturbance",
@@ -1465,6 +1484,7 @@
                     }
                 },
                 "B_NE": {
+                    "source": "B",
                     "dataType": "float64",
                     "dimension": [2],
                     "attributes": {
@@ -1481,6 +1501,7 @@
         "datasets": {
             "AOB_FAC": {
                 "Timestamp": {
+                    "source": "t",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1523,7 +1544,8 @@
                         "UNITS": "deg"
                     }
                 },
-                "MLT": {
+                "MLT_QD": {
+                    "source": "MLT",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Magnetic Local Time (QD)",
@@ -2277,7 +2299,8 @@
         "defaultDataset": "OMNI_HR_1min",
         "datasets": {
             "OMNI_HR_1min": {
-                "Epoch": {
+                "Timestamp": {
+                    "source": "Epoch",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -2285,42 +2308,48 @@
                         "UNITS": "-"
                     }
                 },
-                "BY_GSM": {
+                "IMF_BY_GSM": {
+                    "source": "BY_GSM",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP By (nT), GSM",
                         "UNITS": "nT"
                     }
                 },
-                "BZ_GSM": {
+                "IMF_BZ_GSM": {
+                    "source": "BZ_GSM",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP Bz (nT), GSM",
                         "UNITS": "nT"
                     }
                 },
-                "Vx": {
+                "IMF_Vx": {
+                    "source": "Vx",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Vx Velocity, GSE",
                         "UNITS": "km/s"
                     }
                 },
-                "Vy": {
+                "IMF_Vy": {
+                    "source": "Vy",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Vy Velocity, GSE",
                         "UNITS": "km/s"
                     }
                 },
-                "Vz": {
+                "IMF_Vz": {
+                    "source": "Vz",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Vz Velocity, GSE",
                         "UNITS": "km/s"
                     }
                 },
-                "flow_speed": {
+                "IMF_V": {
+                    "source": "flow_speed",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "flow speed, GSE",
@@ -2537,6 +2566,7 @@
             },
             "SecularVariation": {
                 "SiteCode": {
+                    "source": "SiteCode_SV",
                     "dataType": "char7",
                     "attributes": {
                         "DESCRIPTION": "Seven letter virtual observatory identification code",
@@ -2544,6 +2574,7 @@
                     }
                 },
                 "Timestamp": {
+                    "source": "Timestamp_SV",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -2552,6 +2583,7 @@
                     }
                 },
                 "Latitude": {
+                    "source": "Latitude_SV",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocetric latitude",
@@ -2559,6 +2591,7 @@
                     }
                 },
                 "Longitude": {
+                    "source": "Longitude_SV",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocetric longitude",
@@ -2566,6 +2599,7 @@
                     }
                 },
                 "Radius": {
+                    "source": "Radius_SV",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Radius",

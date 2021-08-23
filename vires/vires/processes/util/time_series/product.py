@@ -47,7 +47,6 @@ class SwarmDefaultParameters():
     TIME_OVERLAP = timedelta(seconds=60) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(seconds=30) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=0.5)
-    VARIABLE_TRANSLATES = {}
     VARIABLE_INTERPOLATION_KINDS = {}
 
 
@@ -65,12 +64,6 @@ class AuxImf2Parameters(SwarmDefaultParameters):
     TIME_OVERLAP = timedelta(hours=2) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(minutes=61) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=60)
-    VARIABLE_TRANSLATES = {
-        'Timestamp': 'Epoch',
-        'IMF_BY_GSM': 'BY_GSM',
-        'IMF_BZ_GSM': 'BZ_GSM',
-        'IMF_V': 'V',
-    }
     VARIABLE_INTERPOLATION_KINDS = {
         'F10_INDEX': 'zero',
         'IMF_BY_GSM': 'zero',
@@ -79,88 +72,28 @@ class AuxImf2Parameters(SwarmDefaultParameters):
     }
 
 
-class SwarmAEJLPParameters(SwarmDefaultParameters):
-    """ Common AEJ_LPx and AOB_FAC product parameters. """
-    VARIABLE_TRANSLATES = {
-        'Timestamp': 't',
-        'MLT_QD': 'MLT',
-        'J_R': 'J_r',
-        'J_NE': 'J',
-        'J_CF_NE': 'J_CF',
-        'J_DF_NE': 'J_DF',
-    }
-
-
-class SwarmAEJLPQualityParameters(SwarmDefaultParameters):
-    """ Common AEJ_LPx product quality parameters. """
-    VARIABLE_TRANSLATES = {
-        'Timestamp': 't_qual',
-    }
-
-
-class SwarmAEJPBParameters(SwarmDefaultParameters):
-    """ Common AEJxPBx product parameters. """
-    VARIABLE_TRANSLATES = {
-        'MLT_QD': 'MLT',
-    }
-
-
-class SwarmAEJPBSGroundMagneticDisturbanceParameters(SwarmDefaultParameters):
-    """ AEJxPBS peak ground magnetic disturbance product parameters. """
-    VARIABLE_TRANSLATES = {
-        'Timestamp': 'Timestamp_B',
-        'Latitude': 'Latitude_B',
-        'Longitude': 'Longitude_B',
-        'B_NE': 'B',
-    }
-
-
 class OmniHr1MinParameters(SwarmDefaultParameters):
-    """ AUX_IMF_2_ parameters """
+    """ OMNI HR 1min parameters """
     INTERPOLATION_KIND = "zero"
     TIME_TOLERANCE = timedelta(0) # time selection tolerance
     TIME_OVERLAP = timedelta(minutes=120) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(seconds=61) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=60)
-    VARIABLE_TRANSLATES = {
-        'Timestamp': 'Epoch',
-        'IMF_BY_GSM': 'BY_GSM',
-        'IMF_BZ_GSM': 'BZ_GSM',
-        'IMF_V': 'flow_speed',
-    }
     VARIABLE_INTERPOLATION_KINDS = {
-        'F10_INDEX': 'zero',
         'IMF_BY_GSM': 'linear',
         'IMF_BZ_GSM': 'linear',
         'IMF_V': 'linear',
-    }
-
-
-class VObsSecularVariationParameters(SwarmDefaultParameters):
-    """ VOBS secular variation. """
-    VARIABLE_TRANSLATES = {
-        'SiteCode': 'SiteCode_SV',
-        'Timestamp': 'Timestamp_SV',
-        'Latitude': 'Latitude_SV',
-        'Longitude': 'Longitude_SV',
-        'Radius': 'Radius_SV',
+        'IMF_Vx': 'linear',
+        'IMF_Vy': 'linear',
+        'IMF_Vz': 'linear',
     }
 
 
 DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
 PRODUCT_TYPE_PARAMETERS = {
-    "SW_AEJxLPL_2F": SwarmAEJLPParameters,
-    "SW_AEJxLPS_2F": SwarmAEJLPParameters,
-    "SW_AEJxLPL_2F:Quality": SwarmAEJLPQualityParameters,
-    "SW_AEJxLPS_2F:Quality": SwarmAEJLPQualityParameters,
-    "SW_AEJxPBL_2F": SwarmAEJPBParameters,
-    "SW_AEJxPBS_2F": SwarmAEJPBParameters,
-    "SW_AEJxPBS_2F:GroundMagneticDisturbance": SwarmAEJPBSGroundMagneticDisturbanceParameters,
-    "SW_AOBxFAC_2F": SwarmAEJLPParameters,
     "SW_MAGx_LR_1B": MagLRParameters,
     "SW_AUX_IMF_2_": AuxImf2Parameters,
     "OMNI_HR_1min": OmniHr1MinParameters,
-    "SW_VOBS_xM_2_:SecularVariation": VObsSecularVariationParameters,
 }
 
 
@@ -316,12 +249,9 @@ class ProductTimeSeries(BaseProductTimeSeries):
         self.dataset_id = dataset_id
         self.default_dataset_id = default_dataset_id
 
-        self.translate_fw = {
-            **params.VARIABLE_TRANSLATES, # TODO: remove
-            **self._get_variable_mapping(
-                self.collection.type.get_dataset_definition(self.dataset_id)
-            )
-        }
+        self.translate_fw = self._get_variable_mapping(
+            self.collection.type.get_dataset_definition(self.dataset_id)
+        )
 
     @property
     def metadata(self):
