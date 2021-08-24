@@ -1058,7 +1058,7 @@
         "defaultDataset": "AUX_IMF",
         "datasets": {
             "AUX_IMF": {
-                "Epoch": {
+                "Timestamp": {
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1066,21 +1066,21 @@
                         "UNITS": "-"
                     }
                 },
-                "BY_GSM": {
+                "IMF_BY_GSM": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP By (nT), GSM",
                         "UNITS": "nT"
                     }
                 },
-                "BZ_GSM": {
+                "IMF_BZ_GSM": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP Bz (nT), GSM",
                         "UNITS": "nT"
                     }
                 },
-                "V": {
+                "IMF_V": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP plasma flow speed (km/s)",
@@ -2277,7 +2277,7 @@
         "defaultDataset": "OMNI_HR_1min",
         "datasets": {
             "OMNI_HR_1min": {
-                "Epoch": {
+                "Timestamp": {
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -2285,42 +2285,42 @@
                         "UNITS": "-"
                     }
                 },
-                "BY_GSM": {
+                "IMF_BY_GSM": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP By (nT), GSM",
                         "UNITS": "nT"
                     }
                 },
-                "BZ_GSM": {
+                "IMF_BZ_GSM": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "1AU IP Bz (nT), GSM",
                         "UNITS": "nT"
                     }
                 },
-                "Vx": {
+                "IMF_Vx": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Vx Velocity, GSE",
                         "UNITS": "km/s"
                     }
                 },
-                "Vy": {
+                "IMF_Vy": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Vy Velocity, GSE",
                         "UNITS": "km/s"
                     }
                 },
-                "Vz": {
+                "IMF_Vz": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Vz Velocity, GSE",
                         "UNITS": "km/s"
                     }
                 },
-                "flow_speed": {
+                "IMF_V": {
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "flow speed, GSE",
