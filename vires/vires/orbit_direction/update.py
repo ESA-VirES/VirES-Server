@@ -169,7 +169,7 @@ class OrbitDirectionTables():
 
             index_sort = argsort(times)
             if (index_sort != arange(times.size)).any():
-                self.logger.warn(
+                self.logger.warning(
                     "%s: Timestamp values are not sorted!", basename(filename)
                 )
 
@@ -178,7 +178,7 @@ class OrbitDirectionTables():
             ).nonzero()[0]))
 
             if index_unique.size < index_sort.size:
-                self.logger.warn(
+                self.logger.warning(
                     "%s: Timestamp values are not unique!", basename(filename)
                 )
 
