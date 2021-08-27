@@ -44,11 +44,11 @@ def extract_orbit_directions(times, lats):
             times, lats = times_all[segment], lats_all[segment]
             if times.size < 2:
                 continue
-            times_extr, type_extr = find_inversion_points(
-                *low_pass_filter(times, lats)
-            )
+            lats_smooth = low_pass_filter(times, lats)
+            times_extr, type_extr = find_inversion_points(times, lats_smooth)
+
             yield OutputData.get_start(
-                times[0], FLAGS_ORBIT_DIRECTION[int(lats[1] >= lats[0])]
+                times[0], FLAGS_ORBIT_DIRECTION[int(lats_smooth[1] >= lats_smooth[0])]
             )
             yield OutputData.get_body(
                 times_extr, FLAGS_ORBIT_DIRECTION[type_extr.astype('int')]
@@ -78,7 +78,7 @@ def low_pass_filter(times, values):
         return times, values
     tmp = times.astype('float64')
     alpha = (tmp[1:-1] - tmp[:-2]) / (tmp[2:] - tmp[:-2]) # weight factor
-    return times, concatenate((
+    return concatenate((
         values[:1],
         0.5 * (values[:-2] * (1 - alpha) + values[1:-1] + values[2:] * alpha),
         values[-1:],
