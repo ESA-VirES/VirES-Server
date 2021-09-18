@@ -31,6 +31,7 @@ from os.path import splitext, basename, abspath
 from datetime import timedelta
 from django.db import transaction
 from vires.util import AttributeDict
+from vires.exceptions import DataIntegrityError
 from vires.time_util import format_datetime
 from vires.models import Product, ProductLocation
 from vires.swarm import (
@@ -44,7 +45,12 @@ from .orbit_direction import (
     update_orbit_direction_tables,
     sync_orbit_direction_tables,
     rebuild_orbit_direction_tables,
-    DataIntegrityError
+)
+from .conjunctions import (
+    find_pair_collections,
+    update_conjunctions_table,
+    sync_conjunctions_table,
+    rebuild_conjunctions_table,
 )
 
 LOG_FORMAT = "product %s/%s %s"
@@ -52,7 +58,6 @@ LOG_FORMAT = "product %s/%s %s"
 DEFAULT_METADATA_READER = SwarmProductMetadataReader
 METADATA_READER = {
     "SW_AUX_OBSx2_": ObsProductMetadataReader,
-    "SW_AUX_OBSH2_": ObsProductMetadataReader,
     "SW_AUX_OBSH2_": ObsProductMetadataReader,
     "SW_VOBS_xM_2_": VObsProductMetadataReader,
 }
@@ -297,18 +302,37 @@ def execute_post_registration_actions(product, logger=None):
         logger = getLogger(__name__)
 
     if product.collection.metadata.get("calculateOrbitDirection"):
-        _update_orbit_direction(product, logger=logger)
+        _update_orbit_direction(product)
+
+    if product.collection.metadata.get("calculateConjunctions"):
+        for other_collection in find_pair_collections(product.collection):
+            _update_conjunctions(product, other_collection)
 
 
-def _update_orbit_direction(product, logger):
+def _update_orbit_direction(product, logger=None):
     """ Update orbit directions from the given product. """
     try:
-        update_orbit_direction_tables(product)
+        update_orbit_direction_tables(product, logger)
     except DataIntegrityError:
         try:
             sync_orbit_direction_tables(product.collection, logger=logger)
         except DataIntegrityError:
             rebuild_orbit_direction_tables(product.collection, logger=logger)
+
+
+def _update_conjunctions(product, other_collection, logger=None):
+    """ Update conjunctions from the given product. """
+    try:
+        update_conjunctions_table(product, other_collection, logger=logger)
+    except DataIntegrityError:
+        try:
+            sync_conjunctions_table(
+                product.collection, other_collection, logger=logger
+            )
+        except DataIntegrityError:
+            rebuild_conjunctions_table(
+                product.collection, other_collection, logger=logger
+            )
 
 
 def _deregister_existing_product(product):

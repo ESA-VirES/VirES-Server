@@ -30,6 +30,7 @@ from math import floor
 from calendar import timegm
 import unittest
 from datetime import datetime
+from numpy import datetime64
 from vires.time_util import (
     DT_1970, is_leap_year, days_per_year, time_to_seconds,
     time_to_day_fraction, day_fraction_to_time,
@@ -40,6 +41,7 @@ from vires.time_util import (
     datetime_to_decimal_year, decimal_year_to_datetime,
     mjd2000_to_decimal_year, decimal_year_to_mjd2000,
     datetime_mean,
+    datetime_to_datetime64,
 )
 
 class TestTimeUtils(unittest.TestCase):
@@ -554,6 +556,36 @@ class TestTimeUtils(unittest.TestCase):
                 print("Failed: ", (year, result))
                 raise
 
+    def test_datetime_to_datetime64(self):
+        test_values = [
+            (
+                (datetime(2021, 6, 13, 15, 25, 34, 123456),),
+                datetime64("2021-06-13T15:25:34.123456", "us")
+            ),
+            (
+                (datetime(2021, 6, 13, 15, 25, 34, 123456), "us"),
+                datetime64("2021-06-13T15:25:34.123456", "us")
+            ),
+            (
+                (datetime(2021, 6, 13, 15, 25, 34, 123456), "ms"),
+                datetime64("2021-06-13T15:25:34.123", "ms")
+            ),
+            (
+                (datetime(2021, 6, 13, 15, 25, 34, 123456), "s"),
+                datetime64("2021-06-13T15:25:34.123", "s")
+            ),
+            (
+                (datetime(2021, 6, 13, 15, 25, 34, 123456), "D"),
+                datetime64("2021-06-13", "D")
+            ),
+        ]
+
+        for (dt_obj, *args), result in test_values:
+            try:
+                self.assertEqual(datetime_to_datetime64(dt_obj, *args), result)
+            except:
+                print("Failed: ", (dt_obj, *args, result))
+                raise
 
 if __name__ == "__main__":
     unittest.main()

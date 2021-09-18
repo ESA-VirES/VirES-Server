@@ -31,6 +31,7 @@ import re
 import math
 import time
 from datetime import datetime, timedelta
+from numpy import datetime64
 from django.utils.timezone import utc
 
 DT_1970 = datetime(1970, 1, 1)
@@ -288,6 +289,11 @@ def decimal_year_to_mjd2000(decimal_year):
     fraction, year = math.modf(decimal_year)
     year = int(year)
     return year_to_day2k(year) + fraction * days_per_year(year)
+
+
+def datetime_to_datetime64(dt_obj, *args):
+    """ Convert datetime.datetime object to UTC numpy.datetime64 value. """
+    return datetime64(utc_to_naive(dt_obj), *args)
 
 
 class Timer():

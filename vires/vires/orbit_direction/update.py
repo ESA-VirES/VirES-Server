@@ -34,7 +34,7 @@ from numpy import (
 )
 from eoxmagmod import mjd2000_to_decimal_year, eval_qdlatlon
 from ..cdf_util import cdf_open
-from ..cdf_write_util import CdfTypeEpoch
+from ..cdf_data_reader import read_cdf_data
 from .table import OrbitDirectionTable
 from .common import NOMINAL_SAMPLING
 from .util import InputData
@@ -155,11 +155,15 @@ class OrbitDirectionTables():
         """ Load data concatenated from a single product. """
         def _load(filename):
             with cdf_open(filename) as cdf:
-                times = CdfTypeEpoch.decode(cdf.raw_var("Timestamp")[...])
-                lats = cdf["Latitude"][...]
-                lons = cdf["Longitude"][...]
-                rads = cdf["Radius"][...]
-            return InputData(times, lats, lons, rads)
+                dataset = read_cdf_data(
+                    cdf, ["Timestamp", "Latitude", "Longitude", "Radius"]
+                )
+            return InputData(
+                dataset["Timestamp"],
+                dataset["Latitude"],
+                dataset["Longitude"],
+                dataset["Radius"],
+            )
 
         def _sanitize(data):
             times = data.times

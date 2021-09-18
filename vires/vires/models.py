@@ -195,6 +195,20 @@ class ProductCollection(Model):
     max_product_duration = DurationField(default=timedelta(0), **MANDATORY)
     metadata = JSONField(default=dict, **MANDATORY)
 
+    @property
+    def spacecraft(self):
+        """ Get mission/spacecraft tuple. """
+        return (
+            self.metadata.get('mission', 'Swarm'),
+            self.metadata.get('spacecraft'),
+        )
+
+    @property
+    def formatted_spacecraft(self):
+        """ Get mission/spacecraft string. """
+        mission, spacecraft = self.spacecraft
+        return "%s-%s" % (mission, spacecraft) if spacecraft else mission
+
     @classmethod
     def select_permitted(cls, permissions):
         query = cls.objects.prefetch_related('type')

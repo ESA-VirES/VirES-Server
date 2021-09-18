@@ -4,6 +4,7 @@
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
+        "calculateConjunctions": true,
         "calculateOrbitDirection": true
     },
     {
@@ -11,6 +12,7 @@
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "B",
         "nominalSampling": "PT1S",
+        "calculateConjunctions": true,
         "calculateOrbitDirection": true
     },
     {
