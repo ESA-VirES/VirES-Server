@@ -70,13 +70,13 @@ class OrbitDirectionTables():
 
     def __contains__(self, product_id):
         return (
-            product_id in self._geo_table #and product_id in self._mag_table
+            product_id in self._geo_table and product_id in self._mag_table
         )
 
     @property
     def changed(self):
         """ Return true if the tables changed and should be saved. """
-        return self._geo_table.changed #or self._mag_table.changed
+        return self._geo_table.changed or self._mag_table.changed
 
     @property
     def products(self):
