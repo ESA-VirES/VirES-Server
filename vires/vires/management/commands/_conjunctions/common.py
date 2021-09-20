@@ -77,4 +77,4 @@ class Counter(BaseCounter):
             )
 
         if self.total == 0:
-            print_fcn("No file processed.")
+            print_fcn("No product processed.")

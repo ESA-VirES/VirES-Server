@@ -212,12 +212,6 @@ def _update_conjunctions_table(table, product, other_product, logger,
         )
     )
 
-    logger.info(
-        "%s conjunctions table updated from %s and %s",
-        get_spacecrafts_string(product.collection, other_product.collection),
-        product.identifier, other_product.identifier,
-    )
-
     return True
 
 
