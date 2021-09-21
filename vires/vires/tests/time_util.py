@@ -32,7 +32,7 @@ import unittest
 from datetime import datetime
 from numpy import datetime64
 from vires.time_util import (
-    DT_1970, is_leap_year, days_per_year, time_to_seconds,
+    TZ_UTC, DT_1970, is_leap_year, days_per_year, time_to_seconds,
     time_to_day_fraction, day_fraction_to_time,
     day2k_to_date, date_to_day2k, day2k_to_year, year_to_day2k,
     datetime_to_mjd2000, mjd2000_to_datetime,
@@ -41,7 +41,7 @@ from vires.time_util import (
     datetime_to_decimal_year, decimal_year_to_datetime,
     mjd2000_to_decimal_year, decimal_year_to_mjd2000,
     datetime_mean,
-    datetime_to_datetime64,
+    datetime_to_datetime64, datetime64_to_datetime, datetime64_to_unix_epoch,
 )
 
 class TestTimeUtils(unittest.TestCase):
@@ -586,6 +586,61 @@ class TestTimeUtils(unittest.TestCase):
             except:
                 print("Failed: ", (dt_obj, *args, result))
                 raise
+
+    def test_datetime64_to_datetime(self):
+        test_values = [
+            (
+                datetime64("2021-06-13T15:25:34.123456", "us"),
+                datetime(2021, 6, 13, 15, 25, 34, 123456, tzinfo=TZ_UTC),
+            ),
+            (
+                datetime64("2021-06-13T15:25:34.123", "ms"),
+                datetime(2021, 6, 13, 15, 25, 34, 123000, tzinfo=TZ_UTC),
+            ),
+            (
+                datetime64("2021-06-13T15:25:34", "s"),
+                datetime(2021, 6, 13, 15, 25, 34, tzinfo=TZ_UTC),
+            ),
+            (
+                datetime64("2021-06-13", "D"),
+                datetime(2021, 6, 13, tzinfo=TZ_UTC),
+            ),
+        ]
+
+        for dt64_obj, result in test_values:
+            try:
+                self.assertEqual(datetime64_to_datetime(dt64_obj), result)
+            except:
+                print("Failed: ", (dt64_obj, result))
+                raise
+
+    def test_datetime64_to_unix_epoch(self):
+        # NOTE: Gregorian calender only.
+        test_values = [
+            (
+                datetime64(item),
+                (item - DT_1970).total_seconds()
+            ) for item in [
+                datetime(2000, 1, 1, 0, 0, 0, 0),
+                datetime(2100, 1, 1, 23, 59, 0, 0),
+                datetime(2016, 3, 30, 23, 0, 0, 0),
+                datetime(2016, 3, 30, 23, 59, 0, 0),
+                datetime(2016, 3, 30, 23, 59, 59, 0),
+                datetime(2016, 3, 30, 23, 59, 59, 999000),
+                datetime(2016, 3, 30, 23, 59, 59, 999999),
+                datetime(1582, 10, 15, 0, 0, 0, 1000),
+            ]
+        ]
+        self.assertEqual(datetime64_to_unix_epoch(datetime64('1970-01-01', 'ms')), 0)
+        for dt64_obj, result in test_values:
+            try:
+                self.assertAlmostEqual(
+                    datetime64_to_unix_epoch(dt64_obj), result, delta=5e-7
+                )
+            except:
+                print("Failed: ", (dt64_obj, result))
+                raise
+
 
 if __name__ == "__main__":
     unittest.main()

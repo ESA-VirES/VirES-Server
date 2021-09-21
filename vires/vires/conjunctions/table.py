@@ -211,7 +211,7 @@ class ConjunctionsTable():
             self._products.ends,
         )
         cdf.attrs['NEIGHBOUR_DISTANCE'] = 1000.
-        cdf.attrs['NEIGHBOUR_OVERLAP'] = 0.
+        cdf.attrs['NEIGHBOUR_OVERLAP'] = 1000.
 
         cdf_add_variable(cdf, "Timestamp", self._data.times, {
             "DESCRIPTION": "Timestamp",
