@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Orbit direction file handling
+# Conjunctions tables
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2021 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,5 +25,4 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .reader import OrbitDirectionReader
-from .update import OrbitDirectionTables
+from .table import ConjunctionsTable

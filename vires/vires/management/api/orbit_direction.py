@@ -31,7 +31,8 @@ from datetime import timedelta
 from vires.cdf_util import cdf_open
 from vires.time_util import naive_to_utc
 from vires.models import ProductCollection, Product
-from vires.orbit_direction import OrbitDirectionTables, DataIntegrityError
+from vires.exceptions import DataIntegrityError
+from vires.orbit_direction import OrbitDirectionTables
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
     ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
@@ -51,10 +52,7 @@ def sync_orbit_direction_tables(collection, logger=None, counter=None):
         counter = Counter()
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(
-            collection.metadata.get('mission', 'Swarm'),
-            collection.metadata.get('spacecraft'),
-        ),
+        *get_orbit_direction_tables(*collection.spacecraft),
         logger=logger
     )
 
@@ -96,10 +94,7 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
         counter = Counter()
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(
-            collection.metadata.get('mission', 'Swarm'),
-            collection.metadata.get('spacecraft'),
-        ),
+        *get_orbit_direction_tables(*collection.spacecraft),
         reset=True, logger=logger
     )
 
@@ -148,16 +143,16 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
     return counter
 
 
-def update_orbit_direction_tables(product):
+def update_orbit_direction_tables(product, logger=None):
     """ Update orbit direction tables from product and collection. """
+    if not logger:
+        logger = getLogger(__name__)
+
     collection = product.collection
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(
-            collection.metadata.get('mission', 'Swarm'),
-            collection.metadata.get('spacecraft'),
-        ),
-        logger=getLogger(__name__)
+        *get_orbit_direction_tables(*collection.spacecraft),
+        logger=logger
     )
 
     def _check_neighbour_product(product):

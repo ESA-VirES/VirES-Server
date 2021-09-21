@@ -33,8 +33,9 @@ from logging import getLogger
 from bisect import bisect_left, bisect_right
 from numpy import asarray, empty
 from ..cdf_util import cdf_open, CDF_EPOCH_TYPE
+from ..cdf_data_reader import read_cdf_data
 from ..cdf_write_util import cdf_add_variable, CdfTypeEpoch
-from .exceptions import DataIntegrityError
+from ..exceptions import DataIntegrityError
 from .common import (
     FLAG_START, FLAG_MIDDLE, FLAG_END,
     FLAG_ASCENDING, FLAG_DESCENDING, FLAG_UNDEFINED,
@@ -191,15 +192,15 @@ class OrbitDirectionTable():
         tail = self._data.time_subset(start=end_trim_time, left_closed=False)
 
         if (
-            not head.is_empty and head.flags[-1] != FLAG_END and
-            not body.is_empty and body.flags[0] == FLAG_START
-        ):
+                not head.is_empty and head.flags[-1] != FLAG_END and
+                not body.is_empty and body.flags[0] == FLAG_START
+            ):
             raise DataIntegrityError("Unexpected segment start.")
 
         if (
-            not tail.is_empty and tail.flags[0] != FLAG_START and
-            not body.is_empty and body.flags[-1] == FLAG_END
-        ):
+                not tail.is_empty and tail.flags[0] != FLAG_START and
+                not body.is_empty and body.flags[-1] == FLAG_END
+            ):
             raise DataIntegrityError("Unexpected segment end.")
 
         self._data = OutputData.join(head, body, tail)
@@ -239,18 +240,22 @@ class OrbitDirectionTable():
                 return empty(0, 'float64'), empty(0, 'float64')
             return data[:, 0], data[:, 1]
 
-        times = CdfTypeEpoch.decode(cdf.raw_var("Timestamp")[...])
-        odirs = cdf["OrbitDirection"][...]
-        flags = cdf["BoundaryType"][...]
-
         products = list(cdf.attrs['SOURCES'])
         start_times, end_times = _read_time_ranges(
             cdf.attrs['SOURCE_TIME_RANGES']
         )
-
         self._products = Products(products, start_times, end_times)
-        self._data = OutputData(times, odirs, flags)
         self._product_set = set(products)
+
+        dataset = read_cdf_data(
+            cdf, ["Timestamp", "OrbitDirection", "BoundaryType"]
+        )
+        self._data = OutputData(
+            dataset["Timestamp"],
+            dataset["OrbitDirection"],
+            dataset["BoundaryType"],
+        )
+
         self._changed = False
 
     def _save_table(self, cdf):
