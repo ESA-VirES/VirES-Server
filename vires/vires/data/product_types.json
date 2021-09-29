@@ -5,6 +5,7 @@
         "datasets": {
             "MOD": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -15,21 +16,21 @@
                 "Latitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "DESCRIPTION": "Position in ITRF - Latitude",
                         "UNITS": "deg"
                     }
                 },
                 "Longitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "DESCRIPTION": "Position in ITRF - Longitude",
                         "UNITS": "deg"
                     }
                 },
                 "Radius": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "DESCRIPTION": "Position in ITRF - Radius",
                         "UNITS": "m"
                     }
                 }
@@ -42,6 +43,7 @@
         "datasets": {
             "MDR_MAG_LR": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -49,31 +51,24 @@
                         "UNITS": "-"
                     }
                 },
-                "SyncStatus": {
-                    "dataType": "uint16",
-                    "attributes": {
-                        "DESCRIPTION": "Synchronization status",
-                        "UNITS": "-"
-                    }
-                },
                 "Latitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "DESCRIPTION": "Position in ITRF - Latitude",
                         "UNITS": "deg"
                     }
                 },
                 "Longitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "DESCRIPTION": "Position in ITRF - Longitude",
                         "UNITS": "deg"
                     }
                 },
                 "Radius": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "DESCRIPTION": "Position in ITRF - Radius",
                         "UNITS": "m"
                     }
                 },
@@ -202,6 +197,13 @@
                         "DESCRIPTION":  "ASM frequency calibration data deviation",
                         "UNITS": "-"
                     }
+                },
+                "SyncStatus": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Synchronization status",
+                        "UNITS": "-"
+                    }
                 }
             }
         }
@@ -212,17 +214,11 @@
         "datasets": {
             "MDR_MAG_HR": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
                         "DESCRIPTION": "Time stamp",
-                        "UNITS": "-"
-                    }
-                },
-                "SyncStatus": {
-                    "dataType": "uint16",
-                    "attributes": {
-                        "DESCRIPTION": "Synchronization status",
                         "UNITS": "-"
                     }
                 },
@@ -330,6 +326,13 @@
                         "DESCRIPTION": "Flags characterizing the S/C platform information",
                         "UNITS": "-"
                     }
+                },
+                "SyncStatus": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Synchronization status",
+                        "UNITS": "-"
+                    }
                 }
             }
         }
@@ -340,17 +343,11 @@
         "datasets": {
             "MDR_EFI_LP": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
                         "DESCRIPTION": "Time stamp",
-                        "UNITS": "-"
-                    }
-                },
-                "SyncStatus": {
-                    "dataType": "uint16",
-                    "attributes": {
-                        "DESCRIPTION": "Synchronization status",
                         "UNITS": "-"
                     }
                 },
@@ -451,6 +448,13 @@
                         "DESCRIPTION": "Flags characterizing the spacecraft potential measurement",
                         "UNITS": "-"
                     }
+                },
+                "SyncStatus": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Synchronization status",
+                        "UNITS": "-"
+                    }
                 }
             }
         }
@@ -461,6 +465,7 @@
         "datasets": {
             "IBI_TMS": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -540,7 +545,8 @@
         "datasets": {
             "EEF_TMS": {
                 "Timestamp": {
-                    "dataType": "Timestamp",
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
                         "DESCRIPTION": "Time of satellite crossing of the magnetic equator, UTC",
@@ -599,6 +605,7 @@
         "datasets": {
             "FAC_TMS": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -692,6 +699,7 @@
         "datasets": {
             "TEC_TMS": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -847,6 +855,7 @@
         "datasets": {
             "IPD_IRR": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1059,6 +1068,7 @@
         "datasets": {
             "AUX_IMF": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "Epoch",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1107,6 +1117,7 @@
         "datasets": {
             "AEJ_LPL": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "t",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1170,6 +1181,7 @@
             },
             "Quality": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "t_qual",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1201,6 +1213,7 @@
         "datasets": {
             "AEJ_PBL": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1274,6 +1287,7 @@
         "datasets": {
             "AEJ_LPS": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "t",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1361,6 +1375,7 @@
             },
             "Quality": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "t_qual",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1392,6 +1407,7 @@
         "datasets": {
             "AEJ_PBS": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1459,6 +1475,7 @@
             },
             "GroundMagneticDisturbance": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "Timestamp_B",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1501,6 +1518,7 @@
         "datasets": {
             "AOB_FAC": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "t",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1583,6 +1601,7 @@
         "datasets": {
             "MIT_minimum": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1722,6 +1741,7 @@
             },
             "ID": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "Timestamp_ID",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1844,6 +1864,7 @@
         "datasets": {
             "MIT_minimum": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -1976,6 +1997,7 @@
             },
             "ID": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "Timestamp_ID",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -2090,6 +2112,7 @@
         "datasets": {
             "SSFAC_boundary": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -2194,6 +2217,7 @@
             },
             "ID": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "Timestamp_ID",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -2300,6 +2324,7 @@
         "datasets": {
             "OMNI_HR_1min": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "Epoch",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -2366,25 +2391,19 @@
         "unsortedDatasets": ["__all__"],
         "datasets": {
             "__all__": {
-                "IAGA_code": {
-                    "dataType": "char3",
-                    "attributes": {
-                        "DESCRIPTION": "IAGA three letter observatory identification code",
-                        "UNITS": "-"
-                    }
-                },
-                "Quality": {
-                    "dataType": "char1",
-                    "attributes": {
-                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
-                        "UNITS": "-"
-                    }
-                },
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
                         "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "IAGA_code": {
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "IAGA three letter observatory identification code",
                         "UNITS": "-"
                     }
                 },
@@ -2416,6 +2435,13 @@
                         "DESCRIPTION": "Magnetic field vector, NEC frame",
                         "UNITS": "nT"
                     }
+                },
+                "Quality": {
+                    "dataType": "char1",
+                    "attributes": {
+                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
+                        "UNITS": "-"
+                    }
                 }
             }
         }
@@ -2427,6 +2453,15 @@
         "unsortedDatasets": ["__all__"],
         "datasets": {
             "__all__": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
                 "IAGA_code": {
                     "dataType": "char3",
                     "attributes": {
@@ -2441,39 +2476,24 @@
                         "UNITS": "-"
                     }
                 },
-                "Quality": {
-                    "dataType": "char1",
-                    "attributes": {
-                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
-                        "UNITS": "-"
-                    }
-                },
-                "Timestamp": {
-                    "dataType": "timestamp",
-                    "dataSubtype": "CDF_EPOCH",
-                    "attributes": {
-                        "DESCRIPTION": "Time stamp",
-                        "UNITS": "-"
-                    }
-                },
                 "Latitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "DESCRIPTION": "Position in ITRF - Latitude",
                         "UNITS": "deg"
                     }
                 },
                 "Longitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "DESCRIPTION": "Position in ITRF - Longitude",
                         "UNITS": "deg"
                     }
                 },
                 "Radius": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "DESCRIPTION": "Position in ITRF - Radius",
                         "UNITS": "m"
                     }
                 },
@@ -2483,6 +2503,13 @@
                     "attributes": {
                         "DESCRIPTION": "Magnetic field vector, NEC frame",
                         "UNITS": "nT"
+                    }
+                },
+                "Quality": {
+                    "dataType": "char1",
+                    "attributes": {
+                        "DESCRIPTION": "Data quality: D for definitive and Q for quasi-definitive",
+                        "UNITS": "-"
                     }
                 }
             }
@@ -2495,18 +2522,19 @@
         "unsortedDatasets": ["__all__", "SecularVariation"],
         "datasets": {
             "__all__": {
-                "SiteCode": {
-                    "dataType": "char7",
-                    "attributes": {
-                        "DESCRIPTION": "Seven letter virtual observatory identification code",
-                        "UNITS": "-"
-                    }
-                },
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
                         "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "SiteCode": {
+                    "dataType": "char7",
+                    "attributes": {
+                        "DESCRIPTION": "Seven letter virtual observatory identification code",
                         "UNITS": "-"
                     }
                 },
@@ -2565,20 +2593,21 @@
                 }
             },
             "SecularVariation": {
-                "SiteCode": {
-                    "source": "SiteCode_SV",
-                    "dataType": "char7",
-                    "attributes": {
-                        "DESCRIPTION": "Seven letter virtual observatory identification code",
-                        "UNITS": "-"
-                    }
-                },
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "source": "Timestamp_SV",
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
                         "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "SiteCode": {
+                    "source": "SiteCode_SV",
+                    "dataType": "char7",
+                    "attributes": {
+                        "DESCRIPTION": "Seven letter virtual observatory identification code",
                         "UNITS": "-"
                     }
                 },
@@ -2631,6 +2660,7 @@
         "datasets": {
             "MDR_MAG": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -2641,21 +2671,21 @@
                 "Latitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "DESCRIPTION": "Position in ITRF - Latitude",
                         "UNITS": "deg"
                     }
                 },
                 "Longitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "DESCRIPTION": "Position in ITRF - Longitude",
                         "UNITS": "deg"
                     }
                 },
                 "Radius": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "DESCRIPTION": "Position in ITRF - Radius",
                         "UNITS": "m"
                     }
                 },
@@ -2722,6 +2752,7 @@
         "datasets": {
             "MDR_FGM_ACAL": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -2732,21 +2763,21 @@
                 "Latitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "DESCRIPTION": "Position in ITRF - Latitude",
                         "UNITS": "deg"
                     }
                 },
                 "Longitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "DESCRIPTION": "Position in ITRF - Longitude",
                         "UNITS": "deg"
                     }
                 },
                 "Radius": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "DESCRIPTION": "Position in ITRF - Radius",
                         "UNITS": "m"
                     }
                 },
@@ -2847,6 +2878,7 @@
         "datasets": {
             "MDR_MAG": {
                 "Timestamp": {
+                    "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
                     "attributes": {
@@ -2857,21 +2889,21 @@
                 "Latitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "DESCRIPTION": "Position in ITRF - Latitude",
                         "UNITS": "deg"
                     }
                 },
                 "Longitude": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "DESCRIPTION": "Position in ITRF - Longitude",
                         "UNITS": "deg"
                     }
                 },
                 "Radius": {
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "DESCRIPTION": "Position in ITRF - Radius",
                         "UNITS": "m"
                     }
                 },
