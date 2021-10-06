@@ -112,5 +112,6 @@ def _token_authentication(view_func, scope):
             user = _get_user(_extract_token(request))
             if user and user.is_active:
                 request.user = user
+                request.token_authentication = True
         return view_func(request, *args, **kwargs)
     return _wrapper_
