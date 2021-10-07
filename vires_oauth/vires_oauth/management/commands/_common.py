@@ -47,17 +47,6 @@ JSON_OPTS = {
 }
 
 
-def strip_blanks(func):
-    """ Decorator removing blank fields from the serialized objects """
-    def _strip_blanks_(*args, **kwargs):
-        return {
-            key: value
-            for key, value in func(*args, **kwargs).items()
-            if value not in (None, "")
-        }
-    return _strip_blanks_
-
-
 def time_spec(value):
     """ CLI time specification parser. """
     date_ = parse_date(value)

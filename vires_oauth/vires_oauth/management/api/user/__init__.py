@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Export users in JSON format.
+#  User management API
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2021 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,32 +26,5 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-import sys
-import json
-from django.contrib.auth.models import User
-from vires_oauth.management.api.user import serialize_user
-from .._common import JSON_OPTS
-from .common import UserSelectionSubcommand
-
-
-class ExportUserSubcommand(UserSelectionSubcommand):
-    name = "export"
-    help = "Export users in JSON format."
-
-    def add_arguments(self, parser):
-        super().add_arguments(parser)
-        parser.add_argument(
-            "-f", "--file", dest="filename", default="-", help=(
-                "Optional file-name the output is written to. "
-                "By default it is written to the standard output."
-            )
-        )
-
-    def handle(self, **kwargs):
-        users = self.select_users(User.objects.order_by("username"), **kwargs)
-
-        data = [serialize_user(user) for user in users]
-
-        filename = kwargs["filename"]
-        with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
-            json.dump(data, file_, **JSON_OPTS)
+from .import_ import save_user
+from .export import serialize_user
