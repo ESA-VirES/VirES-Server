@@ -33,6 +33,7 @@ from django.conf import settings
 from django.db import transaction
 from django.contrib.auth.models import User, Group
 from django.utils.dateparse import parse_datetime
+from django.contrib.auth.hashers import make_password
 from allauth.account.models import EmailAddress
 from allauth.socialaccount.models import SocialAccount
 from vires_oauth.models import UserProfile
@@ -117,6 +118,9 @@ USER_FIELDS = [
 
 @transaction.atomic
 def save_user(data, logger):
+    if "password" not in data and "raw_password" in data:
+        data["password"] = make_password(data.pop("raw_password") or None)
+
     is_updated, user = get_user(data["username"])
     set_model(user, USER_FIELDS, data, PARSERS)
     user.save()
@@ -179,8 +183,6 @@ USER_PROFILE_FIELDS = [
 
 
 def set_user_profile(user, data):
-    if data is None:
-        return
     user_profile = get_user_profile(user)
     set_model(user_profile, USER_PROFILE_FIELDS, data)
     user_profile.save()
@@ -198,8 +200,13 @@ EMAIL_ADDRESS_FIELDS = ["verified", "primary"]
 
 
 def set_email_addresses(user, data):
+
+    remove_extra_email_addresses(user, data)
+
     for item in data:
         set_email_address(user, item)
+
+    fix_primary_email(user)
 
 
 def set_email_address(user, data):
@@ -212,12 +219,31 @@ def set_email_address(user, data):
 
 
 def set_primary_email(user, email):
-    for item in user.emailaddress_set.all():
-        if item.primary and item.email != email:
-            item.primary = False
-            item.save()
+    for item in user.emailaddress_set.exclude(email=email):
+        item.primary = False
+        item.save()
     user.email = email
     user.save()
+
+
+def fix_primary_email(user):
+    if not user.email:
+        return
+
+    for item in user.emailaddress_set.exclude(email=user.email):
+        item.primary = False
+        item.save()
+
+    email = get_email_address(user, user.email)
+    email.primary = True
+    email.save()
+
+
+def remove_extra_email_addresses(user, data):
+    preserved_addresses = {item['email'] for item in data}
+    if user.email:
+        preserved_addresses.add(user.email)
+    return user.emailaddress_set.exclude(email__in=preserved_addresses).delete()
 
 
 def get_email_address(user, email):
@@ -232,6 +258,8 @@ SOCIAL_ACCOUNT_FIELDS = ["uid", "date_joined", "last_login", "extra_data"]
 
 
 def set_social_accounts(user, data):
+    remove_extra_social_accounts(user, data)
+
     for item in data:
         set_social_account(user, item)
 
@@ -240,6 +268,11 @@ def set_social_account(user, data):
     social_account = get_social_account(user, data['provider'])
     set_model(social_account, SOCIAL_ACCOUNT_FIELDS, data, PARSERS)
     social_account.save()
+
+
+def remove_extra_social_accounts(user, data):
+    preserved_accounts = {item['provider'] for item in data}
+    return user.socialaccount_set.exclude(provider__in=preserved_accounts).delete()
 
 
 def get_social_account(user, provider):
