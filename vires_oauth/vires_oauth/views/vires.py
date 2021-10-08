@@ -39,7 +39,7 @@ from ..decorators import (
     redirect_unauthenticated, oauth2_protected, log_exception,
 )
 from ..forms import UserProfileForm
-from ..models import Permission
+from ..models import Permission, UserProfile
 
 USER_PROFILE_TEMPLATE = 'vires_oauth/index.html'
 USER_CONSENT_TEMPLATE = 'account/consent.html'
@@ -89,12 +89,19 @@ def update_user_profile_view(request):
 
 @redirect_unauthenticated
 def update_user_consent_view(request):
+
+    def _get_user_profile(user):
+        try:
+            return user.userprofile
+        except UserProfile.DoesNotExist:
+            return UserProfile(user=user)
+
     redirect_field = 'next'
     redirect_url = get_next_redirect_url(request, redirect_field)
     service_terms_version = getattr(
         settings, "VIRES_SERVICE_TERMS_VERSION", None
     )
-    user_profile = request.user.userprofile
+    user_profile = _get_user_profile(request.user)
     if request.method == "POST":
         user_profile.consented_service_terms_version = service_terms_version
         user_profile.save()

@@ -34,7 +34,7 @@ from numpy import (
 )
 from eoxmagmod import mjd2000_to_decimal_year, eval_qdlatlon
 from ..cdf_util import cdf_open
-from ..cdf_write_util import CdfTypeEpoch
+from ..cdf_data_reader import read_cdf_data
 from .table import OrbitDirectionTable
 from .common import NOMINAL_SAMPLING
 from .util import InputData
@@ -70,13 +70,13 @@ class OrbitDirectionTables():
 
     def __contains__(self, product_id):
         return (
-            product_id in self._geo_table #and product_id in self._mag_table
+            product_id in self._geo_table and product_id in self._mag_table
         )
 
     @property
     def changed(self):
         """ Return true if the tables changed and should be saved. """
-        return self._geo_table.changed #or self._mag_table.changed
+        return self._geo_table.changed or self._mag_table.changed
 
     @property
     def products(self):
@@ -155,11 +155,15 @@ class OrbitDirectionTables():
         """ Load data concatenated from a single product. """
         def _load(filename):
             with cdf_open(filename) as cdf:
-                times = CdfTypeEpoch.decode(cdf.raw_var("Timestamp")[...])
-                lats = cdf["Latitude"][...]
-                lons = cdf["Longitude"][...]
-                rads = cdf["Radius"][...]
-            return InputData(times, lats, lons, rads)
+                dataset = read_cdf_data(
+                    cdf, ["Timestamp", "Latitude", "Longitude", "Radius"]
+                )
+            return InputData(
+                dataset["Timestamp"],
+                dataset["Latitude"],
+                dataset["Longitude"],
+                dataset["Radius"],
+            )
 
         def _sanitize(data):
             times = data.times
@@ -169,7 +173,7 @@ class OrbitDirectionTables():
 
             index_sort = argsort(times)
             if (index_sort != arange(times.size)).any():
-                self.logger.warn(
+                self.logger.warning(
                     "%s: Timestamp values are not sorted!", basename(filename)
                 )
 
@@ -178,7 +182,7 @@ class OrbitDirectionTables():
             ).nonzero()[0]))
 
             if index_unique.size < index_sort.size:
-                self.logger.warn(
+                self.logger.warning(
                     "%s: Timestamp values are not unique!", basename(filename)
                 )
 

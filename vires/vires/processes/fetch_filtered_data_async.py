@@ -208,7 +208,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 (job.started - job.created).total_seconds()
             )
         except Job.DoesNotExist:
-            context.logger.warn(
+            context.logger.warning(
                 "Failed to update the job status! The job does not exist!"
             )
 
@@ -226,7 +226,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 (job.stopped - job.started).total_seconds()
             )
         except Job.DoesNotExist:
-            context.logger.warn(
+            context.logger.warning(
                 "Failed to update the job status! The job does not exist!"
             )
 
@@ -244,7 +244,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 (job.stopped - job.started).total_seconds()
             )
         except Job.DoesNotExist:
-            context.logger.warn(
+            context.logger.warning(
                 "Failed to update the job status! The job does not exist!"
             )
 

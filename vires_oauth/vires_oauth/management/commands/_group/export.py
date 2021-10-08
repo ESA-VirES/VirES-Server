@@ -30,7 +30,8 @@ import sys
 import json
 from django.contrib.auth.models import Group
 from vires_oauth.models import GroupInfo
-from .._common import JSON_OPTS, Subcommand, strip_blanks
+from vires_oauth.utils import strip_blanks
+from .._common import JSON_OPTS, Subcommand
 
 
 class ExportGroupSubcommand(Subcommand):

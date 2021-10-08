@@ -134,20 +134,17 @@ def request_consent(view_func):
     documents. """
     required_version = getattr(settings, "VIRES_SERVICE_TERMS_VERSION", None)
 
+    def _get_consented_version(user):
+        try:
+            profile = user.userprofile
+        except ObjectDoesNotExist:
+            return None
+        return profile.consented_service_terms_version
+
     @wraps(view_func)
     def _wrapper_(request, *args, **kwargs):
         if request.user.is_authenticated and required_version:
-            try:
-                profile = request.user.userprofile
-            except ObjectDoesNotExist:
-                consented_version = None
-            else:
-                consented_version = profile.consented_service_terms_version
-            consent_required = (
-                consented_version is not None
-                and consented_version != required_version
-            )
-            if consent_required:
+            if _get_consented_version(request.user) != required_version:
                 response = redirect('update_user_consent')
                 response["Location"] += "?next=%s" % (
                     quote(request.get_full_path())

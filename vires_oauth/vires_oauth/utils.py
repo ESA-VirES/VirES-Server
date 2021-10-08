@@ -30,6 +30,18 @@ from logging import LoggerAdapter
 from django.utils.http import is_safe_url
 
 
+def strip_blanks(func):
+    """ Decorator removing blank fields from the serialized objects """
+    def _strip_blanks_(*args, **kwargs):
+        return {
+            key: value
+            for key, value in func(*args, **kwargs).items()
+            if value not in (None, "")
+        }
+    return _strip_blanks_
+
+
+
 def decorate(decorators, function):
     """ Decorate `function` with one or more decorators. `decorators` can be
     a single decorator or an iterable of decorators.

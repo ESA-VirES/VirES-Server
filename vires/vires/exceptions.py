@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Orbit direction file handling
+# custom exceptions
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -25,5 +25,5 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .reader import OrbitDirectionReader
-from .update import OrbitDirectionTables
+class DataIntegrityError(ValueError):
+    """ Data integrity error exception. """

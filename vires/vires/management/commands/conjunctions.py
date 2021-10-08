@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Orbit direction - exceptions
+# Orbit direction lookup table management command
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2021 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring, too-few-public-methods
 
-class DataIntegrityError(ValueError):
-    """ Command error exception. """
+from logging import getLogger
+from ._common import Supercommand
+from ._conjunctions.update import UpdateConjunctionsSubcommand
+from ._conjunctions.sync import SyncConjunctionsSubcommand
+from ._conjunctions.rebuild import RebuildConjunctionsSubcommand
+
+
+class Command(Supercommand):
+
+    help = "Spacecraft conjunction table management command."
+
+    commands = {
+        command.name: command(getLogger("%s.%s" % (__name__, command.name)))
+        for command in [
+            UpdateConjunctionsSubcommand,
+            SyncConjunctionsSubcommand,
+            RebuildConjunctionsSubcommand,
+        ]
+    }

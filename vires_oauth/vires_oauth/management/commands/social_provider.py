@@ -30,6 +30,7 @@ from logging import getLogger
 from ._common import Supercommand
 from ._social_provider.export import ExportProviderSubcommand
 from ._social_provider.import_ import ImportProviderSubcommand
+from ._social_provider.remove import RemoveProviderSubcommand
 
 
 class Command(Supercommand):
@@ -41,5 +42,6 @@ class Command(Supercommand):
         for command in [
             ExportProviderSubcommand,
             ImportProviderSubcommand,
+            RemoveProviderSubcommand,
         ]
     }

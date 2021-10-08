@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Export users in JSON format.
+# Synchronize conjunctions table.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2021 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,34 +24,45 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+#pylint: disable=missing-docstring
 
 import sys
-import json
-from django.contrib.auth.models import User
-from vires_oauth.management.api.user import serialize_user
-from .._common import JSON_OPTS
-from .common import UserSelectionSubcommand
+from vires.models import ProductCollection
+from vires.management.api.conjunctions import sync_conjunctions_table
+from .._common import Subcommand
+from .common import Counter, pair_collections
 
 
-class ExportUserSubcommand(UserSelectionSubcommand):
-    name = "export"
-    help = "Export users in JSON format."
+class SyncConjunctionsSubcommand(Subcommand):
+    name = "sync"
+    help = (
+        " Synchronize content of the conjunction table with the content "
+        " of the orbit collections. "
+    )
 
     def add_arguments(self, parser):
-        super().add_arguments(parser)
         parser.add_argument(
-            "-f", "--file", dest="filename", default="-", help=(
-                "Optional file-name the output is written to. "
-                "By default it is written to the standard output."
+            "collection-identifier", nargs="*",
+            help=(
+                "Optional identifiers of the source orbit collections "
+                "to re-build the conjunctions table."
             )
         )
 
     def handle(self, **kwargs):
-        users = self.select_users(User.objects.order_by("username"), **kwargs)
+        query = ProductCollection.objects.order_by('identifier')
+        query = query.filter(metadata__calculateConjunctions=True)
 
-        data = [serialize_user(user) for user in users]
+        collection_ids = kwargs['collection-identifier']
+        if collection_ids:
+            query = query.filter(identifier__in=collection_ids)
 
-        filename = kwargs["filename"]
-        with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
-            json.dump(data, file_, **JSON_OPTS)
+        counter = Counter()
+        self.log = True
+        for collection1, collection2 in pair_collections(query):
+            sync_conjunctions_table(
+                collection1, collection2, logger=self, counter=counter
+            )
+        self.log = False
+        counter.print_report(self.info)
+        sys.exit(counter.failed)
