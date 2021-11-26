@@ -77,15 +77,24 @@ class _TimeSeriesSubsetIterator():
         self.logger.debug("subset: %s/%s", format_datetime(start), format_datetime(stop))
         self.logger.debug("extracted parameters: %s", ", ".join(parameters.keys()))
 
+        time_parameter, time_parameter_options = self._find_timestamp(parameters)
+
         self._items = self._read_data(
             self._query(collection, naive_to_utc(start), naive_to_utc(stop)),
             dataset_id,
             CdfTimeSeriesReader(
                 start, stop, parameters,
-                time_parameter="Timestamp",
-                time_parameter_options=parameters["Timestamp"],
+                time_parameter=time_parameter,
+                time_parameter_options=time_parameter_options,
             )
         )
+
+    @staticmethod
+    def _find_timestamp(parameters):
+        for name, details in parameters.items():
+            if details.get('primaryTimestamp'):
+                return name, details
+        raise ValueError("Primary time-stamp not found!")
 
     @staticmethod
     def _query(collection, start, stop):
