@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Import users from a JSON file.
+#  Remove selected social providers
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2021 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,68 +27,53 @@
 # pylint: disable=missing-docstring, too-few-public-methods
 
 import sys
-import json
 from traceback import print_exc
-from vires_oauth.management.api.user import save_user
+from allauth.socialaccount.models import SocialApp
 from .._common import Subcommand
 
 
-class ImportUserSubcommand(Subcommand):
-    name = "import"
-    help = "Import users from a JSON file."
+class RemoveProviderSubcommand(Subcommand):
+    name = "remove"
+    help = "Remove selected social network providers."
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            "-f", "--file", dest="filename", default="-", help=(
-                "Optional input JSON file-name. "
-                "By default, the users' definitions are read from standard "
-                "input."
-            )
-        )
+        parser.add_argument("providers", nargs="*", help="Selected providers.")
+
+    def select_providers(self, query, **kwargs):
+        providers = set(kwargs['providers'])
+        query = query.filter(provider__in=providers)
+        return query
 
     def handle(self, **kwargs):
-        filename = kwargs['filename']
+        providers = self.select_providers(SocialApp.objects.all(), **kwargs)
 
-        with sys.stdin if filename == "-" else open(filename, "rb") as file_:
-            self.save_users(json.load(file_), **kwargs)
-
-
-    def save_users(self, data, **kwargs):
+        total_count = 0
         failed_count = 0
-        created_count = 0
-        updated_count = 0
-        for item in data:
-            name = item.get("username")
+        removed_count = 0
+
+        for provider in providers:
+            name = provider.provider
             try:
-                is_updated = save_user(item, self)
+                provider.delete()
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
                     print_exc(file=sys.stderr)
-                self.error("Failed to create or update user %s! %s", name, error)
+                self.error("Failed to remove social provider %s! %s", name, error)
             else:
-                updated_count += is_updated
-                created_count += not is_updated
-                self.info(
-                    "user %s updated" if is_updated else "user %s created",
-                    name, log=True
-                )
+                removed_count += 1
+                self.info("social provider %s removed", name, log=True)
+            finally:
+                total_count += 1
 
-        if created_count:
+        if removed_count:
             self.info(
-                "%d of %d user%s created", created_count, len(data),
-                "s" if created_count > 1 else ""
-            )
-
-        if updated_count:
-            self.info(
-                "%d of %d user%s updated", updated_count, len(data),
-                "s" if updated_count > 1 else ""
+                "%d of %d social provider%s removed.",
+                removed_count, total_count, "s" if total_count > 1 else ""
             )
 
         if failed_count:
             self.info(
-                "%d of %d user%s failed to be imported", failed_count, len(data),
-                "s" if failed_count > 1 else ""
+                "%d of %d social provider%s failed ",
+                failed_count, total_count, "s" if total_count > 1 else ""
             )
-        sys.exit(failed_count)

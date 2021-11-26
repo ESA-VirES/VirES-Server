@@ -28,12 +28,9 @@
 
 import sys
 import json
-from functools import partial
 from django.contrib.auth.models import User
-from vires_oauth.models import UserProfile, Permission
-from vires_oauth.time_utils import datetime_to_string
+from vires_oauth.management.api.user import serialize_user
 from .._common import JSON_OPTS
-from .._common import JSON_OPTS, strip_blanks
 from .common import UserSelectionSubcommand
 
 
@@ -58,80 +55,3 @@ class ExportUserSubcommand(UserSelectionSubcommand):
         filename = kwargs["filename"]
         with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
             json.dump(data, file_, **JSON_OPTS)
-
-
-@strip_blanks
-def serialize_user_profile(object_):
-    return {
-        "title": object_.title,
-        "institution": object_.institution,
-        "country": object_.country.code,
-        "study_area": object_.study_area,
-        "executive_summary": object_.executive_summary,
-        "consented_service_terms_version": (
-            object_.consented_service_terms_version
-        ),
-    }
-
-
-@strip_blanks
-def serialize_user(object_):
-    try:
-        user_profile = object_.userprofile
-    except UserProfile.DoesNotExist:
-        user_profile = None
-
-    return {
-        "username": object_.username,
-        "password": object_.password,
-        "is_active": object_.is_active,
-        "date_joined": datetime_to_string(object_.date_joined),
-        "last_login": datetime_to_string(object_.last_login),
-        "first_name": object_.first_name,
-        "last_name": object_.last_name,
-        "email": object_.email, # copy of the primary e-mail
-        "groups": get_groups(object_),
-        "permissions": list(Permission.get_user_permissions(object_)),
-        "user_profile": (
-            serialize_user_profile(user_profile) if user_profile else None
-        ),
-        "email_addresses": (
-            serialize_email_addresses(object_.emailaddress_set.all())
-        ),
-        "social_accounts": (
-            serialize_social_accounts(object_.socialaccount_set.all())
-        ),
-    }
-
-
-def get_groups(user):
-    return [
-        group.name for group in user.groups.order_by('name').all()
-    ]
-
-
-@strip_blanks
-def serialize_email_address(object_):
-    return {
-        "email": object_.email,
-        "verified": object_.verified,
-        "primary": object_.primary,
-    }
-
-
-@strip_blanks
-def serialize_social_account(object_):
-    return {
-        "uid": object_.uid,
-        "provider": object_.provider,
-        "date_joined": datetime_to_string(object_.date_joined),
-        "last_login": datetime_to_string(object_.last_login),
-        "extra_data": object_.extra_data,
-    }
-
-
-def serialize_list(funct, objects):
-    return [funct(object_) for object_ in objects]
-
-serialize_email_addresses = partial(serialize_list, serialize_email_address)
-serialize_social_accounts = partial(serialize_list, serialize_social_account)

@@ -2720,14 +2720,6 @@
                         "UNITS": "nT"
                     }
                 },
-                "B_mod_NEC": {
-                    "dataType": "float64",
-                    "dimension": [3],
-                    "attributes": {
-                        "DESCRIPTION": "CHAOS-7 model field (core, crust + magnetosphere), in NEC (North, East, Center) frame",
-                        "UNITS": "nT"
-                    }
-                },
                 "q_NEC_CRF": {
                     "dataType": "float64",
                     "dimension": [4],

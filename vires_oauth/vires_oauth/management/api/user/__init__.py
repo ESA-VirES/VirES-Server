@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Social network provider management command
+#  User management API
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2020 EOX IT Services GmbH
+# Copyright (C) 2021 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,24 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring, too-few-public-methods
+# pylint: disable=missing-docstring
 
-from logging import getLogger
-from ._common import Supercommand
-from ._social_provider.export import ExportProviderSubcommand
-from ._social_provider.import_ import ImportProviderSubcommand
-from ._social_provider.remove import RemoveProviderSubcommand
-
-
-class Command(Supercommand):
-
-    help = "Social network provider management command."
-
-    commands = {
-        command.name: command(getLogger("%s.%s" % (__name__, command.name)))
-        for command in [
-            ExportProviderSubcommand,
-            ImportProviderSubcommand,
-            RemoveProviderSubcommand,
-        ]
-    }
+from .import_ import save_user
+from .export import serialize_user
