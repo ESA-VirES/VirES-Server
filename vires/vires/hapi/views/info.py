@@ -113,6 +113,8 @@ def _parse_parameters(requested_parameters, dataset_definition):
     def _extract_definitions(parameters_it, definition):
         """ Extract definitions for the selected parameters and check the
         order of the requested parameters.
+        Note that the primary time parameter is always included in the result
+        even if not explicitly included in the request.
         """
         try:
             requested_parameter = next(parameters_it)
@@ -120,19 +122,14 @@ def _parse_parameters(requested_parameters, dataset_definition):
             return
 
         for parameter, parameter_def in definition.items():
-
             if parameter == requested_parameter:
                 yield parameter, parameter_def
                 try:
                     requested_parameter = next(parameters_it)
                 except StopIteration:
                     break
-
             elif parameter_def.get('primaryTimestamp'):
-                raise ValueError(
-                    f"mandatory time parameter {parameter}"
-                    " not requested"
-                )
+                yield parameter, parameter_def
         else:
             raise ValueError(
                 f"unexpected position of {requested_parameter} parameter"
