@@ -222,14 +222,14 @@ class _HapiDataType():
                 return {
                     "type": "string",
                     "length": item_size * size,
-                    "x-encoding": encoding,
+                    "x_encoding": encoding,
                 }
 
             # number type
             if type_ in cls.NUMBER_TYPE_SIZES and size in cls.NUMBER_TYPE_SIZES[type_]:
                 return {
                     "type": cls.NUMBER_TYPE_MAPPING[type_],
-                    "x-type": f"{type_}{size}",
+                    "x_type": f"{type_}{size}",
                 }
 
             # time-stamp

@@ -143,7 +143,7 @@ _register_format(BinaryDataResponse)
 
 class XBinaryDataResponse(HapiDataResponse):
     """ Custom extended binary format HAPI response. """
-    format = "x-binary"
+    format = "x_binary"
     header_prefix = "#"
     response_opts = {
         "content_type": "application/octet-stream",
