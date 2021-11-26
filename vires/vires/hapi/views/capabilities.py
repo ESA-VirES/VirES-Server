@@ -37,7 +37,7 @@ from .data_formats import get_available_formats
 @catch_error
 @allow_methods(['GET'])
 @reject_content
-@allowed_parameters([])
+@allowed_parameters()
 def capabilities(request):
     return HapiResponse({
         "outputFormats": get_available_formats(),

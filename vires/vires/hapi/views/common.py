@@ -115,14 +115,14 @@ def catch_error(view):
     return _catch_error
 
 
-def allowed_parameters(allowed_parameters):
+def allowed_parameters(*allowed_parameters):
     """ Decorator checking the HAPI request allowed parameters. """
     allowed_parameters = set(allowed_parameters)
     def check_allowed_parameters(view):
         def _check_allowed_parameters(request, *args, **kwargs):
             extra_parameters = set(request.GET.keys()) - allowed_parameters
             if extra_parameters:
-                return HapiResponse(hapi_status=1401, message=(
+                raise HapiError(hapi_status=1401, message=(
                     f"unexpected request parameter '{next(iter(extra_parameters))}'"
                 ))
             return view(request, *args, **kwargs)
@@ -130,14 +130,40 @@ def allowed_parameters(allowed_parameters):
     return check_allowed_parameters
 
 
-def required_parameters(required_parameters):
+def map_parameters(*parameters_mapping):
+    """ Decorator mapping alternative request parameters to their target
+    destination. The target parameters and their optional alternatives
+    are mutually exclusive.
+    This decorator is meant to handle backward compatibility for the renamed
+    request parameters.
+    """
+    def map_parameter_names(view):
+        def _map_parameter_names(request, *args, **kwargs):
+            is_copy = False
+            for target, alternative in parameters_mapping:
+                if alternative in request.GET:
+                    if target in request.GET:
+                        raise HapiError(hapi_status=1400, message=(
+                            f"'{target}' and '{alternative}' parameters cannot be "
+                            "present simultaneously"
+                        ))
+                    if not is_copy:
+                        request.GET = request.GET.copy()
+                        is_copy = True
+                    request.GET.setlist(target, request.GET.pop(alternative))
+            return view(request, *args, **kwargs)
+        return _map_parameter_names
+    return map_parameter_names
+
+
+def required_parameters(*required_parameters):
     """ Decorator checking the HAPI request required parameters. """
     required_parameters = set(required_parameters)
     def check_required_parameters(view):
         def _check_required_parameters(request, *args, **kwargs):
             missing_parameters = required_parameters - set(request.GET.keys())
             if missing_parameters:
-                return HapiResponse(hapi_status=1400, message=(
+                raise HapiError(hapi_status=1400, message=(
                     f"missing mandatory request parameter '{next(iter(missing_parameters))}'"
                 ))
             return view(request, *args, **kwargs)

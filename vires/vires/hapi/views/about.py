@@ -45,7 +45,7 @@ HAPI_ABOUT = {}
 @catch_error
 @allow_methods(['GET'])
 @reject_content
-@allowed_parameters([])
+@allowed_parameters()
 def about(request):
     if not HAPI_ABOUT:
         HAPI_ABOUT.update(_generate_about_payload(

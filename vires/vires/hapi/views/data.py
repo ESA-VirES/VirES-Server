@@ -37,7 +37,8 @@ from vires.views.decorators import allow_methods, reject_content
 from ..dataset import MAX_TIME_SELECTION, get_time_limit, get_collection_time_info
 from ..time_series import TimeSeries
 from .common import (
-    HapiError, catch_error, allowed_parameters, required_parameters,
+    HapiError,
+    catch_error, allowed_parameters, required_parameters, map_parameters,
 )
 from .data_formats import get_data_formatter, parse_format
 from .info import get_info_response, parse_dataset_and_parameters
@@ -48,8 +49,12 @@ from .info import get_info_response, parse_dataset_and_parameters
 @catch_error
 @allow_methods(['GET'])
 @reject_content
-@allowed_parameters(["dataset", "start", "stop", "parameters", "include", "format"])
-@required_parameters(["dataset", "start", "stop"])
+@allowed_parameters(
+    "dataset", "id", "start", "time.min", "stop", "time.max", "parameters",
+    "include", "format"
+)
+@map_parameters(("dataset", "id"), ("start", "time.min"), ("stop", "time.max"))
+@required_parameters("dataset", "start", "stop")
 def data(request):
 
     collection, dataset_id, dataset_def = parse_dataset_and_parameters(

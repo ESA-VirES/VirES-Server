@@ -38,15 +38,16 @@ from ..readers.common import TIME_PRECISION
 from ..formats.common import get_datetime64_string_size
 from .common import (
     HapiResponse, HapiError,
-    catch_error, allowed_parameters, required_parameters,
+    catch_error, allowed_parameters, required_parameters, map_parameters
 )
 
 
 @catch_error
 @allow_methods(['GET'])
 @reject_content
-@allowed_parameters(["dataset", "parameters"])
-@required_parameters(["dataset"])
+@allowed_parameters("dataset", "id", "parameters")
+@map_parameters(("dataset", "id"))
+@required_parameters("dataset")
 def info(request):
     collection, _, dataset_def = parse_dataset_and_parameters(
         request.GET.get('dataset'), request.GET.get('parameters')

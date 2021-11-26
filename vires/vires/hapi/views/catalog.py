@@ -37,7 +37,7 @@ from .common import HapiResponse, catch_error, allowed_parameters
 @catch_error
 @allow_methods(['GET'])
 @reject_content
-@allowed_parameters([])
+@allowed_parameters()
 def catalog(request):
     datasets = [
         {"id": id_}
