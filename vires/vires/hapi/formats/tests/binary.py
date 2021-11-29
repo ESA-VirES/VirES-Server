@@ -28,7 +28,6 @@
 
 from unittest import TestCase, main
 from struct import unpack
-from io import BytesIO
 from numpy import (
     array, prod,
     str_, bytes_, bool_, float32, float64, datetime64,
@@ -36,40 +35,86 @@ from numpy import (
 )
 from numpy.testing import assert_equal
 from vires.hapi.formats.binary import (
-    arrays_to_binary, BINARY_ITEM_SIZE,
-    cast_array_to_allowed_hapi_types,
-    get_hapi_type,
+    arrays_to_hapi_binary, arrays_to_x_binary,
+    HAPI_BINARY_ITEM_SIZE, X_BINARY_ITEM_SIZE,
+    HAPI_BINARY_TYPE_MAPPING, X_BINARY_TYPE_MAPPING,
 )
 from .base import FormatTestMixIn, random_integer_array
 
 
-class TestArraysToBinary(FormatTestMixIn, TestCase):
+def _binary_decoder(format_):
+    """ Build binary value encoder. """
+    def _decoder(buffer_):
+        return unpack(format_, buffer_)
+    return _decoder
+
+
+class BinaryFormatTestMixIn(FormatTestMixIn):
+    TYPE_MAPPING = None
+    ITES_SIZES = None
+    DECODERS = None
+
+    @staticmethod
+    def _arrays_to_binary(arrays):
+        raise NotImplementedError
 
     def _test(self, *arrays, dump=False):
         array_types = [(a.dtype, a.shape[1:]) for a in arrays]
-        buffer_ = BytesIO()
-        arrays_to_binary(buffer_, arrays)
+        buffer_ = self._arrays_to_binary(arrays)
         if dump:
-            buffer_.seek(0)
-            print(buffer_.read())
-        buffer_.seek(0)
-        parsed_arrays = _parse_binary(buffer_, array_types)
+            print(buffer_)
+        parsed_arrays = _parse_binary(
+            buffer_, array_types,
+            self.DECODERS, self.ITES_SIZES, self.TYPE_MAPPING,
+        )
         for source, parsed in zip(arrays, parsed_arrays):
             assert_equal(source, parsed)
+            assert_equal(source.dtype.type, parsed.dtype.type)
 
 
-class TestArraysToHapiBinary(TestArraysToBinary):
+class TestArraysToXBinary(BinaryFormatTestMixIn, TestCase):
+    TYPE_MAPPING = X_BINARY_TYPE_MAPPING
+    ITES_SIZES = X_BINARY_ITEM_SIZE
+    DECODERS = {
+        str_: lambda v: v.rstrip(b"\x00").decode('utf8'),
+        bytes_: lambda v: v.rstrip(b"\x00"),
+        bool_: _binary_decoder("?"),
+        int8: _binary_decoder("b"),
+        int16: _binary_decoder("<h"),
+        int32: _binary_decoder("<l"),
+        int64: _binary_decoder("<q"),
+        uint8: _binary_decoder("B"),
+        uint16: _binary_decoder("<H"),
+        uint32: _binary_decoder("<L"),
+        uint64: _binary_decoder("<Q"),
+        float32: _binary_decoder("<f"),
+        float64: _binary_decoder("<d"),
+        datetime64: _binary_decoder("<Q"),
+    }
 
-    def _test(self, *arrays, dump=False):
-        output_arrays = cast_array_to_allowed_hapi_types(arrays)
-        super()._test(*output_arrays, dump=dump)
-        for input_, output in zip(arrays, output_arrays):
-            assert_equal(input_, output)
-            assert_equal(get_hapi_type(input_.dtype.type), output.dtype.type)
+    @staticmethod
+    def _arrays_to_binary(arrays):
+        return arrays_to_x_binary(arrays)
+
+
+class TestArraysToHapiBinary(BinaryFormatTestMixIn, TestCase):
+    TYPE_MAPPING = HAPI_BINARY_TYPE_MAPPING
+    ITES_SIZES = HAPI_BINARY_ITEM_SIZE
+    DECODERS = HAPI_BINARY_DECODERS = {
+        str_: lambda v: v.rstrip(b"\x00").decode('utf8'),
+        bytes_: lambda v: v.rstrip(b"\x00"),
+        int32: _binary_decoder("<l"),
+        float64: _binary_decoder("<d"),
+        datetime64: lambda v: v.rstrip(b"\x00").decode('ascii'),
+    }
+
+    @staticmethod
+    def _arrays_to_binary(arrays):
+        return arrays_to_hapi_binary(arrays)
 
     def _test_failed(self, *arrays):
         with self.assertRaises(TypeError):
-            cast_array_to_allowed_hapi_types(arrays)
+            arrays_to_hapi_binary(arrays)
 
     def test_int64_array_0d(self):
         self._test_failed(random_integer_array((20,), 'int64'))
@@ -81,95 +126,22 @@ class TestArraysToHapiBinary(TestArraysToBinary):
         self._test_failed(random_integer_array((20,), 'uint64'))
 
 
-
-class TestHapiBinaryTypeMapping(TestCase):
-
-    def _test_hapi_type_mapping_supported(self, type_, expected=None):
-        self.assertEqual(get_hapi_type(type_), expected or type_)
-
-    def _test_hapi_type_mapping_unsupported(self, type_):
-        with self.assertRaises(TypeError):
-            get_hapi_type(type_)
-
-    def test_hapi_type_mapping_str(self):
-        self._test_hapi_type_mapping_supported(str_)
-
-    def test_hapi_type_mapping_bytes(self):
-        self._test_hapi_type_mapping_supported(bytes_)
-
-    def test_hapi_type_mapping_bool(self):
-        self._test_hapi_type_mapping_supported(bool_, int32)
-
-    def test_hapi_type_mapping_int8(self):
-        self._test_hapi_type_mapping_supported(int8, int32)
-
-    def test_hapi_type_mapping_int16(self):
-        self._test_hapi_type_mapping_supported(int16, int32)
-
-    def test_hapi_type_mapping_int32(self):
-        self._test_hapi_type_mapping_supported(int32)
-
-    def test_hapi_type_mapping_int64(self):
-        self._test_hapi_type_mapping_unsupported(int64)
-
-    def test_hapi_type_mapping_uint8(self):
-        self._test_hapi_type_mapping_supported(uint8, int32)
-
-    def test_hapi_type_mapping_uint16(self):
-        self._test_hapi_type_mapping_supported(uint16, int32)
-
-    def test_hapi_type_mapping_uint32(self):
-        self._test_hapi_type_mapping_unsupported(uint32)
-
-    def test_hapi_type_mapping_uint64(self):
-        self._test_hapi_type_mapping_unsupported(uint64)
-
-    def test_hapi_type_mapping_float32(self):
-        self._test_hapi_type_mapping_supported(float32, float64)
-
-    def test_hapi_type_mapping_float64(self):
-        self._test_hapi_type_mapping_supported(float64)
-
-    def test_hapi_type_mapping_datetime64(self):
-        self._test_hapi_type_mapping_supported(datetime64)
-
-
-def _binary_decoder(format_):
-    """ Build binary value encoder. """
-    def _decoder(buffer_):
-        return unpack(format_, buffer_)
-    return _decoder
-
-BINARY_DECODERS = {
-    str_: lambda v: v.rstrip(b"\x00").decode('utf8'),
-    bytes_: lambda v: v.rstrip(b"\x00"),
-    bool_: _binary_decoder("?"),
-    int8: _binary_decoder("b"),
-    int16: _binary_decoder("<h"),
-    int32: _binary_decoder("<l"),
-    int64: _binary_decoder("<q"),
-    uint8: _binary_decoder("B"),
-    uint16: _binary_decoder("<H"),
-    uint32: _binary_decoder("<L"),
-    uint64: _binary_decoder("<Q"),
-    float32: _binary_decoder("<f"),
-    float64: _binary_decoder("<d"),
-    datetime64: lambda v: v.rstrip(b"\x00").decode('ascii'),
-}
-
-
-def _parse_binary(file, types):
+def _parse_binary(data, types, decoders, item_sizes, type_mapping):
     """ CSV output parser. """
 
-    def _read_records():
+    def _read_records(data):
+
+        def _map_type(type_):
+            return type_mapping.get(type_, type_)
 
         fields = [
             (
-                BINARY_DECODERS[type_.type],
-                BINARY_ITEM_SIZE[type_.type](type_),
+                decoders[_map_type(type_.type)],
+                item_sizes[_map_type(type_.type)](type_),
                 int(prod(shape or (1,)))
             ) for type_, shape in types
         ]
+
         record_size = sum(size * count for _, size, count in fields)
 
         def _decode_record(record):
@@ -185,7 +157,7 @@ def _parse_binary(file, types):
                 yield tuple(_decode_field(field, decode, item_size, item_count))
 
         while True:
-            record = file.read(record_size)
+            record, data = data[:record_size], data[record_size:]
             if not record:
                 break
             if len(record) != record_size:
@@ -212,7 +184,7 @@ def _parse_binary(file, types):
             for list_, (type_, shape) in zip(lists, types)
         )
 
-    return _records_to_lists(_read_records())
+    return _records_to_lists(_read_records(data))
 
 
 if __name__ == "__main__":

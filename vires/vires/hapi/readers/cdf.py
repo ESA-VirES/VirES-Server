@@ -36,6 +36,7 @@ from .common import TIME_PRECISION
 
 class CdfTimeSeriesReader():
     """ CDF file time-series reader. """
+    CHUNK_SIZE = 10800 # equivalent of 3h of 1Hz data
 
     def __init__(self, start, stop, extracted_parameters,
                  time_parameter="Timestamp", time_parameter_options=None):
@@ -63,8 +64,7 @@ class CdfTimeSeriesReader():
                 self._start_time, self._stop_time,
                 start_index, stop_index,
             )
-
-            return self._read_subset(
+            yield from self._read_subsets(
                 cdf, size, slice_, subset, self._extracted_parameters
             )
 
@@ -96,6 +96,15 @@ class CdfTimeSeriesReader():
         if index.size == 0:
             return 0, slice(0, 0), Ellipsis
         return index.size, slice(index.min(), index.max() + 1), index - start
+
+    @classmethod
+    def _read_subsets(cls, cdf, size, slice_, subset, extracted_parameters):
+        """ Yield chunks of the selected data. """
+        dataset = cls._read_subset(cdf, size, slice_, subset, extracted_parameters)
+        size = dataset.length
+        for idx_start in range(0, size, cls.CHUNK_SIZE):
+            idx_stop = min(idx_start + cls.CHUNK_SIZE, size)
+            yield dataset.subset(slice(idx_start, idx_stop))
 
     @classmethod
     def _read_subset(cls, cdf, size, slice_, subset, extracted_parameters):

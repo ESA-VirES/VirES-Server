@@ -112,4 +112,4 @@ class _TimeSeriesSubsetIterator():
             source_dataset = product.get_dataset(dataset_id)
             if source_dataset:
                 self.sources.add(product.identifier)
-                yield reader(source_dataset)
+                yield from reader(source_dataset)

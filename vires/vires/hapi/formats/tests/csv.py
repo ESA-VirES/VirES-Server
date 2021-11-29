@@ -27,7 +27,7 @@
 # pylint: disable=missing-docstring,no-self-use,too-many-public-methods
 
 from unittest import TestCase, main
-from io import StringIO
+from io import BytesIO, TextIOWrapper
 from numpy import array, prod, cumsum, bool_
 from numpy.testing import assert_equal
 from vires.hapi.formats.csv import quote_csv_string, arrays_to_csv
@@ -59,12 +59,9 @@ class TestArraysToCsv(FormatTestMixIn, TestCase):
 
     def _test(self, *arrays, dump=False):
         array_types = [(a.dtype, a.shape[1:]) for a in arrays]
-        buffer_ = StringIO()
-        arrays_to_csv(buffer_, arrays)
+        buffer_ = arrays_to_csv(arrays)
         if dump:
-            buffer_.seek(0)
-            print(buffer_.read())
-        buffer_.seek(0)
+            print(buffer_)
         parsed_arrays = _parse_csv(buffer_, array_types)
         for source, parsed in zip(arrays, parsed_arrays):
             assert_equal(source, parsed)
@@ -76,11 +73,11 @@ TEXT_DECODERS = {
 TEXT_DEFAULT_DECODER = lambda v, dt: array(v, dtype=dt)
 
 
-def _parse_csv(file, types, field_delimiter=",", record_delimiter="\n", quote="\""):
+def _parse_csv(data, types, field_delimiter=",", record_delimiter="\n", quote="\""):
     """ CSV output parser. """
     # pylint: disable=too-many-branches,too-many-statements
 
-    def _tokenize():
+    def _tokenize(file):
         buffer_ = []
         is_quoted = False
         while True:
@@ -172,7 +169,9 @@ def _parse_csv(file, types, field_delimiter=",", record_delimiter="\n", quote="\
 
     field_counts = cumsum([0, *(prod(shape or (1,)) for _, shape in types)])
 
-    return _records_to_lists(_group_records(_tokenize()), field_counts)
+    return _records_to_lists(_group_records(_tokenize(
+        TextIOWrapper(BytesIO(data), encoding="UTF-8")
+    )), field_counts)
 
 
 if __name__ == "__main__":

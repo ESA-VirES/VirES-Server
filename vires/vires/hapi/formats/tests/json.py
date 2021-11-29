@@ -42,14 +42,10 @@ class TestArraysToJsonFragment(FormatTestMixIn, TestCase):
 
     def _test(self, *arrays, dump=False):
         array_types = [(a.dtype, a.shape[1:]) for a in arrays]
-        buffer_ = StringIO()
-        buffer_.write("[")
-        arrays_to_json_fragment(buffer_, arrays)
-        buffer_.write("null]")
+        buffer_ = arrays_to_json_fragment(arrays)
         if dump:
-            print(buffer_.getvalue())
-        parsed_records = json.loads(buffer_.getvalue())[:-1]
-        parsed_arrays = _parse_plain_records(parsed_records, array_types)
+            print(buffer_)
+        parsed_arrays = _parse_json_fragment(buffer_, array_types)
         for source, parsed in zip(arrays, parsed_arrays):
             assert_equal(source, parsed)
 
@@ -64,6 +60,17 @@ class TestArraysToPlainRecords(FormatTestMixIn, TestCase):
         parsed_arrays = _parse_plain_records(records, array_types)
         for source, parsed in zip(arrays, parsed_arrays):
             assert_equal(source, parsed)
+
+
+def _parse_json_fragment(buffer_, types):
+
+    # turn fragment into a proper JSON object
+    if buffer_ and buffer_[-1:] == b",":
+        buffer_ = buffer_[:-1]
+    buffer_ = b"".join([b"[", buffer_, b"]"])
+
+    parsed_records = json.loads(buffer_.decode('ascii'))
+    return _parse_plain_records(parsed_records, types)
 
 
 def _parse_plain_records(records, types):

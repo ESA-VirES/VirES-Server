@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 
 from itertools import chain
+from io import BytesIO, TextIOWrapper, StringIO
 from numpy import str_, bytes_, bool_, float32, float64, datetime64
 from .common import flatten_records, format_datetime64
 
@@ -51,16 +52,31 @@ TEXT_FORMATTING = {
 }
 
 
-def arrays_to_csv(file, arrays, formats=None, delimiter=","):
-    """ Convert Numpy arrays into CSV lines written in the output file."""
-    type_formatting = {**TEXT_FORMATTING, **(formats or {})}
+def arrays_to_csv(arrays, delimiter=",", newline="\r\n", encoding="UTF-8"):
+    """ Convert Numpy arrays into a CSV byte-string. """
+    return _lines_to_bytes(
+        lines=_arrays_to_csv_lines(
+            arrays=arrays,
+            delimiter=delimiter
+        ),
+        newline=newline.encode(encoding),
+        encoding=encoding,
+    )
+
+
+def _lines_to_bytes(lines, newline, encoding):
+    return newline.join(line.encode(encoding) for line in lines)
+
+
+def _arrays_to_csv_lines(arrays, delimiter=","):
     field_formatting = [
-        type_formatting.get(array.dtype.type) or DEFAULT_TEXT_FORMATTING
+        TEXT_FORMATTING.get(array.dtype.type) or DEFAULT_TEXT_FORMATTING
         for array in arrays
     ]
     arrays = [flatten_records(array) for array in arrays]
     for record in zip(*arrays):
-        print(delimiter.join(chain.from_iterable(
+        yield from delimiter.join(chain.from_iterable(
             (format_(item) for item in field)
             for field, format_ in zip(record, field_formatting)
-        )), file=file)
+        )).split("\n")
+    yield ""

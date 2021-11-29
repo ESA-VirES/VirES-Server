@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 
 import json
+from itertools import chain
 from numpy import (
     str_, bytes_, bool_, float32, float64, datetime64,
     int8, int16, int32, int64, uint8, uint16, uint32, uint64,
@@ -51,19 +52,23 @@ JSON_FORMATTING = {
 }
 
 
-def arrays_to_json_fragment(file, arrays, prefix="\n", suffix=",", formats=None):
-    """ Convert Numpy arrays into JSON fragment holding the records."""
-    for record in arrays_to_plain_records(arrays, formats=formats):
-        file.write(prefix)
-        file.write(json.dumps(record))
-        file.write(suffix)
+def arrays_to_json_fragment(arrays, encoding='ascii', newline="\r\n"):
+    """ Convert Numpy arrays into bytes array holding the JSON-encoded records."""
+    newline = newline.encode(encoding)
+
+    def _encode_records(arrays):
+        for record in arrays_to_plain_records(arrays):
+            yield newline
+            yield json.dumps(record).encode(encoding)
+            yield b","
+
+    return b"".join(_encode_records(arrays))
 
 
-def arrays_to_plain_records(arrays, formats=None):
+def arrays_to_plain_records(arrays):
     """ Convert Numpy arrays into JSON serializable records."""
-    type_formatting = {**JSON_FORMATTING, **(formats or {})}
     field_formatting = [
-        type_formatting.get(array.dtype.type) or DEFAULT_JSON_FORMATTING
+        JSON_FORMATTING.get(array.dtype.type) or DEFAULT_JSON_FORMATTING
         for array in arrays
     ]
 

@@ -28,15 +28,14 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring,unused-argument,too-few-public-methods
 
-import os
 import json
-from io import TextIOWrapper, BytesIO, StringIO
+from logging import getLogger
 from django.core.serializers.json import DjangoJSONEncoder
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from ..formats.csv import arrays_to_csv
-from ..formats.binary import cast_array_to_allowed_hapi_types, arrays_to_binary
+from ..formats.binary import arrays_to_hapi_binary, arrays_to_x_binary
 from ..formats.json import arrays_to_json_fragment
-from .common import HapiResponse
+from .common import HapiResponse, LOGGER_NAME
 
 DEFAULT_DATA_RESPONSE_FORMAT = "csv"
 DATA_RESPONSE_FORMATS = {}
@@ -65,28 +64,53 @@ def get_available_formats():
 class HapiDataResponse():
     """ Base HAPI data response. """
     format = None
-    header_prefix = None
-    response_opts = None
+    header_prefix = ""
+    response_opts = {}
 
-    def __new__(cls, datasets, header=None):
-        buffer_ = BytesIO()
-        cls._write_response(buffer_, datasets, header)
-        return HttpResponse(buffer_.getvalue(), **cls.response_opts)
-
-    @classmethod
-    def _write_response(cls, binary_file, datasets, header):
+    def _generate_response(cls, datasets, header=None):
         raise NotImplementedError
 
+    # streamed response
+    def __new__(cls, datasets, header=None):
+        #return cls._get_http_response(datasets, header)
+        return cls._get_streaming_http_response(datasets, header)
+
     @classmethod
-    def _write_data_header(cls, text_file, header):
-        lines = StringIO(json.dumps(
-            cls._get_json_response(header), cls=DjangoJSONEncoder, indent=2
-        ))
-        for line in lines:
-            if cls.header_prefix:
-                text_file.write(cls.header_prefix)
-            text_file.write(line)
-        text_file.write("\n")
+    def _get_http_response(cls, datasets, header=None):
+        return HttpResponse(
+            cls._generate_response(datasets, header),
+            **cls.response_opts
+        )
+
+    @classmethod
+    def _get_streaming_http_response(cls, datasets, header=None):
+
+        def _handle_errors(chunks):
+            try:
+                yield from chunks
+            except:
+                getLogger(LOGGER_NAME).error(
+                    "An error occurred while streaming HAPI data response!",
+                    exc_info=True
+                )
+                raise
+
+        return StreamingHttpResponse(
+            _handle_errors(cls._generate_response(datasets, header)),
+            **cls.response_opts
+        )
+
+    @classmethod
+    def _get_data_header(cls, header):
+
+        def _get_lines():
+            lines = json.dumps(
+                cls._get_json_response(header), cls=DjangoJSONEncoder, indent=2
+            ).split("\n")
+            for line in lines:
+                yield f"{cls.header_prefix}{line}\r\n".encode("ASCII")
+
+        return b"".join(_get_lines())
 
     @classmethod
     def _get_json_response(cls, content):
@@ -110,13 +134,11 @@ class CsvDataResponse(HapiDataResponse):
     }
 
     @classmethod
-    def _write_response(cls, binary_file, datasets, header):
-        text_file = TextIOWrapper(binary_file, encoding="UTF-8", newline="\r\n")
+    def _generate_response(cls, datasets, header=None):
         if header:
-            cls._write_data_header(text_file, header)
+            yield cls._get_data_header(header)
         for dataset in datasets:
-            arrays_to_csv(text_file, dataset.values())
-        text_file.detach()
+            yield arrays_to_csv(dataset.values())
 
 _register_format(CsvDataResponse)
 
@@ -130,13 +152,11 @@ class BinaryDataResponse(HapiDataResponse):
     }
 
     @classmethod
-    def _write_response(cls, binary_file, datasets, header):
+    def _generate_response(cls, datasets, header=None):
         if header:
-            text_file = TextIOWrapper(binary_file, encoding="ascii", newline="\r\n")
-            cls._write_data_header(text_file, header)
-            text_file.detach()
+            yield cls._get_data_header(header)
         for dataset in datasets:
-            arrays_to_binary(binary_file, cast_array_to_allowed_hapi_types(dataset.values()))
+            yield arrays_to_hapi_binary(dataset.values())
 
 _register_format(BinaryDataResponse)
 
@@ -150,13 +170,11 @@ class XBinaryDataResponse(HapiDataResponse):
     }
 
     @classmethod
-    def _write_response(cls, binary_file, datasets, header):
+    def _generate_response(cls, datasets, header=None):
         if header:
-            text_file = TextIOWrapper(binary_file, encoding="ascii", newline="\r\n")
-            cls._write_data_header(text_file, header)
-            text_file.detach()
+            yield cls._get_data_header(header)
         for dataset in datasets:
-            arrays_to_binary(binary_file, dataset.values())
+            yield arrays_to_x_binary(dataset.values())
 
 _register_format(XBinaryDataResponse)
 
@@ -169,42 +187,26 @@ class JsonDataResponse(HapiDataResponse):
     }
 
     @classmethod
-    def _write_response(cls, binary_file, datasets, header):
-        if not header:
-            header = {}
-        header["data"] = []
-        text_file = TextIOWrapper(binary_file, encoding="ascii", newline="\r\n")
-        cls._write_data_header(text_file, header)
-        text_file.detach()
-
-        # inject data records into the empty data list
-        tail = cls._seek_backwards(binary_file, b"]")
-
-        text_file = TextIOWrapper(binary_file, encoding="ascii", newline="\r\n")
+    def _generate_response(cls, datasets, header=None):
+        body = cls._get_data_header({**(header or {}), "data": []})
+        # insert records into the empty data array
+        chunk, tail = cls._seek_backwards_and_split(body, b"]")
         record_count = 0
         for dataset in datasets:
+            yield chunk
             record_count += dataset.length
-            arrays_to_json_fragment(
-                text_file, dataset.values(), prefix="\n", suffix=","
-            )
-        text_file.detach()
-
-        if record_count > 0: # remove trailing comma if needed
-            cls._seek_backwards(binary_file, b",")
-
-        binary_file.write(tail)
+            chunk = arrays_to_json_fragment(dataset.values())
+        # remove trailing comma and close the JSON body
+        if record_count > 0:
+            chunk = chunk[:-1]
+        yield chunk
+        yield tail
 
     @classmethod
-    def _seek_backwards(cls, file, searched):
-        size = len(searched)
-        position = file.seek(-size, os.SEEK_CUR)
-        char = file.read(size)
-        while position and char != searched:
-            position = file.seek(-size - 1, os.SEEK_CUR)
-            char = file.read(size)
-        position = file.seek(-size, os.SEEK_CUR)
-        tail = file.read()
-        file.seek(position, os.SEEK_SET)
-        return tail
+    def _seek_backwards_and_split(cls, buffer_, searched):
+        idx = buffer_.rfind(searched)
+        if idx < 0:
+            idx = len(buffer_)
+        return buffer_[:idx], buffer_[idx:]
 
 _register_format(JsonDataResponse)

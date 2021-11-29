@@ -235,7 +235,11 @@ class _HapiDataType():
                 unit = TIME_PRECISION[precision]
                 return {
                     "type": "isotime",
-                    "length": get_datetime64_string_size(f"datetime64[{unit}]")
+                    "length": get_datetime64_string_size(f"datetime64[{unit}]"),
+                    "x_standard": "UTC",
+                    "x_epoch": "1970-01-01T00:00:00Z",
+                    "x_precision": unit,
+                    "x_type": "int64",
                 }
 
         raise ValueError(f"Unsupported data type {vires_type}!")
