@@ -28,7 +28,7 @@
 
 from allauth.socialaccount.tests import OAuth2TestsMixin
 from allauth.tests import MockedResponse, TestCase
-from .eoiam import EoiamProvider
+from .provider import EoiamProvider
 
 
 class EoiamTestsMinimal(OAuth2TestsMixin, TestCase):
