@@ -60,7 +60,7 @@ class EoiamOAuth2Adapter(OAuth2Adapter):
         headers = {'Authorization': 'Bearer %s' % token}
         return requests.get(cls.profile_url, headers=headers)
 
-    def complete_login(self, request, app, token, **kwargs):
+    def complete_login(self, request, app, token, response):
         extra_data = self.read_profile(token.token).json()
         return self.get_provider().sociallogin_from_response(request, extra_data)
 

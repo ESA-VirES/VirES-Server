@@ -47,7 +47,7 @@ class EoiamAccount(ProviderAccount):
 
 class EoiamProvider(OAuth2Provider):
     id = 'eoiam'
-    name = 'EOIAM'
+    name = 'EO Sign In'
     account_class = EoiamAccount
 
     @staticmethod

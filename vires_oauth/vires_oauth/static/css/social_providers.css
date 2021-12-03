@@ -8,64 +8,81 @@
   text-align: center;
 }
 
-.socialaccount_provider.facebook  { 
+
+@font-face {
+  font-family: "esa-logo";
+  src: url("../fonts/esa-logo.woff") format('woff');
+}
+.socialaccount_provider.eoiam  {
   font-size: 0;
   text-decoration: none;
 }
-.socialaccount_provider.facebook::before { 
+.socialaccount_provider.eoiam::before {
+  font-family: esa-logo;
+  content: "E";
+  font-size: 40px;
+  text-decoration: none;
+}
+
+
+.socialaccount_provider.facebook  {
+  font-size: 0;
+  text-decoration: none;
+}
+.socialaccount_provider.facebook::before {
   font-family: FontAwesome;
   content: "\f082";
   font-size: 40px;
 }
 
 
-.socialaccount_provider.twitter  { 
+.socialaccount_provider.twitter  {
   font-size: 0;
   text-decoration: none;
 }
-.socialaccount_provider.twitter::before { 
+.socialaccount_provider.twitter::before {
   font-family: FontAwesome;
   content: "\f081";
   font-size: 40px;
 }
 
 
-.socialaccount_provider.github  { 
+.socialaccount_provider.github  {
   font-size: 0;
   text-decoration: none;
 }
-.socialaccount_provider.github::before { 
+.socialaccount_provider.github::before {
   font-family: FontAwesome;
   content: "\f092";
   font-size: 40px;
 }
 
 
-.socialaccount_provider.dropbox  { 
+.socialaccount_provider.dropbox  {
   font-size: 0;
   text-decoration: none;
 }
-.socialaccount_provider.dropbox::before { 
+.socialaccount_provider.dropbox::before {
   font-family: FontAwesome;
   content: "\f16b";
   font-size: 40px;
 }
 
-.socialaccount_provider.linkedin_oauth2  { 
+.socialaccount_provider.linkedin_oauth2  {
   font-size: 0;
   text-decoration: none;
 }
-.socialaccount_provider.linkedin_oauth2::before { 
+.socialaccount_provider.linkedin_oauth2::before {
   font-family: FontAwesome;
   content: "\f08c";
   font-size: 40px;
 }
 
-.socialaccount_provider.google  { 
+.socialaccount_provider.google  {
   font-size: 0;
   text-decoration: none;
 }
-.socialaccount_provider.google::before { 
+.socialaccount_provider.google::before {
   font-family: FontAwesome;
   content: "\f0d4";
   font-size: 40px;
