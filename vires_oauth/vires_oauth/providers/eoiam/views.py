@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  ESA EOIAM provider - views
+#  EOIAM provider - views
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -31,7 +31,7 @@
 #
 # SOCIALACCOUNT_PROVIDERS = {
 #     'eoiam': {
-#         'SERVER_URL': <OAuth2 server URL>,
+#         'SERVER_URL': <EOIAM server URL>,
 #     },
 # }
 

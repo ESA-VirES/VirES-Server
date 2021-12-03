@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  ESA EOIAM provider - "social account" provider class
+#  EOIAM provider - "social account" provider class
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -66,6 +66,5 @@ class EoiamProvider(OAuth2Provider):
             'first_name': data.get('given_name'),
             'last_name': data.get('family_name'),
         }
-
 
 provider_classes = [EoiamProvider]
