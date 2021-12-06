@@ -25,7 +25,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .placeholder import placeholder_view # TODO to be removed
+from .landing_page import landing_page
 from .about import about
 from .capabilities import capabilities
 from .catalog import catalog

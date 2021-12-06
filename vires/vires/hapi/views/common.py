@@ -30,9 +30,15 @@
 
 from logging import getLogger
 from traceback import format_exc
+from datetime import datetime, time
+from django.utils.dateparse import (
+    parse_date as django_parse_date,
+    parse_datetime as django_parse_datetime,
+)
 from django.http import JsonResponse
 from django.conf import settings
 from vires.views.exceptions import HttpError
+from vires.time_util import naive_to_utc
 
 LOGGER_NAME = "vires.hapi"
 
@@ -110,7 +116,7 @@ def catch_error(view):
             getLogger(LOGGER_NAME).error("Internal serve error!", exc_info=True)
             return HapiResponse(
                 hapi_status=1500, message=str(error),
-                debug=(format_exc() if settings.DEBUG else None),
+                x_debug=(format_exc() if settings.DEBUG else None),
             )
     return _catch_error
 
@@ -169,3 +175,14 @@ def required_parameters(*required_parameters):
             return view(request, *args, **kwargs)
         return _check_required_parameters
     return check_required_parameters
+
+
+def parse_datetime(value):
+    """ Parse date-time value. """
+    parsed_value = django_parse_datetime(value)
+    if parsed_value is not None:
+        return naive_to_utc(parsed_value)
+    parsed_value = django_parse_date(value)
+    if parsed_value is not None:
+        return naive_to_utc(datetime.combine(parsed_value, time()))
+    raise ValueError(f"invalid time {value}'")

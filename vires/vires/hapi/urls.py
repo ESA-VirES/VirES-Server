@@ -27,11 +27,10 @@
 #pylint: disable=missing-docstring
 
 from django.urls import path
-from .views import about, capabilities, catalog, info, data
-from .views import placeholder_view
+from .views import landing_page, about, capabilities, catalog, info, data
 
 urlpatterns = [
-    path('', placeholder_view("HAPI landing page"), name='hapi-landing-page'),
+    path('', landing_page, name='hapi-landing-page'),
     path('about', about, name='hapi-about'),
     path('capabilities', capabilities, name='hapi-capabilities'),
     path('catalog', catalog, name='hapi-catalog'),

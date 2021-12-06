@@ -49,10 +49,10 @@ from .common import (
 @map_parameters(("dataset", "id"))
 @required_parameters("dataset")
 def info(request):
-    collection, _, dataset_def = parse_dataset_and_parameters(
+    collection, dataset_id, dataset_def = parse_dataset_and_parameters(
         request.GET.get('dataset'), request.GET.get('parameters')
     )
-    return HapiResponse(get_info_response(collection, dataset_def))
+    return HapiResponse(get_info_response(collection, dataset_id, dataset_def))
 
 
 def parse_dataset_and_parameters(hapi_dataset_id, parameters):
@@ -68,7 +68,7 @@ def parse_dataset_and_parameters(hapi_dataset_id, parameters):
     return collection, dataset_id, dataset_def
 
 
-def get_info_response(collection, dataset_def):
+def get_info_response(collection, dataset_id, dataset_def):
     """ Build info response. """
 
     metadata = {
@@ -81,15 +81,28 @@ def get_info_response(collection, dataset_def):
     }
 
     return {
-        "parameters": [
-            _build_parameter(name, details)
-            for name, details in dataset_def.items()
-        ],
+        "x_dataset": collection.identifier + (
+            f":{dataset_id}" if dataset_id else ""
+        ),
+        "x_datasetType": collection.type.identifier + (
+            f":{dataset_id}" if dataset_id else ""
+        ),
         "startDate": format_datetime(metadata["startDate"]),
         "stopDate": format_datetime(metadata["stopDate"]),
         "cadence": metadata.get("nominalSampling"),
         "modificationDate": metadata.get("lastUpdate"),
+        "parameters": [
+            _build_parameter(name, details)
+            for name, details in dataset_def.items()
+        ],
     }
+
+
+def sort_dataset_definition(definition):
+    """ Sort dataset definitions according to the order index. """
+    return dict(sorted(
+        definition.items(), key=lambda item: item[1].get("_order") or 0
+    ))
 
 
 def _parse_parameters(requested_parameters, dataset_definition):
@@ -103,12 +116,6 @@ def _parse_parameters(requested_parameters, dataset_definition):
                 yield item
             else:
                 observed.add(item)
-
-    def _sort_dataset_definition(definition):
-        """ Sort dataset definitions according to the order index. """
-        return dict(sorted(
-            definition.items(), key=lambda item: item[1].get("_order") or 0
-        ))
 
     def _extract_definitions(parameters_it, definition):
         """ Extract definitions for the selected parameters and check the
@@ -151,7 +158,7 @@ def _parse_parameters(requested_parameters, dataset_definition):
         return dict(_extract_definitions(iter(parameters), definition))
 
 
-    dataset_definition = _sort_dataset_definition(dataset_definition)
+    dataset_definition = sort_dataset_definition(dataset_definition)
 
     if not requested_parameters:
         return dataset_definition
@@ -238,7 +245,7 @@ class _HapiDataType():
                     "length": get_datetime64_string_size(f"datetime64[{unit}]"),
                     "x_standard": "UTC",
                     "x_epoch": "1970-01-01T00:00:00Z",
-                    "x_precision": unit,
+                    "x_unit": unit,
                     "x_type": "int64",
                 }
 

@@ -30,14 +30,11 @@
 # pylint: disable=missing-docstring,unused-argument,too-few-public-methods
 
 #from logging import getLogger
-from datetime import datetime, time
-from django.utils.dateparse import parse_date, parse_datetime
-from vires.time_util import naive_to_utc
 from vires.views.decorators import allow_methods, reject_content
 from ..dataset import MAX_TIME_SELECTION, get_time_limit, get_collection_time_info
 from ..time_series import TimeSeries
 from .common import (
-    HapiError,
+    parse_datetime, HapiError,
     catch_error, allowed_parameters, required_parameters, map_parameters,
 )
 from .data_formats import get_data_formatter, parse_format
@@ -74,7 +71,7 @@ def data(request):
     return get_data_formatter(format_)(
         datasets=source.subset(start, stop, dataset_def),
         header=(
-            get_info_response(collection, dataset_def)
+            get_info_response(collection, dataset_id, dataset_def)
             if include_header else None
         ),
     )
@@ -83,12 +80,12 @@ def data(request):
 def _parse_time_selection(collection, start, stop):
 
     try:
-        start = _parse_datetime(start)
+        start = parse_datetime(start)
     except ValueError:
         raise HapiError(hapi_status=1402) from None
 
     try:
-        stop = _parse_datetime(stop)
+        stop = parse_datetime(stop)
     except ValueError:
         raise HapiError(hapi_status=1403) from None
 
@@ -121,14 +118,3 @@ def _parse_header_flag(header_flag):
     if header_flag == 'header':
         return True
     raise HapiError(hapi_status=1410) from None
-
-
-def _parse_datetime(value):
-    """ Parse date-time value. """
-    parsed_value = parse_datetime(value)
-    if parsed_value is not None:
-        return naive_to_utc(parsed_value)
-    parsed_value = parse_date(value)
-    if parsed_value is not None:
-        return naive_to_utc(datetime.combine(parsed_value, time()))
-    raise ValueError(f"invalid time {value}'")
