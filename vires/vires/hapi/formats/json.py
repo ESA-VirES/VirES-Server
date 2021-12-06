@@ -25,13 +25,32 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+
 import json
 from itertools import chain
 from numpy import (
     str_, bytes_, bool_, float32, float64, datetime64,
     int8, int16, int32, int64, uint8, uint16, uint32, uint64,
+    isfinite,
 )
 from .common import flatten_records, format_datetime64
+
+
+# FIXME: JSON cannot encode IEEE-754 not-a-number and positive or negative
+#        infinity not sure how these values should be encoded in the HAPI JSON
+#        response. To make parsers happy, we convert these special values to
+#        string parsable by Python float() and JS Number().
+
+_JSON_FLOAT_FIX = {
+    'nan': 'NaN',
+    'inf': 'Infinity',
+    '-inf': '-Infinity',
+}
+
+
+def json_float(value):
+    return float(value) if isfinite(value) else _JSON_FLOAT_FIX[str(value)]
+
 
 DEFAULT_JSON_FORMATTING = lambda v: v # simple pass-trough
 JSON_FORMATTING = {
@@ -46,8 +65,8 @@ JSON_FORMATTING = {
     uint16: int,
     uint32: int,
     uint64: int,
-    float32: float,
-    float64: float,
+    float32: json_float,
+    float64: json_float,
     datetime64: format_datetime64,
 }
 
