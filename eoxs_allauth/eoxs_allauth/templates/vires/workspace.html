@@ -261,6 +261,7 @@
                 <ul class="dropdown-menu">
                   <li><a href="#WebUI">Web Client</a></li>
                   <li><a href="#API">Python Client</a></li>
+                  <li><a href="#HAPI">Heliophysics API</a></li>
                   {% if has_vre_jhub %}
                   <li><a href="#VRE">Jupyter / VRE</a></li>
                   {% endif %}
@@ -312,7 +313,7 @@
           <hr>
 
           <div class="divider" id="WebUI"></div>
-          <h2>VirES for Swarm - Web Client</h2>
+          <h2>VirES for Swarm &#8212; Web Client</h2>
           <hr>
           <p>
             Here is a demonstration of the main features of the VirES for Swarm
@@ -348,7 +349,7 @@
           </p>
 
           <div class="divider" id="API"></div>
-          <h2>VirES for Swarm - API</h2>
+          <h2>VirES for Swarm &#8212; API</h2>
           <hr>
           <p>
             In addition to the web graphical user interface, the data can be
@@ -356,9 +357,18 @@
             client such as the <a href="https://viresclient.readthedocs.io" target="_blank">VirES Python client</a>.
           </p>
 
+          <div class="divider" id="HAPI"></div>
+          <h2>VirES for Swarm &#8212; Heliophysics API</h2>
+          <hr>
+          <p>
+            Selected datasets can be also accesses through the
+            <a href="https://github.com/hapi-server/data-specification" target="_blank">Heliophysics API</a>
+            (HAPI). For more details about see the description of the
+            <a href="/hapi" target="_blank">VirES for Swarm HAPI server</a>.
+          </p>
           {% if has_vre_jhub %}
           <div class="divider" id="VRE"></div>
-          <h2>VirES for Swarm - Jupyter Lab</h2>
+          <h2>VirES for Swarm &#8212; Jupyter Lab</h2>
           <hr>
           <p><img src="{% static 'images/VRE_JupyterLab.png' %}" style="width:75%;margin:1em auto 1em auto;display: block;"></p>
           <p>
