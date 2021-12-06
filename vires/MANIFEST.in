@@ -1,2 +1,2 @@
 include vires/data/*.json
-recursive-include eoxs_allauth/templates *
+recursive-include vires/templates *
