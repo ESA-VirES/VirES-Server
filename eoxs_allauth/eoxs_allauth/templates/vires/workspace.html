@@ -1,10 +1,10 @@
 {% extends "vires/base.html" %}
 {% load i18n %}
-{% block title %}
-  <title>VirES for Swarm</title>
-{% endblock %}
 
-{% block content %}
+{% block additional_headers %}
+{% endblock additional_headers %}
+
+{% block body %}
 
 {% load staticfiles %}
 <script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
@@ -648,4 +648,4 @@
 
   {% endif %}
 
-{% endblock %}
+{% endblock body %}
