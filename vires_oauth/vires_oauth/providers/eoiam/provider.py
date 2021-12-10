@@ -26,6 +26,8 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+from allauth.account.models import EmailAddress
+from allauth.socialaccount import app_settings
 from allauth.socialaccount.providers.base import ProviderAccount
 from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
 
@@ -50,6 +52,8 @@ class EoiamProvider(OAuth2Provider):
     name = 'EO Sign In'
     account_class = EoiamAccount
 
+    settings = app_settings.PROVIDERS.get(id, {})
+
     @staticmethod
     def get_default_scope():
         return ["openid"] # "profile", "email"
@@ -66,5 +70,13 @@ class EoiamProvider(OAuth2Provider):
             'first_name': data.get('given_name'),
             'last_name': data.get('family_name'),
         }
+
+    @classmethod
+    def extract_email_addresses(cls, data):
+        return [EmailAddress(
+            email=data['sub'],
+            verified=bool(cls.settings.get('TRUST_EMAILS', False)),
+            primary=True
+        )]
 
 provider_classes = [EoiamProvider]
