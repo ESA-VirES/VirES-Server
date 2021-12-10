@@ -52,11 +52,11 @@ class EoiamProvider(OAuth2Provider):
 
     @staticmethod
     def get_default_scope():
-        return ["openid", "profile", "email"]
+        return ["openid"] # "profile", "email"
 
     @staticmethod
     def extract_uid(data):
-        return data['username']
+        return data['sub']
 
     @staticmethod
     def extract_common_fields(data):
