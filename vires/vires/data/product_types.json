@@ -192,7 +192,7 @@
                     }
                 },
                 "ASM_Freq_Dev": {
-                    "dataType": "uint16",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION":  "ASM frequency calibration data deviation",
                         "UNITS": "-"
