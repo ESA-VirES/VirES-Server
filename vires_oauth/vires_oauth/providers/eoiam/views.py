@@ -45,6 +45,7 @@ from .provider import EoiamProvider
 
 
 class EoiamOAuth2Adapter(OAuth2Adapter):
+    basic_auth = True # pass client credentials via the HTTP Basic authentication
     provider_id = EoiamProvider.id
     settings = app_settings.PROVIDERS.get(provider_id, {})
 
