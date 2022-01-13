@@ -67,6 +67,7 @@ class HapiDataResponse():
     header_prefix = ""
     response_opts = {}
 
+    @classmethod
     def _generate_response(cls, datasets, header=None):
         raise NotImplementedError
 
