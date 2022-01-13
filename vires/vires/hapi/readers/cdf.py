@@ -31,7 +31,7 @@ from numpy import asarray, broadcast_to, searchsorted
 from vires.time_util import datetime_to_datetime64
 from vires.cdf_util import cdf_open, CDF_EPOCH_TYPE, cdf_rawtime_to_datetime64
 from vires.dataset import Dataset
-from .common import TIME_PRECISION
+from ..data_type import parse_data_type, TIME_PRECISION
 
 
 class CdfTimeSeriesReader():
@@ -124,10 +124,25 @@ class CdfTimeSeriesReader():
         cdf_var = cdf.raw_var(source_variable)
         cdf_type = cdf_var.type()
         if cdf_var.rv(): # regular record variable
-            return cls._parse_data(cdf_type, cdf_var[slice_][subset], options)
-        # NRV variable - requires size to be set
-        value = cls._parse_data(cdf_type, asarray(cdf_var[...]), options)
-        return broadcast_to(value, (size,) + value.shape)
+            data = cls._parse_data(cdf_type, cdf_var[slice_][subset], options)
+        else:
+            # NRV variable - requires size to be set
+            value = cls._parse_data(cdf_type, asarray(cdf_var[...]), options)
+            data = broadcast_to(value, (size,) + value.shape)
+        cls._assert_declared_type(variable, data, options)
+        return data
+
+    @staticmethod
+    def _assert_declared_type(variable, data, options):
+        """ Assert that the extracted data type matches the data type declared
+        in parameter's metadata.
+        """
+        declared = parse_data_type(options)
+        if data.dtype != declared.dtype:
+            raise AssertionError(
+                f"{variable}: mismatch between the declared and extracted "
+                f"data type! {declared.dtype} != {data.dtype}"
+            )
 
     @staticmethod
     def _parse_data(cdf_type, raw_data, options):

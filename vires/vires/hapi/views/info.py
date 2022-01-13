@@ -29,13 +29,12 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring,unused-argument,too-few-public-methods
 
-import re
 from django.db.models import Min, Max
 from vires.time_util import format_datetime#, parse_duration
 from vires.views.decorators import allow_methods, reject_content
 from ..dataset import parse_dataset
-from ..readers.common import TIME_PRECISION
 from ..formats.common import get_datetime64_string_size
+from ..data_type import parse_data_type
 from .common import (
     HapiResponse, HapiError,
     catch_error, allowed_parameters, required_parameters, map_parameters
@@ -193,13 +192,6 @@ def _build_parameter(name, details):
 class _HapiDataType():
     """ HAPI data-type description factory. """
 
-    RE_DATA_TYPE = re.compile("([a-z]+)([1-9][0-9]*)?")
-
-    STRING_ENCODING = {
-        "char": ("ASCII", 1),
-        "unicode": ("UTF8", 4),
-    }
-
     NUMBER_TYPE_MAPPING = {
         "float": "double",
         "uint": "integer",
@@ -213,40 +205,29 @@ class _HapiDataType():
     }
 
     def __new__(cls, vires_parameter):
-        vires_type = vires_parameter["dataType"]
+        data_type = parse_data_type(vires_parameter)
 
-        match = cls.RE_DATA_TYPE.match(vires_type)
-        if match:
-            type_, size = match.groups()
-            size = None if size is None else int(size)
+        if data_type.type in ('float', 'int', 'uint'):
+            return {
+                "type": cls.NUMBER_TYPE_MAPPING[data_type.type],
+                "x_type": data_type.type_string,
+            }
 
-            # string type
-            if type_ in cls.STRING_ENCODING: # string-type
-                encoding, item_size = cls.STRING_ENCODING[type_]
-                return {
-                    "type": "string",
-                    "length": item_size * size,
-                    "x_encoding": encoding,
-                }
+        if data_type.type == "timestamp":
+            return {
+                "type": "isotime",
+                "length": get_datetime64_string_size(data_type.dtype),
+                "x_standard": data_type.standard,
+                "x_epoch": data_type.epoch,
+                "x_unit": data_type.unit,
+                "x_type": data_type.storage_type,
+            }
 
-            # number type
-            if type_ in cls.NUMBER_TYPE_SIZES and size in cls.NUMBER_TYPE_SIZES[type_]:
-                return {
-                    "type": cls.NUMBER_TYPE_MAPPING[type_],
-                    "x_type": f"{type_}{size}",
-                }
+        if data_type.type in ('char', 'unicode'):
+            return {
+                "type": "string",
+                "length": data_type.byte_size,
+                "x_encoding": data_type.encoding,
+            }
 
-            # time-stamp
-            if type_ == "timestamp":
-                precision = vires_parameter.get("timePrecision")
-                unit = TIME_PRECISION[precision]
-                return {
-                    "type": "isotime",
-                    "length": get_datetime64_string_size(f"datetime64[{unit}]"),
-                    "x_standard": "UTC",
-                    "x_epoch": "1970-01-01T00:00:00Z",
-                    "x_unit": unit,
-                    "x_type": "int64",
-                }
-
-        raise ValueError(f"Unsupported data type {vires_type}!")
+        raise ValueError(f"Unsupported data type {data_type.type}!")
