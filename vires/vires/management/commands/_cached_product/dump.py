@@ -107,8 +107,7 @@ def read_info_cdf(filename):
             if 'SOURCE' in cdf.attrs:
                 sources = list(cdf.attrs['SOURCE'])
     except CDFError:
-        last_modified = None
-        sources = []
+        last_modified, sources = None, []
 
     return {
         "updated": last_modified,
@@ -117,11 +116,17 @@ def read_info_cdf(filename):
 
 
 def read_info_zip(filename):
-    return {
-        "updated": format_datetime(_get_file_timestamp(filename)),
-        "sources": process_zipped_files(
+    try:
+        last_modiified = format_datetime(_get_file_timestamp(filename)),
+        sources = process_zipped_files(
             filename, lambda _, filename: filename2id(filename)
         )
+    except FileNotFoundError:
+        last_modified, sources = None, []
+
+    return {
+        "updated": last_modified,
+        "sources": sources,
     }
 
 

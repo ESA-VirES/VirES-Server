@@ -28,6 +28,10 @@
 from logging import getLogger
 
 
+class ModelError(Exception):
+    """ Model error exception. """
+
+
 class ModelCache():
     """ Model cache class.
 
@@ -51,6 +55,7 @@ class ModelCache():
 
     def get_model_with_sources(self, model_id):
         """ Get model with sources for given identifier. """
+        model_id_orig = model_id
         model_id = self.model_aliases.get(model_id, model_id)
 
         model_factory = self.model_factories.get(model_id)
@@ -59,7 +64,18 @@ class ModelCache():
 
         model = self.cache.get(model_id)
         if model_factory.model_changed or not model:
-            self.cache[model_id] = model = model_factory()
+            try:
+                model = model_factory()
+            except Exception as error:
+                self.logger.error(
+                    "Error occurred wile loading model %s!",
+                    model_id if model_id_orig == model_id
+                    else f"{model_id_orig}({model_id})",
+                    exc_info=True
+                )
+                raise ModelError("Failed to load model %s!" % model_id_orig) from error
+
+            self.cache[model_id] = model
             self.sources[model_id] = sources = model_factory.sources
             self.logger.info("%s model loaded", model_id)
         else:
