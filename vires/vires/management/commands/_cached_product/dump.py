@@ -34,6 +34,7 @@ from vires.util import unique, include
 from vires.cdf_util import cdf_open, CDFError
 from vires.cache_util import cache_path
 from vires.time_util import naive_to_utc, format_datetime
+from vires.model_shc import process_zipped_files, filename2id
 from vires.data.vires_settings import (
     SPACECRAFTS, AUX_DB_DST, AUX_DB_KP, CACHED_PRODUCT_FILE,
 )
@@ -84,22 +85,16 @@ def serialize_cache_item(identifier, filename, info_reader):
 
 def read_info_file(filename):
 
-    try:
-        last_modified = naive_to_utc(
-            datetime.utcfromtimestamp(getmtime(filename))
-        )
-    except FileNotFoundError:
-        last_modified = None
-
-    try:
-        with open("%s.source" % filename) as file_:
-            sources = [line.strip() for line in file_]
-    except FileNotFoundError:
-        sources = []
+    def _read_sources_from_file(filename):
+        try:
+            with open(filename) as file_:
+                return [line.strip() for line in file_]
+        except FileNotFoundError:
+            return []
 
     return {
-        "updated": format_datetime(last_modified),
-        "sources": sources,
+        "updated": format_datetime(_get_file_timestamp(filename)),
+        "sources": _read_sources_from_file(f"{filename}.source")
     }
 
 
@@ -112,13 +107,34 @@ def read_info_cdf(filename):
             if 'SOURCE' in cdf.attrs:
                 sources = list(cdf.attrs['SOURCE'])
     except CDFError:
-        last_modified = None
-        sources = []
+        last_modified, sources = None, []
 
     return {
         "updated": last_modified,
         "sources": sources,
     }
+
+
+def read_info_zip(filename):
+    try:
+        last_modiified = format_datetime(_get_file_timestamp(filename)),
+        sources = process_zipped_files(
+            filename, lambda _, filename: filename2id(filename)
+        )
+    except FileNotFoundError:
+        last_modified, sources = None, []
+
+    return {
+        "updated": last_modified,
+        "sources": sources,
+    }
+
+
+def _get_file_timestamp(filename):
+    try:
+        return naive_to_utc(datetime.utcfromtimestamp(getmtime(filename)))
+    except FileNotFoundError:
+        return None
 
 
 def configure_cached_product(product_type, **kwargs):
@@ -148,6 +164,7 @@ CACHED_PRODUCTS = {
 }
 
 
+configure_cached_product("MCO_SHA_2X", info_reader=read_info_zip)
 configure_cached_product("MMA_CHAOS_", info_reader=read_info_cdf)
 configure_cached_product("MMA_SHA_2C", info_reader=read_info_cdf)
 configure_cached_product("MMA_SHA_2F", info_reader=read_info_cdf)

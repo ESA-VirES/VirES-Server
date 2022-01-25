@@ -44,12 +44,14 @@ from eoxmagmod.time_util import decimal_year_to_mjd2000
 from eoxmagmod.magnetic_model.parser_shc import parse_shc_header
 from ..amps import AmpsMagneticFieldModel
 from ..util import cached_property
-from ..file_util import FileChangeMonitor
 from .files import (
     ModelFileWithLiteralSource,
     CachedModelFileWithSourceFile,
     CachedComposedModelFile,
+    CachedZippedMultiModelFile,
 )
+from .factories import ModelFactory, ZippedModelFactory
+from .cache import ModelCache
 
 
 DIPOLE_MODEL = "IGRF"
@@ -77,74 +79,18 @@ PREDEFINED_COMPOSED_MODELS = {
 }
 
 
-class ModelFactory():
-    """ Model factory class. """
-    def __init__(self, loader, model_files):
-        self.loader = loader
-        self.model_files = model_files
-        self._tracker = FileChangeMonitor()
-
-    @cached_property
-    def files(self):
-        """ Get list of files required by this model. """
-        return [model_file.filename for model_file in self.model_files]
-
-    @property
-    def model_changed(self):
-        """ Check if the model files changed. """
-        return self._tracker.changed(*self.files)
-
-    def __call__(self):
-        """ Create new model instance. """
-        return self.loader(*self.files)
-
-    @property
-    def sources(self):
-        """ Load model sources. """
-        return [model_file.sources for model_file in self.model_files]
-
-
-class ModelCache():
-    """ Model cache class. """
-    def __init__(self, model_factories, model_aliases=None, logger=None):
-        self.logger = logger or getLogger(__name__)
-        self.model_factories = model_factories
-        self.model_aliases = model_aliases or {}
-        self.cache = {}
-        self.sources = {}
-
-    def get_model(self, model_id):
-        """ Get model for given identifier. """
-        model, _ = self.get_model_with_sources(model_id)
-        return model
-
-    def get_model_with_sources(self, model_id):
-        """ Get model with sources for given identifier. """
-        model_id = self.model_aliases.get(model_id, model_id)
-
-        model_factory = self.model_factories.get(model_id)
-        if not model_factory:
-            return None, None # invalid model id
-
-        model = self.cache.get(model_id)
-        if model_factory.model_changed or not model:
-            self.cache[model_id] = model = model_factory()
-            self.sources[model_id] = sources = model_factory.sources
-            self.logger.info("%s model loaded", model_id)
-        else:
-            sources = self.sources[model_id]
-        return model, sources
-
-
-def shc_validity_reader(filename):
+def shc_validity_reader(file_):
     """ SHC model validity reader. """
-    return _shc_validity_reader(filename, decimal_year_to_mjd2000)
+    return _shc_validity_reader(file_, decimal_year_to_mjd2000)
 
 
-def _shc_validity_reader(filename, to_mjd2000):
+def _shc_validity_reader(file_, to_mjd2000):
     """ Low-level SHC model validity reader. """
-    with open(filename) as file_in:
-        header = parse_shc_header(file_in)
+    if hasattr(file_, 'read'):
+        header = parse_shc_header(file_)
+    else:
+        with open(file_) as file_in:
+            header = parse_shc_header(file_in)
     return (
         to_mjd2000(header["validity_start"]), to_mjd2000(header["validity_end"])
     )
@@ -166,9 +112,9 @@ MODEL_FACTORIES = {
             CHAOS_STATIC_LATEST, CHAOS_STATIC_SOURCE, shc_validity_reader
         )]
     ),
-    "CHAOS-Core": ModelFactory(
+    "CHAOS-Core": ZippedModelFactory(
         load_model_shc,
-        [CachedModelFileWithSourceFile("MCO_SHA_2X", shc_validity_reader)]
+        CachedZippedMultiModelFile("MCO_SHA_2X", shc_validity_reader)
     ),
     "LCS-1": ModelFactory(
         load_model_shc,
@@ -253,4 +199,4 @@ MODEL_LIST = (
     + list(PREDEFINED_COMPOSED_MODELS)
 )
 
-MODEL_CACHE = ModelCache(MODEL_FACTORIES, MODEL_ALIASES)
+MODEL_CACHE = ModelCache(MODEL_FACTORIES, MODEL_ALIASES, getLogger(__name__))
