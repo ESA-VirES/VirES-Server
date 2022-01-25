@@ -117,7 +117,7 @@ def read_info_cdf(filename):
 
 def read_info_zip(filename):
     try:
-        last_modiified = format_datetime(_get_file_timestamp(filename)),
+        last_modified = format_datetime(_get_file_timestamp(filename))
         sources = process_zipped_files(
             filename, lambda _, filename: filename2id(filename)
         )
