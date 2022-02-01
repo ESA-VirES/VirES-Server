@@ -125,6 +125,28 @@ VirES server implements the version {{ version }} of the
   {% endif %}
 </ul>
 
+<h3 id="limits">Data Request Limits</h3>
+
+<p>
+  The time selection of one HAPI data request is currently limited to a time
+  selection of approx. <strong>432,000 data records</strong> (equivalent of
+  5 days of 1Hz <code>MAGx_LR_1B</code> data or 2 hours and 24 minutes of 50Hz
+  <code>MAGx_HR_1B</code> data), which is the same limit applied
+  to the synchronous VirES API requests.
+</p>
+<p>
+  This number of records is converted to a time period by multiplication
+  with the <strong>nominal cadence</strong> of the dataset (see
+  <code>x_maxTimeSelection</code> in the dataset info) which is then
+  used as the actual hard limit.
+  For irregularly sampled datasets, the number of the actual records may
+  slightly differ from the nominal limit.
+</p>
+<p>
+  If you need to retrieve more data than this limit, please consider
+  splitting your large requests into smaller chunks.
+</p>
+
 <h3 id="extenstions">Custom Extensions</h3>
 
 <p>
@@ -146,6 +168,11 @@ VirES server implements the version {{ version }} of the
   bear the identical set of parameters.
 </p>
 
+<h4 id="request-max-time-seletion">Maximum Time Selection</h4>
+<p>
+  The maximum time selection is included in the dataset info response
+  as the custom <code>x_maxTimeSelection</code> field.
+</p>
 <h4 id=<storage-data-type">Storage Data Type</h4>
 <p>
   The parameters description contains additional attribute <code>x_type</code>

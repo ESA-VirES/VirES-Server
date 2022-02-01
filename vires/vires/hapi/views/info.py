@@ -30,9 +30,9 @@
 # pylint: disable=missing-docstring,unused-argument,too-few-public-methods
 
 from django.db.models import Min, Max
-from vires.time_util import format_datetime#, parse_duration
+from vires.time_util import format_datetime, parse_duration, format_duration
 from vires.views.decorators import allow_methods, reject_content
-from ..dataset import parse_dataset
+from ..dataset import MAX_TIME_SELECTION, get_time_limit, parse_dataset
 from ..formats.common import get_datetime64_string_size
 from ..data_type import parse_data_type
 from .common import (
@@ -79,6 +79,13 @@ def get_info_response(collection, dataset_id, dataset_def):
         )
     }
 
+    max_time_selection = None
+    nominal_sampling = metadata.get("nominalSampling")
+    if nominal_sampling:
+        max_time_selection = format_duration(
+            get_time_limit(MAX_TIME_SELECTION, parse_duration(nominal_sampling))
+        )
+
     return {
         "x_dataset": collection.identifier + (
             f":{dataset_id}" if dataset_id else ""
@@ -89,6 +96,7 @@ def get_info_response(collection, dataset_id, dataset_def):
         "startDate": format_datetime(metadata["startDate"]),
         "stopDate": format_datetime(metadata["stopDate"]),
         "cadence": metadata.get("nominalSampling"),
+        "x_maxTimeSelection": max_time_selection,
         "modificationDate": metadata.get("lastUpdate"),
         "parameters": [
             _build_parameter(name, details)

@@ -102,6 +102,37 @@ def parse_duration(value):
     return timedelta(days, fsec)
 
 
+def format_duration(value):
+    """ Encode python timedelta object as ISO 8601 duration string.
+    Raises a `ValueError` if the conversion was not possible.
+    """
+    #NOTE: The months and years are ambiguous and we do not encode them.
+    if not isinstance(value, timedelta):
+        raise ValueError("Invalid input type!")
+    items = []
+    if value.days < 0:
+        items.append('-')
+        value = -value
+    items.append('P')
+    if value.days != 0:
+        items.append('%dD'%value.days)
+    elif value.seconds == 0 and value.microseconds == 0:
+        items.append('T0S') # zero interval
+    if value.seconds != 0 or value.microseconds != 0:
+        minutes, seconds = divmod(value.seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        items.append('T')
+        if hours != 0:
+            items.append('%dH'%hours)
+        if minutes != 0:
+            items.append('%dM'%minutes)
+        if value.microseconds != 0:
+            items.append("%.6fS"%(seconds+1e-6*value.microseconds))
+        elif seconds != 0:
+            items.append('%dS'%seconds)
+    return "".join(items)
+
+
 def datetime_mean(start, stop):
     """ Get arithmetic mean of two `datetime.datetime` values. """
     return (stop - start)/2 + start
