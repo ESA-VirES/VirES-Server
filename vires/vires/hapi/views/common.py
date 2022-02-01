@@ -74,7 +74,7 @@ class HapiResponse(JsonResponse):
         }
         if debug:
             # optional debugging message - not part of the HAPI spec
-            status["debug"] = debug
+            status["x_debug"] = debug
         return status
 
     def __init__(self, content=None, hapi_status=1200, http_status=None,
@@ -116,7 +116,7 @@ def catch_error(view):
             getLogger(LOGGER_NAME).error("Internal serve error!", exc_info=True)
             return HapiResponse(
                 hapi_status=1500, message=str(error),
-                x_debug=(format_exc() if settings.DEBUG else None),
+                debug=(format_exc() if settings.DEBUG else None),
             )
     return _catch_error
 
