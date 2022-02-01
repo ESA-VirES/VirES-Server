@@ -140,61 +140,61 @@ VirES server implements the version {{ version }} of the
 
 <h4 id="dataset-name-and-type">Dataset Name and Type</h4>
 <p>
-The info responses contain extra <code>x_dataset</code> and
-<code>x_datasetType</code> for the VirES product collection (equal to the HAPI
-dataset name) and VirES product type. Datasets of the same <code>x_datasetType</code>
-bear the identical set of parameters.
+  The info responses contain extra <code>x_dataset</code> and
+  <code>x_datasetType</code> for the VirES product collection (equal to the HAPI
+  dataset name) and VirES product type. Datasets of the same <code>x_datasetType</code>
+  bear the identical set of parameters.
 </p>
 
 <h4 id=<storage-data-type">Storage Data Type</h4>
 <p>
-The parameters description contains additional attribute <code>x_type</code>
-publishing original storage data type of the parameter and its bit-size
-(<code>int8</code>, <code>int16</code>, <code>int32</code>, <code>int64</code>,
-<code>uint8</code>, <code>uint16</code>, <code>uint32</code>, <code>uint64</code>,
-<code>float32</code> or <code>float64</code>).
+  The parameters description contains additional attribute <code>x_type</code>
+  publishing original storage data type of the parameter and its bit-size
+  (<code>int8</code>, <code>int16</code>, <code>int32</code>, <code>int64</code>,
+  <code>uint8</code>, <code>uint16</code>, <code>uint32</code>, <code>uint64</code>,
+  <code>float32</code> or <code>float64</code>).
 </p>
 <p>
-In case of the time-stamps, the description defines the original time-encoding
-with these attributes: <code>x_standard</code> (<code>UTC</code>),
-<code>x_epoch</code> (zero-time instant, <code>1970-01-01T00:00:00Z</code>),
-<code>x_unit</code> (time unit of the stored numbers, e.g. <code>s</code>,
-<code>ms</code>, or <code>us</code>) and <code>x_type</code> (storage data type,
-<code>int64</code>).
+  In case of the time-stamps, the description defines the original time-encoding
+  with these attributes: <code>x_standard</code> (<code>UTC</code>),
+  <code>x_epoch</code> (zero-time instant, <code>1970-01-01T00:00:00Z</code>),
+  <code>x_unit</code> (time unit of the stored numbers, e.g. <code>s</code>,
+  <code>ms</code>, or <code>us</code>) and <code>x_type</code> (storage data type,
+  <code>int64</code>).
 </p>
 <p>
-The string arrays contain an additional <code>x_encoding</code> attribute
-(<code>ASCII</code> or <code>UTF-8</code>).
+  The string arrays contain an additional <code>x_encoding</code> attribute
+  (<code>ASCII</code> or <code>UTF-8</code>).
 </p>
 
 <h4 id="custom-binary-format">Custom Binary Format</h4>
 <p>
-VirES provides an extra custom binary format <code>x_binary</code>.
-This format has the same structure and endianity as the HAPI <code>binary</code>
-format but the time, integer and floating point values are encoded in their
-source data type indicated by the <code>x_type</code>, rather than by the
-ISO&#8209;8601 time string, 32&#8209;bits signed integer and double precision
-float.
+  VirES provides an extra custom binary format <code>x_binary</code>.
+  This format has the same structure and endianity as the HAPI <code>binary</code>
+  format but the time, integer and floating point values are encoded in their
+  source data type indicated by the <code>x_type</code>, rather than by the
+  ISO&#8209;8601 time string, 32&#8209;bits signed integer and double precision
+  float.
 </p>
 <p>
-This binary format is a bit faster to produce and more compact than
-the standard binary format and it can safely represent <code>uint32</code>,
+  This binary format is a bit faster to produce and more compact than
+  the standard binary format and it can safely represent <code>uint32</code>,
 <code>int64</code>, and <code>uint64</code> values.
 </p>
 
 <h3 id="ieee745-special-values-in-json">JSON Representation of Special IEEE 745 Values</h3>
 <p>
-The number represenatation <a href="https://en.wikipedia.org/wiki/JSON" target="_blank">JSON</a>
-format is limited to decimal numbers (<code>-123.456</code>) with the
-optional exponential notation (<code>-1.23456e2</code>) and it cannot
-represent the <a href="https://en.wikipedia.org/wiki/IEEE_754#Formats" target="_blank">IEEE 745</a>
-special <i>not-a-number</i> and positive or negative <i>infinity</i> values which
-may occur in the provided time series data.
+  The number represenatation <a href="https://en.wikipedia.org/wiki/JSON" target="_blank">JSON</a>
+  format is limited to decimal numbers (<code>-123.456</code>) with the
+  optional exponential notation (<code>-1.23456e2</code>) and it cannot
+  represent the <a href="https://en.wikipedia.org/wiki/IEEE_754#Formats" target="_blank">IEEE 745</a>
+  special <i>not-a-number</i> and positive or negative <i>infinity</i> values which
+  may occur in the provided time series data.
 </p>
 <p>
-VirES for Swarm HAPI server encodes these values as strings which are
-parsable by the Javascript <code>Number()</code> and Python <code>float()</code>
-functions:
+  VirES for Swarm HAPI server encodes these values as strings which are
+  parsable by the Javascript <code>Number()</code> and Python <code>float()</code>
+  functions:
 </p>
 <table class="table table-bordered">
   <thead>
