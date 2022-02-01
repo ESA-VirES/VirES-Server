@@ -25,58 +25,43 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+import csv
 from itertools import chain
-from io import BytesIO, TextIOWrapper, StringIO
-from numpy import str_, bytes_, bool_, float32, float64, datetime64
-from .common import flatten_records, format_datetime64
+from io import BytesIO, TextIOWrapper
+from numpy import bytes_, bool_, datetime64, char
+from .common import flatten_records, convert_arrays, format_datetime64_array
 
 
-def quote_csv_string(value, delimiter=",", quote='"', escaped_quote='""', new_line="\n"):
-    """ CSV string quoting. """
-    string_needs_quotes = (
-        delimiter in value or quote in value or new_line in value
-    )
-    if string_needs_quotes:
-        value = "%s%s%s" % (quote, value.replace(quote, escaped_quote), quote)
-    return value
-
-
-DEFAULT_TEXT_FORMATTING = str # pylint: disable=invalid-name
-TEXT_FORMATTING = {
-    str_: quote_csv_string,
-    bytes_: lambda v, **kwargs: quote_csv_string(bytes(v).decode('ascii'), **kwargs),
-    bool_: lambda v: str(int(v)),
-    float32: lambda v: "%.9g" % v,
-    float64: lambda v: "%.17g" % v,
-    datetime64: format_datetime64,
+CSV_ARRAY_CONVERSIONS = {
+    datetime64: lambda a: char.decode(format_datetime64_array(a), 'ASCII'),
+    bytes_: lambda a: char.decode(a, 'UTF-8'),
+    bool_: lambda a: a.astype('uint8'),
 }
 
 
-def arrays_to_csv(arrays, delimiter=",", newline="\r\n", encoding="UTF-8"):
+class HapiCsvDialect(csv.Dialect):
+    """ HAPI CSV dialect specification. """
+    delimiter = ','
+    quotechar = '"'
+    doublequote = True
+    skipinitialspace = False
+    lineterminator = '\r\n'
+    quoting = csv.QUOTE_MINIMAL
+
+
+def arrays_to_csv(arrays):
     """ Convert Numpy arrays into a CSV byte-string. """
-    return _lines_to_bytes(
-        lines=_arrays_to_csv_lines(
-            arrays=arrays,
-            delimiter=delimiter
-        ),
-        newline=newline.encode(encoding),
-        encoding=encoding,
-    )
+    arrays = map(flatten_records, convert_arrays(arrays, CSV_ARRAY_CONVERSIONS))
 
+    buffer_ = BytesIO()
+    text_buffer = TextIOWrapper(buffer_, encoding="UTF-8", write_through=True)
 
-def _lines_to_bytes(lines, newline, encoding):
-    return newline.join(line.encode(encoding) for line in lines)
-
-
-def _arrays_to_csv_lines(arrays, delimiter=","):
-    field_formatting = [
-        TEXT_FORMATTING.get(array.dtype.type) or DEFAULT_TEXT_FORMATTING
-        for array in arrays
-    ]
-    arrays = [flatten_records(array) for array in arrays]
+    writer = csv.writer(text_buffer, HapiCsvDialect)
     for record in zip(*arrays):
-        yield from delimiter.join(chain.from_iterable(
-            (format_(item) for item in field)
-            for field, format_ in zip(record, field_formatting)
-        )).split("\n")
-    yield ""
+        writer.writerow(
+            tuple(chain.from_iterable(
+                item.tolist() for item in record
+            ))
+        )
+
+    return buffer_.getvalue()

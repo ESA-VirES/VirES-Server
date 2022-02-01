@@ -27,12 +27,13 @@
 # pylint: disable=missing-docstring
 
 from unittest import TestCase, main
-from numpy import datetime64, dtype
+from numpy import datetime64, dtype, array
 from numpy.random import random
 from numpy.testing import assert_equal
 from vires.hapi.formats.common import (
     flatten_records,
-    format_datetime64,
+    format_datetime64_value,
+    format_datetime64_array,
     get_datetime64_string_size,
     cast_datetime64,
     round_datetime64,
@@ -135,10 +136,10 @@ class TestDatetime64StringSize(TestCase):
         self._test_get_datetime64_string_size(dtype("datetime64[ns]"), 30)
 
 
-class TestDatetime64Formatting(TestCase):
+class TestDatetime64ValueFormatting(TestCase):
 
     def _test_format_datetime64(self, input_, expected_output):
-        self.assertEqual(format_datetime64(input_), expected_output)
+        self.assertEqual(format_datetime64_value(input_), expected_output)
 
     def test_year(self):
         self._test_format_datetime64(datetime64(0, "Y"), "1970")
@@ -166,6 +167,72 @@ class TestDatetime64Formatting(TestCase):
 
     def test_nanosecond(self):
         self._test_format_datetime64(datetime64(0, "ns"), "1970-01-01T00:00:00.000000000Z")
+
+    def test_day_nat(self):
+        self._test_format_datetime64(datetime64("NaT", "D"), "NaT")
+
+    def test_microsecond_nat(self):
+        self._test_format_datetime64(datetime64("NaT", "us"), "NaT")
+
+
+class TestDatetime64ArrayFormatting(TestCase):
+
+    def _test_format_datetime64(self, input_, expected_output):
+        assert_equal(format_datetime64_array(input_), expected_output)
+
+    def test_year(self):
+        self._test_format_datetime64(
+            array([0, "NaT"], "datetime64[Y]"),
+            array([b"1970", b"NaT"])
+        )
+
+    def test_month(self):
+        self._test_format_datetime64(
+            array([0, "NaT"], "datetime64[M]"),
+            array([b"1970-01", b"NaT"])
+        )
+
+    def test_day(self):
+        self._test_format_datetime64(
+            array([0, "NaT"], "datetime64[D]"),
+            array([b"1970-01-01", b"NaT"])
+        )
+
+    def test_hour(self):
+        self._test_format_datetime64(
+            array([0, "NaT"], "datetime64[h]"),
+            array([b"1970-01-01T00Z", b"NaT"])
+        )
+
+    def test_minute(self):
+        self._test_format_datetime64(
+            array([0, "NaT"], "datetime64[m]"),
+            array([b"1970-01-01T00:00Z", b"NaT"])
+        )
+
+    def test_second(self):
+        self._test_format_datetime64(
+            array([0, "NaT"], "datetime64[s]"),
+            array([b"1970-01-01T00:00:00Z", b"NaT"])
+        )
+
+    def test_millisecond(self):
+        self._test_format_datetime64(
+            array([0, "NaT"], "datetime64[ms]"),
+            array([b"1970-01-01T00:00:00.000Z", b"NaT"])
+        )
+
+    def test_microsecond(self):
+        self._test_format_datetime64(
+            array([0, "NaT"], "datetime64[us]"),
+            array([b"1970-01-01T00:00:00.000000Z", b"NaT"])
+        )
+
+    def test_nanosecond(self):
+        self._test_format_datetime64(
+            array([0, "NaT"], "datetime64[ns]"),
+            array([b"1970-01-01T00:00:00.000000000Z", b"NaT"])
+        )
 
 
 class TestFlattenRecords(TestCase):

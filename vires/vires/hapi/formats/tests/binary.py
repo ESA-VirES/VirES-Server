@@ -34,12 +34,58 @@ from numpy import (
     uint8, uint16, uint32, uint64, int8, int16, int32, int64,
 )
 from numpy.testing import assert_equal
-from vires.hapi.formats.binary import (
+from vires.hapi.formats.binary_slow import (
+#from vires.hapi.formats.binary import (
     arrays_to_hapi_binary, arrays_to_x_binary,
-    HAPI_BINARY_ITEM_SIZE, X_BINARY_ITEM_SIZE,
-    HAPI_BINARY_TYPE_MAPPING, X_BINARY_TYPE_MAPPING,
+)
+from vires.hapi.formats.common import (
+    get_datetime64_string_size,
 )
 from .base import FormatTestMixIn, random_integer_array
+
+def constant_item_size(size):
+    """ Build function for a constant item size. """
+    def _item_size(_):
+        return size
+    return _item_size
+
+
+HAPI_BINARY_TYPE_MAPPING = {
+    bool_: int32,
+    int8: int32,
+    int16: int32,
+    uint8: int32,
+    uint16: int32,
+    float32: float64,
+}
+
+
+HAPI_BINARY_ITEM_SIZE = {
+    str_: lambda t: t.itemsize,
+    bytes_: lambda t: t.itemsize,
+    int32: constant_item_size(4),
+    float64: constant_item_size(8),
+    datetime64: get_datetime64_string_size,
+}
+
+
+X_BINARY_TYPE_MAPPING = {
+    datetime64: int64,
+}
+
+
+X_BINARY_ITEM_SIZE = {
+    **HAPI_BINARY_ITEM_SIZE,
+    bool_: constant_item_size(1),
+    int8: constant_item_size(1),
+    int16: constant_item_size(2),
+    int64: constant_item_size(8),
+    uint8: constant_item_size(1),
+    uint16: constant_item_size(2),
+    uint32: constant_item_size(4),
+    uint64: constant_item_size(8),
+    float32: constant_item_size(4),
+}
 
 
 def _binary_decoder(format_):

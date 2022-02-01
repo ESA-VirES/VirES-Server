@@ -25,59 +25,26 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from itertools import chain
-from struct import pack
+from sys import byteorder as system_byteorder
 from numpy import (
+    dtype, empty, full, choose, isnat,
     str_, bytes_, bool_, float32, float64, datetime64,
     uint8, uint16, uint32, uint64, int8, int16, int32, int64,
 )
 from .common import (
-    flatten_records, format_datetime64, get_datetime64_string_size,
+    format_datetime64_array, get_datetime64_string_size,
+    encode_string_array, convert_arrays,
 )
 
 
-# These numpy.datetime64 format, when printed, have no time component.
-DATE_ONLY_UNITS = set(["Y", "M", "W", "D"])
+def _astype_conversion(type_):
+    """ Get as-type array conversion. """
+    def _convert_astype(array):
+        return array.astype(type_)
+    return _convert_astype
 
 
-def binary_encoder(format_):
-    """ Build binary value encoder. """
-    def _encoder(value, *_):
-        return pack(format_, value)
-    return _encoder
-
-
-def constant_item_size(size):
-    """ Build function for a constant item size. """
-    def _item_size(_):
-        return size
-    return _item_size
-
-
-def trim_or_pad_bytes(byte_string, lenght):
-    """ Trim or pad bytes to the requested byte length. """
-    return byte_string[:lenght].ljust(lenght, b'\x00')
-
-
-# standard HAPI binary encoding
-
-HAPI_BINARY_ENCODING = {
-    str_: lambda v, l: trim_or_pad_bytes(v.encode("utf8"), l),
-    bytes_: trim_or_pad_bytes,
-    int32: binary_encoder("<l"),
-    float64: binary_encoder("<d"),
-    datetime64: lambda v, l: trim_or_pad_bytes(
-        format_datetime64(v).encode("ascii"), l
-    ),
-}
-
-HAPI_BINARY_ITEM_SIZE = {
-    str_: lambda t: t.itemsize,
-    bytes_: lambda t: t.itemsize,
-    int32: constant_item_size(4),
-    float64: constant_item_size(8),
-    datetime64: get_datetime64_string_size,
-}
+HAPI_BYTEORDER = 'little'
 
 HAPI_BINARY_TYPE_MAPPING = {
     bool_: int32,
@@ -89,6 +56,19 @@ HAPI_BINARY_TYPE_MAPPING = {
 }
 
 HAPI_BINARY_UNSUPPORTED_TYPES = {int64, uint32, uint64}
+
+HAPI_ARRAY_CONVERSIONS = {
+    datetime64: format_datetime64_array,
+    str_: encode_string_array,
+    **{
+        src_type: _astype_conversion(dst_type)
+        for src_type, dst_type in HAPI_BINARY_TYPE_MAPPING.items()
+    }
+}
+
+X_ARRAY_CONVERSIONS = {
+    str_: encode_string_array,
+}
 
 
 def arrays_to_hapi_binary(arrays):
@@ -102,68 +82,20 @@ def arrays_to_hapi_binary(arrays):
                 "format!."
             )
 
-    return b"".join(_arrays_to_binary_records(
-        arrays=_cast_arrays(arrays, HAPI_BINARY_TYPE_MAPPING),
-        type_encoding=HAPI_BINARY_ENCODING,
-        type_item_size=HAPI_BINARY_ITEM_SIZE,
-    ))
-
-
-# extended HAPI binary encoding
-
-X_BINARY_ENCODING = {
-    **HAPI_BINARY_ENCODING,
-    bool_: binary_encoder("?"),
-    int8: binary_encoder("b"),
-    int16: binary_encoder("<h"),
-    int64: binary_encoder("<q"),
-    uint8: binary_encoder("B"),
-    uint16: binary_encoder("<H"),
-    uint32: binary_encoder("<L"),
-    uint64: binary_encoder("<Q"),
-    float32: binary_encoder("<f"),
-}
-
-X_BINARY_ITEM_SIZE = {
-    **HAPI_BINARY_ITEM_SIZE,
-    bool_: constant_item_size(1),
-    int8: constant_item_size(1),
-    int16: constant_item_size(2),
-    int64: constant_item_size(8),
-    uint8: constant_item_size(1),
-    uint16: constant_item_size(2),
-    uint32: constant_item_size(4),
-    uint64: constant_item_size(8),
-    float32: constant_item_size(4),
-}
-
-X_BINARY_TYPE_MAPPING = {
-    datetime64: int64,
-}
+    return _arrays_to_binary(convert_arrays(arrays, HAPI_ARRAY_CONVERSIONS))
 
 
 def arrays_to_x_binary(arrays):
     """ Serialize Numpy arrays into byte-string in the custom binary format. """
-    return b"".join(_arrays_to_binary_records(
-        arrays=_cast_arrays(arrays, type_mapping=X_BINARY_TYPE_MAPPING),
-        type_encoding=X_BINARY_ENCODING,
-        type_item_size=X_BINARY_ITEM_SIZE,
-    ))
+    return _arrays_to_binary(convert_arrays(arrays, X_ARRAY_CONVERSIONS))
 
 
-def _arrays_to_binary_records(arrays, type_encoding, type_item_size):
-    """ Generate binary records. """
-    field_encoding = [
-        (type_encoding[dt.type], type_item_size[dt.type](dt))
-        for dt in (array.dtype for array in arrays)
-    ]
-    arrays = [flatten_records(array) for array in arrays]
-    for record in zip(*arrays):
-        yield b"".join(chain.from_iterable(
-            (format_(item, size) for item in field)
-            for field, (format_, size) in zip(record, field_encoding)
-        ))
-
+def _arrays_to_binary(arrays):
+    """ Serialize Numpy arrays into byte-string. """
+    return _assure_byteorder(
+        _convert_arrays_to_struct_array(arrays),
+        byteorder=HAPI_BYTEORDER, inplace=True,
+    ).tobytes(order='C')
 
 def _cast_arrays(arrays, type_mapping):
     """ Cast arrays to the desired type. """
@@ -177,3 +109,30 @@ def _cast_arrays(arrays, type_mapping):
             (array, _get_type(array.dtype.type)) for array in arrays
         )
     ]
+
+
+def _assure_byteorder(array, byteorder, inplace=False):
+    """ Convert array byte order or the desired 'little' (default) or 'big'
+    endian byte order.
+    """
+    if system_byteorder != byteorder:
+        array = array.newbyteorder().byteswap(inplace=inplace)
+    return array
+
+
+def _convert_arrays_to_struct_array(arrays):
+    """ Convert a list of arrays to a structured array. """
+    arrays = list(arrays)
+    size = arrays[0].shape[0] if arrays else 0
+    labels = [f"f{idx}" for idx in range(len(arrays))]
+
+    struct_dtype = dtype([
+        (label, array.dtype, array.shape[1:])
+        for label, array in zip(labels, arrays)
+    ])
+
+    data = empty(size, struct_dtype)
+    for label, array in zip(labels, arrays):
+        data[label] = array
+
+    return data

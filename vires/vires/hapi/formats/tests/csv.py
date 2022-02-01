@@ -30,29 +30,8 @@ from unittest import TestCase, main
 from io import BytesIO, TextIOWrapper
 from numpy import array, prod, cumsum, bool_
 from numpy.testing import assert_equal
-from vires.hapi.formats.csv import quote_csv_string, arrays_to_csv
+from vires.hapi.formats.csv import arrays_to_csv
 from .base import FormatTestMixIn
-
-
-class TestCsvStringQuotation(TestCase):
-
-    def _test_quote_csv_string(self, input_, expected_output):
-        self.assertEqual(quote_csv_string(input_), expected_output)
-
-    def test_no_quote(self):
-        self._test_quote_csv_string('ABCD', 'ABCD')
-
-    def test_with_quote(self):
-        self._test_quote_csv_string('"ABCD"', '"""ABCD"""')
-        self._test_quote_csv_string('ABCD"', '"ABCD"""')
-        self._test_quote_csv_string('"ABCD', '"""ABCD"')
-        self._test_quote_csv_string('AB"CD', '"AB""CD"')
-
-    def test_with_field_delimiter(self):
-        self._test_quote_csv_string('AB,CD', '"AB,CD"')
-
-    def test_with_record_delimiter(self):
-        self._test_quote_csv_string('AB\nCD', '"AB\nCD"')
 
 
 class TestArraysToCsv(FormatTestMixIn, TestCase):
