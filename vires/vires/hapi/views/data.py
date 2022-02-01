@@ -31,10 +31,11 @@
 
 #from logging import getLogger
 from vires.views.decorators import allow_methods, reject_content
+from vires.time_util import format_datetime
 from ..dataset import MAX_TIME_SELECTION, get_time_limit, get_collection_time_info
 from ..time_series import TimeSeries
 from .common import (
-    parse_datetime, HapiError,
+    parse_datetime, HapiError, get_access_logger,
     catch_error, allowed_parameters, required_parameters, map_parameters,
 )
 from .data_formats import get_data_formatter, parse_format
@@ -54,6 +55,8 @@ from .info import get_info_response, parse_dataset_and_parameters
 @required_parameters("dataset", "start", "stop")
 def data(request):
 
+    access_logger = get_access_logger("data", request)
+
     collection, dataset_id, dataset_def = parse_dataset_and_parameters(
         request.GET.get('dataset'), request.GET.get('parameters')
     )
@@ -68,12 +71,23 @@ def data(request):
 
     source = TimeSeries(collection, dataset_id)
 
+    # log the request
+    access_logger.info(
+        "request: dataset: %s, toi: (%s, %s), parameters: (%s), format: %s",
+        request.GET.get('dataset'),
+        format_datetime(start),
+        format_datetime(stop),
+        ", ".join(dataset_def.keys()),
+        request.GET.get('format'),
+    )
+
     return get_data_formatter(format_)(
         datasets=source.subset(start, stop, dataset_def),
         header=(
             get_info_response(collection, dataset_id, dataset_def)
             if include_header else None
         ),
+        logger=access_logger,
     )
 
 

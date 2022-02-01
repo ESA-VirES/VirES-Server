@@ -39,8 +39,18 @@ from django.http import JsonResponse
 from django.conf import settings
 from vires.views.exceptions import HttpError
 from vires.time_util import naive_to_utc
+from vires.access_util import AccessLoggerAdapter, get_username, get_remote_addr
 
 LOGGER_NAME = "vires.hapi"
+
+
+def get_access_logger(end_point, request):
+    """ Get access logger. """
+    return AccessLoggerAdapter(
+        logger=getLogger(f"access.hapi.{end_point}"),
+        username=get_username(request),
+        remote_addr=get_remote_addr(request),
+    )
 
 
 class HapiResponse(JsonResponse):

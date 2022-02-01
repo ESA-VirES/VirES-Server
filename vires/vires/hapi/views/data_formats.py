@@ -68,23 +68,42 @@ class HapiDataResponse():
     response_opts = {}
 
     @classmethod
+    def _collect_stats(cls, datasets, logger):
+        """ Collect some info about the response and log it. """
+        variables = None
+        count = 0
+        for dataset in datasets:
+            count += dataset.length
+            if not variables:
+                variables = list(dataset)
+            yield dataset
+        if logger:
+            logger.info(
+                "response: count: %d samples, format: %s, mime-type: %s, "
+                "parameters: (%s)",
+                count, cls.format, cls.response_opts.get('content_type'),
+                ", ".join(variables or ())
+            )
+
+
+    @classmethod
     def _generate_response(cls, datasets, header=None):
         raise NotImplementedError
 
     # streamed response
-    def __new__(cls, datasets, header=None):
-        #return cls._get_http_response(datasets, header)
-        return cls._get_streaming_http_response(datasets, header)
+    def __new__(cls, datasets, header=None, **kwargs):
+        #return cls._get_http_response(datasets, header, **kwargs)
+        return cls._get_streaming_http_response(datasets, header, **kwargs)
 
     @classmethod
-    def _get_http_response(cls, datasets, header=None):
+    def _get_http_response(cls, datasets, header=None, logger=None, **kwargs):
         return HttpResponse(
-            cls._generate_response(datasets, header),
+            cls._generate_response(cls._collect_stats(datasets, logger), header),
             **cls.response_opts
         )
 
     @classmethod
-    def _get_streaming_http_response(cls, datasets, header=None):
+    def _get_streaming_http_response(cls, datasets, header=None, logger=None, **kwargs):
 
         def _handle_errors(chunks):
             try:
@@ -97,7 +116,11 @@ class HapiDataResponse():
                 raise
 
         return StreamingHttpResponse(
-            _handle_errors(cls._generate_response(datasets, header)),
+            _handle_errors(
+                cls._generate_response(
+                    cls._collect_stats(datasets, logger), header
+                ),
+            ),
             **cls.response_opts
         )
 
