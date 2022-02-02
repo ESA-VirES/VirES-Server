@@ -71,7 +71,7 @@
     },
     {
         "name": "SW_OPER_MAGB_HR_1B",
-        "description": "Swarm C vector (VFM) magnetic field measurements at 50Hz rate.",
+        "description": "Swarm B vector (VFM) magnetic field measurements at 50Hz rate.",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
