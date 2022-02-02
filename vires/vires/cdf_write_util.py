@@ -39,6 +39,7 @@ from .cdf_util import (
     CDF_UINT4_TYPE,
     CDF_DOUBLE_TYPE,
     CDF_FLOAT_TYPE,
+    cdf_rawtime_to_datetime64, datetime64_to_cdf_rawtime,
 )
 
 _TYPE_MAP = {
@@ -109,15 +110,12 @@ class CdfTypeEpoch():
     @classmethod
     def decode(cls, cdf_raw_time):
         """ Convert CDF raw time to datetime64[ms]. """
-        return asarray(
-            cdf_raw_time - CDF_EPOCH_1970
-        ).astype('datetime64[ms]')
+        return cdf_rawtime_to_datetime64(cdf_raw_time, CDF_EPOCH_TYPE, unit="ms")
 
     @classmethod
     def encode(cls, time):
         """ Convert datetime64[ms] to CDF raw time. """
-        time = asarray(time, 'datetime64[ms]').astype('int64')
-        return time + CDF_EPOCH_1970
+        return datetime64_to_cdf_rawtime(asarray(time), CDF_EPOCH_TYPE)
 
 
 def get_converter(cdf_type):
