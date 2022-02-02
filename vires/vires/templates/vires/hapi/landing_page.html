@@ -135,7 +135,7 @@ VirES server implements the version {{ version }} of the
   The time selection of one HAPI data request is currently limited to a time
   selection of approx. <strong>432,000 data records</strong> (equivalent of
   5 days of 1Hz <code>MAGx_LR_1B</code> data or 2 hours and 24 minutes of 50Hz
-  <code>MAGx_HR_1B</code> data), which is the same limit applied
+  <code>MAGx_HR_1B</code> data), which is the same limit as the one applied
   to the synchronous VirES API requests.
 </p>
 <p>
@@ -157,7 +157,7 @@ VirES server implements the version {{ version }} of the
   The <a href="https://github.com/hapi-server/data-specification" target="_blank">HAPI Specification</a>
   allows extension of the protocol as long as these do not collide with
   the baseline specification and can be safely ignored by client which do not
-  recognize them . The extension attributes are labelled by the <code>x_</code>
+  recognize them. The extension attributes are labelled by the <code>x_</code>
   prefix.
 </p>
 <p>
@@ -208,16 +208,16 @@ VirES server implements the version {{ version }} of the
   float.
 </p>
 <p>
-  This binary format is a bit faster to produce and more compact than
+  This binary format is a bit faster to produce, more compact than
   the standard binary format and it can safely represent <code>uint32</code>,
 <code>int64</code>, and <code>uint64</code> values.
 </p>
 
 <h3 id="ieee745-special-values-in-json">JSON Representation of Special IEEE 745 Values</h3>
 <p>
-  The number represenatation <a href="https://en.wikipedia.org/wiki/JSON" target="_blank">JSON</a>
+  The number representation in the <a href="https://en.wikipedia.org/wiki/JSON" target="_blank">JSON</a>
   format is limited to decimal numbers (<code>-123.456</code>) with the
-  optional exponential notation (<code>-1.23456e2</code>) and it cannot
+  optional exponential notation (<code>-1.23456e2</code>). JSON cannot
   represent the <a href="https://en.wikipedia.org/wiki/IEEE_754#Formats" target="_blank">IEEE 745</a>
   special <i>not-a-number</i> and positive or negative <i>infinity</i> values which
   may occur in the provided time series data.
