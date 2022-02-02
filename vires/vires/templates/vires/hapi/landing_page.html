@@ -50,6 +50,7 @@ Click a dataset name to see its HAPI JSON info response.
           <thead>
             <tr>
               <th>dataset</th>
+              <th>description</th>
             </tr>
           </thead>
           <tbody>
@@ -57,6 +58,9 @@ Click a dataset name to see its HAPI JSON info response.
             <tr>
               <td>
                 <a href="./info?dataset={{dataset}}" target="dataset-info"><code>{{dataset}}</code></a>
+              </td>
+              <td>
+                {{info.description}}
               </td>
             </tr>
           {% endfor %}
