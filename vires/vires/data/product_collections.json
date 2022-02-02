@@ -1,6 +1,8 @@
 [
     {
         "name": "SW_OPER_MODA_SC_1B",
+        "description": "Swarm A S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
@@ -9,6 +11,8 @@
     },
     {
         "name": "SW_OPER_MODB_SC_1B",
+        "description": "Swarm B S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "B",
         "nominalSampling": "PT1S",
@@ -17,6 +21,8 @@
     },
     {
         "name": "SW_OPER_MODC_SC_1B",
+        "description": "Swarm C S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "C",
         "nominalSampling": "PT1S",
@@ -24,6 +30,8 @@
     },
     {
         "name": "SW_OPER_MAGA_LR_1B",
+        "description": "Swarm A vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_LR_1B",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
@@ -33,12 +41,16 @@
     },
     {
         "name": "SW_OPER_MAGB_LR_1B",
+        "description": "Swarm B vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_MAGC_LR_1B",
+        "description": "Swarm C vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
         "spacecraft": "C",
@@ -48,6 +60,8 @@
     },
     {
         "name": "SW_OPER_MAGA_HR_1B",
+        "description": "Swarm A vector (VFM) magnetic field measurements at 50Hz rate.",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
         "spacecraft": "A",
@@ -57,12 +71,16 @@
     },
     {
         "name": "SW_OPER_MAGB_HR_1B",
+        "description": "Swarm C vector (VFM) magnetic field measurements at 50Hz rate.",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_MAGC_HR_1B",
+        "description": "Swarm C vector (VFM) magnetic field measurements at 50Hz rate.",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
         "spacecraft": "C",

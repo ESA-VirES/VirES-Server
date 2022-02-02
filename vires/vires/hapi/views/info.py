@@ -79,30 +79,42 @@ def get_info_response(collection, dataset_id, dataset_def):
         )
     }
 
-    max_time_selection = None
-    nominal_sampling = metadata.get("nominalSampling")
-    if nominal_sampling:
-        max_time_selection = format_duration(
-            get_time_limit(MAX_TIME_SELECTION, parse_duration(nominal_sampling))
-        )
+    dataset_id_suffix = f":{dataset_id}" if dataset_id else ""
 
-    return {
-        "x_dataset": collection.identifier + (
-            f":{dataset_id}" if dataset_id else ""
-        ),
-        "x_datasetType": collection.type.identifier + (
-            f":{dataset_id}" if dataset_id else ""
-        ),
-        "startDate": format_datetime(metadata["startDate"]),
-        "stopDate": format_datetime(metadata["stopDate"]),
-        "cadence": metadata.get("nominalSampling"),
-        "x_maxTimeSelection": max_time_selection,
-        "modificationDate": metadata.get("lastUpdate"),
-        "parameters": [
+    def __generate_info_response():
+
+        yield "x_dataset", f"{collection.identifier}{dataset_id_suffix}"
+        yield "x_datasetType", f"{collection.type.identifier}{dataset_id_suffix}"
+        yield "startDate", format_datetime(metadata["startDate"])
+        yield "stopDate", format_datetime(metadata["stopDate"])
+
+        nominal_sampling = metadata.get("nominalSampling")
+        if nominal_sampling:
+            yield "cadence", nominal_sampling
+            yield "x_maxTimeSelection", format_duration(
+                get_time_limit(MAX_TIME_SELECTION, parse_duration(nominal_sampling))
+            )
+
+        yield "modificationDate", metadata.get("lastUpdate")
+
+        description = metadata.get("description")
+        if description:
+            yield "description", description
+
+        data_terms = metadata.get("dataTerms")
+        if data_terms:
+            yield "x_dataTerms", data_terms
+
+        resource_url = collection.type.definition.get("resourceUrl")
+        if resource_url:
+            yield "resourceURL", resource_url
+
+        yield "parameters", [
             _build_parameter(name, details)
             for name, details in dataset_def.items()
-        ],
-    }
+        ]
+
+    return dict(__generate_info_response())
 
 
 def sort_dataset_definition(definition):

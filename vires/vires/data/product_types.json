@@ -1,6 +1,8 @@
 [
     {
         "name": "SW_MODx_SC_1B",
+        "description": "Swarm S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products",
         "defaultDataset": "MOD",
         "datasets": {
             "MOD": {
@@ -39,6 +41,8 @@
     },
     {
         "name": "SW_MAGx_LR_1B",
+        "description": "Swarm vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#MAGX_HR_1B_Product",
         "defaultDataset": "MDR_MAG_LR",
         "datasets": {
             "MDR_MAG_LR": {
@@ -210,6 +214,8 @@
     },
     {
         "name": "SW_MAGx_HR_1B",
+        "description": "Swarm vector (VFM) magnetic field measurements at 50Hz rate.",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product",
         "defaultDataset": "MDR_MAG_HR",
         "datasets": {
             "MDR_MAG_HR": {
