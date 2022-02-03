@@ -201,10 +201,10 @@ def _build_parameter(name, details):
 
     return {
         "name": name,
-        **_HapiDataType(details),
         **_parse_dimension(details.get("dimension")),
-        "units": _parse_unit(details["attributes"].get("UNITS")),
         "description": (details["attributes"].get("DESCRIPTION") or ""),
+        "units": _parse_unit(details["attributes"].get("UNITS")),
+        **_HapiDataType(details),
         "fill": details.get("nodataValue"),
     }
 
@@ -235,6 +235,7 @@ class _HapiDataType():
 
         if data_type.type == "timestamp":
             return {
+                "units": "UTC",
                 "type": "isotime",
                 "length": get_datetime64_string_size(data_type.dtype),
                 "x_standard": data_type.standard,
