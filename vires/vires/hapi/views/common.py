@@ -88,7 +88,7 @@ class HapiResponse(JsonResponse):
         return status
 
     def __init__(self, content=None, hapi_status=1200, http_status=None,
-                 message=None, debug=None, **kwargs):
+                 message=None, debug=None, reason=None, **kwargs):
         if http_status is None:
             #  HAPI errors
             http_status, default_message = self.STATUS_CODES[hapi_status]
@@ -98,11 +98,14 @@ class HapiResponse(JsonResponse):
         else:
             hapi_status = 1400
 
+        if hapi_status >= 1400 and not reason:
+            reason = f"HAPI error {hapi_status}: {message}"
+
         super().__init__({
             "HAPI": self.VERSION,
             "status": self.generate_status(hapi_status, message, debug),
             **(content or {}),
-        }, status=http_status, **kwargs)
+        }, status=http_status, reason=reason, **kwargs)
 
 
 class HapiError(Exception):

@@ -140,9 +140,7 @@ class HapiDataResponse():
     def _get_json_response(cls, content):
         return {
             "HAPI": HapiResponse.VERSION,
-            "status": HapiResponse.generate_status(
-                *HapiResponse.STATUS_CODES[1200]
-            ),
+            "status": HapiResponse.generate_status(1200, "OK"),
             "format": cls.format,
             **content,
         }
