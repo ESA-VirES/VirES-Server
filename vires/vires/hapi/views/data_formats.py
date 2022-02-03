@@ -167,6 +167,39 @@ class CsvDataResponse(HapiDataResponse):
 _register_format(CsvDataResponse)
 
 
+class JsonDataResponse(HapiDataResponse):
+    """ JSON HAPI data response. """
+    format = "json"
+    response_opts = {
+        "content_type": "application/json",
+    }
+
+    @classmethod
+    def _generate_response(cls, datasets, header=None):
+        body = cls._get_data_header({**(header or {}), "data": []})
+        # insert records into the empty data array
+        chunk, tail = cls._seek_backwards_and_split(body, b"]")
+        record_count = 0
+        for dataset in datasets:
+            yield chunk
+            record_count += dataset.length
+            chunk = arrays_to_json_fragment(dataset.values())
+        # remove trailing comma and close the JSON body
+        if record_count > 0:
+            chunk = chunk[:-1]
+        yield chunk
+        yield tail
+
+    @classmethod
+    def _seek_backwards_and_split(cls, buffer_, searched):
+        idx = buffer_.rfind(searched)
+        if idx < 0:
+            idx = len(buffer_)
+        return buffer_[:idx], buffer_[idx:]
+
+_register_format(JsonDataResponse)
+
+
 class BinaryDataResponse(HapiDataResponse):
     """ Binary HAPI data response. """
     format = "binary"
@@ -201,36 +234,3 @@ class XBinaryDataResponse(HapiDataResponse):
             yield arrays_to_x_binary(dataset.values())
 
 _register_format(XBinaryDataResponse)
-
-
-class JsonDataResponse(HapiDataResponse):
-    """ JSON HAPI data response. """
-    format = "json"
-    response_opts = {
-        "content_type": "application/json",
-    }
-
-    @classmethod
-    def _generate_response(cls, datasets, header=None):
-        body = cls._get_data_header({**(header or {}), "data": []})
-        # insert records into the empty data array
-        chunk, tail = cls._seek_backwards_and_split(body, b"]")
-        record_count = 0
-        for dataset in datasets:
-            yield chunk
-            record_count += dataset.length
-            chunk = arrays_to_json_fragment(dataset.values())
-        # remove trailing comma and close the JSON body
-        if record_count > 0:
-            chunk = chunk[:-1]
-        yield chunk
-        yield tail
-
-    @classmethod
-    def _seek_backwards_and_split(cls, buffer_, searched):
-        idx = buffer_.rfind(searched)
-        if idx < 0:
-            idx = len(buffer_)
-        return buffer_[:idx], buffer_[idx:]
-
-_register_format(JsonDataResponse)
