@@ -1,6 +1,6 @@
 {% extends "documents/base.html" %}
-{% block static_title %}VirES for Swarm - Custom File Format{% endblock %}
-{% block static_content %}
+{% block title %}VirES for Swarm - Custom File Format{% endblock title %}
+{% block content %}
 <!--
 .! markdown ../../vires/custom_data_format_description.md
 <table class="table table-striped table-bordered">
@@ -214,4 +214,4 @@ remove pointless line breaks added by the conversion tool.
 </tbody>
 </table>
 <p>The <em>float</em> means a decimal representation of the double-precision floating-point number, e.g., <code>-8.5</code>, <code>1e-5</code>, <code>nan</code>, or <code>-inf</code>.</p>
-{% endblock %}
+{% endblock content %}

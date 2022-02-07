@@ -32,7 +32,7 @@ from datetime import datetime, timedelta
 import ctypes
 from numpy import (
     nan, vectorize, object as dt_object, float64 as dt_float64,
-    ndarray, searchsorted, asarray, full,
+    ndarray, searchsorted, asarray, full, datetime_data,
 )
 import scipy
 from scipy.interpolate import interp1d
@@ -116,6 +116,15 @@ CDF_CREATOR = "%s [%s-%s, libcdf-%s]" % (
     "%s.%s.%s-%s" % pycdf.lib.version
 )
 
+CDF_EPOCH_TO_DATETIME64 = {
+    "D": 86400000.0,
+    "h": 3600000.0,
+    "m": 60000.0,
+    "s": 1000.0,
+    "ms": 1.0,
+    "us": 0.001,
+}
+
 
 def cdf_type_map(cdf_type):
     """ CDF type conversion. """
@@ -190,6 +199,32 @@ def cdf_open(filename, mode="r", backward_compatible=True):
     else:
         raise ValueError("Invalid mode value %r!" % mode)
     return cdf
+
+
+def cdf_rawtime_to_datetime64(cdf_raw_time, cdf_type, unit="ms", count=1, tiebreak=0):
+    """ Convert CDF raw time to numpy.datetime64. """
+    if cdf_type == CDF_EPOCH_TYPE:
+        tmp = cdf_raw_time - CDF_EPOCH_1970
+        scale = 1 / (CDF_EPOCH_TO_DATETIME64[unit] * count)
+        if scale != 1:
+            tmp *= scale
+        if tiebreak != 0:
+            tmp += tiebreak
+        return asarray(tmp).astype(f'datetime64[{count}{unit}]')
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
+
+
+def datetime64_to_cdf_rawtime(time, cdf_type):
+    """ Convert numpy.datetime64 to CDF raw-time. """
+    if cdf_type == CDF_EPOCH_TYPE:
+        unit, count = datetime_data(time.dtype)
+        scale = CDF_EPOCH_TO_DATETIME64[unit] * count
+        tmp = time.astype('float64')
+        if scale != 1:
+            tmp *= scale
+        tmp += CDF_EPOCH_1970
+        return tmp
+    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
 
 
 def cdf_rawtime_to_seconds(raw_time_delta, cdf_type):

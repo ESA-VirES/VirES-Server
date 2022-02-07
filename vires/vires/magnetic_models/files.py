@@ -26,10 +26,12 @@
 #-------------------------------------------------------------------------------
 #pylint: disable=too-few-public-methods
 
+from io import TextIOWrapper
 from numpy import asarray
 from vires.util import cached_property
 from vires.cdf_util import cdf_open, cdf_rawtime_to_mjd2000, CDF_EPOCH_TYPE
 from vires.cache_util import cache_path
+from vires.model_shc import process_zipped_files, filename2id
 from vires.data.vires_settings import CACHED_PRODUCT_FILE
 
 
@@ -123,6 +125,40 @@ class CachedModelFileWithSourceFile(ModelFileCached, LiteralModelSource):
     def source(self):
         with open(self.filename + '.source') as file_in:
             return file_in.read().strip()
+
+
+class CachedZippedMultiModelFile(ModelFileCached, BaseModelSource):
+    """ Cached multi-model ZIP-file container. """
+
+    def __init__(self, cache_id, validity_reader):
+        super().__init__(cache_id)
+        self._validity_reader = validity_reader
+
+    @property
+    def sources(self):
+
+        def _extract_source_and_validity(archive, filename):
+            with archive.open(filename) as fin:
+                return (
+                    filename2id(filename),
+                    self._validity_reader(TextIOWrapper(fin, encoding="UTF-8")),
+                )
+
+        result = process_zipped_files(
+            self.filename, _extract_source_and_validity
+        )
+
+        return (
+            [source for source, _ in result],
+            asarray([validity for _, validity in result]),
+        )
+
+    @property
+    def validity(self):
+        """ Get model validity interval. """
+        _, validities = self.sources
+        return (validities[:, 0].min(), validities[:, 1].max())
+
 
 
 class CachedComposedModelFile(ModelFileCached, BaseModelSource):

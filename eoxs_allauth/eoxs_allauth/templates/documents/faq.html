@@ -1,6 +1,6 @@
 {% extends "documents/base.html" %}
-{% block static_title %}VirES for Swarm - Frequently Asked Questions{% endblock %}
-{% block static_content %}
+{% block title %}VirES for Swarm - Frequently Asked Questions{% endblock title %}
+{% block content %}
 
 <style type="text/css">
   .decimal li{
@@ -38,7 +38,6 @@
   </ul>
 </div>
 
-
 <div class="panel panel-default">
   <div class="panel-heading"><a name="sync"> What is the synchronization status and last available data?</a></div>
   <div class="panel-body">
@@ -56,7 +55,7 @@
   <div class="panel-body">
     <p>The Spherical Harmonic representation of the Earth magnetic field is employed to model the reference magnetic field to which the SWARM measurements can be compared.</p>
     <p>VirES is configured to offer a set of standard models, namely, the CHAOS-6, IGRF-12 and the Swarm Initial Field model. Beside these a user is allowed to define custom models.</p>
-    <p>Each magnetic field model is defined by a set of Spherical Harmonic coefficients. The model evaluation is performed on-the-fly by our own implementation of the Spherical Harmonic expansion (<a href="https://github.com/ESA-VirES/MagneticModel/blob/master/eoxmagmod/eoxmagmod/include/shc.h">see the code here</a>).  The algorithm is loosely based on the algorithm used by NOAA WMM 2010 software.</p>
+    <p>Each magnetic field model is defined by a set of Spherical Harmonic coefficients. The model evaluation is performed on-the-fly by our own implementation of the Spherical Harmonic expansion (<a href="https://github.com/ESA-VirES/MagneticModel/blob/master/eoxmagmod/eoxmagmod/include/shc.h" target="_blank">see the code here</a>).  The algorithm is loosely based on the algorithm used by NOAA WMM 2010 software.</p>
     <p>Beside the evaluation of the SWARM measurement residuals, the models can be visualized as raster map overlays or as field lines.</p>
     <p>The model coefficients themselves are generally time dependent and they are valid only over a specific time period. If the requested time lies outside the model validity range a warning is displayed to the user and the model is not displayed. The models are never extrapolated outside of the validity bounds.</p>
     <p>The residuals are evaluated at the exact measurement times.  For the map and field line visualizations the models are evaluated at the mean time of the time selection.</p>
@@ -69,7 +68,7 @@
   <div class="panel-heading"><a name="qdl_mlt">How does VirES evaluate the Apex Quasi-Dipole latitude and Magnetic Local Time?</a></div>
   <div class="panel-body">
     <p>
-    The Apex Quasi-dipole latitude and Magnetic Local Time are evaluated by Fortran code kindly provided by Nils Olsen (<a href="https://github.com/ESA-VirES/MagneticModel/tree/master/qdipole">See on github</a>).</p>
+    The Apex Quasi-dipole latitude and Magnetic Local Time are evaluated by Fortran code kindly provided by Nils Olsen (<a href="https://github.com/ESA-VirES/MagneticModel/tree/master/qdipole" target="_blank">see on GitHub</a>).</p>
     <p> For example, the evaluation of the QD latitude (lat_QD) is done using the following formula:
     </p>
     <p>
@@ -187,7 +186,7 @@
     <p>
       The CDF is a binary format which stores the floating-point values
       as the 64bits IEEE 754
-      <a href="https://en.wikipedia.org/wiki/Double-precision_floating-point_format">double precision</a>
+      <a href="https://en.wikipedia.org/wiki/Double-precision_floating-point_format" target="_blank">double precision</a>
       numbers (usually having between 15-17 significant decimal places,
       with the exception of the subnormal values).
       The data in the CDF format are identical to the original Swarm products.
@@ -197,7 +196,7 @@
 <div class="panel panel-default">
   <div class="panel-heading"><a name="contribute">Can I contribute to the evolution of VirES, and how?</a></div>
   <div class="panel-body">
-    An online user forum and problem solution area is currently under preparation. You will receive a notification by email as soon this will be opened to anybody wishing to provide ideas and improvement suggestions to the VirES application engineers and to the service provider team. VirES is a Free and Open Source Software initiative meaning that you are also invited to get involved into branching out software code and to contribute your own enhancements to it. The code is maintained and related issues are publicly tracked under <a href="https://github.com/ESA-VirES">ESA-VirES</a>.
+    An online user forum and problem solution area is currently under preparation. You will receive a notification by email as soon this will be opened to anybody wishing to provide ideas and improvement suggestions to the VirES application engineers and to the service provider team. VirES is a Free and Open Source Software initiative meaning that you are also invited to get involved into branching out software code and to contribute your own enhancements to it. The code is maintained and related issues are publicly tracked under <a href="https://github.com/ESA-VirES" target="_blank">ESA-VirES</a>.
   </div>
 </div>
 <div class="panel panel-default">
@@ -222,7 +221,7 @@
 <div class="panel panel-default">
   <div class="panel-heading"><a name="vires">Who owns VirES?</a></div>
   <div class="panel-body">
-    "VirES for Swarm" is a service required and implemented by the Earth Observation Directorate of the <a href="http://esa.int">European Space Agency</a> (ESA) and designed and operated by <a href="https://eox.at/">EOX IT Services GmbH</a> (EOX), a private company. The technical framework entirely consists of Free and Open Source Software (MIT style licence). EOX is currently the sole committer to the code repository (hoping that other developer will be joining soon). The site is hosted on the servers of EOX. The domain name vires.services is owned by EOX. The information uploaded and generated by using the VirES service are owned by the individual who performed the specific upload and generated output as defined in the personal data privacy strategy of the service.
+    "VirES for Swarm" is a service required and implemented by the Earth Observation Directorate of the <a href="https://www.esa.int" target="_blank">European Space Agency</a> (ESA) and designed and operated by <a href="https://eox.at/" target="_blank">EOX IT Services GmbH</a> (EOX), a private company. The technical framework entirely consists of Free and Open Source Software (MIT style licence). EOX is currently the sole committer to the code repository (hoping that other developer will be joining soon). The site is hosted on the servers of EOX. The domain name vires.services is owned by EOX. The information uploaded and generated by using the VirES service are owned by the individual who performed the specific upload and generated output as defined in the personal data privacy strategy of the service.
   </div>
 </div>
 <div class="panel panel-default">
@@ -233,5 +232,4 @@
   </div>
 </div>
 
-  
-{% endblock %}
+{% endblock content %}
