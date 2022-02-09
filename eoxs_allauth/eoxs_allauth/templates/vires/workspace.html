@@ -269,7 +269,7 @@
               </li>
               <li><a href="#Data">Data</a></li>
               <li><a href="#Signup">Sign-up</a></li>
-              <li><a href="{% url 'vires_login' %}?process=login">Log in</a></li>
+              <li><a href="#Login" onclick="document.forms['login-form'].submit()">Log in</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div><!--/.container -->
@@ -573,7 +573,10 @@
           </p>
           <div style="text-align: center">
             <div style="margin-top: 2em;">
-              <a class="linkbutton" href="{% url 'vires_login' %}?process=signup">Sign up</a>
+              <form name="signup-form" method="post" action="{% url 'vires_login' %}">
+                {% csrf_token %}
+                <button type="submit" class="linkbutton">Sign up</button>
+              </form>
             </div>
           </div>
         </div>
@@ -589,7 +592,10 @@
           </p>
           <div style="text-align: center">
             <div style="margin-top: 2em;">
-              <a class="linkbutton" href="{% url 'vires_login' %}?process=login">Log in</a>
+              <form name="login-form" method="post" action="{% url 'vires_login' %}">
+                {% csrf_token %}
+                <button type="submit" class="linkbutton">Log in</button>
+              </form>
             </div>
           </div>
         </div>

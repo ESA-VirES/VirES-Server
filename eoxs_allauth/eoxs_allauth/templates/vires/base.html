@@ -120,7 +120,8 @@
                 </li>
               {% else %}
                 <li>
-                  <a class="tab-header" href="{% url 'vires_login' %}">
+                  <form name="login-form" method="post" action="{% url 'vires_login' %}">{% csrf_token %}</form>
+                  <a class="tab-header" href="#" onclick="document.forms['login-form'].submit()">
                     <i class="fa fa-fw fa-sign-in"></i> Log in
                   </a>
                 </li>

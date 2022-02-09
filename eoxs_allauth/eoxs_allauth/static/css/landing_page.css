@@ -234,13 +234,19 @@ section.bg {
   font-size: 17px;
 }
 
+button.linkbutton:focus, button.linkbutton:active {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+
 .linkbutton{
+  border: none;
   cursor: pointer;
   background-color: rgb(46, 46, 46);
-  color: rgb(255, 255, 255);
+  color: rgb(221, 221, 221);
   display: inline;
   font-weight: bold;
-  height: 50px;
   list-style-type: none;
   outline-color: rgb(255, 255, 255);
   padding-bottom: 15px;
@@ -252,14 +258,17 @@ section.bg {
   text-transform: uppercase;
 }
 
-.linkbutton:hover{
-  background-color: rgb(0, 0, 0);
+.linkbutton:focus, .linkbutton:active {
   text-decoration: none;
+  background-color: rgb(0, 0, 0);
   color: rgb(255, 255, 255);
-  border-bottom-color: rgb(255, 255, 255);
-  border-left-color: rgb(255, 255, 255);
-  border-right-color: rgb(255, 255, 255);
-  border-top-color: rgb(255, 255, 255);
+  outline-color: rgb(255, 255, 255);
+}
+
+.linkbutton:hover{
+  text-decoration: none;
+  background-color: rgb(46, 46, 46);
+  color: rgb(255, 255, 255);
   outline-color: rgb(255, 255, 255);
 }
 

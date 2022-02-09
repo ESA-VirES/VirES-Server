@@ -2,14 +2,10 @@
 {% load i18n %}
 
 {% block content %}
-{% if process == "signup" %}
-  <h2>Signing up for {{ provider.name }}</h2>
-  <p>You are about to create a new {{ provider.name }} account.</p>
-{% else %}
-  <h2>Logging into {{ provider.name }}</h2>
-  <p>You are about to log in with your {{ provider.name }} account.</p>
-{% endif %}
+<h2>Logging into {{ provider.name }}</h2>
+<p>You are logged out. Press the button below to log in with your {{ provider.name }} account.</p>
 <form method="post">
   {% csrf_token %}
   <button type="submit" class="btn btn-primary">{% trans "Continue" %}</button>
+</form>
 {% endblock %}
