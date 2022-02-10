@@ -108,6 +108,13 @@ def get_cached_product_configuration():
     )
 
     _configure_cached_product(
+        "MMA_CHAOS_",
+        updater=merge_mma_sha_2c,
+        filter=filter_mma_sha_2c,
+        tmp_extension=".tmp.cdf"
+    )
+
+    _configure_cached_product(
         "MMA_SHA_2C",
         updater=merge_mma_sha_2c,
         filter=filter_mma_sha_2c,
