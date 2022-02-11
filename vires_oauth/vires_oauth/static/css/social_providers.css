@@ -1,3 +1,36 @@
+.socialaccount_provider.inactive {
+  color: grey;
+}
+
+td.align-middle {
+  vertical-align: middle !important;
+}
+
+.socialaccount_providers li form {
+  display: inline;
+}
+
+tr.clickable {
+cursor: pointer;
+}
+
+tr.clickable:hover {
+background-color: #f9f9f9;
+}
+
+button.socialaccount_provider {
+  color: #428bca;
+  background-color: transparent;
+  padding: 0px;
+  border: none;
+  outline: none;
+  display: inline;
+}
+
+button.socialaccount_provider:focus, button.socialaccount_provider:hover {
+  color: #2a6496;
+}
+
 .socialaccount_providers li{
 	display: inline;
 	margin-left: 1em;
