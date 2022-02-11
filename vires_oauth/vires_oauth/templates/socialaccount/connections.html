@@ -31,12 +31,14 @@
       </fieldset>
     </form>
   {% else %}
-    <p>{% trans 'You currently have no social network accounts connected to this account.' %}</p>
+    <p>{% trans 'There is currently no third party account connected to this account.' %}</p>
   {% endif %}
+  {% if socialaccount_providers %}
   <h2>{% trans 'Connect a New External Account' %}</h2>
   <p>{% blocktrans %}Connect a new account from one of the providers listed below:{% endblocktrans %}</p>
   <ul class="socialaccount_providers">
     {% include "socialaccount/snippets/provider_list.html" with process="connect" %}
   </ul>
   {% include "socialaccount/snippets/login_extra.html" %}
+  {% endif %}
 {% endblock %}
