@@ -97,17 +97,18 @@ def allow_methods(allowed_methods, allowed_headers=None, handle_options=True,
     def _allow_methods_decorator_(view):
         @wraps(view)
         def _allow_methods_(request, *args, **kwargs):
-            if handle_options and request.method == "OPTIONS":
-                response = HttpResponse(status=204)
-                response['Access-Control-Allow-Methods'] = allowed_methods_str
-                response['Access-Control-Allow-Headers'] = allowed_headers_str
-                response['Access-Control-Max-Age'] = max_age_str
-            elif request.method not in allowed_methods:
+            if request.method not in allowed_methods:
                 raise HttpError405(headers=[('Allow', allowed_methods_str)])
+            elif handle_options and request.method == "OPTIONS":
+                response = HttpResponse(status=204)
             else:
                 response = view(request, *args, **kwargs)
+            response['Access-Control-Allow-Methods'] = allowed_methods_str
+            response['Access-Control-Allow-Headers'] = allowed_headers_str
+            response['Access-Control-Max-Age'] = max_age_str
             return response
         return _allow_methods_
+
     return _allow_methods_decorator_
 
 

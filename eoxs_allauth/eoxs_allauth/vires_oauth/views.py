@@ -42,6 +42,7 @@ from allauth.socialaccount import app_settings
 from allauth.socialaccount.providers.oauth2.views import (
     OAuth2Adapter, OAuth2CallbackView, OAuth2LoginView,
 )
+from allauth.socialaccount.providers.base.constants import AuthProcess
 from .provider import ViresProvider
 
 
@@ -72,5 +73,15 @@ class ViresOAuth2Adapter(OAuth2Adapter):
         raise NotImplementedError
 
 
-oauth2_login = OAuth2LoginView.adapter_view(ViresOAuth2Adapter)
+class ViresOAuth2LoginView(OAuth2LoginView):
+    def login(self, request, *args, **kwargs):
+        # prevent AuthProcess.REDIRECT and AuthProcess.CONNECT processes.
+        process = request.GET.get("process")
+        if process in (AuthProcess.REDIRECT, AuthProcess.CONNECT):
+            request.GET = request.GET.copy()
+            request.GET.pop("process")
+        return super().login(request, *args, **kwargs)
+
+
+oauth2_login = ViresOAuth2LoginView.adapter_view(ViresOAuth2Adapter)
 oauth2_callback = OAuth2CallbackView.adapter_view(ViresOAuth2Adapter)

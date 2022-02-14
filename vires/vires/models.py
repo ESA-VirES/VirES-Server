@@ -219,6 +219,12 @@ class ProductCollection(Model):
             Q(metadata__requiredPermission__in=permissions)
         )
 
+    @classmethod
+    def select_public(cls):
+        """ Select public collections allowing unauthenticated access. """
+        query = cls.objects.prefetch_related('type')
+        return query.filter(metadata__requiredPermission__isnull=True)
+
     class Meta:
         verbose_name = "Product Collection"
         verbose_name_plural = "Product Collections"

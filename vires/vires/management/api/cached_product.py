@@ -31,6 +31,7 @@ from vires.aux_dst import update_dst
 from vires.aux_f107 import update_aux_f107_2_
 from vires.orbit_counter import update_orbit_counter_file
 from vires.orbit_counter_grace import update_grace_orbit_counter_file
+from vires.model_shc import merge_files_to_zip, filter_mco_sha_2x
 from vires.model_mma import (
     merge_mma_sha_2f, filter_mma_sha_2f, merge_mma_sha_2c, filter_mma_sha_2c,
 )
@@ -98,6 +99,13 @@ def get_cached_product_configuration():
             cached_products[product_type].update(kwargs)
 
     # cached product specific configuration
+
+    _configure_cached_product(
+        "MCO_SHA_2X",
+        updater=merge_files_to_zip,
+        filter=filter_mco_sha_2x,
+        tmp_extension=".tmp.zip"
+    )
 
     _configure_cached_product(
         "MMA_CHAOS_",

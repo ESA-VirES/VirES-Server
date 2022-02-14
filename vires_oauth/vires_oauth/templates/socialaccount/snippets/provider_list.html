@@ -4,16 +4,17 @@
 {% if provider.id == "openid" %}
 {% for brand in provider.get_brands %}
 <li>
-  <a title="{{brand.name}}" 
-     class="socialaccount_provider {{provider.id}} {{brand.id}}" 
-     href="{% provider_login_url provider.id openid=brand.openid_url process=process %}"
-     >{{brand.name}}</a>
+  <form method="post" action="{% provider_login_url provider.id openid=brand.openid_url process=process %}">
+    {% csrf_token %}
+    <button type="submit" class="socialaccount_provider {{provider.id}} {{brand.id}}" title="{{brand.name}}">{{brand.name}}</button>
+  </form>
 </li>
 {% endfor %}
 {% endif %}
 <li>
-  <a title="{{provider.name}}" class="socialaccount_provider {{provider.id}}" 
-     href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}"
-     >{{provider.name}}</a>
+  <form method="post" action="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
+    {% csrf_token %}
+    <button type="submit" class="socialaccount_provider {{provider.id}}" title="{{provider.name}}">{{provider.name}}</button>
+  </form>
 </li>
 {% endfor %}

@@ -113,11 +113,34 @@ def save_product_type(data):
     identifier = data.pop("name")
     for key in ["updated", "removed"]:
         data.pop(key, None)
+    for dataset_id, dataset_def in data.get("datasets").items():
+        add_order_to_dataset_parameters(identifier, dataset_id, dataset_def)
     is_updated, product_type = get_product_type(identifier)
     product_type.definition = data
     product_type.save()
     return is_updated
 
+
+def add_order_to_dataset_parameters(type_id, dataset_id, dataset_def):
+    """ Add ordering index to the dataset parameters' definitions. """
+    timestamps = []
+    for idx, (param_id, param_def) in enumerate(dataset_def.items()):
+        if param_def.get("primaryTimestamp"):
+            # the timestamp must be always first
+            idx = -1
+            timestamps.append(param_id)
+        param_def["_order"] = idx
+
+    if not timestamps:
+        raise ValueError(
+            f"No primary timestamp parameter found in {type_id}:{dataset_id}!"
+        )
+
+    if timestamps[1:]:
+        raise ValueError(
+            f"Multiple primary timestamp parameters {', '.join(timestamps)} "
+            f"found in {type_id}:{dataset_id}!"
+        )
 
 def get_product_type(identifier):
     try:
