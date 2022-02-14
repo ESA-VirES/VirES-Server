@@ -1,5 +1,6 @@
 {% extends "socialaccount/base.html" %}
 {% load i18n %}
+{% load socialaccount %}
 {% block head_title %}{% trans "Account Connections" %}{% endblock %}
 {% block content %}
   <h2>{% trans "Account Connections" %}</h2>
@@ -33,6 +34,7 @@
   {% else %}
     <p>{% trans 'There is currently no third party account connected to this account.' %}</p>
   {% endif %}
+  {% get_providers as socialaccount_providers %}
   {% if socialaccount_providers %}
   <h2>{% trans 'Connect a New External Account' %}</h2>
   <p>{% blocktrans %}Connect a new account from one of the providers listed below:{% endblocktrans %}</p>
