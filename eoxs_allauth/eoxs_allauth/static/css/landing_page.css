@@ -1,7 +1,6 @@
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700,600);
 
-html,
-body {
+html, body {
   height: 100%;
   /* The html and body elements cannot have any padding or margin. */
   -webkit-font-smoothing: antialiased;
@@ -23,8 +22,6 @@ body {
   /* Pad bottom by footer height */
   padding: 0 0 60px;
 }
-
-
 
 
 /* Custom page CSS
@@ -49,23 +46,23 @@ body {
 
 /* Declare heights because of positioning of img element */
 
-
 /*
 #myCarousel  .item {
   height: 60%;
   background-color:#bbb;
 }
+
 #myCarousel img {
   top: 0;
   left: 0;
   min-height: 60%;
-  
-}*/
-
+}
+*/
 
 #wrap > .container {
   padding: 0px 15px 0;
 }
+
 .container .credit {
   margin: 20px 0;
 }
@@ -119,82 +116,83 @@ h1 {
 }
 
 #nav.affix {
-   position: fixed;
-   top: 0;
-   z-index:10;
-   -webkit-transition: all .6s ease-in-out;
+  position: fixed;
+  top: 0;
+  z-index:10;
+  -webkit-transition: all .6s ease-in-out;
 }
 
 #footer > .container {
-  
 }
 
 @media (min-width: 767px) {
   .navbar-nav.nav-justified > li{
-      float:none;
+    float:none;
   }
 }
-  
+
 .navbar-nav {
-  margin: 1px 1px; 
-}  
-  
+  margin: 1px 1px;
+}
+
 /* customize nav style */
 .navbar-custom {
-    background-color: #2e2e2e;
-    font-weight:700;
-    text-transform:uppercase;
-    border-width:0;
+  background-color: #2e2e2e;
+  font-weight:700;
+  text-transform:uppercase;
+  border-width:0;
 }
+
 .navbar-custom  .navbar-nav>li>a {
-	color: #ddd;
+  color: #ddd;
 }
+
 .navbar-custom  li>a:hover {
 	color: #000;
 }
 
 .navbar-custom .navbar-nav>.dropdown>a .caret {
-	border-top-color: #999;
-	border-bottom-color: #999;
+  border-top-color: #999;
+  border-bottom-color: #999;
 }
 
 .navbar-collapse.in { /*3.0.2 bug workaround*/
-    overflow-y: visible;
+  overflow-y: visible;
 }
 
 .navbar-toggle {
-	outline:0;
+  outline:0;
 }
 
 .divider {
-	height:50px;
+  height:50px;
 }
 
 .panel {
-	border-width:0;
+  border-width:0;
 }
 
 @media (max-width: 768px) {
-	header {
-	
-	}
+  header {
+  }
 }
 
 
 .scroll-top {
-   position:fixed;
-   bottom:0;
-   right:6%;
-   z-index:100;
-   background: #f2f3f2;
-   font-size:24px;
-   border-top-left-radius:3px;
-   border-top-right-radius:3px;
+  position:fixed;
+  bottom:0;
+  right:6%;
+  z-index:100;
+  background: #f2f3f2;
+  font-size:24px;
+  border-top-left-radius:3px;
+  border-top-right-radius:3px;
 }
+
 .scroll-top a:link,.scroll-top a:visited {
   color:#222;
-} 
- 
+}
+
 
 section.bg {
   color: #ffffff;
@@ -205,12 +203,10 @@ section.bg {
 }
 
 
-
 .panel .img-responsive {
-	min-height:270px;
-    max-height:270px;
+  min-height:270px;
+  max-height:270px;
 }
-
 
 
 .videowrapper {
@@ -222,6 +218,7 @@ section.bg {
   padding-top: 25px;
   height: 0;
 }
+
 .videowrapper iframe {
   position: absolute;
   top: 0;
@@ -234,13 +231,19 @@ section.bg {
   font-size: 17px;
 }
 
+button.linkbutton:focus, button.linkbutton:active {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+
 .linkbutton{
+  border: none;
   cursor: pointer;
   background-color: rgb(46, 46, 46);
-  color: rgb(255, 255, 255);
+  color: rgb(221, 221, 221);
   display: inline;
   font-weight: bold;
-  height: 50px;
   list-style-type: none;
   outline-color: rgb(255, 255, 255);
   padding-bottom: 15px;
@@ -252,14 +255,17 @@ section.bg {
   text-transform: uppercase;
 }
 
-.linkbutton:hover{
-  background-color: rgb(0, 0, 0);
+.linkbutton:focus, .linkbutton:active {
   text-decoration: none;
+  background-color: rgb(0, 0, 0);
   color: rgb(255, 255, 255);
-  border-bottom-color: rgb(255, 255, 255);
-  border-left-color: rgb(255, 255, 255);
-  border-right-color: rgb(255, 255, 255);
-  border-top-color: rgb(255, 255, 255);
+  outline-color: rgb(255, 255, 255);
+}
+
+.linkbutton:hover{
+  text-decoration: none;
+  background-color: rgb(46, 46, 46);
+  color: rgb(255, 255, 255);
   outline-color: rgb(255, 255, 255);
 }
 

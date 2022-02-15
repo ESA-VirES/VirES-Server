@@ -5,6 +5,6 @@
   <h2>{% trans "Login Failure" %}</h2>
   <p>An error occurred while attempting to log in via your VirES account.<br>
   <p>
-    <a href="{% url 'vires_login' %}"  class="btn btn-primary">Retry to log in &raquo;</a>
+    <a href="#" onclick="document.forms['login-form'].submit()" class="btn btn-primary">Retry to log in &raquo;</a>
   </p>
 {% endblock %}

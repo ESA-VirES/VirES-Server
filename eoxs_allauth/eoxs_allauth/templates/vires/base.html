@@ -1,5 +1,5 @@
 {% load i18n %}
-{% load staticfiles %}
+{% load static %}
 {% load vires_oauth %}
 <!doctype html>
 <html lang="en">
@@ -35,7 +35,7 @@
   <title>{% block title %}VirES for Swarm{% endblock title %}</title>
   {% block additional_headers %}
     <script src="{% static 'js/landing_page.js' %}"></script>
-    <link href="{% static 'css/landing_page.css' %}" rel="stylesheet">
+    <link href="{% static 'css/landing_page.css' %}?v=20220211" rel="stylesheet">
     <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
     <script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
     <script src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js'%}"></script>
@@ -76,7 +76,7 @@
       <script type="text/javascript">
         setTimeout(function(){
           if ($('.djangoalert').length > 0) {
-          $('.djangoalert').remove();
+            $('.djangoalert').remove();
           }
         }, 5000)
       </script>
@@ -84,7 +84,6 @@
   {% endblock messages %}
 
   {% block body %}
-
     <div class="navbar navbar-inverse navbar-fixed-top not-selectable" style="position:relative; margin-bottom: 0px">
       <div class="container">
         <div class="navbar-header">
@@ -120,7 +119,8 @@
                 </li>
               {% else %}
                 <li>
-                  <a class="tab-header" href="{% url 'vires_login' %}">
+                  <form name="login-form" method="post" action="{% url 'vires_login' %}">{% csrf_token %}</form>
+                  <a class="tab-header" href="#" onclick="document.forms['login-form'].submit()">
                     <i class="fa fa-fw fa-sign-in"></i> Log in
                   </a>
                 </li>
@@ -140,33 +140,7 @@
         </div>
       </div>
 
-      <div id="footer">
-        <div class="container">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="row">
-                  <a href="https://eox.at" target="_blank" style="text-decoration: none;">
-                    <img style="height:30px; display:inline;" src="{% static 'images/EOX_Logo_inverted.png' %}">
-                  </a>
-                  <p class="text-muted" style="display:inline;">service for</p>
-                  <a href="https://www.esa.int" target="_blank" style="text-decoration: none;">
-                    <img style="height:50px;  display:inline; margin-left:4px;" src="{% static 'images/esa_logo_white.png' %}">
-                  </a>
-              </div>
-            </div>
-            <div class="col-md-6 text-muted" style="text-align: center; margin-top:15px;">
-              <a style="display:inline; margin-right:5px;" href="/data_terms" target="_blank_">ESA Data Terms</a> |
-              <a style="display:inline; margin-left:5px;" href="/service_terms" target="_blank_">VirES Service Terms</a> |
-              <a style="display:inline; margin-left:5px;" href="/privacy_notice" target="_blank_">Privacy Notice</a> |
-              <a href="https://earth.esa.int/eogateway/missions/swarm" target="_blank">Swarm Mission</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <ul class="nav pull-right scroll-top">
-        <li><a href="#" title="Scroll to top"><i class="glyphicon glyphicon-chevron-up"></i></a></li>
-      </ul>
+      {% include 'vires/footer.html' %}
 
     {% endblock page_layout %}
 

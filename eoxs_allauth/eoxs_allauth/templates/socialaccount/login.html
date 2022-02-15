@@ -1,0 +1,11 @@
+{% extends "socialaccount/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<h2>Logging into {{ provider.name }}</h2>
+<p>You are logged out. Press the button below to log in with your {{ provider.name }} account.</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-primary">{% trans "Proceed" %}</button>
+</form>
+{% endblock %}

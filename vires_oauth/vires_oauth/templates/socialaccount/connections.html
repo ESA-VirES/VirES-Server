@@ -1,5 +1,6 @@
 {% extends "socialaccount/base.html" %}
 {% load i18n %}
+{% load socialaccount %}
 {% block head_title %}{% trans "Account Connections" %}{% endblock %}
 {% block content %}
   <h2>{% trans "Account Connections" %}</h2>
@@ -9,28 +10,37 @@
       {% csrf_token %}
       <fieldset>
         {% if form.non_field_errors %}<div id="errorMsg">{{ form.non_field_errors }}</div>{% endif %}
-        {% for base_account in form.accounts %}
+        <table class="table external-accounts">
+          <thead>
+            <tr><th>&nbsp;</th><th>Provider</th><th>Account Name</th></tr>
+          </thead>
+          <tbody>
+          {% for base_account in form.accounts %}
           {% with base_account.get_provider_account as account %}
-          <div>
-            <label for="id_account_{{ base_account.id }}">
-            <input id="id_account_{{ base_account.id }}" type="radio" name="account" value="{{ base_account.id }}"/>
-            <span class="socialaccount_provider {{ base_account.provider }} {{ account.get_brand.id }}">{{account.get_brand.name}}</span>
-            {{ account }}
-            </label>
-          </div>
+            <tr class="clickable" onclick="$(this).find('td input:radio').prop('checked', true);">
+              <td class="align-middle"><input id="id_account_{{ base_account.id }}" type="radio" name="account" value="{{ base_account.id }}"/></td>
+              <td class="align-middle"><span class="socialaccount_provider {{ base_account.provider }} {{ account.get_brand.id }} color-grey">{{account.get_brand.name}}</span></td>
+              <td class="align-middle">{{ account }}</td>
+            </tr>
           {% endwith %}
-        {% endfor %}
-        <div>
-          <button type="submit" class="btn btn-primary">{% trans 'Remove' %}</button>
-        </div>
+          {% endfor %}
+          </tbody>
+          </table>
+        <p>
+          <button type="submit" class="btn btn-primary">{% trans 'Remove selected account' %}</button>
+        </p>
       </fieldset>
     </form>
   {% else %}
-    <p>{% trans 'You currently have no social network accounts connected to this account.' %}</p>
+    <p>{% trans 'There is currently no third party account connected to this account.' %}</p>
   {% endif %}
-  <h2>{% trans 'Add a 3rd Party Account' %}</h2>
+  {% get_providers as socialaccount_providers %}
+  {% if socialaccount_providers %}
+  <h2>{% trans 'Connect a New External Account' %}</h2>
+  <p>{% blocktrans %}Connect a new account from one of the providers listed below:{% endblocktrans %}</p>
   <ul class="socialaccount_providers">
     {% include "socialaccount/snippets/provider_list.html" with process="connect" %}
   </ul>
   {% include "socialaccount/snippets/login_extra.html" %}
+  {% endif %}
 {% endblock %}

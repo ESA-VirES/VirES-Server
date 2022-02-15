@@ -6,7 +6,7 @@
 
 {% block body %}
 
-{% load staticfiles %}
+{% load static %}
 <script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
 
 {% if client_state or client_state_url %}
@@ -228,7 +228,7 @@
 
     <link href="{% static 'workspace/bower_components/bootstrap/dist/css/bootstrap.min.css'%}" rel="stylesheet">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet">
-    <link href="{% static 'css/landing_page.css' %}" rel="stylesheet">
+    <link href="{% static 'css/landing_page.css' %}?v=20220211" rel="stylesheet">
     <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
 
         <!-- Wrap all page content here -->
@@ -269,7 +269,7 @@
               </li>
               <li><a href="#Data">Data</a></li>
               <li><a href="#Signup">Sign-up</a></li>
-              <li><a href="{% url 'vires_login' %}?process=login">Log in</a></li>
+              <li><a href="#Login" onclick="document.forms['login-form'].submit()">Log in</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div><!--/.container -->
@@ -573,7 +573,10 @@
           </p>
           <div style="text-align: center">
             <div style="margin-top: 2em;">
-              <a class="linkbutton" href="{% url 'vires_login' %}?process=signup">Sign up</a>
+              <form name="signup-form" method="post" action="{% url 'vires_login' %}">
+                {% csrf_token %}
+                <button type="submit" class="linkbutton">Sign up</button>
+              </form>
             </div>
           </div>
         </div>
@@ -589,7 +592,10 @@
           </p>
           <div style="text-align: center">
             <div style="margin-top: 2em;">
-              <a class="linkbutton" href="{% url 'vires_login' %}?process=login">Log in</a>
+              <form name="login-form" method="post" action="{% url 'vires_login' %}">
+                {% csrf_token %}
+                <button type="submit" class="linkbutton">Log in</button>
+              </form>
             </div>
           </div>
         </div>
@@ -614,40 +620,7 @@
 
     </div><!--/wrap-->
 
-    <div id="footer">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="row">
-
-                <a href="https://eox.at" target="_blank" style="text-decoration: none;">
-                  <img style="height:30px; display:inline;" src="{% static 'images/EOX_Logo_inverted.png' %}">
-                </a>
-
-
-                <p class="text-muted" style="display:inline;">service for</p>
-
-
-                <a href="https://www.esa.int" target="_blank" style="text-decoration: none;">
-                  <img style="height:50px;  display:inline; margin-left:4px;" src="{% static 'images/esa_logo_white.png' %}">
-                </a>
-
-            </div>
-          </div>
-
-          <div class="col-md-6 text-muted" style="text-align: center; margin-top:15px;">
-            <a style="display:inline; margin-right:5px;" href="/data_terms" target="_blank_">ESA Data Terms</a> |
-            <a style="display:inline; margin-left:5px;" href="/service_terms" target="_blank_">VirES Service Terms</a> |
-            <a style="display:inline; margin-left:5px;" href="/privacy_notice" target="_blank_">Privacy Notice</a> |
-            <a href="https://earth.esa.int/eogateway/missions/swarm" target="_blank">Swarm Mission</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <ul class="nav pull-right scroll-top">
-      <li><a href="#" title="Scroll to top"><i class="glyphicon glyphicon-chevron-up"></i></a></li>
-    </ul>
+    {% include 'vires/footer.html' %}
 
     <!-- script references -->
 
