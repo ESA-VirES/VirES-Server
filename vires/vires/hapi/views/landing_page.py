@@ -39,6 +39,8 @@ PREFERED_EXAMPLE_PARAMETERS = [
     'Latitude', 'Longitude', 'Radius', 'B_NEC', 'Flags_B',
 ]
 
+DEFAULT_ORDER = 1000
+
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
@@ -48,7 +50,6 @@ def landing_page(request):
     """ HAPI landing page view. """
     datasets = _get_dataset_infos(list_public_datasets())
     dataset_groups = _group_datasets_by_type(datasets)
-
 
     return render(request, TEMPLATE_NAME, dict(
         version=HapiResponse.VERSION,
@@ -61,7 +62,10 @@ def landing_page(request):
 def _get_info(hapi_dataset_id):
     collection, dataset_id, dataset_def = parse_dataset(hapi_dataset_id)
     dataset_def = sort_dataset_definition(dataset_def)
-    return get_info_response(collection, dataset_id, dataset_def)
+    return {
+        **get_info_response(collection, dataset_id, dataset_def),
+        "x_dataTypeOrder": collection.type.definition.get("_order", DEFAULT_ORDER),
+    }
 
 
 def _get_dataset_infos(datasets):
@@ -70,13 +74,19 @@ def _get_dataset_infos(datasets):
 
 def _group_datasets_by_type(dataset_infos):
     groups = {}
+    order = {}
     for dataset, info in dataset_infos.items():
         type_ = info["x_datasetType"]
+        order[type_] = info["x_dataTypeOrder"]
         group = groups.get(type_)
         if not group:
             groups[type_] = group = {}
         group[dataset] = info
-    return groups
+    return _order_groups(groups, order)
+
+
+def _order_groups(groups, order):
+    return dict(sorted(groups.items(), key=lambda item: order[item[0]]))
 
 
 def _get_example_selection(datasets):
