@@ -29,6 +29,7 @@
 from logging import getLogger
 from ._common import Supercommand
 from ._job.list import ListJobSubcommand
+from ._job.dump import DumpJobSubcommand
 from ._job.info import InfoJobSubcommand
 from ._job.remove import RemoveJobSubcommand
 
@@ -41,6 +42,7 @@ class Command(Supercommand):
         command.name: command(getLogger("%s.%s" % (__name__, command.name)))
         for command in [
             ListJobSubcommand,
+            DumpJobSubcommand,
             InfoJobSubcommand,
             RemoveJobSubcommand,
         ]

@@ -606,7 +606,7 @@ $ <instance>/manage.py job info --loose | column -t -s , | less -S
 
 #### Getting Dangling Jobs' Details
 
-Identifiers of the dangling asynchronous jobs can be listed by the `dangling_job` `info` command:
+Details of the dangling asynchronous jobs can be printed by the `dangling_job` `info` command:
 ```
 $ <instance>/manage.py dangling_job info | column -t -s , | less -S
 ```
@@ -614,6 +614,45 @@ $ <instance>/manage.py dangling_job info | column -t -s , | less -S
 For the complete list of the selection options see the command help invoked by the `--help` option:
 ```
 $ <instance>/manage.py dangling_job info --help
+```
+
+
+#### Dumping Jobs' Details in JSON Format
+
+Alternatively, details of all asynchronous jobs can be dumped by the `dump` command in JSON format:
+```
+$ <instance>/manage.py dump info
+```
+
+Just like the list command, the output can be constrained by additional selection criteria, e.g., owner, status, completion time, etc.:
+```
+$ <instance>/manage.py dump info -u vagrant -s SUCCEEDED -s FAILED --ended-after P1D
+```
+
+For the complete list of the selection options see the command help invoked by the `--help` option:
+```
+$ <instance>/manage.py dump info --help
+```
+
+
+#### Dumping Loose Jobs' Details in JSON Format
+
+Details of the loose asynchronous jobs can be dumped as JSON by the `dump` command with the `--loose` option:
+```
+$ <instance>/manage.py job dump --loose
+
+
+
+#### Dumping Dangling Jobs' Details in JSON Format
+
+Details of the dangling asynchronous jobs can be dumped by the `dangling_job` `dump` command:
+```
+$ <instance>/manage.py dangling_job dump
+```
+
+For the complete list of the selection options see the command help invoked by the `--help` option:
+```
+$ <instance>/manage.py dangling_job dump --help
 ```
 
 

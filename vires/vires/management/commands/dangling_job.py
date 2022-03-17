@@ -29,6 +29,7 @@
 from logging import getLogger
 from ._common import Supercommand
 from ._dangling_job.list import ListDanglingJobSubcommand
+from ._dangling_job.dump import DumpDanglingJobSubcommand
 from ._dangling_job.info import InfoDanglingJobSubcommand
 from ._dangling_job.remove import RemoveDanglingJobSubcommand
 
@@ -41,6 +42,7 @@ class Command(Supercommand):
         command.name: command(getLogger("%s.%s" % (__name__, command.name)))
         for command in [
             ListDanglingJobSubcommand,
+            DumpDanglingJobSubcommand,
             InfoDanglingJobSubcommand,
             RemoveDanglingJobSubcommand,
         ]
