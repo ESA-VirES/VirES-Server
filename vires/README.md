@@ -640,6 +640,7 @@ $ <instance>/manage.py dump info --help
 Details of the loose asynchronous jobs can be dumped as JSON by the `dump` command with the `--loose` option:
 ```
 $ <instance>/manage.py job dump --loose
+```
 
 
 
