@@ -1,5 +1,5 @@
 # VirES Server
-This repository groups SW packages needed by a VieES server instance. 
+This repository groups SW packages needed by a VirES server instance. 
 Content of the repository is:
  
 * `vires` - VirES server - EOxServer extension package
