@@ -93,6 +93,7 @@ class UserProfileForm(Form):
 
 
 class SignupForm(Form):
+
     title = CharField(max_length=100, required=False)
     first_name = CharField(max_length=30, required=False)
     last_name = CharField(max_length=30, required=False)
@@ -111,6 +112,19 @@ class SignupForm(Form):
         }),
         required=False,
     )
+
+    # provider-specific data extraction functions
+    DATA_EXTRACTOR = {}
+
+    @classmethod
+    def extractor(cls, provider):
+        """ Decorator registering and new provider-specific data extraction
+        function.
+        """
+        def _register_extractor(extract_funct):
+            cls.DATA_EXTRACTOR[provider] = extract_funct
+            return extract_funct
+        return _register_extractor
 
     def signup(self, request, user):
         user.first_name = self.cleaned_data['first_name']
@@ -142,7 +156,7 @@ class SignupForm(Form):
         logger.debug("initial: %s: %s", provider, self.initial)
         logger.debug("extra: %s: %s", provider, extra_data)
         self.initial.update(
-            DATA_EXTRACTOR.get(provider, lambda _: {})(extra_data)
+            self.DATA_EXTRACTOR.get(provider, lambda _: {})(extra_data)
         )
         self.extract_username(self.initial)
         logger.debug("final,: %s: %s", provider, self.initial)
@@ -154,10 +168,28 @@ class SignupForm(Form):
             initial['username'] = email_to_username(initial['email'])
 
 
-# add a provider-specific extraction function - if necessary
-DATA_EXTRACTOR = {}
-
-
 def email_to_username(email):
     """ Extract user-name from an e-mail address. """
     return RE_USER_NAME_INVALID_CHARACTERS.sub('', email.partition("@")[0])
+
+
+# to be tested before enabling
+#@SignupForm.extractor("linkedin_oauth2")
+#def extract_linkedin(extra_data):
+#    """ Extract user info from a LinkedIn user profile. """
+#    data = {}
+#    if "location" in extra_data:
+#        data["country"] = extra_data["location"]["country"]["code"].upper()
+#    if "emailAddress" in extra_data:
+#        data["email"] = extra_data["emailAddress"]
+#    if "positions" in extra_data and "values" in extra_data["positions"]:
+#        for position in extra_data["positions"]["values"]:
+#            if "isCurrent" in position and position["isCurrent"]:
+#                if "company" in position:
+#                    data["institution"] = position["company"]["name"]
+#                if "title" in position:
+#                    data["title"] = position["title"]
+#                if "summary" in position:
+#                    data["study_area"] = position["summary"]
+#                break
+#    return data
