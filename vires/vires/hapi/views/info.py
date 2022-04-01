@@ -40,6 +40,13 @@ from .common import (
     catch_error, allowed_parameters, required_parameters, map_parameters
 )
 
+EXTRA_METADATA_FIELDS = [
+    ("description", "description"),
+    ("x_dataTerms", "dataTerms"),
+    ("resourceURL", "resourceUrl"),
+    ("citation", "citation"),
+]
+
 
 @catch_error
 @allow_methods(['GET'])
@@ -97,17 +104,14 @@ def get_info_response(collection, dataset_id, dataset_def):
 
         yield "modificationDate", metadata.get("lastUpdate")
 
-        description = metadata.get("description")
-        if description:
-            yield "description", description
-
-        data_terms = metadata.get("dataTerms")
-        if data_terms:
-            yield "x_dataTerms", data_terms
-
-        resource_url = collection.type.definition.get("resourceUrl")
-        if resource_url:
-            yield "resourceURL", resource_url
+        # add extra metadata fields
+        for target_field, source_field in EXTRA_METADATA_FIELDS:
+            value = (
+                metadata.get(source_field) or
+                collection.type.definition.get(source_field)
+            )
+            if value is not None:
+                yield target_field, value
 
         yield "parameters", [
             _build_parameter(name, details)

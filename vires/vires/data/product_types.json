@@ -3,7 +3,9 @@
         "name": "SW_MODx_SC_1B",
         "description": "Swarm S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MOD",
+        "_order": 1,
         "datasets": {
             "MOD": {
                 "Timestamp": {
@@ -43,7 +45,9 @@
         "name": "SW_MAGx_LR_1B",
         "description": "Swarm vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG_LR",
+        "_order": 2,
         "datasets": {
             "MDR_MAG_LR": {
                 "Timestamp": {
@@ -216,7 +220,9 @@
         "name": "SW_MAGx_HR_1B",
         "description": "Swarm vector (VFM) magnetic field measurements at 50Hz rate.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Magnetic_Products",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG_HR",
+        "_order": 3,
         "datasets": {
             "MDR_MAG_HR": {
                 "Timestamp": {
@@ -2662,7 +2668,11 @@
     },
     {
         "name": "GRACE_x_MAG",
+        "description": "GRACE platform magnetometer measurements",
+        "resourceUrl": "https://doi.org/10.1186/s40623-021-01373-9",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG",
+        "_order": 101,
         "datasets": {
             "MDR_MAG": {
                 "Timestamp": {
@@ -2746,7 +2756,12 @@
     },
     {
         "name": "GFx_FGM_ACAL",
+        "description": "GRACE-FO platform magnetometer measurements.",
+        "resourceUrl": "https://doi.org/10.1186/s40623-021-01364-w",
+        "citation": "https://doi.org/10.5880/GFZ.2.3.2021.002",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_FGM_ACAL",
+        "_order": 102,
         "datasets": {
             "MDR_FGM_ACAL": {
                 "Timestamp": {
@@ -2872,7 +2887,11 @@
     },
     {
         "name": "CS_MAG",
+        "description": "Cryosat-2 Platform magnetometer measurements",
+        "resourceUrl": "https://doi.org/10.1186/s40623-020-01171-9",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG",
+        "_order": 103,
         "datasets": {
             "MDR_MAG": {
                 "Timestamp": {

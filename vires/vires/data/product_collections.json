@@ -2,7 +2,6 @@
     {
         "name": "SW_OPER_MODA_SC_1B",
         "description": "Swarm A S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
-        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
@@ -12,7 +11,6 @@
     {
         "name": "SW_OPER_MODB_SC_1B",
         "description": "Swarm B S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
-        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "B",
         "nominalSampling": "PT1S",
@@ -22,7 +20,6 @@
     {
         "name": "SW_OPER_MODC_SC_1B",
         "description": "Swarm C S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
-        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "C",
         "nominalSampling": "PT1S",
@@ -31,7 +28,6 @@
     {
         "name": "SW_OPER_MAGA_LR_1B",
         "description": "Swarm A vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
-        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_LR_1B",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
@@ -42,7 +38,6 @@
     {
         "name": "SW_OPER_MAGB_LR_1B",
         "description": "Swarm B vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
-        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
         "spacecraft": "B"
@@ -50,7 +45,6 @@
     {
         "name": "SW_OPER_MAGC_LR_1B",
         "description": "Swarm C vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
-        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
         "spacecraft": "C",
@@ -61,7 +55,6 @@
     {
         "name": "SW_OPER_MAGA_HR_1B",
         "description": "Swarm A vector (VFM) magnetic field measurements at 50Hz rate.",
-        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
         "spacecraft": "A",
@@ -72,7 +65,6 @@
     {
         "name": "SW_OPER_MAGB_HR_1B",
         "description": "Swarm B vector (VFM) magnetic field measurements at 50Hz rate.",
-        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
         "spacecraft": "B"
@@ -80,7 +72,6 @@
     {
         "name": "SW_OPER_MAGC_HR_1B",
         "description": "Swarm C vector (VFM) magnetic field measurements at 50Hz rate.",
-        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
         "spacecraft": "C",
@@ -511,46 +502,46 @@
     },
     {
         "name": "GRACE_A_MAG",
+        "description": "GRACE 1 platform magnetometer measurements",
         "productType": "GRACE_x_MAG",
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "GRACE",
-        "spacecraft": "1",
-        "requiredPermission": "swarm"
+        "spacecraft": "1"
     },
     {
         "name": "GRACE_B_MAG",
+        "description": "GRACE 2 platform magnetometer measurements",
         "productType": "GRACE_x_MAG",
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "GRACE",
-        "spacecraft": "2",
-        "requiredPermission": "swarm"
+        "spacecraft": "2"
     },
     {
         "name": "GF1_OPER_FGM_ACAL_CORR",
+        "description": "GRACE-FO 1 platform magnetometer measurements",
         "productType": "GFx_FGM_ACAL",
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "GRACE-FO",
-        "spacecraft": "1",
-        "requiredPermission": "swarm"
+        "spacecraft": "1"
     },
     {
         "name": "GF2_OPER_FGM_ACAL_CORR",
+        "description": "GRACE-FO 2 platform magnetometer measurements",
         "productType": "GFx_FGM_ACAL",
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "GRACE-FO",
-        "spacecraft": "2",
-        "requiredPermission": "swarm"
+        "spacecraft": "2"
     },
     {
         "name": "CS_OPER_MAG",
+        "description": "Cryosat-2 Platform magnetometer measurements",
         "productType": "CS_MAG",
         "nominalSampling": "PT4S",
         "calculateOrbitDirection": true,
-        "mission": "CryoSat-2",
-        "requiredPermission": "swarm"
+        "mission": "CryoSat-2"
     }
 ]
