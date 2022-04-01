@@ -30,6 +30,7 @@ from allauth.account.models import EmailAddress
 from allauth.socialaccount import app_settings
 from allauth.socialaccount.providers.base import ProviderAccount
 from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
+from ...forms import SignupForm
 
 
 class EoiamAccount(ProviderAccount):
@@ -63,10 +64,25 @@ class EoiamProvider(OAuth2Provider):
         return data['sub']
 
     @staticmethod
+    def extract_extra_data(data):
+        if "Oa-Signed-Tcs":
+            permissions = data.pop("Oa-Signed-Tcs")
+            if isinstance(permissions, str):
+                permissions = permissions.split(",")
+        else:
+            permissions = []
+        data['permissions'] = permissions
+
+        if "Institution" in data:
+            data['institution'] = data.pop("Institution")
+
+        return data
+
+    @staticmethod
     def extract_common_fields(data):
         return {
             'username': data['sub'],
-            'email': data['sub'],
+            'email': data['email'],
             'first_name': data.get('given_name'),
             'last_name': data.get('family_name'),
         }
@@ -74,9 +90,19 @@ class EoiamProvider(OAuth2Provider):
     @classmethod
     def extract_email_addresses(cls, data):
         return [EmailAddress(
-            email=data['sub'],
+            email=data['email'],
             verified=bool(cls.settings.get('TRUST_EMAILS', False)),
             primary=True
         )]
 
 provider_classes = [EoiamProvider]
+
+
+@SignupForm.extractor(EoiamProvider.id)
+def extract_eoiam(extra_data):
+    """ Extract user info from an EO-IAM user profile. """
+    data = {}
+    for key in ("country", "institution"):
+        if key in extra_data:
+            data[key] = extra_data[key]
+    return data
