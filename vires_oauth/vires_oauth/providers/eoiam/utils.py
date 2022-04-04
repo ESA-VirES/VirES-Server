@@ -67,7 +67,7 @@ def update_groups(user, group_names_added, group_names_removed):
 
     groups_added = (
         Group.objects
-        .fliter(name__in=group_names_added)
+        .filter(name__in=group_names_added)
         .exclude(id__in=user.groups.values("id"))
     )
     group_names_added = list(groups_added.values_list("name", flat=True))
