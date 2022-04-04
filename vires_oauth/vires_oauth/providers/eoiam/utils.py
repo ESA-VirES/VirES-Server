@@ -62,7 +62,7 @@ def _is_permitted(possessed_permissions, required_permissions_list):
 def update_groups(user, group_names_added, group_names_removed):
 
     groups_removed = user.groups.filter(name__in=group_names_removed)
-    group_names_removed = list(groups_removed.value_list("name", flat=True))
+    group_names_removed = list(groups_removed.values_list("name", flat=True))
     user.groups.remove(*groups_removed)
 
     groups_added = (
@@ -70,7 +70,7 @@ def update_groups(user, group_names_added, group_names_removed):
         .fliter(name__in=group_names_added)
         .exclude(id__in=user.groups.values("id"))
     )
-    group_names_added = list(groups_added.value_list("name", flat=True))
+    group_names_added = list(groups_added.values_list("name", flat=True))
     user.groups.add(*groups_added)
 
     return group_names_added, group_names_removed
