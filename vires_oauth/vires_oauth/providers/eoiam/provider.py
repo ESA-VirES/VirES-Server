@@ -49,8 +49,8 @@ class EoiamAccount(ProviderAccount):
 
 
 class EoiamProvider(OAuth2Provider):
-    id = 'eoiam'
-    name = 'EO Sign In'
+    id = "eoiam"
+    name = "EO Sign In"
     account_class = EoiamAccount
 
     settings = app_settings.PROVIDERS.get(id, {})
@@ -61,7 +61,7 @@ class EoiamProvider(OAuth2Provider):
 
     @staticmethod
     def extract_uid(data):
-        return data['sub']
+        return data["sub"]
 
     @staticmethod
     def extract_extra_data(data):
@@ -71,27 +71,27 @@ class EoiamProvider(OAuth2Provider):
                 permissions = permissions.split(",")
         else:
             permissions = []
-        data['permissions'] = permissions
+        data["permissions"] = permissions
 
         if "Institution" in data:
-            data['institution'] = data.pop("Institution")
+            data["institution"] = data.pop("Institution")
 
         return data
 
     @staticmethod
     def extract_common_fields(data):
         return {
-            'username': data['sub'],
-            'email': data['email'],
-            'first_name': data.get('given_name'),
-            'last_name': data.get('family_name'),
+            "username": data["sub"],
+            "email": data["email"],
+            "first_name": data.get("given_name"),
+            "last_name": data.get("family_name"),
         }
 
     @classmethod
     def extract_email_addresses(cls, data):
         return [EmailAddress(
-            email=data['email'],
-            verified=bool(cls.settings.get('TRUST_EMAILS', False)),
+            email=data["email"],
+            verified=bool(cls.settings.get("TRUST_EMAILS", False)),
             primary=True
         )]
 
