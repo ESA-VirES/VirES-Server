@@ -39,7 +39,7 @@ from allauth.account.signals import (
     email_added, email_removed,
 )
 from allauth.socialaccount.signals import (
-    pre_social_login, social_account_added, social_account_removed,
+    social_account_added, social_account_removed,
 )
 from .utils import AccessLoggerAdapter
 
@@ -62,7 +62,7 @@ def set_default_group(sender, request, user, **kwargs):
         group = groups.get(group_name)
         if group:
             user.groups.add(group)
-            logger.debug("User %s added to group %s.", user.username, group.name)
+            logger.info("user %s added to %s", user.username, group.name)
         else:
             logger.warning("Default group %s does not exist!", group_name)
 
@@ -78,18 +78,16 @@ def receive_app_authorized(request, token, **kwargs):
 
 
 @receiver(user_logged_in)
-def receive_user_logged_in(request, user, **kwargs):
-    provider = getattr(user, 'provider', None)
-    socialaccount = user.socialaccount_set.get(provider=provider) if provider else None
+def receive_user_logged_in(request, user, sociallogin=None, **kwargs):
+    socialaccount = sociallogin.account if sociallogin else None
     _get_access_logger(request, user).info(
         "user logged in %s", _extract_login_info(socialaccount)
     )
 
 
 @receiver(user_signed_up)
-def receive_user_signed_up(request, user, **kwargs):
-    socialaccounts = list(user.socialaccount_set.all())
-    socialaccount = socialaccounts[0] if socialaccounts else None
+def receive_user_signed_up(request, user, sociallogin=None, **kwargs):
+    socialaccount = sociallogin.account if sociallogin else None
     _get_access_logger(request, user).info(
         "user signed up %s", _extract_login_info(socialaccount)
     )
@@ -146,12 +144,6 @@ def receive_email_confirmation_sent(confirmation, **kwargs):
         "e-mail confirmation request sent to %s",
         confirmation.email_address.email
     )
-
-
-@receiver(pre_social_login)
-def receive_pre_social_login(request, sociallogin, **kwargs):
-    if sociallogin.is_existing:
-        sociallogin.user.provider = sociallogin.account.provider
 
 
 @receiver(social_account_added)
