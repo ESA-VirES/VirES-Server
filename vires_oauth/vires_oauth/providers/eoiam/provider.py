@@ -26,11 +26,13 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+from logging import getLogger
 from allauth.account.models import EmailAddress
 from allauth.socialaccount import app_settings
 from allauth.socialaccount.providers.base import ProviderAccount
 from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
 from ...forms import SignupForm
+from .utils import update_user_groups_from_permissions
 
 
 class EoiamAccount(ProviderAccount):
@@ -54,6 +56,15 @@ class EoiamProvider(OAuth2Provider):
     account_class = EoiamAccount
 
     settings = app_settings.PROVIDERS.get(id, {})
+
+    # A dictionary holding a list of alternative combinations EOIAM permissions
+    # required to grant a group membership. If none of the listed combinations
+    # is met the user cannot be a member of the given group.
+    required_group_permissions = {
+        group_name: list(map(frozenset, required_permissions))
+        for group_name, required_permissions
+        in settings.get("REQUIRED_GROUP_PERMISSIONS", {}).items()
+    }
 
     @staticmethod
     def get_default_scope():
@@ -94,6 +105,16 @@ class EoiamProvider(OAuth2Provider):
             verified=bool(cls.settings.get("TRUST_EMAILS", False)),
             primary=True
         )]
+
+    @classmethod
+    def populate_user_from_extra_data(cls, user, extra_data):
+        update_user_groups_from_permissions(
+            user,
+            set(extra_data["permissions"]),
+            cls.required_group_permissions,
+            logger=getLogger(__name__),
+        )
+
 
 provider_classes = [EoiamProvider]
 
