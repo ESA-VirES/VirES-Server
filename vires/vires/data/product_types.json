@@ -472,6 +472,235 @@
         }
     },
     {
+        "name": "SW_EFIx_TCTyy",
+        "defaultDataset": "EFI_TII_CT",
+        "datasets": {
+            "EFI_TII_CT": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time",
+                        "UNITS": "hour"
+                    }
+                },
+                "Vixh": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Along-track ion drift from horizontal TII sensor in satellite-track coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vixh_error": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Random error estimate for along-track ion drift from horizontal TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vixv": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Along-track ion drift from vertical TII sensor in satellite-track coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vixv_error": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Random error estimate for along-track ion drift from vertical TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Viy": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Cross-track vertical ion drift from horizontal TII sensor in satellite-track coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Viy_error": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Random error estimate for cross-track vertical ion drift from horizontal TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Viz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Cross-track vertical ion drift from vertical TII sensor in satellite-track coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Viz_error": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Random error estimate for cross-track vertical ion drift from vertical TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "VsatN": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Satellite velocity N component in north-east-centre coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "VsatE": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Satellite velocity E component in north-east-centre coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "VsatC": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Satellite velocity C component in north-east-centre coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Ehx": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field x component in satellite-track coordinates, derived from -VxB with along-track ion drift from horizontal sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Ehy": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field y component in satellite-track coordinates, derived from -VxB with along-track ion drift from horizontal sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Ehz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field z component in satellite-track coordinates, derived from -VxB with along-track ion drift from horizontal sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Evx": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field x component in satellite-track coordinates, derived from -VxB with along-track ion drift from vertical sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Evy": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field y component in satellite-track coordinates, derived from -VxB with along-track ion drift from vertical sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Evz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field z component in satellite-track coordinates, derived from -VxB with along-track ion drift from vertical sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Bx": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Geomagnetic field x component in satellite-track coordinates, derived from the 1 Hz product.",
+                        "UNITS": "nT"
+                    }
+                },
+                "By": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Geomagnetic field y component in satellite-track coordinates, derived from the 1 Hz product.",
+                        "UNITS": "nT"
+                    }
+                },
+                "Bz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Geomagnetic field z component in satellite-track coordinates, derived from the 1 Hz product.",
+                        "UNITS": "nT"
+                    }
+                },
+                "Vicrx": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion drift corotation signal x component in satellite-track coordinates. This has been removed from ion drift and electric field.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vicry": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion drift corotation signal y component in satellite-track coordinates. This has been removed from ion drift and electric field.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vicrz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion drift corotation signal z component in satellite-track coordinates. This has been removed from ion drift and electric field.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Quality_flags": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Bitwise flag for each velocity component, where a value of 1 for a particular component signifies that calibration was successful, and that the baseline 1-sigma noise level is less than or equal to 100 m/s at 2 Hz. Electric field quality can be assessed from these flags according to -vxB. Bit0 (least significant) = Vixh, bit1 = Vixv, bit2 = Viy, bit3 = Viz. Refer to the release notes for details.",
+                        "UNITS": "-"
+                    }
+                },
+                "Calibration_flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Information about the calibration process. Refer to the release notes for details.",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_IBIxTMS_2F",
         "defaultDataset": "IBI_TMS",
         "datasets": {

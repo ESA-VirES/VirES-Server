@@ -101,6 +101,48 @@
         "requiredPermission": "swarm"
     },
     {
+        "name": "SW_EXPT_EFIA_TCT02",
+        "nominalSampling": "PT0.5S",
+        "productType": "SW_EFIx_TCTyy",
+        "spacecraft": "A",
+        "requiredPermission": "swarm"
+    },
+    {
+        "name": "SW_EXPT_EFIB_TCT02",
+        "nominalSampling": "PT0.5S",
+        "productType": "SW_EFIx_TCTyy",
+        "spacecraft": "B",
+        "requiredPermission": "swarm"
+    },
+    {
+        "name": "SW_EXPT_EFIC_TCT02",
+        "nominalSampling": "PT0.5S",
+        "productType": "SW_EFIx_TCTyy",
+        "spacecraft": "C",
+        "requiredPermission": "swarm"
+    },
+    {
+        "name": "SW_EXPT_EFIA_TCT16",
+        "nominalSampling": "PT0.0625S",
+        "productType": "SW_EFIx_TCTyy",
+        "spacecraft": "A",
+        "requiredPermission": "swarm"
+    },
+    {
+        "name": "SW_EXPT_EFIB_TCT16",
+        "nominalSampling": "PT0.0625S",
+        "productType": "SW_EFIx_TCTyy",
+        "spacecraft": "B",
+        "requiredPermission": "swarm"
+    },
+    {
+        "name": "SW_EXPT_EFIC_TCT16",
+        "nominalSampling": "PT0.0625S",
+        "productType": "SW_EFIx_TCTyy",
+        "spacecraft": "C",
+        "requiredPermission": "swarm"
+    },
+    {
         "name": "SW_OPER_IBIATMS_2F",
         "productType": "SW_IBIxTMS_2F",
         "nominalSampling": "PT1S",
