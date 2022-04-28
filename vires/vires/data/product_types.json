@@ -472,6 +472,113 @@
         }
     },
     {
+        "name": "SW_EFIxTIE_2_",
+        "defaultDataset": "EFI_TIE",
+        "datasets": {
+            "EFI_TIE": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "Latitude",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "Longitude",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "Height",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Height above WGS84 reference ellipsoid",
+                        "UNITS": "m"
+                    }
+                },
+                "Radius_GC": {
+                    "source": "Radius",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time",
+                        "UNITS": "hour"
+                    }
+                },
+                "Tn_msis": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Neutral temperature from NRLMSISE00 model",
+                        "UNITS": "K"
+                    }
+                },
+                "Te_adj_LP": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Corrected Swarm LP electron temperature",
+                        "UNITS": "K"
+                    }
+                },
+                "Ti_meas_drift": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion temperature estimated using Swarm TII drift at high latitudes",
+                        "UNITS": "K"
+                    }
+                },
+                "Ti_model_drift": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion temperature estimated using Weimer 2005 model drifts at high latitude",
+                        "UNITS": "K"
+                    }
+                },
+                "Flag_ti_meas": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterising TII-based Ti: Bit0 = 1/0: high-latitude frictional heating included/omitted, Bit1=1/0: electron temperature from low/high-gain probe, Bit2=1/0: ion temperature data available/data value is set to NaN",
+                        "UNITS": "-"
+                    }
+                },
+                "Flag_ti_model": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterising model-based Ti: Bit0 = 1/0: high-latitude frictional heating included/omitted, Bit1=1/0: electron temperature from low/high-gain probe, Bit2=1/0: ion temperature data available/data value is set to NaN",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_EFIx_TCTyy",
         "defaultDataset": "EFI_TII_CT",
         "datasets": {
