@@ -71,6 +71,7 @@ from vires.processes.util.models import (
     IndexKpFromKp10,
     Identity,
     BnecToF,
+    Geodetic2GeocentricCoordinates,
 )
 from vires.processes.util.filters import (
     MinStepSampler, GroupingSampler, ExtraSampler, BoundingBoxFilter,
@@ -302,6 +303,7 @@ class FetchData(WPSProcess):
             model_subsol = SubSolarPoint()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
+            model_gd2gc = Geodetic2GeocentricCoordinates()
             copied_variables = [
                 Identity("MLT_QD", "MLT"),
                 Identity("Latitude_QD", "QDLat"),
@@ -386,7 +388,7 @@ class FetchData(WPSProcess):
 
                 # models
                 aux_models = chain((
-                    model_bnec_intensity,
+                    model_gd2gc, model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals, copied_variables)

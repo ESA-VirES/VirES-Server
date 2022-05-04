@@ -29,6 +29,7 @@ from .base import Model
 from .magnetic_model import (
     MagneticModelResidual, SourceMagneticModel, ComposedMagneticModel,
 )
+from .geodetic_coordinates import Geodetic2GeocentricCoordinates
 from .magnetic_coordinates import QuasiDipoleCoordinates, MagneticLocalTime
 from .magnetic_dipole import MagneticDipole, DipoleTiltAngle
 from .sun_ephemeris import SunPosition, SubSolarPoint
