@@ -286,8 +286,8 @@
       </div>
 
         <p class="lead current-version text-center">
-          <strong>Version 3.8.0</strong> (<a href="/changelog">Changelog</a>)<br>
-          <em>February 2022</em>
+          <strong>Version 3.9.0</strong> (<a href="/changelog">Changelog</a>)<br>
+          <em>May 2022</em>
         </p>
 
         <p class="lead text-center">
@@ -327,8 +327,8 @@
           <div class="divider"></div>
           <p>
             <a href="#Data">Various Swarm product data</a> can be visualized on the platform
-            plotted over the globe and shown in a scatterplot.
-            The scatterplot allows for dual y-axes with independent zoom and
+            plotted over the globe and shown in a scatter plot.
+            The scatter plot allows for dual y-axes with independent zoom and
             panning features.
             Different variables can be plotted in multiple vertically-stacked
             plots sharing the common x-axis.
@@ -374,7 +374,7 @@
           <p>
             The direct data access using the VirES Python client can be
             performed in Jupyter notebook running in the VirES for Swarm
-            Jupyter based <a href="https://swarm-vre.readthedocs.io/en/latest/intro.html#what-is-the-vre" target="_blank">Virtual Research Environment (VRE)</a>.
+            Jupyter based <a href="https://notebooks.vires.services/docs/vre-overview.html" target="_blank">Virtual Research Environment (VRE)</a>.
           </p>
           <p>
             To access the VirES for Swarm Jupyter Lab you need to have a VirES account
@@ -399,64 +399,73 @@
           <p>Data from the following Swarm products are available in VirES:</p>
           <ul>
             <li style="list-style-type: circle;">
-              The low resolution (1Hz) magnetic VFM vector and ASM scalar data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product">MAGx_LR_1B</a>)
+              Low resolution (1Hz) magnetic VFM vector and ASM scalar data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product">MAGx_LR_1B</a>)
             </li>
             <li style="list-style-type: circle;">
-              The high resolution (50Hz) magnetic VFM vector data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#Magnetic_Products">MAGx_HR_1B</a>,
+              High resolution (50Hz) magnetic VFM vector data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#Magnetic_Products">MAGx_HR_1B</a>,
               accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>,
               readily available in <a target="_blank" href="https://vre.vires.services">VRE</a>)
             </li>
             <li style="list-style-type: circle;">
-              The plasma data (2Hz) from the Langmuir probe including electron temperature and plasma density (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#EFIX_LP_1B_Product">EFIx_LP_1B</a>)
+              Plasma data (2Hz) from the Langmuir probe including electron temperature and plasma density (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-1b-product-definitions#EFIX_LP_1B_Product">EFIx_LP_1B</a>)
             </li>
             <li style="list-style-type: circle;">
-              The ionospheric bubble index data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#IBIxTMS_2F">IBIxTMS_2F</a>)
+              Ionospheric bubble index data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#IBIxTMS_2F">IBIxTMS_2F</a>)
             </li>
             <li style="list-style-type: circle;">
-              The ionospheric total electron content data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#TECxTMS_2F">TECxTMS_2F</a>)
+              Ionospheric total electron content data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#TECxTMS_2F">TECxTMS_2F</a>)
             </li>
             <li style="list-style-type: circle;">
-              The single and combined S/C solution for the current density data
+              Single and combined S/C solution for the current density data
               (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#FACxTMS_2F">FACxTMS_2F</a> and
               <a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#FAC_TMS_2F">FAC_TMS_2F</a>)
             </li>
             <li style="list-style-type: circle;">
-              The dayside equatorial electric field data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#EEFxTMS_2F">EEFxTMS_2F</a>)
+              Dayside equatorial electric field data (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#EEFxTMS_2F">EEFxTMS_2F</a>)
             </li>
             <li style="list-style-type: circle;">
-              The characteristics of the plasma density and plasma irregularities along the orbit (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#IPDxIRR_2F">IPDxIRR_2F</a>)
+              Characteristics of the plasma density and plasma irregularities along the orbit (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#IPDxIRR_2F">IPDxIRR_2F</a>)
             </li>
             <li style="list-style-type: circle;">
-               High-latitude ionospheric horizontal sheet current densities profiles calculated using
-               the Line Current (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AEJxLPL_2F</a>)
-               and Spherical Elementary Current Systems (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AEJxLPS_2F</a>) methods
+              High-latitude ionospheric horizontal sheet current densities profiles calculated using
+              the Line Current (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AEJxLPL_2F</a>)
+              and Spherical Elementary Current Systems (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AEJxLPS_2F</a>) methods
             </li>
             <li style="list-style-type: circle;">
-               High-latitude ionospheric horizontal sheet current boundaries and peaks locations calculated using
-               the Line Current (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AEJxPBL_2F</a>)
-               and Spherical Elementary Current Systems (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AEJxPBS_2F</a>) methods
+              High-latitude ionospheric horizontal sheet current boundaries and peaks locations calculated using
+              the Line Current (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AEJxPBL_2F</a>)
+              and Spherical Elementary Current Systems (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AEJxPBS_2F</a>) methods
             </li>
             <li style="list-style-type: circle;">
-               Aurora oval boundaries derived from the Field-Aligned Currents data
-               (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AOBxFAC_2F</a>)
+              Aurora oval boundaries derived from the Field-Aligned Currents data
+              (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf">AOBxFAC_2F</a>)
             </li>
             <li style="list-style-type: circle;">
-               Mid-latitude ionospheric trough (MIT) boundaries and minima based on the Langmuir probe electron density and temperature measurements
-               (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf">MITx_LP_2F</a>),
-               accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
+              Mid-latitude ionospheric trough (MIT) boundaries and minima based on the Langmuir probe electron density and temperature measurements
+              (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf">MITx_LP_2F</a>),
+              accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
             </li>
             <li style="list-style-type: circle;">
-               Mid-latitude ionospheric trough (MIT) boundaries and minima derived from the GPS TEC estimate
-               (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf">MITxTEC_2F</a>),
-               accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
+              Mid-latitude ionospheric trough (MIT) boundaries and minima derived from the GPS TEC estimate
+              (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf">MITxTEC_2F</a>),
+              accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
             </li>
             <li style="list-style-type: circle;">
-               Midnight plasma-pause index (PPI) and the associated SSFAC boundaries
-               (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf">PPIxFAC_2F</a>),
-               accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
+              Midnight plasma-pause index (PPI) and the associated SSFAC boundaries
+              (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf">PPIxFAC_2F</a>),
+              accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
             </li>
             <li style="list-style-type: circle;">
-               Swarm spacecrafts' positions (<a target="_blank" href="https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products">MODx_SC_1B</a>)
+              Thermal ion imager cross track flow data at 2&nbsp;Hz and 16&nbsp;Hz (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf">TIIx_TCT02 and TIIx_TCT06</a>)
+              accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
+            </li>
+            <li style="list-style-type: circle;">
+              Thermal ion imager ion temperature estimates (<a target="_blank" href="https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_">TIIxTIE</a>)
+              accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
+            </li>
+            <li style="list-style-type: circle;">
+              Swarm spacecrafts' positions (<a target="_blank" href="https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products">MODx_SC_1B</a>)
+              accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
             </li>
           </ul>
 
@@ -484,10 +493,10 @@
           <p>The following models of the Earth's magnetic field and its components (core, crust, lithospheric, magnetospheric, and ionospheric magnetic field) are available</p>
           <ul>
             <li style="list-style-type: circle;">
-              The 13th generation of the International Geomagnetic Reference Field (<a target="_blank" href="https://earth-planets-space.springeropen.com/articles/10.1186/s40623-020-01288-x">IGRF 13</a>) released in December 2019 by the International Association of Geomagnetism and Aeronomy
+              13th generation of the International Geomagnetic Reference Field (<a target="_blank" href="https://earth-planets-space.springeropen.com/articles/10.1186/s40623-020-01288-x">IGRF 13</a>) released in December 2019 by the International Association of Geomagnetism and Aeronomy
             </li>
             <li style="list-style-type: circle;">
-              The CHAOS-7 high resolution geomagnetic field model derived from Swarm, CHAMP, Ørsted, SAC-C and Cryosat satellite magnetic data along with ground observatory data (<a target="_blank" href="https://spacecenter.dk/files/magnetic-models/CHAOS-7/">CHAOS-7</a>)
+              The latest version of the CHAOS high resolution geomagnetic field model derived from Swarm, CHAMP, Ørsted, SAC-C and CryoSat-2 satellite magnetic data along with ground observatory data (<a target="_blank" href="https://spacecenter.dk/files/magnetic-models/CHAOS-7/">CHAOS-7</a>)
             </li>
             <li style="list-style-type: circle;">
               Spherical harmonic model of the main (core) field and its temporal variation (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MCO_SHA_2C">MCO_SHA_2C</a>)
@@ -502,10 +511,10 @@
               Spherical harmonic model of the lithospheric field (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MLI_SHA_2D">MLI_SHA_2D</a>)
             </li>
             <li style="list-style-type: circle;">
-              The LCS-1 high-resolution lithospheric field model, derived from CHAMP and Swarm satellite observations (<a target="_blank" href="https://spacecenter.dk/files/magnetic-models/LCS-1/">LCS-1</a>)
+              LCS-1 high-resolution lithospheric field model, derived from CHAMP and Swarm satellite observations (<a target="_blank" href="https://spacecenter.dk/files/magnetic-models/LCS-1/">LCS-1</a>)
             </li>
             <li style="list-style-type: circle;">
-              The MF7 crustal field model, derived from CHAMP satellite observations (<a target="_blank" href="https://geomag.us/models/MF7.html">MF7</a>)
+              MF7 crustal field model, derived from CHAMP satellite observations (<a target="_blank" href="https://geomag.us/models/MF7.html">MF7</a>)
             </li>
             <li style="list-style-type: circle;">
               Spherical harmonic model of the lithospheric field (<a target="_blank" href="https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#MLI_SHA_2E">MLI_SHA_2E</a>)
@@ -517,7 +526,7 @@
               Spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MMA_SHA_2F">MMA_SHA_2F primary and secondary field</a>)
             </li>
             <li style="list-style-type: circle;">
-              The <a target="_blank" href="https://spacecenter.dk/files/magnetic-models/CHAOS-7/">CHAOS</a> spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (CHAOS-MMA primary and secondary field)
+              <a target="_blank" href="https://spacecenter.dk/files/magnetic-models/CHAOS-7/">CHAOS</a> spherical harmonic model of the large-scale magnetospheric field and its Earth-induced counterpart (CHAOS-MMA primary and secondary field)
             </li>
             <li style="list-style-type: circle;">
               Spherical harmonic model of the daily geomagnetic variation at middle latitudes (Sq) and low latitudes (EEJ) (<a target="_blank" href="https://earth.esa.int/web/guest/missions/esa-eo-missions/swarm/data-handbook/level-2-product-definitions#MIO_SHA_2C">MIO_SHA_2C primary and secondary field</a>)
@@ -535,10 +544,10 @@
           <p>The global context of space weather is provided in form of:</p>
           <ul>
             <li style="list-style-type: circle;">
-              The Disturbance storm time index (<a target="_blank" href="https://en.wikipedia.org/wiki/Disturbance_storm_time_index">Dst Index</a>) and its rate of change.
+              Disturbance storm time index (<a target="_blank" href="https://en.wikipedia.org/wiki/Disturbance_storm_time_index">Dst Index</a>) and its rate of change.
             </li>
             <li style="list-style-type: circle;">
-              The disturbances in the horizontal component of the Earth's magnetic field (<a target="_blank" href="https://en.wikipedia.org/wiki/K-index">planetary Kp Index</a>)
+              Disturbances in the horizontal component of the Earth's magnetic field (<a target="_blank" href="https://en.wikipedia.org/wiki/K-index">planetary Kp Index</a>)
             </li>
             <li style="list-style-type: circle;">
               Observed daily measure of the solar radio flux per unit frequency at a wavelength of 10.7 cm
