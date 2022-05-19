@@ -28,7 +28,7 @@
 
 import sys
 from logging import (
-    getLogger, DEBUG, INFO, WARNING, ERROR,
+    getLogger, DEBUG, INFO, WARNING,
     Formatter, StreamHandler,
 )
 from datetime import datetime, time
@@ -36,13 +36,7 @@ from django.core.management.base import BaseCommand
 from django.utils.dateparse import parse_date, parse_datetime
 from vires.time_util import naive_to_utc, parse_duration
 
-
-_LABEL2LOGLEVEL = {
-    "INFO": INFO,
-    "WARNING": WARNING,
-    "ERROR": ERROR,
-}
-
+LOGGER_NAME = "vires"
 
 JSON_OPTS = {
     'sort_keys': False,
@@ -126,11 +120,11 @@ class Supercommand(ConsoleOutput, BaseCommand):
     def set_stream_handler(self, verbosity):
         """ Set command stream handler for the given verbosity level. """
         if verbosity == 0:
-            self._add_stream_handler(getLogger('vires'), WARNING)
+            self._add_stream_handler(getLogger(LOGGER_NAME), WARNING)
         elif verbosity == 1:
-            self._add_stream_handler(getLogger('vires'), INFO)
+            self._add_stream_handler(getLogger(LOGGER_NAME), INFO)
         elif verbosity == 2:
-            self._add_stream_handler(getLogger('vires'), DEBUG)
+            self._add_stream_handler(getLogger(LOGGER_NAME), DEBUG)
         elif verbosity == 3:
             self._add_stream_handler(getLogger(), DEBUG)
 

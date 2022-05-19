@@ -267,6 +267,8 @@ class Product(Model):
 
 
 class ProductLocation(Model):
+    # View DB table not managed by Django. See the migrations for more details.
+
     id = BigIntegerField(primary_key=True)
     product = ForeignKey(Product, related_name='+', **DO_NOTHING)
     location = CharField(max_length=1024)

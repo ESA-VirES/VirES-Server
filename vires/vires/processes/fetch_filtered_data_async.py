@@ -73,6 +73,7 @@ from vires.processes.util.models import (
     IndexKpFromKp10,
     Identity,
     BnecToF,
+    Geodetic2GeocentricCoordinates,
 )
 from vires.processes.util.filters import (
     MinStepSampler, GroupingSampler, ExtraSampler,
@@ -199,7 +200,7 @@ class FetchFilteredDataAsync(WPSProcess):
         """ Callback executed when an asynchronous Job gets started. """
         try:
             job = update_job(
-                get_job_by_id(context.identifier),
+                Job.objects.get(identifier=context.identifier),
                 status=Job.STARTED,
                 started=datetime.now(utc),
             )
@@ -217,7 +218,7 @@ class FetchFilteredDataAsync(WPSProcess):
         """ Callback executed when an asynchronous Job finishes. """
         try:
             job = update_job(
-                get_job_by_id(context.identifier),
+                Job.objects.get(identifier=context.identifier),
                 status=Job.SUCCEEDED,
                 stopped=datetime.now(utc),
             )
@@ -235,7 +236,7 @@ class FetchFilteredDataAsync(WPSProcess):
         """ Callback executed when an asynchronous Job fails. """
         try:
             job = update_job(
-                get_job_by_id(context.identifier),
+                Job.objects.get(identifier=context.identifier),
                 status=Job.FAILED,
                 stopped=datetime.now(utc),
             )
@@ -247,6 +248,15 @@ class FetchFilteredDataAsync(WPSProcess):
             context.logger.warning(
                 "Failed to update the job status! The job does not exist!"
             )
+
+    @staticmethod
+    def discard(context):
+        """ Asynchronous process removal. """
+        try:
+            Job.objects.get(identifier=context.identifier).delete()
+            context.logger.info("Job removed.")
+        except Job.DoesNotExist:
+            pass
 
     def initialize(self, context, inputs, outputs, parts):
         """ Asynchronous process initialization. """
@@ -274,14 +284,6 @@ class FetchFilteredDataAsync(WPSProcess):
             identifier=context.identifier,
             response_url=context.status_location,
         )
-
-    @staticmethod
-    def discard(context):
-        """ Asynchronous process removal. """
-        job = get_job_by_id(context.identifier, raise_exception=False)
-        if job:
-            job.delete()
-            context.logger.info("Job removed.")
 
     def execute(self, permissions, collection_ids, begin_time, end_time,
                 filters, sampling_step, requested_variables, model_ids, shc,
@@ -382,6 +384,7 @@ class FetchFilteredDataAsync(WPSProcess):
             model_subsol = SubSolarPoint()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
+            model_gd2gc = Geodetic2GeocentricCoordinates()
             copied_variables = [
                 Identity("MLT_QD", "MLT"),
                 Identity("Latitude_QD", "QDLat"),
@@ -470,7 +473,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
                 # models
                 aux_models = chain((
-                    model_bnec_intensity,
+                    model_gd2gc, model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals, copied_variables)
@@ -756,16 +759,6 @@ class FetchFilteredDataAsync(WPSProcess):
                 *context.publish(source_products_filename), **source_products
             ),
         }
-
-
-def get_job_by_id(identifier, raise_exception=True):
-    """ Get job for the given job identifier. """
-    try:
-        return Job.objects.get(identifier=identifier)
-    except Job.DoesNotExist:
-        if raise_exception:
-            raise
-    return None
 
 
 def count_active_jobs(user):
