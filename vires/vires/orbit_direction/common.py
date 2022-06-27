@@ -26,7 +26,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=
 
-from numpy import int8, timedelta64
+from numpy import int8
 
 # point type values
 FLAG_START = int8(1)
@@ -37,9 +37,3 @@ FLAG_MIDDLE = int8(0)
 FLAG_ASCENDING = int8(1)
 FLAG_DESCENDING = int8(-1)
 FLAG_UNDEFINED = int8(0)
-
-# gap detection threshold
-GAP_THRESHOLD = timedelta64(15000, 'ms')
-
-# nominal sampling interval
-NOMINAL_SAMPLING = timedelta64(1000, 'ms')

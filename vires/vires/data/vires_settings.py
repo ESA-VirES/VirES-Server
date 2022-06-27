@@ -25,6 +25,8 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+from datetime import timedelta
+
 DEFAULT_MISSION = "Swarm"
 
 AUX_DB_DST = "aux_dst.cdf"
@@ -111,3 +113,21 @@ ORBIT_CONJUNCTION_FILE = {
 }
 
 SPACECRAFTS = list(ORBIT_COUNTER_FILE)
+
+# thresholds used by the orbit direction extraction
+
+OD_THRESHOLDS_DEFAULT = {
+    "max_product_gap": timedelta(seconds=15.5),
+    "min_product_gap": timedelta(seconds=0.5),
+    "nominal_sampling": timedelta(seconds=1),
+    "gap_threshold": timedelta(seconds=15),
+}
+
+OD_THRESHOLDS = {
+    ("GOCE", None): {
+        "max_product_gap": timedelta(seconds=72),
+        "min_product_gap": timedelta(seconds=8),
+        "nominal_sampling": timedelta(seconds=16),
+        "gap_threshold": timedelta(seconds=64),
+    },
+}

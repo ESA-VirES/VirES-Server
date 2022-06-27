@@ -28,19 +28,16 @@
 
 from numpy import array, concatenate
 from .util import OutputData
-from .common import (
-    FLAG_ASCENDING, FLAG_DESCENDING,
-    GAP_THRESHOLD, NOMINAL_SAMPLING,
-)
+from .common import FLAG_ASCENDING, FLAG_DESCENDING
 
 FLAGS_ORBIT_DIRECTION = array([FLAG_DESCENDING, FLAG_ASCENDING], 'int8')
 
 
-def extract_orbit_directions(times, lats):
+def extract_orbit_directions(times, lats, nominal_sampling, gap_threshold):
     """ Extract orbit directions lookup table from the given data. """
 
     def _process_data(times_all, lats_all):
-        for segment in get_continuous_segments(times_all, GAP_THRESHOLD):
+        for segment in get_continuous_segments(times_all, gap_threshold):
             times, lats = times_all[segment], lats_all[segment]
             if times.size < 2:
                 continue
@@ -53,7 +50,7 @@ def extract_orbit_directions(times, lats):
             yield OutputData.get_body(
                 times_extr, FLAGS_ORBIT_DIRECTION[type_extr.astype('int')]
             )
-            yield OutputData.get_end(times[-1] + NOMINAL_SAMPLING)
+            yield OutputData.get_end(times[-1] + nominal_sampling)
 
     return OutputData.join(*list(_process_data(times, lats)))
 

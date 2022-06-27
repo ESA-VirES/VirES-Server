@@ -36,7 +36,6 @@ from eoxmagmod import mjd2000_to_decimal_year, eval_qdlatlon
 from ..cdf_util import cdf_open
 from ..cdf_data_reader import read_cdf_data
 from .table import OrbitDirectionTable
-from .common import NOMINAL_SAMPLING
 from .util import InputData
 from .extract import extract_orbit_directions
 
@@ -58,8 +57,16 @@ class QDOrbitDirectionTable(OrbitDirectionTable):
 class OrbitDirectionTables():
     """ Single spacecraft orbit direction lookup tables class. """
 
-    def __init__(self, geo_table_filename, mag_table_filename, reset=False,
-                 logger=None):
+    def __init__(self, geo_table_filename, mag_table_filename,
+                 nominal_sampling, gap_threshold,
+                 reset=False, logger=None, **_):
+
+        self.nominal_sampling = timedelta_to_timedelta64ms(nominal_sampling)
+        self.gap_threshold = timedelta_to_timedelta64ms(gap_threshold)
+
+        print(f"nominal_sampling = {self.nominal_sampling}")
+        print(f"gap_threshold = {self.gap_threshold}")
+
         self.logger = logger or getLogger(__name__)
         self._geo_table = GeoOrbitDirectionTable(
             geo_table_filename, reset, logger=self.logger
@@ -106,12 +113,20 @@ class OrbitDirectionTables():
         )
 
         self._geo_table.update(
-            extract_orbit_directions(*get_times_and_latitudes(*data)),
+            extract_orbit_directions(
+                *get_times_and_latitudes(*data),
+                nominal_sampling=self.nominal_sampling,
+                gap_threshold=self.gap_threshold,
+            ),
             product_id, start_time, end_time, margin_before, margin_after,
         )
 
         self._mag_table.update(
-            extract_orbit_directions(*get_times_and_qd_latitudes(*data)),
+            extract_orbit_directions(
+                *get_times_and_qd_latitudes(*data),
+                nominal_sampling=self.nominal_sampling,
+                gap_threshold=self.gap_threshold,
+            ),
             product_id, start_time, end_time, margin_before, margin_after,
         )
 
@@ -123,7 +138,7 @@ class OrbitDirectionTables():
         body = self._load_data_from_product(data_file)
         start_time, end_time = body.times[[0, -1]]
         margin_before = timedelta64(0, 'ms')
-        margin_after = NOMINAL_SAMPLING
+        margin_after = self.nominal_sampling
 
         data_items = []
 
@@ -141,7 +156,7 @@ class OrbitDirectionTables():
                 data_file_after, slice(None, INPUT_MARGIN)
             )
             margin_after = max(
-                NOMINAL_SAMPLING, tail.times[:TRIM_MARGIN][-1] - end_time
+                margin_after, tail.times[:TRIM_MARGIN][-1] - end_time
             )
             data_items.append(tail)
 
@@ -210,3 +225,8 @@ def datetime64_to_mjd2000(times):
     return MS2DAYS*(
         asarray(times, 'M8[ms]') - datetime64('2000-01-01', 'ms')
     ).astype('float64')
+
+
+def timedelta_to_timedelta64ms(td_obj):
+    """ Convert datetime.timedelta to numpy.timedelta64('ms'). """
+    return timedelta64(int(td_obj.total_seconds() * 1e3), "ms")

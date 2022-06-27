@@ -125,12 +125,12 @@ class OutputData(namedtuple("OutputData", ["times", "odirs", "flags"])):
                     right_closed=True, margin=0):
         """ Get temporal subset of the data. """
         return self[_sorted_range(
-           data= self.times,
-           start=start,
-           end=end,
-           left_closed=left_closed,
-           right_closed=right_closed,
-           margin=margin,
+            data=self.times,
+            start=start,
+            end=end,
+            left_closed=left_closed,
+            right_closed=right_closed,
+            margin=margin,
         )]
 
     def dump(self, prefix=""):
@@ -140,7 +140,7 @@ class OutputData(namedtuple("OutputData", ["times", "odirs", "flags"])):
 
 
 def _sorted_range(data, start, end, left_closed=True, right_closed=True,
-                 margin=0):
+                  margin=0):
     """ Get a slice of a sorted data array matched by the given interval. """
     idx_start, idx_end = None, None
 
