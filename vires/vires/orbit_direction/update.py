@@ -64,9 +64,6 @@ class OrbitDirectionTables():
         self.nominal_sampling = timedelta_to_timedelta64ms(nominal_sampling)
         self.gap_threshold = timedelta_to_timedelta64ms(gap_threshold)
 
-        print(f"nominal_sampling = {self.nominal_sampling}")
-        print(f"gap_threshold = {self.gap_threshold}")
-
         self.logger = logger or getLogger(__name__)
         self._geo_table = GeoOrbitDirectionTable(
             geo_table_filename, reset, logger=self.logger
