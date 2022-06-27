@@ -1,6 +1,7 @@
 #-------------------------------------------------------------------------------
 #
-# GRACE and GRACE-FO orbit counter files handling.
+# Handling of the GFZ orbit counter file format used for GOCE, GRACE, and
+# GRACE-FO missions.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -32,19 +33,19 @@ from numpy import zeros
 from .cdf_util import cdf_open, cdf_rawtime_to_mjd2000
 
 
-def update_grace_orbit_counter_file(src_file, dst_file):
+def update_gfz_orbit_counter_file(src_file, dst_file):
     """ Update GRACE and GRACE-FO orbit counter file. """
     if isinstance(src_file, str):
-        _update_grace_orbit_counter_file(src_file, dst_file)
+        _update_gfz_orbit_counter_file(src_file, dst_file)
     else:
         with NamedTemporaryFile() as ftemp:
-            
+
             copyfileobj(src_file, ftemp, 1024*1024)
             ftemp.flush()
-            _update_grace_orbit_counter_file(ftemp.name, dst_file)
+            _update_gfz_orbit_counter_file(ftemp.name, dst_file)
 
 
-def _update_grace_orbit_counter_file(src_file, dst_file):
+def _update_gfz_orbit_counter_file(src_file, dst_file):
 
     with cdf_open(src_file) as cdf_src:
         with cdf_open(dst_file, "w") as cdf_dst:

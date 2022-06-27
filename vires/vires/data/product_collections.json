@@ -600,6 +600,14 @@
         "spacecraft": "2"
     },
     {
+        "name": "GO_MAG_ACAL_CORR",
+        "description": "GOCE platform magnetometer measurements",
+        "productType": "GO_MAG_ACAL",
+        "nominalSampling": "PT16S",
+        "calculateOrbitDirection": true,
+        "mission": "GOCE"
+    },
+    {
         "name": "CS_OPER_MAG",
         "description": "Cryosat-2 Platform magnetometer measurements",
         "productType": "CS_MAG",
