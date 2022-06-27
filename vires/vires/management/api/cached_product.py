@@ -29,8 +29,9 @@ from logging import getLogger
 from vires.aux_kp import update_kp
 from vires.aux_dst import update_dst
 from vires.aux_f107 import update_aux_f107_2_
-from vires.orbit_counter import update_orbit_counter_file
-from vires.orbit_counter_gfz import update_gfz_orbit_counter_file
+from vires.orbit_counter import (
+    update_orbit_counter_file, update_gfz_orbit_counter_file,
+)
 from vires.model_shc import merge_files_to_zip, filter_mco_sha_2x
 from vires.model_mma import (
     merge_mma_sha_2f, filter_mma_sha_2f, merge_mma_sha_2c, filter_mma_sha_2c,

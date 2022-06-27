@@ -30,7 +30,7 @@ from os.path import basename, splitext
 from tempfile import NamedTemporaryFile
 from shutil import copyfileobj
 from numpy import zeros
-from .cdf_util import cdf_open, cdf_rawtime_to_mjd2000
+from ..cdf_util import cdf_open, cdf_rawtime_to_mjd2000
 
 
 def update_gfz_orbit_counter_file(src_file, dst_file):
