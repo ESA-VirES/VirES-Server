@@ -26,6 +26,8 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments, too-few-public-methods
 
+from logging import getLogger
+from numpy import isnan
 from numpy import array, concatenate
 from .util import OutputData
 from .common import FLAG_ASCENDING, FLAG_DESCENDING
@@ -35,6 +37,12 @@ FLAGS_ORBIT_DIRECTION = array([FLAG_DESCENDING, FLAG_ASCENDING], 'int8')
 
 def extract_orbit_directions(times, lats, nominal_sampling, gap_threshold):
     """ Extract orbit directions lookup table from the given data. """
+
+    def _strip_nan_lats(times, lats):
+        mask = ~isnan(lats)
+        if not mask.all():
+            getLogger(__name__).warning("NaN value detected and skipped!")
+        return times[mask], lats[mask]
 
     def _process_data(times_all, lats_all):
         for segment in get_continuous_segments(times_all, gap_threshold):
@@ -52,6 +60,7 @@ def extract_orbit_directions(times, lats, nominal_sampling, gap_threshold):
             )
             yield OutputData.get_end(times[-1] + nominal_sampling)
 
+    times, lats = _strip_nan_lats(times, lats)
     return OutputData.join(*list(_process_data(times, lats)))
 
 
@@ -83,7 +92,7 @@ def low_pass_filter(times, values):
 
 
 def find_inversion_points(times, lats):
-    """ Find points of maxi./min. latitudes were the orbit direction gets
+    """ Find points of max./min. latitudes were the orbit direction gets
     inverted.
     """
     index = lookup_extrema(lats)
