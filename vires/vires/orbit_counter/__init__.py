@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Orbit direction - common settings
+# Swarm orbit number file handling.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2017 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=
 
-from numpy import int8
-
-# point type values
-FLAG_START = int8(1)
-FLAG_END = int8(-1)
-FLAG_MIDDLE = int8(0)
-
-# orbit direction values
-FLAG_ASCENDING = int8(1)
-FLAG_DESCENDING = int8(-1)
-FLAG_UNDEFINED = int8(0)
+from .swarm import update_orbit_counter_file
+from .gfz import update_gfz_orbit_counter_file
+from .reader import (
+    get_orbit_timerange, OrbitCounterReader, get_max_orbit_number
+)

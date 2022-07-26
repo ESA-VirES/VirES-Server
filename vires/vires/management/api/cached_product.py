@@ -29,8 +29,9 @@ from logging import getLogger
 from vires.aux_kp import update_kp
 from vires.aux_dst import update_dst
 from vires.aux_f107 import update_aux_f107_2_
-from vires.orbit_counter import update_orbit_counter_file
-from vires.orbit_counter_grace import update_grace_orbit_counter_file
+from vires.orbit_counter import (
+    update_orbit_counter_file, update_gfz_orbit_counter_file,
+)
 from vires.model_shc import merge_files_to_zip, filter_mco_sha_2x
 from vires.model_mma import (
     merge_mma_sha_2f, filter_mma_sha_2f, merge_mma_sha_2c, filter_mma_sha_2c,
@@ -149,7 +150,7 @@ def get_cached_product_configuration():
             _configure_cached_product(
                 "GR%s_ORBCNT" % spacecraft,
                 label="GRACE-%s orbit counter" % spacecraft,
-                updater=simple_cached_product_updater(update_grace_orbit_counter_file),
+                updater=simple_cached_product_updater(update_gfz_orbit_counter_file),
                 tmp_extension=".tmp.cdf"
             )
             cached_products.pop("GR%s_ODBGEO" % spacecraft)
@@ -158,7 +159,7 @@ def get_cached_product_configuration():
             _configure_cached_product(
                 "GF%s_ORBCNT" % spacecraft,
                 label="GRACE-FO-%s orbit counter" % spacecraft,
-                updater=simple_cached_product_updater(update_grace_orbit_counter_file),
+                updater=simple_cached_product_updater(update_gfz_orbit_counter_file),
                 tmp_extension=".tmp.cdf"
             )
             cached_products.pop("GF%s_ODBGEO" % spacecraft)
@@ -172,6 +173,15 @@ def get_cached_product_configuration():
             )
             cached_products.pop("CS2_ODBGEO")
             cached_products.pop("CS2_ODBMAG")
+        elif mission == "GOCE":
+            _configure_cached_product(
+                "GO_ORBCNT",
+                label="GOCE orbit counter",
+                updater=simple_cached_product_updater(update_gfz_orbit_counter_file),
+                tmp_extension=".tmp.cdf"
+            )
+            cached_products.pop("GO_ODBGEO")
+            cached_products.pop("GO_ODBMAG")
 
     return cached_products
 

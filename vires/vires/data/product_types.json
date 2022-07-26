@@ -3222,6 +3222,160 @@
         }
     },
     {
+        "name": "GO_MAG_ACAL",
+        "description": "GOCE platform magnetometer measurements.",
+        "resourceUrl": null,
+        "citation": null,
+        "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
+        "defaultDataset": "MDR_MAG_ACAL",
+        "_order": 102,
+        "datasets": {
+            "MDR_MAG_ACAL": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_MAG": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_SC_NEC": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: SC ... NEC",
+                        "UNITS": "-"
+                    }
+                },
+                "q_MAG_SC": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: MAG ... SC",
+                        "UNITS": "-"
+                    }
+                },
+                "dB_MTQ_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to magnetorquer, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_XI_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 2nd order non-linearities, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_NY_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 3rd order non-linearities, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BT_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of offsets, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_ST_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of scale factors, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_SA_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to solar array currents, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BAT_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to battery currents, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_HK_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to housekeeping data, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BLOCK_CORR": {
+                    "dataType": "float64",
+                    "dimension": [6],
+                    "attributes": {
+                        "DESCRIPTION": "Block correction for MAG2 and MAG3, MAG frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_FLAG": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "CS_MAG",
         "description": "Cryosat-2 Platform magnetometer measurements",
         "resourceUrl": "https://doi.org/10.1186/s40623-020-01171-9",
