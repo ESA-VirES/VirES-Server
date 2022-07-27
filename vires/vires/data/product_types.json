@@ -3224,8 +3224,8 @@
     {
         "name": "GO_MAG_ACAL",
         "description": "GOCE platform magnetometer measurements.",
-        "resourceUrl": null,
-        "citation": null,
+        "resourceUrl": "https://doi.org/10.1002/essoar.10511006.1",
+        "citation": "https://doi.org/10.5880/GFZ.2.3.2022.001",
         "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
         "defaultDataset": "MDR_MAG_ACAL",
         "_order": 102,
