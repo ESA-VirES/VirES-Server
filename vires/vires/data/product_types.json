@@ -487,7 +487,7 @@
                 },
                 "Latitude_GD": {
                     "source": "Latitude",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "WGS84 geodetic latitude",
                         "UNITS": "deg"
@@ -495,7 +495,7 @@
                 },
                 "Longitude_GD": {
                     "source": "Longitude",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "WGS84 geodetic longitude",
                         "UNITS": "deg"
@@ -503,7 +503,7 @@
                 },
                 "Height_GD": {
                     "source": "Height",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Height above WGS84 reference ellipsoid",
                         "UNITS": "m"
@@ -511,7 +511,7 @@
                 },
                 "Radius_GC": {
                     "source": "Radius",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric radius",
                         "UNITS": "m"
@@ -519,7 +519,7 @@
                 },
                 "Latitude_QD": {
                     "source": "QDLatitude",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Quasi-dipole latitude",
                         "UNITS": "deg"
@@ -527,35 +527,35 @@
                 },
                 "MLT_QD": {
                     "source": "MLT",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Magnetic local time",
                         "UNITS": "hour"
                     }
                 },
                 "Tn_msis": {
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Neutral temperature from NRLMSISE00 model",
                         "UNITS": "K"
                     }
                 },
                 "Te_adj_LP": {
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Corrected Swarm LP electron temperature",
                         "UNITS": "K"
                     }
                 },
                 "Ti_meas_drift": {
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Ion temperature estimated using Swarm TII drift at high latitudes",
                         "UNITS": "K"
                     }
                 },
                 "Ti_model_drift": {
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Ion temperature estimated using Weimer 2005 model drifts at high latitude",
                         "UNITS": "K"
