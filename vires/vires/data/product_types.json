@@ -472,6 +472,184 @@
         }
     },
     {
+        "name": "SW_EFIxIDM_2_",
+        "defaultDataset": "EFI_IDM",
+        "datasets": {
+            "EFI_IDM": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "Latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "Longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "Height",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Height above WGS84 reference ellipsoid",
+                        "UNITS": "m"
+                    }
+                },
+                "Radius_GC": {
+                    "source": "Radius",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time",
+                        "UNITS": "hour"
+                    }
+                },
+                "V_sat_nec": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Satellite velocity in north, east, centre (NEC) reference frame.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "M_i_eff": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass.",
+                        "UNITS": "a.m.u."
+                    }
+                },
+                "M_i_eff_err": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass uncertainty.",
+                        "UNITS": "a.m.u."
+                    }
+                },
+                "M_i_eff_Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass validity flag.",
+                        "UNITS": "-"
+                    }
+                },
+                "M_i_eff_tbt_model": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass from Truhlik et al. (2015) topside empirical model.",
+                        "UNITS": "a.m.u."
+                    }
+                },
+                "V_i": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "V_i_err": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift uncertainty.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "V_i_Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift validity flag.",
+                        "UNITS": "-"
+                    }
+                },
+                "V_i_raw": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift without high-latitude detrending.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "N_i": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion density.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "N_i_err": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion density unertainty.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "N_i_Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion density validity flag.",
+                        "UNITS": "-"
+                    }
+                },
+                "A_fp": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Modified-OML EFI faceplate area.",
+                        "UNITS": "m^2"
+                    }
+                },
+                "R_p": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Modified-OML Langmuir spherical probe radius.",
+                        "UNITS": "m"
+                    }
+                },
+                "T_e": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Electron temperature.",
+                        "UNITS": "K"
+                    }
+                },
+                "Phi_sc": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Spacecraft floating potential with respect to plasma potential far from satellite.",
+                        "UNITS": "V"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_EFIxTIE_2_",
         "defaultDataset": "EFI_TIE",
         "datasets": {

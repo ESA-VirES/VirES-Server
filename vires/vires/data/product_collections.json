@@ -101,6 +101,27 @@
         "requiredPermission": "swarm"
     },
     {
+        "name": "SW_PREL_EFIAIDM_2_",
+        "nominalSampling": "PT0.5S",
+        "productType": "SW_EFIxIDM_2_",
+        "spacecraft": "A",
+        "requiredPermission": "swarm"
+    },
+    {
+        "name": "SW_PREL_EFIBIDM_2_",
+        "nominalSampling": "PT0.5S",
+        "productType": "SW_EFIxIDM_2_",
+        "spacecraft": "B",
+        "requiredPermission": "swarm"
+    },
+    {
+        "name": "SW_PREL_EFICIDM_2_",
+        "nominalSampling": "PT0.5S",
+        "productType": "SW_EFIxIDM_2_",
+        "spacecraft": "C",
+        "requiredPermission": "swarm"
+    },
+    {
         "name": "SW_OPER_EFIATIE_2_",
         "nominalSampling": "PT0.5S",
         "productType": "SW_EFIxTIE_2_",
