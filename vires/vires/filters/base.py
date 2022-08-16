@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Data filters - bounding box filter
+#  Data filters - base filter class
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,30 +24,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments
-
-from .base import Filter
-from .range import ScalarRangeFilter
 
 
-class BoundingBoxFilter(Filter):
-    """ Bounding box filter. """
+class Filter():
+    """ Base filter class. """
 
-    def __init__(self, variables, bbox):
-        self._variables = tuple(variables)
-        self.filters = [
-            ScalarRangeFilter(variable, vmin, vmax)
-            for variable, (vmin, vmax) in zip(variables, zip(bbox[0], bbox[1]))
-        ]
+    @property
+    def key(self):
+        """ A key uniquely identifying the filter instance. """
+        raise NotImplementedError
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def __eq__(self, other):
+        return self.key == other.key
 
     @property
     def required_variables(self):
-        return self._variables
+        """ Get a list of the dataset variables required by this filter.
+        """
+        raise NotImplementedError
 
     def filter(self, dataset, index=None):
-        for filter_ in self.filters:
-            index = filter_.filter(dataset, index)
-        return index
+        """ Filter dataset. Optionally a dataset subset index can be provided.
+        A new array of indices identifying the filtered data subset is returned.
+        """
+        raise NotImplementedError
 
     def __str__(self):
-        return ";".join(str(filter_) for filter_ in self.filters)
+        raise NotImplementedError

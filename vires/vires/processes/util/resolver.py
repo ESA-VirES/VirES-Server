@@ -30,7 +30,7 @@
 from collections import OrderedDict, defaultdict
 from itertools import chain
 from vires.util import unique
-from .filters import RejectAll
+from vires.filters import RejectAll
 from .time_series import TimeSeries
 from .models import Model
 

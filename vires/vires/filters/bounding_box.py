@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Data filters - base filter class
+#  Data filters - bounding box filter
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2022 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,22 +24,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments
+
+from .boolean_operations import Conjunction
+from .simple_predicates import LessThanOrEqualFilter, GreaterThanOrEqualFilter
 
 
-class Filter():
-    """ Base filter class. """
+class BoundingBoxFilter(Conjunction):
+    """ Bounding box filter. """
 
-    @property
-    def required_variables(self):
-        """ Get a list of the dataset variables required by this filter.
-        """
-        raise NotImplementedError
-
-    def filter(self, dataset, index=None):
-        """ Filter dataset. Optionally a dataset subset index can be provided.
-        A new array of indices identifying the filtered data subset is returned.
-        """
-        raise NotImplementedError
-
-    def __str__(self):
-        raise NotImplementedError
+    def __init__(self, variable1, variable2, bbox):
+        (min_value1, min_value2), (max_value1, max_value2) = bbox
+        super().__init__(
+            GreaterThanOrEqualFilter(variable1, min_value1),
+            LessThanOrEqualFilter(variable1, max_value1),
+            GreaterThanOrEqualFilter(variable2, min_value2),
+            LessThanOrEqualFilter(variable2, max_value2),
+        )

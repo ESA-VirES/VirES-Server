@@ -36,6 +36,14 @@ class MinStepSampler(Filter):
     """ Filter class sub-sampling the dataset so that the distance
     between two neighbours is not shorter than the requested minimal step.
     """
+
+    @property
+    def key(self):
+        return (self.__class__, (self.variable, None), self.min_step, self.base_value)
+
+    def __str__(self):
+        return f"MinStepSampler({self.variable}, {self.min_step!r}, {self.base_value!r})"
+
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return 'min-step-sampler %s: %s' % (
@@ -76,16 +84,18 @@ class MinStepSampler(Filter):
         self.logger.debug("filtered size: %d", index.size)
         return index
 
-    def __str__(self):
-        return "%s: MinStepSampler(%r, %r)" % (
-            self.variable, self.min_step, self.base_value
-        )
-
 
 class GroupingSampler(Filter):
     """ Filter class sub-sampling the dataset so that the distance
     between two neighbour groups is not shorter than the requested minimal step.
     """
+    @property
+    def key(self):
+        return (self.__class__, (self.variable, None))
+
+    def __str__(self):
+        return f"GroupingSampler({self.variable})"
+
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             return 'grouping-sampler %s: %s' % (
@@ -119,12 +129,16 @@ class GroupingSampler(Filter):
         self.logger.debug("filtered size: %d", index.size)
         return res_index
 
-    def __str__(self):
-        return "%s: GroupingSampler()" % self.variable
-
 
 class ExtraSampler(Filter):
     """ Add extra samples to contain points of the second time-series. """
+
+    def __str__(self):
+        return f"ExtraSampler({self.variable}, {self.label})"
+
+    @property
+    def key(self):
+        return (self.__class__, (self.variable, None), self.label)
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -163,6 +177,3 @@ class ExtraSampler(Filter):
         return NearestNeighbour1DInterpolator(
             data, dataset[self.variable], gap_threshold, segment_neighbourhood
         ).index
-
-    def __str__(self):
-        return "%s: ExtraSampler(%s)" % (self.variable, self.label)
