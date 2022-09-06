@@ -838,14 +838,14 @@
                 "Viy": {
                     "dataType": "float32",
                     "attributes": {
-                        "DESCRIPTION": "Cross-track vertical ion drift from horizontal TII sensor in satellite-track coordinates.",
+                        "DESCRIPTION": "Cross-track horizontal ion drift from horizontal TII sensor in satellite-track coordinates.",
                         "UNITS": "m/s"
                     }
                 },
                 "Viy_error": {
                     "dataType": "float32",
                     "attributes": {
-                        "DESCRIPTION": "Random error estimate for cross-track vertical ion drift from horizontal TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "DESCRIPTION": "Random error estimate for cross-track horizontal ion drift from horizontal TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
                         "UNITS": "m/s"
                     }
                 },
