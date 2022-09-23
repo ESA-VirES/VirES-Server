@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Data filters - base filter class
+# Swarm orbit number file handling.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2017 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,21 +25,8 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-
-class Filter():
-    """ Base filter class. """
-
-    @property
-    def required_variables(self):
-        """ Get a list of the dataset variables required by this filter.
-        """
-        raise NotImplementedError
-
-    def filter(self, dataset, index=None):
-        """ Filter dataset. Optionally a dataset subset index can be provided.
-        A new array of indices identifying the filtered data subset is returned.
-        """
-        raise NotImplementedError
-
-    def __str__(self):
-        raise NotImplementedError
+from .swarm import update_orbit_counter_file
+from .gfz import update_gfz_orbit_counter_file
+from .reader import (
+    get_orbit_timerange, OrbitCounterReader, get_max_orbit_number
+)

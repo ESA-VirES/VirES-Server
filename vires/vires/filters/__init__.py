@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Data filters - bounding box filter
+#  Data filters
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -24,30 +24,43 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments
 
+from numpy import empty
 from .base import Filter
-from .range import ScalarRangeFilter
+from .exceptions import FilterError
+from .bounding_box import BoundingBoxFilter
+from .temporal_sampling import MinStepSampler, GroupingSampler, ExtraSampler
+from .boolean_operations import Negation, Conjunction, Disjunction
+from .simple_predicates import (
+    EqualFilter,
+    NotEqualFilter,
+    StringEqualFilter,
+    StringNotEqualFilter,
+    BitmaskEqualFilter,
+    BitmaskNotEqualFilter,
+    LessThanFilter,
+    GreaterThanFilter,
+    LessThanOrEqualFilter,
+    GreaterThanOrEqualFilter,
+    IsNanFilter,
+    IsNotNanFilter,
+)
 
 
-class BoundingBoxFilter(Filter):
-    """ Bounding box filter. """
+def format_filters(filters):
+    """ Convert list of filters to a string. """
+    return " AND ".join(str(filter_) for filter_ in filters)
 
-    def __init__(self, variables, bbox):
-        self._variables = tuple(variables)
-        self.filters = [
-            ScalarRangeFilter(variable, vmin, vmax)
-            for variable, (vmin, vmax) in zip(variables, zip(bbox[0], bbox[1]))
-        ]
+
+class RejectAll(Filter):
+    """ Filter rejecting all records. """
 
     @property
     def required_variables(self):
-        return self._variables
+        return ()
 
     def filter(self, dataset, index=None):
-        for filter_ in self.filters:
-            index = filter_.filter(dataset, index)
-        return index
+        return empty(0, dtype='int64')
 
     def __str__(self):
-        return ";".join(str(filter_) for filter_ in self.filters)
+        return "NONE"

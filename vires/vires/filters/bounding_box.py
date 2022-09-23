@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Data filters
+#  Data filters - bounding box filter
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2022 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,31 +24,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments
 
-from numpy import empty
-from .base import Filter
-from .range import ScalarRangeFilter, VectorComponentRangeFilter
-from .bounding_box import BoundingBoxFilter
-from .temporal_sampling import MinStepSampler, GroupingSampler, ExtraSampler
+from .boolean_operations import Conjunction
+from .simple_predicates import LessThanOrEqualFilter, GreaterThanOrEqualFilter
 
 
-def format_filters(filters):
-    """ Convert filters to a string. """
-    return "; ".join(
-        "%s: %g,%g" % (key, vmin, vmax)
-        for key, (vmin, vmax) in filters.items()
-    )
+class BoundingBoxFilter(Conjunction):
+    """ Bounding box filter. """
 
-
-class RejectAll(Filter):
-    """ Filter rejecting all records. """
-
-    @property
-    def required_variables(self):
-        return ()
-
-    def filter(self, dataset, index=None):
-        return empty(0, dtype='int64')
-
-    def __str__(self):
-        return "RejectAll()"
+    def __init__(self, variable1, variable2, bbox):
+        (min_value1, min_value2), (max_value1, max_value2) = bbox
+        super().__init__(
+            GreaterThanOrEqualFilter(variable1, min_value1),
+            LessThanOrEqualFilter(variable1, max_value1),
+            GreaterThanOrEqualFilter(variable2, min_value2),
+            LessThanOrEqualFilter(variable2, max_value2),
+        )

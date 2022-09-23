@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Data filters - common utilities
+#  Data filters - bounding box filter - test
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2022 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,14 +25,22 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from numpy import empty, concatenate, unique
+from unittest import TestCase, main
+from vires.filters import BoundingBoxFilter
+from vires.filters.tests.common import FilterTestMixIn
 
 
-def merge_indices(*indices):
-    """ Merge indices eliminating duplicate values. """
-    indices = [index for index in indices if index is not None]
-    if len(indices) > 1:
-        return unique(concatenate(indices))
-    if len(indices) == 1:
-        return indices[0]
-    return empty(0, dtype='int64')
+class TestBoundingBoxFilter(TestCase, FilterTestMixIn):
+    CLASS = BoundingBoxFilter
+    ARGS = ("Latitude", "Longitude", ((-45, -90), (+45, +90)))
+    REQUIRED_VARIABLES = ("Latitude", "Longitude")
+    DATA = {
+        "Latitude": [-90., -45., 0., +45., +90.],
+        "Longitude": [-180., -90, 0., +90., +180.],
+    }
+    STRING = "(Latitude >= -45 AND Latitude <= 45 AND Longitude >= -90 AND Longitude <= 90)"
+    RESULT = [1, 2, 3]
+
+
+if __name__ == "__main__":
+    main()

@@ -472,6 +472,184 @@
         }
     },
     {
+        "name": "SW_EFIxIDM_2_",
+        "defaultDataset": "EFI_IDM",
+        "datasets": {
+            "EFI_IDM": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "Latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "Longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "Height",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Height above WGS84 reference ellipsoid",
+                        "UNITS": "m"
+                    }
+                },
+                "Radius_GC": {
+                    "source": "Radius",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time",
+                        "UNITS": "hour"
+                    }
+                },
+                "V_sat_nec": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Satellite velocity in north, east, centre (NEC) reference frame.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "M_i_eff": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass.",
+                        "UNITS": "a.m.u."
+                    }
+                },
+                "M_i_eff_err": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass uncertainty.",
+                        "UNITS": "a.m.u."
+                    }
+                },
+                "M_i_eff_Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass validity flag.",
+                        "UNITS": "-"
+                    }
+                },
+                "M_i_eff_tbt_model": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass from Truhlik et al. (2015) topside empirical model.",
+                        "UNITS": "a.m.u."
+                    }
+                },
+                "V_i": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "V_i_err": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift uncertainty.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "V_i_Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift validity flag.",
+                        "UNITS": "-"
+                    }
+                },
+                "V_i_raw": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift without high-latitude detrending.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "N_i": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion density.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "N_i_err": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion density unertainty.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "N_i_Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion density validity flag.",
+                        "UNITS": "-"
+                    }
+                },
+                "A_fp": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Modified-OML EFI faceplate area.",
+                        "UNITS": "m^2"
+                    }
+                },
+                "R_p": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Modified-OML Langmuir spherical probe radius.",
+                        "UNITS": "m"
+                    }
+                },
+                "T_e": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Electron temperature.",
+                        "UNITS": "K"
+                    }
+                },
+                "Phi_sc": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Spacecraft floating potential with respect to plasma potential far from satellite.",
+                        "UNITS": "V"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_EFIxTIE_2_",
         "defaultDataset": "EFI_TIE",
         "datasets": {
@@ -487,7 +665,7 @@
                 },
                 "Latitude_GD": {
                     "source": "Latitude",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "WGS84 geodetic latitude",
                         "UNITS": "deg"
@@ -495,7 +673,7 @@
                 },
                 "Longitude_GD": {
                     "source": "Longitude",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "WGS84 geodetic longitude",
                         "UNITS": "deg"
@@ -503,7 +681,7 @@
                 },
                 "Height_GD": {
                     "source": "Height",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Height above WGS84 reference ellipsoid",
                         "UNITS": "m"
@@ -511,7 +689,7 @@
                 },
                 "Radius_GC": {
                     "source": "Radius",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric radius",
                         "UNITS": "m"
@@ -519,7 +697,7 @@
                 },
                 "Latitude_QD": {
                     "source": "QDLatitude",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Quasi-dipole latitude",
                         "UNITS": "deg"
@@ -527,35 +705,35 @@
                 },
                 "MLT_QD": {
                     "source": "MLT",
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Magnetic local time",
                         "UNITS": "hour"
                     }
                 },
                 "Tn_msis": {
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Neutral temperature from NRLMSISE00 model",
                         "UNITS": "K"
                     }
                 },
                 "Te_adj_LP": {
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Corrected Swarm LP electron temperature",
                         "UNITS": "K"
                     }
                 },
                 "Ti_meas_drift": {
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Ion temperature estimated using Swarm TII drift at high latitudes",
                         "UNITS": "K"
                     }
                 },
                 "Ti_model_drift": {
-                    "dataType": "float32",
+                    "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Ion temperature estimated using Weimer 2005 model drifts at high latitude",
                         "UNITS": "K"
@@ -660,14 +838,14 @@
                 "Viy": {
                     "dataType": "float32",
                     "attributes": {
-                        "DESCRIPTION": "Cross-track vertical ion drift from horizontal TII sensor in satellite-track coordinates.",
+                        "DESCRIPTION": "Cross-track horizontal ion drift from horizontal TII sensor in satellite-track coordinates.",
                         "UNITS": "m/s"
                     }
                 },
                 "Viy_error": {
                     "dataType": "float32",
                     "attributes": {
-                        "DESCRIPTION": "Random error estimate for cross-track vertical ion drift from horizontal TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "DESCRIPTION": "Random error estimate for cross-track horizontal ion drift from horizontal TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
                         "UNITS": "m/s"
                     }
                 },
@@ -3208,6 +3386,160 @@
                     "dimension": [3],
                     "attributes": {
                         "DESCRIPTION": "Disturbance field related to battery currents, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_FLAG": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GO_MAG_ACAL",
+        "description": "GOCE platform magnetometer measurements.",
+        "resourceUrl": "https://doi.org/10.1002/essoar.10511006.1",
+        "citation": "https://doi.org/10.5880/GFZ.2.3.2022.001",
+        "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
+        "defaultDataset": "MDR_MAG_ACAL",
+        "_order": 102,
+        "datasets": {
+            "MDR_MAG_ACAL": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_MAG": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_SC_NEC": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: SC ... NEC",
+                        "UNITS": "-"
+                    }
+                },
+                "q_MAG_SC": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: MAG ... SC",
+                        "UNITS": "-"
+                    }
+                },
+                "dB_MTQ_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to magnetorquer, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_XI_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 2nd order non-linearities, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_NY_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 3rd order non-linearities, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BT_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of offsets, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_ST_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of scale factors, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_SA_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to solar array currents, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BAT_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to battery currents, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_HK_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to housekeeping data, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BLOCK_CORR": {
+                    "dataType": "float64",
+                    "dimension": [6],
+                    "attributes": {
+                        "DESCRIPTION": "Block correction for MAG2 and MAG3, MAG frame",
                         "UNITS": "nT"
                     }
                 },

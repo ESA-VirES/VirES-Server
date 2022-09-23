@@ -27,7 +27,6 @@
 #pylint: disable=missing-docstring,broad-except
 
 from logging import getLogger
-from datetime import timedelta
 from vires.cdf_util import cdf_open
 from vires.time_util import naive_to_utc
 from vires.models import ProductCollection, Product
@@ -36,10 +35,8 @@ from vires.orbit_direction import OrbitDirectionTables
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
     ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
+    OD_THRESHOLDS_DEFAULT, OD_THRESHOLDS,
 )
-
-TIMEDELTA_MAX = timedelta(seconds=15.5)
-TIMEDELTA_MIN = timedelta(seconds=0.5)
 
 
 def sync_orbit_direction_tables(collection, logger=None, counter=None):
@@ -51,9 +48,11 @@ def sync_orbit_direction_tables(collection, logger=None, counter=None):
     if not counter:
         counter = Counter()
 
+    thresholds = get_orbit_direction_thresholds(*collection.spacecraft)
+
     od_tables = OrbitDirectionTables(
         *get_orbit_direction_tables(*collection.spacecraft),
-        logger=logger
+        **thresholds, logger=logger
     )
 
     logger.info(
@@ -70,7 +69,7 @@ def sync_orbit_direction_tables(collection, logger=None, counter=None):
     for product in list_collection(collection):
         counter.total += 1
         processed = _update_orbit_direction_tables(
-            od_tables, collection, product
+            od_tables, collection, product, **thresholds,
         )
 
         if processed:
@@ -93,9 +92,11 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
     if not counter:
         counter = Counter()
 
+    thresholds = get_orbit_direction_thresholds(*collection.spacecraft)
+
     od_tables = OrbitDirectionTables(
         *get_orbit_direction_tables(*collection.spacecraft),
-        reset=True, logger=logger
+        **thresholds, reset=True, logger=logger
     )
 
     if collection is None:
@@ -113,6 +114,7 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
 
     last_data_file = None
     last_end_time = None
+    max_product_gap = thresholds["max_product_gap"]
 
     for product in list_collection(collection):
         counter.total += 1
@@ -123,7 +125,7 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
         if not last_data_file or last_end_time < start_time:
             data_file_before = last_data_file if (
                 last_data_file
-                and (start_time - last_end_time) < TIMEDELTA_MAX
+                and (start_time - last_end_time) < max_product_gap
             ) else None
             od_tables.update(
                 product.identifier, data_file, data_file_before, None
@@ -150,9 +152,11 @@ def update_orbit_direction_tables(product, logger=None):
 
     collection = product.collection
 
+    thresholds = get_orbit_direction_thresholds(*collection.spacecraft)
+
     od_tables = OrbitDirectionTables(
         *get_orbit_direction_tables(*collection.spacecraft),
-        logger=logger
+        **thresholds, logger=logger
     )
 
     def _check_neighbour_product(product):
@@ -164,7 +168,8 @@ def update_orbit_direction_tables(product, logger=None):
             )
 
     processed = _update_orbit_direction_tables(
-        od_tables, collection, product, _check_neighbour_product
+        od_tables, collection, product, check_products=_check_neighbour_product,
+        **thresholds
     )
 
     od_tables.save()
@@ -173,7 +178,8 @@ def update_orbit_direction_tables(product, logger=None):
 
 
 def _update_orbit_direction_tables(od_tables, collection, product,
-                                   check_product=None):
+                                   min_product_gap, max_product_gap,
+                                   check_product=None, **_):
 
     if product.identifier in od_tables:
         return False
@@ -190,12 +196,12 @@ def _update_orbit_direction_tables(od_tables, collection, product,
 
     data_file_before = _extract_and_check_data_file(
         find_product_by_time_interval(
-            collection, start_time - TIMEDELTA_MAX, start_time - TIMEDELTA_MIN
+            collection, start_time - max_product_gap, start_time - min_product_gap
         )
     )
     data_file_after = _extract_and_check_data_file(
         find_product_by_time_interval(
-            collection, end_time + TIMEDELTA_MIN, end_time + TIMEDELTA_MAX
+            collection, end_time + min_product_gap, end_time + max_product_gap
         )
     )
 
@@ -204,6 +210,11 @@ def _update_orbit_direction_tables(od_tables, collection, product,
     )
 
     return True
+
+
+def get_orbit_direction_thresholds(mission, spacecraft):
+    """ Get orbit direction thresholds for the given spacecraft identifier. """
+    return OD_THRESHOLDS.get((mission, spacecraft), OD_THRESHOLDS_DEFAULT)
 
 
 def get_orbit_direction_tables(mission, spacecraft):

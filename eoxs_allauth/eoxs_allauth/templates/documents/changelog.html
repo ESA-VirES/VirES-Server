@@ -4,6 +4,46 @@
 <h1>Changelog</h1>
 <hr>
 <h3>
+    Release of Service v3.10.0 (2022-10-22)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>Extended data filtering API</b><br>
+      The VirES server API has been modified to allow new types of data filters.
+      It is now possible to filter data by various equality and
+      inequality predicates and masked bit flags. The new filters API
+      can be fully exploited via the
+      <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/">VirES Python client</a>.
+    </li>
+    <li><b>Bit-flags filters in web client</b><br>
+      The VirES web client now allows data filtering by binary quality
+      and calibration flags. Thanks to the new server API, the same filters
+      can be applied to the downloaded data.
+    </li>
+    <li><b>Plotting error-bars</b><br>
+      The Analytical Viewer is now capable of plotting uncertainty as error bars.
+    </li>
+    <li><b>New EFIxIDM products</b><br>
+      The new ion drift, density and effective mass products
+      (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/2860886/SLIDEM_Product_Definition.pdf">EFIxIDM</a>)
+      prepared by the <a target="_blank" href="https://earth.esa.int/eogateway/activities/slidem">SLIDEM</a> project
+      have been added to VirES. The data is accessible via both API and web-client.
+    </li>
+    <li><b>EFIxTIE and EFIxTCT products accessible via web-client</b><br>
+      The data from the Thermal Ion Imager cross track flow
+      (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf">EFIxTCT</a>, 2&nbsp;Hz)
+      and ion temperature estimate (<a target="_blank" href="https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_">EFIxTIE</a>),
+      added to VirES in the previous release, have been made accessible via the web client.
+    </li>
+    <li><b>New GOCE calibrated magnetic field measurements</b><br>
+      The calibrated magnetic field measurements from the GOCE mission
+      has been added to VirES and are accessible via the API.
+    </li>
+</ul>
+<hr>
+<h3>
     Release of Service v3.9.0 (2022-05-20)
 </h3>
 <p>
@@ -13,8 +53,8 @@
     <li><b>New EFI TII products</b><br>
       VirES now offers API access to data from the following EFI TII products:
       <ul>
-        <li>2&nbsp;Hz and 16&nbsp;Hz thermal ion imager - cross track flow (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf">TIIx_TCT</a>)</li>
-        <li>Ion temperature estimate (<a target="_blank" href="https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_">TIIxTIE</a>)</li>
+        <li>2&nbsp;Hz and 16&nbsp;Hz thermal ion imager - cross track flow (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf">EFIxTCT</a>)</li>
+        <li>Ion temperature estimate (<a target="_blank" href="https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_">EFIxTIE</a>)</li>
       </ul>
     </li>
     <li><b>Heliophysics API</b><br>
