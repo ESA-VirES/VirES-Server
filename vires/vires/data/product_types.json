@@ -3544,7 +3544,7 @@
                     }
                 },
                 "B_FLAG": {
-                    "dataType": "uint8",
+                    "dataType": "uint32",
                     "attributes": {
                         "DESCRIPTION": "Flags",
                         "UNITS": "-"
