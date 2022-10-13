@@ -629,6 +629,14 @@
         "mission": "GOCE"
     },
     {
+        "name": "GO_MAG_ACAL_CORR_ML",
+        "description": "GOCE platform magnetometer measurements (ML calibrated)",
+        "productType": "GO_MAG_ACAL_ML",
+        "nominalSampling": "PT16S",
+        "calculateOrbitDirection": false,
+        "mission": "GOCE"
+    },
+    {
         "name": "CS_OPER_MAG",
         "description": "Cryosat-2 Platform magnetometer measurements",
         "productType": "CS_MAG",

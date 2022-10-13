@@ -3406,7 +3406,7 @@
         "citation": "https://doi.org/10.5880/GFZ.2.3.2022.001",
         "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
         "defaultDataset": "MDR_MAG_ACAL",
-        "_order": 102,
+        "_order": 103,
         "datasets": {
             "MDR_MAG_ACAL": {
                 "Timestamp": {
@@ -3554,12 +3554,116 @@
         }
     },
     {
+        "name": "GO_MAG_ACAL_ML",
+        "description": "GOCE platform magnetometer measurements (ML calibrated).",
+        "resourceUrl": "https://doi.org/10.1186/s40623-022-01695-2",
+        "citation": "https://doi.org/10.5880/GFZ.2.3.2022.002",
+        "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
+        "defaultDataset": "MDR_MAG_ACAL_ML",
+        "_order": 104,
+        "datasets": {
+            "MDR_MAG_ACAL_ML": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "QDLongitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "B_MAG": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_FGM_NEC": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: combined FGM ... NEC",
+                        "UNITS": "-"
+                    }
+                },
+                "B_FLAG": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flag for combined FGM (Bit field:0: Data correct,1: Outlier detected,2: FGM interpolation corrupted)",
+                        "UNITS": "-"
+                    }
+                },
+                "KP_DST_FLAG": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Kp and Dst flag (0 low magnetic activity, 1 high magnetic activity)",
+                        "UNITS": "-"
+                    }
+                },
+                "NaN_FLAG": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flag for filled NaN values with column mean value (0: Data complete,1: NaN values filled",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "CS_MAG",
         "description": "Cryosat-2 Platform magnetometer measurements",
         "resourceUrl": "https://doi.org/10.1186/s40623-020-01171-9",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG",
-        "_order": 103,
+        "_order": 105,
         "datasets": {
             "MDR_MAG": {
                 "Timestamp": {
