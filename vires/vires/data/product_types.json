@@ -87,6 +87,13 @@
                         "UNITS": "nT"
                     }
                 },
+                "dF_Sun": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction intensity of Sun ASM frame",
+                        "UNITS": "nT"
+                    }
+                },
                 "dF_AOCS": {
                     "dataType": "float64",
                     "attributes": {
