@@ -75,44 +75,45 @@ CACHED_PRODUCT_FILE = {
     "CS2_ODBMAG": "CS2_ODBMAG.cdf",
     "CNJ_SWA_SWB": "CNJ_SWA_SWB.cdf",
 }
-ORBIT_COUNTER_FILE = {
-    ("Swarm", "A"): CACHED_PRODUCT_FILE["AUXAORBCNT"],
-    ("Swarm", "B"): CACHED_PRODUCT_FILE["AUXBORBCNT"],
-    ("Swarm", "C"): CACHED_PRODUCT_FILE["AUXCORBCNT"],
-    ("GRACE", "1"): CACHED_PRODUCT_FILE["GR1_ORBCNT"],
-    ("GRACE", "2"): CACHED_PRODUCT_FILE["GR2_ORBCNT"],
-    ("GRACE-FO", "1"): CACHED_PRODUCT_FILE["GF1_ORBCNT"],
-    ("GRACE-FO", "2"): CACHED_PRODUCT_FILE["GF2_ORBCNT"],
-    ("CryoSat-2", None): CACHED_PRODUCT_FILE["CS2_ORBCNT"],
-    ("GOCE", None): CACHED_PRODUCT_FILE["GO_ORBCNT"],
+
+SPACECRAFTS = [
+    ("Swarm", "A"),
+    ("Swarm", "B"),
+    ("Swarm", "C"),
+    ("GRACE", "1"),
+    ("GRACE", "2"),
+    ("GRACE-FO", "1"),
+    ("GRACE-FO", "2"),
+    ("CryoSat-2", None),
+    ("GOCE", None),
+
+]
+
+MISSION_TO_FILE_PREFIX = {
+    "Swarm": "AUX{spacecraft}",
+    "GRACE": "GR{spacecraft}_",
+    "GRACE-FO": "GF{spacecraft}_",
+    "CryoSat-2": "CS2_",
+    "GOCE": "GO_"
 }
-ORBIT_DIRECTION_GEO_FILE = {
-    ("Swarm", "A"): CACHED_PRODUCT_FILE["AUXAODBGEO"],
-    ("Swarm", "B"): CACHED_PRODUCT_FILE["AUXBODBGEO"],
-    ("Swarm", "C"): CACHED_PRODUCT_FILE["AUXCODBGEO"],
-    ("GRACE", "1"): CACHED_PRODUCT_FILE["GR1_ODBGEO"],
-    ("GRACE", "2"): CACHED_PRODUCT_FILE["GR2_ODBGEO"],
-    ("GRACE-FO", "1"): CACHED_PRODUCT_FILE["GF1_ODBGEO"],
-    ("GRACE-FO", "2"): CACHED_PRODUCT_FILE["GF2_ODBGEO"],
-    ("CryoSat-2", None): CACHED_PRODUCT_FILE["CS2_ODBGEO"],
-    ("GOCE", None): CACHED_PRODUCT_FILE["GO_ODBGEO"],
-}
-ORBIT_DIRECTION_MAG_FILE = {
-    ("Swarm", "A"): CACHED_PRODUCT_FILE["AUXAODBMAG"],
-    ("Swarm", "B"): CACHED_PRODUCT_FILE["AUXBODBMAG"],
-    ("Swarm", "C"): CACHED_PRODUCT_FILE["AUXCODBMAG"],
-    ("GRACE", "1"): CACHED_PRODUCT_FILE["GR1_ODBMAG"],
-    ("GRACE", "2"): CACHED_PRODUCT_FILE["GR2_ODBMAG"],
-    ("GRACE-FO", "1"): CACHED_PRODUCT_FILE["GF1_ODBMAG"],
-    ("GRACE-FO", "2"): CACHED_PRODUCT_FILE["GF2_ODBMAG"],
-    ("CryoSat-2", None): CACHED_PRODUCT_FILE["CS2_ODBMAG"],
-    ("GOCE", None): CACHED_PRODUCT_FILE["GO_ODBMAG"],
-}
+
+ORBIT_COUNTER_FILE = {}
+ORBIT_DIRECTION_GEO_FILE = {}
+ORBIT_DIRECTION_MAG_FILE = {}
+
+for mission, spacecraft in SPACECRAFTS:
+    prefix = MISSION_TO_FILE_PREFIX[mission].format(spacecraft=spacecraft)
+    ORBIT_COUNTER_FILE[(mission, spacecraft)] = CACHED_PRODUCT_FILE[f"{prefix}ORBCNT"]
+    ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft)] = CACHED_PRODUCT_FILE[f"{prefix}ODBGEO"]
+    ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft)] = CACHED_PRODUCT_FILE[f"{prefix}ODBMAG"]
+del mission, spacecraft, prefix
+
 ORBIT_CONJUNCTION_FILE = {
     (("Swarm", "A"), ("Swarm", "B")): CACHED_PRODUCT_FILE["CNJ_SWA_SWB"],
 }
 
 SPACECRAFTS = list(ORBIT_COUNTER_FILE)
+
 
 # thresholds used by the orbit direction extraction
 

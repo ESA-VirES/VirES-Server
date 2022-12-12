@@ -37,6 +37,7 @@ from vires.time_util import naive_to_utc, format_datetime
 from vires.model_shc import process_zipped_files, filename2id
 from vires.data.vires_settings import (
     SPACECRAFTS, AUX_DB_DST, AUX_DB_KP, CACHED_PRODUCT_FILE,
+    MISSION_TO_FILE_PREFIX,
 )
 from .._common import Subcommand, JSON_OPTS
 
@@ -171,21 +172,12 @@ configure_cached_product("MMA_SHA_2F", info_reader=read_info_cdf)
 configure_cached_product("AUX_F10_2_", info_reader=read_info_cdf)
 
 for mission, spacecraft in SPACECRAFTS:
-    if mission == "Swarm":
-        configure_cached_product("AUX%sORBCNT" % spacecraft, info_reader=read_info_cdf)
-        configure_cached_product("AUX%sODBGEO" % spacecraft, info_reader=read_info_cdf)
-        configure_cached_product("AUX%sODBMAG" % spacecraft, info_reader=read_info_cdf)
-    elif mission == "GRACE":
-        configure_cached_product("GR%s_ORBCNT" % spacecraft, info_reader=read_info_cdf)
-        configure_cached_product("GR%s_ODBGEO" % spacecraft, info_reader=read_info_cdf)
-        configure_cached_product("GR%s_ODBMAG" % spacecraft, info_reader=read_info_cdf)
-    elif mission == "GRACE-FO":
-        configure_cached_product("GF%s_ORBCNT" % spacecraft, info_reader=read_info_cdf)
-        configure_cached_product("GF%s_ODBGEO" % spacecraft, info_reader=read_info_cdf)
-        configure_cached_product("GF%s_ODBMAG" % spacecraft, info_reader=read_info_cdf)
-    elif mission == "CryoSat-2":
-        configure_cached_product("CS2_ORBCNT", info_reader=read_info_cdf)
-        configure_cached_product("CS2_ODBGEO", info_reader=read_info_cdf)
-        configure_cached_product("CS2_ODBMAG", info_reader=read_info_cdf)
+    prefix = (
+        MISSION_TO_FILE_PREFIX.get(mission) or ""
+    ).format(spacecraft=spacecraft)
+    if prefix:
+        configure_cached_product(f"{prefix}ORBCNT", info_reader=read_info_cdf)
+        configure_cached_product(f"{prefix}ODBGEO", info_reader=read_info_cdf)
+        configure_cached_product(f"{prefix}ODBMAG", info_reader=read_info_cdf)
 
 configure_cached_product("CNJ_SWA_SWB", info_reader=read_info_cdf)
