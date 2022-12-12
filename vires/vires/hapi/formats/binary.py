@@ -50,12 +50,16 @@ HAPI_BINARY_TYPE_MAPPING = {
     bool_: int32,
     int8: int32,
     int16: int32,
+    #int32: int32,
+    int64: int32, # may overflow!
     uint8: int32,
     uint16: int32,
+    uint32: int32, # may overflow!
+    uint64: int32, # may overflow!
     float32: float64,
 }
 
-HAPI_BINARY_UNSUPPORTED_TYPES = {int64, uint32, uint64}
+HAPI_BINARY_UNSUPPORTED_TYPES = {}
 
 HAPI_ARRAY_CONVERSIONS = {
     datetime64: format_datetime64_array,
