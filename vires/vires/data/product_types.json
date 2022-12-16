@@ -1836,7 +1836,7 @@
                     }
                 },
                 "Flags": {
-                    "dataType": "uint8",
+                    "dataType": "uint16",
                     "attributes": {
                         "DESCRIPTION": "Quality indicator",
                         "UNITS": "-"
@@ -2038,7 +2038,7 @@
                     }
                 },
                 "Flags": {
-                    "dataType": "uint8",
+                    "dataType": "uint16",
                     "attributes": {
                         "DESCRIPTION": "Quality indicator",
                         "UNITS": "-"
@@ -2435,7 +2435,7 @@
                 },
                 "Position_Quality": {
                     "source": "Position_Quality_ID",
-                    "dataType": "float64",
+                    "dataType": "int8",
                     "attributes": {
                         "DESCRIPTION": "Indicator characterizing the detection quality of the position",
                         "UNITS": "-"
@@ -2687,7 +2687,7 @@
                 },
                 "Position_Quality": {
                     "source": "Position_Quality_ID",
-                    "dataType": "float64",
+                    "dataType": "int8",
                     "attributes": {
                         "DESCRIPTION": "Indicator characterizing the detection quality of the position",
                         "UNITS": "-"
@@ -2903,7 +2903,7 @@
                 },
                 "Position_Quality": {
                     "source": "Position_Quality_ID",
-                    "dataType": "float64",
+                    "dataType": "int8",
                     "attributes": {
                         "DESCRIPTION": "Indicator characterizing the detection quality of the position",
                         "UNITS": "-"
