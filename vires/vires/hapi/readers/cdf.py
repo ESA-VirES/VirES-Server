@@ -79,7 +79,7 @@ class CdfTimeSeriesReader():
             values[start_index:stop_index], [start_value, stop_value], 'left'
         )
         start, stop = start + start_index, stop + start_index
-        return start - stop, slice(start, stop), Ellipsis
+        return stop - start, slice(start, stop), Ellipsis
 
     @staticmethod
     def _subset_unsorted(values, start_value, stop_value, start_index, stop_index):

@@ -81,399 +81,400 @@
     },
     {
         "name": "SW_OPER_EFIA_LP_1B",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm A plasma data from the Langimur Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_EFIB_LP_1B",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm B plasma data from the Langimur Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_EFIC_LP_1B",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm C plasma data from the Langimur Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "C"
     },
     {
         "name": "SW_PREL_EFIAIDM_2_",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm A LP ion drift, density and effective mass data",
         "productType": "SW_EFIxIDM_2_",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "A"
     },
     {
         "name": "SW_PREL_EFIBIDM_2_",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm B LP ion drift, density and effective mass data",
         "productType": "SW_EFIxIDM_2_",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "B"
     },
     {
         "name": "SW_PREL_EFICIDM_2_",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm C LP ion drift, density and effective mass data",
         "productType": "SW_EFIxIDM_2_",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_EFIATIE_2_",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm A Thermal Ion Imager (TII) ion temperatures estimate",
         "productType": "SW_EFIxTIE_2_",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_EFIBTIE_2_",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm B Thermal Ion Imager (TII) ion temperatures estimate",
         "productType": "SW_EFIxTIE_2_",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_EFICTIE_2_",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm C Thermal Ion Imager (TII) ion temperatures estimate",
         "productType": "SW_EFIxTIE_2_",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "C"
     },
     {
         "name": "SW_EXPT_EFIA_TCT02",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm A Thermal Ion Imager (TII) cross track flow at 2Hz",
         "productType": "SW_EFIx_TCTyy",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "A"
     },
     {
         "name": "SW_EXPT_EFIB_TCT02",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm B Thermal Ion Imager (TII) cross track flow at 2Hz",
         "productType": "SW_EFIx_TCTyy",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "B"
     },
     {
         "name": "SW_EXPT_EFIC_TCT02",
-        "nominalSampling": "PT0.5S",
+        "description": "Swarm C Thermal Ion Imager (TII) cross track flow at 2Hz",
         "productType": "SW_EFIx_TCTyy",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "C"
     },
     {
         "name": "SW_EXPT_EFIA_TCT16",
-        "nominalSampling": "PT0.0625S",
+        "description": "Swarm A Thermal Ion Imager (TII) cross track flow at 16Hz",
         "productType": "SW_EFIx_TCTyy",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.0625S",
+        "spacecraft": "A"
     },
     {
         "name": "SW_EXPT_EFIB_TCT16",
-        "nominalSampling": "PT0.0625S",
+        "description": "Swarm B Thermal Ion Imager (TII) cross track flow at 16Hz",
         "productType": "SW_EFIx_TCTyy",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.0625S",
+        "spacecraft": "B"
     },
     {
         "name": "SW_EXPT_EFIC_TCT16",
-        "nominalSampling": "PT0.0625S",
+        "description": "Swarm C Thermal Ion Imager (TII) cross track flow at 16Hz",
         "productType": "SW_EFIx_TCTyy",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT0.0625S",
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_IBIATMS_2F",
+        "description": "Swarm A ionospheric bubble index",
         "productType": "SW_IBIxTMS_2F",
         "nominalSampling": "PT1S",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_IBIBTMS_2F",
+        "description": "Swarm B ionospheric bubble index",
         "productType": "SW_IBIxTMS_2F",
         "nominalSampling": "PT1S",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_IBICTMS_2F",
+        "description": "Swarm C ionospheric bubble index",
         "productType": "SW_IBIxTMS_2F",
         "nominalSampling": "PT1S",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_TECATMS_2F",
+        "description": "Swarm A ionospheric total electron content",
         "productType": "SW_TECxTMS_2F",
         "nominalSampling": "PT1S",
         "spacecraft": "A",
-        "groupSamples": true,
-        "requiredPermission": "swarm"
+        "groupSamples": true
     },
     {
         "name": "SW_OPER_TECBTMS_2F",
+        "description": "Swarm B ionospheric total electron content",
         "productType": "SW_TECxTMS_2F",
         "nominalSampling": "PT1S",
         "spacecraft": "B",
-        "groupSamples": true,
-        "requiredPermission": "swarm"
+        "groupSamples": true
     },
     {
         "name": "SW_OPER_TECCTMS_2F",
+        "description": "Swarm C ionospheric total electron content",
         "productType": "SW_TECxTMS_2F",
         "nominalSampling": "PT1S",
         "spacecraft": "C",
-        "groupSamples": true,
-        "requiredPermission": "swarm"
+        "groupSamples": true
     },
     {
         "name": "SW_OPER_FACATMS_2F",
+        "description": "Swarm A field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
         "nominalSampling": "PT1S",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_FACBTMS_2F",
+        "description": "Swarm B field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
         "nominalSampling": "PT1S",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_FACCTMS_2F",
+        "description": "Swarm C field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
         "nominalSampling": "PT1S",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_FAC_TMS_2F",
+        "description": "Swarm field-aligned and radial current densities using the dual-satellite method",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#FAC_TMS_2F",
         "productType": "SW_FACxTMS_2F",
-        "nominalSampling": "PT1S",
-        "requiredPermission": "swarm"
+        "nominalSampling": "PT1S"
     },
     {
         "name": "SW_OPER_EEFATMS_2F",
+        "description": "Swarm A dayside equatorial electric field",
         "productType": "SW_EEFxTMS_2F",
         "nominalSampling": "PT5616S",
         "spacecraft": "A",
-        "extraSampled": true,
-        "requiredPermission": "swarm"
+        "extraSampled": true
     },
     {
         "name": "SW_OPER_EEFBTMS_2F",
+        "description": "Swarm B dayside equatorial electric field",
         "productType": "SW_EEFxTMS_2F",
         "nominalSampling": "PT5616S",
         "spacecraft": "B",
-        "extraSampled": true,
-        "requiredPermission": "swarm"
+        "extraSampled": true
     },
     {
         "name": "SW_OPER_EEFCTMS_2F",
+        "description": "Swarm C dayside equatorial electric field",
         "productType": "SW_EEFxTMS_2F",
         "nominalSampling": "PT5616S",
         "spacecraft": "C",
-        "extraSampled": true,
-        "requiredPermission": "swarm"
+        "extraSampled": true
     },
     {
         "name": "SW_OPER_IPDAIRR_2F",
+        "description": "Swarm A characteristics of the plasma density and plasma irregularities",
         "productType": "SW_IPDxIRR_2F",
         "nominalSampling": "PT1S",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_IPDBIRR_2F",
+        "description": "Swarm B characteristics of the plasma density and plasma irregularities",
         "productType": "SW_IPDxIRR_2F",
         "nominalSampling": "PT1S",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_IPDCIRR_2F",
+        "description": "Swarm C characteristics of the plasma density and plasma irregularities",
         "productType": "SW_IPDxIRR_2F",
         "nominalSampling": "PT1S",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_AEJALPL_2F",
+        "description": "Swarm A ionospheric sheet current densities determined by the Line Current (LC) method",
         "productType": "SW_AEJxLPL_2F",
         "spacecraft": "A",
         "nominalSampling": "PT16S",
-        "splitBy": {"QDOrbitDirection": 0},
-        "requiredPermission": "swarm"
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJBLPL_2F",
+        "description": "Swarm B ionospheric sheet current densities determined by the Line Current (LC) method",
         "productType": "SW_AEJxLPL_2F",
         "spacecraft": "B",
         "nominalSampling": "PT16S",
-        "splitBy": {"QDOrbitDirection": 0},
-        "requiredPermission": "swarm"
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJCLPL_2F",
+        "description": "Swarm C ionospheric sheet current densities determined by the Line Current (LC) method",
         "productType": "SW_AEJxLPL_2F",
         "spacecraft": "C",
         "nominalSampling": "PT16S",
-        "splitBy": {"QDOrbitDirection": 0},
-        "requiredPermission": "swarm"
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJAPBL_2F",
+        "description": "Swarm A ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
         "productType": "SW_AEJxPBL_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_AEJBPBL_2F",
+        "description": "Swarm B ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
         "productType": "SW_AEJxPBL_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_AEJCPBL_2F",
+        "description": "Swarm C ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
         "productType": "SW_AEJxPBL_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_AEJALPS_2F",
+        "description": "Swarm A ionospheric sheet current densities determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxLPS_2F",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
-        "splitBy": {"QDOrbitDirection": 0},
-        "requiredPermission": "swarm"
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJBLPS_2F",
+        "description": "Swarm B ionospheric sheet current densities determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxLPS_2F",
         "spacecraft": "B",
         "nominalSampling": "PT1S",
-        "splitBy": {"QDOrbitDirection": 0},
-        "requiredPermission": "swarm"
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJCLPS_2F",
+        "description": "Swarm C ionospheric sheet current densities determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxLPS_2F",
         "spacecraft": "C",
         "nominalSampling": "PT1S",
-        "splitBy": {"QDOrbitDirection": 0},
-        "requiredPermission": "swarm"
+        "splitBy": {"QDOrbitDirection": 0}
     },
     {
         "name": "SW_OPER_AEJAPBS_2F",
+        "description": "Swarm A ionospheric auroral electrojet peaks and boundaries determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxPBS_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_AEJBPBS_2F",
+        "description": "Swarm B ionospheric auroral electrojet peaks and boundaries determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxPBS_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_AEJCPBS_2F",
+        "description": "Swarm C ionospheric auroral electrojet peaks and boundaries determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxPBS_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_AOBAFAC_2F",
+        "description": "Swarm A aurora oval boundaries determined from the Field Aligned Current (FAC) data",
         "productType": "SW_AOBxFAC_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_AOBBFAC_2F",
+        "description": "Swarm B aurora oval boundaries determined from the Field Aligned Current (FAC) data",
         "productType": "SW_AOBxFAC_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_AOBCFAC_2F",
+        "description": "Swarm C aurora oval boundaries determined from the Field Aligned Current (FAC) data",
         "productType": "SW_AOBxFAC_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_MITA_LP_2F",
+        "description": "Swarm A mid-latitude ionospheric trough boundaries and minima from from Langmuir Probe (LP) data",
         "productType": "SW_MITx_LP_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_MITB_LP_2F",
+        "description": "Swarm B mid-latitude ionospheric trough boundaries and minima from from Langmuir Probe (LP) data",
         "productType": "SW_MITx_LP_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_MITC_LP_2F",
+        "description": "Swarm C mid-latitude ionospheric trough boundaries and minima from from Langmuir Probe (LP) data",
         "productType": "SW_MITx_LP_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_MITATEC_2F",
+        "description": "Swarm A mid-latitude ionospheric trough boundaries and minima from from Total Electron Content (TEC) data",
         "productType": "SW_MITxTEC_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_MITBTEC_2F",
+        "description": "Swarm B mid-latitude ionospheric trough boundaries and minima from from Total Electron Content (TEC) data",
         "productType": "SW_MITxTEC_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_MITCTEC_2F",
+        "description": "Swarm C mid-latitude ionospheric trough boundaries and minima from from Total Electron Content (TEC) data",
         "productType": "SW_MITxTEC_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_PPIAFAC_2F",
+        "description": "Swarm A equatorward boundary of Small-Scale Field Aligned Currents (SSFAC) and the associated midnight Plasma-Pause (PP) index",
         "productType": "SW_PPIxFAC_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "A",
-        "requiredPermission": "swarm"
+        "spacecraft": "A"
     },
     {
         "name": "SW_OPER_PPIBFAC_2F",
+        "description": "Swarm B equatorward boundary of Small-Scale Field Aligned Currents (SSFAC) and the associated midnight Plasma-Pause (PP) index",
         "productType": "SW_PPIxFAC_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "B",
-        "requiredPermission": "swarm"
+        "spacecraft": "B"
     },
     {
         "name": "SW_OPER_PPICFAC_2F",
+        "description": "Swarm C equatorward boundary of Small-Scale Field Aligned Currents (SSFAC) and the associated midnight Plasma-Pause (PP) index",
         "productType": "SW_PPIxFAC_2F",
         "nominalSampling": "PT1404S",
-        "spacecraft": "C",
-        "requiredPermission": "swarm"
+        "spacecraft": "C"
     },
     {
         "name": "SW_OPER_AUX_IMF_2_",

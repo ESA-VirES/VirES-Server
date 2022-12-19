@@ -32,7 +32,7 @@ from traceback import print_exc
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
 from django.contrib.auth.models import User
-from oauth2_provider.models import Application
+from oauth2_provider.models import get_application_model
 from .._common import Subcommand
 
 
@@ -121,13 +121,17 @@ APP_KEYS = [
 
 @transaction.atomic
 def save_app(item):
+    # NOTE: The application model detects if the client secret is hashed or
+    #       plain text. Plain text secrets are hashed on save. Hashed secretes
+    #       are saved without modification.
     client_id = item['client_id']
 
+    model = get_application_model()
     try:
-        app = Application.objects.get(client_id=client_id)
+        app = model.objects.get(client_id=client_id)
         is_updated = True
-    except Application.DoesNotExist:
-        app = Application(client_id=client_id)
+    except model.DoesNotExist:
+        app = model(client_id=client_id)
         is_updated = False
 
     if 'owner' in item:
