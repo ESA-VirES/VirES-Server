@@ -48,6 +48,11 @@ class ModelCache():
         self.cache = {}
         self.sources = {}
 
+    def flush(self):
+        """ Flush model cache. """
+        self.cache = {}
+        self.sources = {}
+
     def get_model(self, model_id):
         """ Get model for given identifier. """
         model, _ = self.get_model_with_sources(model_id)
