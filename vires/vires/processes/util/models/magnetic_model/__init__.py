@@ -28,3 +28,5 @@
 from .source_model import SourceMagneticModel
 from .composed_model import ComposedMagneticModel
 from .residual import MagneticModelResidual
+from .mio_model import MagneticModelMioMultiplication
+from .model_setup import generate_magnetic_model_sources

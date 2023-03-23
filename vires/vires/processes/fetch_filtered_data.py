@@ -72,13 +72,14 @@ from vires.processes.util.time_series import (
     OrbitCounter, OrbitDirection, QDOrbitDirection,
 )
 from vires.processes.util.models import (
-    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
+    QuasiDipoleCoordinates, MagneticLocalTime,
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
     IndexKpFromKp10,
     Identity,
     BnecToF,
     Geodetic2GeocentricCoordinates,
+    generate_magnetic_model_sources,
 )
 
 TIME_PRECISION = timedelta(microseconds=1)
@@ -247,7 +248,7 @@ class FetchFilteredData(WPSProcess):
             self.logger.debug("sampling step: %s", sampling_step)
 
         # resolve data sources, models and filters and variables dependencies
-        resolvers = dict()
+        resolvers = {}
 
         if sources:
             orbit_info = {
@@ -291,20 +292,6 @@ class FetchFilteredData(WPSProcess):
                 Identity("Longitude_QD", "QDLon"),
             ]
 
-            # collect all spherical-harmonics models and residuals
-            models_with_residuals = []
-            for model in source_models:
-                models_with_residuals.append(model)
-            for model in requested_models:
-                models_with_residuals.append(model)
-                for variable in model.BASE_VARIABLES:
-                    models_with_residuals.append(
-                        MagneticModelResidual(model.name, variable)
-                    )
-                for variable in MagneticModelResidual.MODEL_VARIABLES:
-                    models_with_residuals.append(
-                        MagneticModelResidual(model.name, variable)
-                    )
             # optional sub-sampling filters
             if sampling_step:
                 sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
@@ -372,13 +359,17 @@ class FetchFilteredData(WPSProcess):
                         resolver.add_model(SatSatSubtraction(msc, ssc, cols))
 
                 # models
-                aux_models = chain((
-                    model_gd2gc, model_bnec_intensity,
-                    model_kp, model_qdc, model_mlt, model_sun,
-                    model_subsol, model_dipole, model_tilt_angle,
-                ), models_with_residuals, copied_variables)
-
-                for model in aux_models:
+                for model in chain(
+                    (
+                        model_gd2gc, model_bnec_intensity,
+                        model_kp, model_qdc, model_mlt, model_sun,
+                        model_subsol, model_dipole, model_tilt_angle,
+                    ),
+                    generate_magnetic_model_sources(
+                        *spacecraft, requested_models, source_models,
+                    ),
+                    copied_variables,
+                ):
                     resolver.add_model(model)
 
                 # add remaining filters

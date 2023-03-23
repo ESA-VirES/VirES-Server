@@ -30,4 +30,5 @@ from .models import (
     MODEL_CACHE,
     DIPOLE_MODEL,
     PREDEFINED_COMPOSED_MODELS,
+    MIO_MODELS,
 )
