@@ -48,10 +48,10 @@ def sync_orbit_direction_tables(collection, logger=None, counter=None):
     if not counter:
         counter = Counter()
 
-    thresholds = get_orbit_direction_thresholds(*collection.spacecraft)
+    thresholds = get_orbit_direction_thresholds(*collection.spacecraft_tuple)
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(*collection.spacecraft),
+        *get_orbit_direction_tables(*collection.spacecraft_tuple),
         **thresholds, logger=logger
     )
 
@@ -92,10 +92,10 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
     if not counter:
         counter = Counter()
 
-    thresholds = get_orbit_direction_thresholds(*collection.spacecraft)
+    thresholds = get_orbit_direction_thresholds(*collection.spacecraft_tuple)
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(*collection.spacecraft),
+        *get_orbit_direction_tables(*collection.spacecraft_tuple),
         **thresholds, reset=True, logger=logger
     )
 
@@ -152,10 +152,10 @@ def update_orbit_direction_tables(product, logger=None):
 
     collection = product.collection
 
-    thresholds = get_orbit_direction_thresholds(*collection.spacecraft)
+    thresholds = get_orbit_direction_thresholds(*collection.spacecraft_tuple)
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(*collection.spacecraft),
+        *get_orbit_direction_tables(*collection.spacecraft_tuple),
         **thresholds, logger=logger
     )
 
@@ -271,7 +271,7 @@ def get_collection(collection_id):
     Return None if no collection matched.
     """
     try:
-        return ProductCollection.objects.get(
+        return ProductCollection.objects.select_related('spacecraft').get(
             identifier=collection_id
         )
     except ProductCollection.DoesNotExist:

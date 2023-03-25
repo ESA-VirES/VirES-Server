@@ -32,7 +32,8 @@ import json
 from traceback import print_exc
 from django.db import transaction
 from vires.data import PRODUCT_COLLECTIONS
-from vires.models import ProductCollection, ProductType
+from vires.data.vires_settings import DEFAULT_MISSION
+from vires.models import ProductCollection, ProductType, Spacecraft
 from .._common import Subcommand
 
 
@@ -116,6 +117,9 @@ def save_product_collection(data):
         data.pop(key, None)
     is_updated, product_collection = get_product_collection(identifier)
     product_collection.type = get_product_type(data.pop("productType"))
+    product_collection.spacecraft = spacecraft = get_spacecraft(
+        data.pop("mission", None), data.pop("spacecraft", None)
+    )
     product_collection.metadata = data
     product_collection.save()
     return is_updated
@@ -130,3 +134,22 @@ def get_product_collection(identifier):
 
 def get_product_type(identifier):
     return ProductType.objects.get(identifier=identifier)
+
+
+def get_spacecraft(mission, spacecraft):
+
+    def _create_spacecraft(mission, spacecraft):
+        spacecraft = Spacecraft(mission=mission, spacecraft=spacecraft)
+        spacecraft.save()
+        return spacecraft
+
+    if not spacecraft and not mission:
+        return None
+
+    if spacecraft and not mission:
+        mission = DEFAULT_MISSION
+
+    try:
+        return Spacecraft.objects.get(mission=mission, spacecraft=spacecraft)
+    except Spacecraft.DoesNotExist:
+        return _create_spacecraft(mission, spacecraft)

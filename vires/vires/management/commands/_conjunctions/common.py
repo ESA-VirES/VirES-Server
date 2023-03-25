@@ -41,7 +41,7 @@ def pair_collections(collections):
 
 def is_valid_spacecraft_pair(collection1, collection2):
     return (
-        (collection1.spacecraft, collection2.spacecraft)
+        (collection1.spacecraft_tuple, collection2.spacecraft_tuple)
         in ORBIT_CONJUNCTION_FILE
     )
 

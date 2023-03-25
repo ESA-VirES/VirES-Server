@@ -77,5 +77,6 @@ def serialize_collection(object_):
         "created": format_datetime(object_.created),
         "updated": format_datetime(object_.updated),
         "maxProductDuration": format_timedelta(object_.max_product_duration),
+        **object_.spacecraft_dict,
         **object_.metadata
     }
