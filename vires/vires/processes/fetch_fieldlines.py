@@ -64,39 +64,39 @@ class FetchFieldlines(WPSProcess):
 
     inputs = WPSProcess.inputs + [
         ("model_ids", LiteralData(
-            'model_ids', str, optional=False,
+            "model_ids", str, optional=False,
             abstract="String input for model identifiers (comma separator)",
         )),
         ("shc", ComplexData(
-            'shc',
+            "shc",
             title="Custom model coefficients.",
             abstract=(
                 "Custom forward magnetic field model coefficients encoded "
                 " in the SHC plain-text format."
             ),
             optional=True,
-            formats=(FormatText('text/plain'),)
+            formats=(FormatText("text/plain"),)
         )),
         ("time", LiteralData(
-            'time', datetime, optional=False,
+            "time", datetime, optional=False,
             abstract="Time at which the fields lines are calculated.",
         )),
         ("locations", ComplexData(
-            'locations', optional=False,
+            "locations", optional=False,
             title="Set of geocentric spherical coordinates in ITRF frame.",
             abstract=(
                 "Set of geocentric Latitude (deg), Longitude (deg) and Radius "
                 "(m) coordinates in ITRF frame.",
             ),
             formats=[
-                FormatText('text/csv'),
+                FormatText("text/csv"),
             ],
         )),
     ]
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Fields lines",
+            "output", title="Fields lines",
             abstract="Calculated field lines and coloured field strength.",
             formats=(
                 FormatJSON(),
@@ -166,24 +166,24 @@ class FetchFieldlines(WPSProcess):
 
             access_logger.info(
                 "response: lines: %d, points: %d, mime-type: %s",
-                len(locations) * len(models), total_count, output['mime_type'],
+                len(locations) * len(models), total_count, output["mime_type"],
             )
 
         # data colouring
         field_lines = generate_field_lines()
         info = {
-            'time': format_datetime(time),
-            'models': {model.name: model.expression for model in models},
-            'locations': [tuple(location) for location in locations]
+            "time": format_datetime(time),
+            "models": {model.name: model.expression for model in models},
+            "locations": [tuple(location) for location in locations]
         }
 
-        if output['mime_type'] == "application/json":
+        if output["mime_type"] == "application/json":
             return self._write_json(field_lines, info, output)
-        if output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
+        if output["mime_type"] in ("application/msgpack", "application/x-msgpack"):
             return self._write_msgpack(field_lines, info, output)
         raise InvalidOutputDefError(
-            'output',
-            "Unexpected output format %r requested!" % output['mime_type']
+            "output",
+            f"Unexpected output format {output['mime_type']!r} requested!"
         )
 
     @classmethod
@@ -208,16 +208,16 @@ class FetchFieldlines(WPSProcess):
             apex_point, apex_height = cls._find_apex(coords)
             ground_points = cls._find_ground_intersection(coords)
             fieldlines[model_id].append({
-                'start_point': start.tolist(),
-                'ground_points': ground_points.tolist(),
-                'apex_point': None if apex_point is None else apex_point.tolist(),
-                'apex_height': apex_height,
-                'coordinates': coords.tolist(),
-                'values': values.tolist(),
+                "start_point": start.tolist(),
+                "ground_points": ground_points.tolist(),
+                "apex_point": None if apex_point is None else apex_point.tolist(),
+                "apex_height": apex_height,
+                "coordinates": coords.tolist(),
+                "values": values.tolist(),
             })
         return {
-            'info': info,
-            'fieldlines': dict(fieldlines),
+            "info": info,
+            "fieldlines": dict(fieldlines),
         }
 
     @staticmethod

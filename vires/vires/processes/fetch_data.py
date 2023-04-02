@@ -115,10 +115,10 @@ class FetchData(WPSProcess):
     profiles = ["vires"]
 
     inputs = WPSProcess.inputs + [
-        ('user', RequestParameter(get_user)),
-        ('permissions', RequestParameter(get_vires_permissions)),
+        ("user", RequestParameter(get_user)),
+        ("permissions", RequestParameter(get_vires_permissions)),
         ("collection_ids", ComplexData(
-            'collection_ids', title="Collection identifiers", abstract=(
+            "collection_ids", title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
                 "The input is required to be the following form: "
                 "{<label1>: [<collection11>, <collection12>, ...], "
@@ -127,15 +127,15 @@ class FetchData(WPSProcess):
             ), formats=FormatJSON()
         )),
         ("begin_time", LiteralData(
-            'begin_time', datetime, optional=False, title="Begin time",
+            "begin_time", datetime, optional=False, title="Begin time",
             abstract="Start of the selection time interval",
         )),
         ("end_time", LiteralData(
-            'end_time', datetime, optional=False, title="End time",
+            "end_time", datetime, optional=False, title="End time",
             abstract="End of the selection time interval",
         )),
         ("sampling_step", LiteralData(
-            'sampling_step', timedelta, optional=True, title="Sampling step",
+            "sampling_step", timedelta, optional=True, title="Sampling step",
             allowed_values=AllowedRange(timedelta(0), None, dtype=timedelta),
             abstract="Optional output data sampling step.",
         )),
@@ -144,12 +144,12 @@ class FetchData(WPSProcess):
             abstract="Optional selection bounding box.", default=None,
         )),
         ("requested_variables", LiteralData(
-            'variables', str, optional=True, default=None,
+            "variables", str, optional=True, default=None,
             title="Data variables",
             abstract="Comma-separated list of the extracted data variables."
         )),
         ("model_ids", LiteralData(
-            'model_ids', str, optional=True, default="",
+            "model_ids", str, optional=True, default="",
             title="Model identifiers",
             abstract=(
                 "Optional list of the forward Earth magnetic field model "
@@ -157,17 +157,17 @@ class FetchData(WPSProcess):
             ),
         )),
         ("shc", ComplexData(
-            'shc',
+            "shc",
             title="Custom model coefficients.",
             abstract=(
                 "Custom forward magnetic field model coefficients encoded "
                 " in the SHC plain-text format."
             ),
             optional=True,
-            formats=(FormatText('text/plain'),)
+            formats=(FormatText("text/plain"),)
         )),
         ("csv_time_format", LiteralData(
-            'csv_time_format', str, optional=True, title="CSV time  format",
+            "csv_time_format", str, optional=True, title="CSV time  format",
             abstract="Optional time format used by the CSV output.",
             allowed_values=CDF_RAW_TIME_FORMATS,
             default=CDF_RAW_TIME_FORMATS[0],
@@ -176,8 +176,8 @@ class FetchData(WPSProcess):
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Output data", formats=(
-                FormatText('text/csv'),
+            "output", title="Output data", formats=(
+                FormatText("text/csv"),
                 FormatBinaryRaw("application/msgpack"),
                 FormatBinaryRaw("application/x-msgpack"),
             )
@@ -192,7 +192,7 @@ class FetchData(WPSProcess):
 
         # parse inputs
         sources = parse_collections(
-            'collection_ids', collection_ids.data, permissions=permissions,
+            "collection_ids", collection_ids.data, permissions=permissions,
             custom_dataset=CustomDatasetTimeSeries.COLLECTION_IDENTIFIER,
             user=user,
         )
@@ -200,7 +200,7 @@ class FetchData(WPSProcess):
             "model_ids", model_ids, shc
         )
         requested_variables = parse_variables(
-            'requested_variables', requested_variables
+            "requested_variables", requested_variables
         )
         self.logger.debug(
             "requested variables: %s", ", ".join(requested_variables)
@@ -223,7 +223,7 @@ class FetchData(WPSProcess):
                 format_timedelta(time_limit)
             )
             access_logger.warning(message)
-            raise InvalidInputValueError('end_time', message)
+            raise InvalidInputValueError("end_time", message)
 
         # log the request
         access_logger.info(
@@ -313,13 +313,13 @@ class FetchData(WPSProcess):
             ]
 
             # sampling filter
-            sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
+            sampler = MinStepSampler("Timestamp", timedelta_to_cdf_rawtime(
                 sampling_step, CDF_EPOCH_TYPE
             ))
-            grouping_sampler = GroupingSampler('Timestamp')
+            grouping_sampler = GroupingSampler("Timestamp")
             filters = []
             if bbox:
-                filters.append(BoundingBoxFilter('Latitude', 'Longitude', bbox))
+                filters.append(BoundingBoxFilter("Latitude", "Longitude", bbox))
 
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.items():
@@ -334,34 +334,34 @@ class FetchData(WPSProcess):
 
                 # slaves
                 for slave in product_sources[1:]:
-                    resolver.add_slave(slave, 'Timestamp')
+                    resolver.add_slave(slave, "Timestamp")
 
                     # extra sampling for selected collections
-                    if slave.metadata.get('extraSampled'):
+                    if slave.metadata.get("extraSampled"):
                         resolver.add_filter(ExtraSampler(
-                            'Timestamp', slave.collection_identifier, slave
+                            "Timestamp", slave.collection_identifier, slave
                         ))
 
                 # optional sample grouping
-                if master.metadata.get('groupSamples'):
+                if master.metadata.get("groupSamples"):
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
                 for slave in (index_kp10, index_dst, index_ddst, index_f10, index_imf):
-                    resolver.add_slave(slave, 'Timestamp')
+                    resolver.add_slave(slave, "Timestamp")
 
                 # satellite specific slaves
                 spacecraft = (
-                    master.metadata.get('mission') or DEFAULT_MISSION,
-                    master.metadata.get('spacecraft')
+                    master.metadata.get("mission") or DEFAULT_MISSION,
+                    master.metadata.get("spacecraft")
                 )
                 #TODO: add mission label
-                resolver.add_model(SpacecraftLabel(spacecraft[1] or '-'))
+                resolver.add_model(SpacecraftLabel(spacecraft[1] or "-"))
 
                 for item in orbit_info.get(spacecraft, []):
-                    resolver.add_slave(item, 'Timestamp')
+                    resolver.add_slave(item, "Timestamp")
 
-                if spacecraft[0] == "Swarm" and spacecraft[1] in ('A', 'B', 'C'):
+                if spacecraft[0] == "Swarm" and spacecraft[1] in ("A", "B", "C"):
                     # prepare spacecraft to spacecraft differences
                     # NOTE: No residual variables required by the filters.
                     subtracted_variables = get_subtracted_variables(requested_variables)
@@ -464,7 +464,7 @@ class FetchData(WPSProcess):
                             collection_count, MAX_SAMPLES_COUNT_PER_COLLECTION
                         )
                         raise InvalidInputValueError(
-                            'end_time',
+                            "end_time",
                             "Requested data exceeds the maximum limit of %d "
                             "samples per collection!" %
                             MAX_SAMPLES_COUNT_PER_COLLECTION
@@ -491,10 +491,10 @@ class FetchData(WPSProcess):
 
             access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
-                total_count, output['mime_type'], ", ".join(output_variables)
+                total_count, output["mime_type"], ", ".join(output_variables)
             )
 
-        if output['mime_type'] == "text/csv":
+        if output["mime_type"] == "text/csv":
             # write the output
             output_fobj = StringIO(newline="\r\n")
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
@@ -532,7 +532,7 @@ class FetchData(WPSProcess):
             http_headers = ()
             return CDFileWrapper(output_fobj, headers=http_headers, **output)
 
-        if output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
+        if output["mime_type"] in ("application/msgpack", "application/x-msgpack"):
 
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
 
@@ -568,9 +568,9 @@ class FetchData(WPSProcess):
                 data_lenght += dataset.length
 
             # additional metadata
-            output_dict['__info__'] = {
-                'sources': extract_product_names(resolvers.values()),
-                'variables': {
+            output_dict["__info__"] = {
+                "sources": extract_product_names(resolvers.values()),
+                "variables": {
                     label: resolver.output_variables
                     for label, resolver in resolvers.items()
                 },
@@ -583,6 +583,6 @@ class FetchData(WPSProcess):
             )
 
         raise InvalidOutputDefError(
-            'output',
-            "Unexpected output format %r requested!" % output['mime_type']
+            "output",
+            f"Unexpected output format {output['mime_type']!r} requested!"
         )

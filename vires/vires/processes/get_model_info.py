@@ -56,7 +56,7 @@ class GetModelInfo(WPSProcess):
 
     inputs = WPSProcess.inputs + [
         ("model_ids", LiteralData(
-            'model_ids', str, optional=True, default=None,
+            "model_ids", str, optional=True, default=None,
             title="Model identifiers",
             abstract=(
                 "Optional list of the forward Earth magnetic field model "
@@ -64,22 +64,22 @@ class GetModelInfo(WPSProcess):
             ),
         )),
         ("shc", ComplexData(
-            'shc',
+            "shc",
             title="Custom model coefficients.",
             abstract=(
                 "Custom forward magnetic field model coefficients encoded "
                 " in the SHC plain-text format."
             ),
             optional=True,
-            formats=(FormatText('text/plain'),),
+            formats=(FormatText("text/plain"),),
         )),
     ]
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Output data", formats=(
-                FormatText('text/csv'),
-                FormatJSON('application/json'),
+            "output", title="Output data", formats=(
+                FormatText("text/csv"),
+                FormatJSON("application/json"),
             )
         )),
     ]
@@ -96,9 +96,9 @@ class GetModelInfo(WPSProcess):
 
         access_logger.info("request: models: (%s), ", model_ids)
 
-        if output['mime_type'] == "text/csv":
+        if output["mime_type"] == "text/csv":
             return self._csv_output(models, output)
-        if output['mime_type'] == "application/json":
+        if output["mime_type"] == "application/json":
             return self._json_output(models, output)
 
         raise InvalidOutputDefError(
@@ -130,13 +130,13 @@ class GetModelInfo(WPSProcess):
         def _get_model_info(model):
             validity_start, validity_stop = model.validity
             return {
-                'name': model.name,
-                'expression': model.expression,
-                'validity': {
-                    'start': cls._format_time(validity_start),
-                    'end': cls._format_time(validity_stop),
+                "name": model.name,
+                "expression": model.expression,
+                "validity": {
+                    "start": cls._format_time(validity_start),
+                    "end": cls._format_time(validity_stop),
                 },
-                'sources': model.sources,
+                "sources": model.sources,
             }
 
         return CDObject([
