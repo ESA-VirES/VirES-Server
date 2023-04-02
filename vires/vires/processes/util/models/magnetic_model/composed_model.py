@@ -28,17 +28,17 @@
 
 from logging import getLogger, LoggerAdapter
 from itertools import chain
-from numpy import inf, zeros
-from eoxmagmod import vnorm, ComposedGeomagneticModel
+from numpy import zeros
+from eoxmagmod import vnorm
 from vires.util import include, unique, cached_property
 from vires.cdf_util import CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from ..base import Model
-from .source_extraction import ExtractSourcesMixIn
-from .source_model import SourceMagneticModel
+
+# FIXME: short vs full expression (full_expression => definition, short_expression => expression)
 
 
-class ComposedMagneticModel(Model, ExtractSourcesMixIn):
+class ComposedMagneticModel(Model):
     """ Combined forward spherical harmonic expansion model. """
     BASE_VARIABLES = ["F", "B_NEC"]
 
@@ -48,24 +48,20 @@ class ComposedMagneticModel(Model, ExtractSourcesMixIn):
 
     @cached_property
     def required_variables(self):
-        return [f"B_NEC_{model.name}" for _, model in self.components]
+        return [
+            f"B_NEC_{component.model.name}"
+            for component in self.composed_model.components
+        ]
+
+    @cached_property
+    def name(self):
+        """ composed model name """
+        return self.composed_model.name
 
     @cached_property
     def full_expression(self):
         """ full composed model expression """
-        def _generate_parts():
-            components = iter(self.components)
-            try:
-                scale, model = next(components)
-            except StopIteration:
-                return
-            sign = "- " if scale < 0 else ""
-            yield f"{sign}{model.short_expression}"
-            for scale, model in components:
-                sign = "-" if scale < 0 else "+"
-                yield "{sign} {model.short_expression}"
-
-        return " ".join(_generate_parts())
+        return self.composed_model.expression
 
     @cached_property
     def short_expression(self):
@@ -75,57 +71,34 @@ class ComposedMagneticModel(Model, ExtractSourcesMixIn):
             name = f"'{name}'"
         return name
 
-    @cached_property
+    @property
     def validity(self):
         """ Get model validity period. """
-        if not self.components: # empty composed model
-            return -inf, -inf
+        return self.composed_model.validity
 
-        start, end = -inf, +inf
-        for _, model in self.components:
-            comp_start, comp_end = model.validity
-            start = max(start, comp_start)
-            end = min(end, comp_end)
-            if start > end: # no validity overlap
-                return -inf, -inf
-
-        return start, end
-
-    @cached_property
+    @property
     def model(self):
-        """ Get aggregated model. """
+        """ Get the low-level magnetic model. """
+        return self.composed_model.model
 
-        def _iterate_models(model_obj, scale=1.0):
-            """ iterate models of of a model object. """
-            if isinstance(model_obj, SourceMagneticModel):
-                yield model_obj.model, scale, model_obj.parameters
-            elif isinstance(model_obj, ComposedMagneticModel):
-                for item_scale, item_model_obj in model_obj.components:
-                    for item in _iterate_models(item_model_obj, item_scale*scale):
-                        yield item
-
-        aggregated_model = ComposedGeomagneticModel()
-        for model, scale, parameters in _iterate_models(self):
-            aggregated_model.push(model, scale, **parameters)
-
-        return aggregated_model
-
-    @cached_property
+    @property
     def sources(self):
-        """ Get model sources and their validity ranges. """
-        return list(chain.from_iterable(
-            model.sources for _, model in self.components
-        ))
+        """ Get list of composed model's sources. """
+        return sorted(set(chain.from_iterable(
+            item.names for item in self.composed_model.sources
+        )))
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             model_name = self.extra["model_name"]
             return f"{model_name}: {msg}", kwargs
 
-    def __init__(self, name, components, logger=None):
+    def __init__(self, composed_model, logger=None):
         super().__init__()
-        self.name = name
-        self.components = components
+
+        # an instance of parsed vires.magnetic_models.parser.ComposedMagneticModel
+        self.composed_model = composed_model
+
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
             "model_name": self.variables[0],
         })
@@ -142,12 +115,14 @@ class ComposedMagneticModel(Model, ExtractSourcesMixIn):
             return output_ds
 
         b_nec = zeros((dataset.length, 3))
-        for variable, (sign, _) in zip(self.required_variables, self.components):
-            b_nec_source = dataset[variable]
-            if sign < 0:
-                b_nec -= b_nec_source
-            else:
-                b_nec += b_nec_source
+        factors = (
+            component.scale for component in self.composed_model.components
+        )
+        for variable, factor in zip(self.required_variables, factors):
+            values = dataset[variable]
+            if factor != 1:
+                values = factor * values
+            b_nec += values
 
         for variable in variables:
             filter_, type_, attrib = self._output[variable]

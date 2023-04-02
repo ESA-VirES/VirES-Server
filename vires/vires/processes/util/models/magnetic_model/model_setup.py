@@ -25,10 +25,12 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from vires.magnetic_models import MIO_MODELS, MODEL_CACHE
+from logging import getLogger
 from .residual import MagneticModelResidual
 from .source_model import SourceMagneticModel
 from .mio_model import MagneticModelMioMultiplication
+
+LOGGER = getLogger(__name__)
 
 
 def generate_magnetic_model_sources(mission, spacecraft, requested_models,
@@ -65,23 +67,17 @@ def _handle_source_mio_models(models):
     current_model_set = set()
     for model in models:
 
-        new_model_name = MIO_MODELS.get(model.short_name)
+        new_source_model = model.source_model.raw_mio_model
 
-        if not new_model_name:
+        if not new_source_model:
             # not a MIO model
             if model.name not in current_model_set:
                 current_model_set.add(model.name)
                 yield model
             continue
 
-        # MIO model
         # create new source without the F10.7-factor multiplication
-        new_model = SourceMagneticModel(
-            model_name=new_model_name,
-            model=MODEL_CACHE.get_model(new_model_name),
-            sources=model.sources,
-            parameters=model.parameters
-        )
+        new_model = SourceMagneticModel(new_source_model)
 
         # avoid duplicate models
         if new_model.name in current_model_set:

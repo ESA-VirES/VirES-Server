@@ -24,20 +24,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-locals,too-many-arguments,too-few-public-methods
 
 from logging import getLogger, LoggerAdapter
 from itertools import chain
-from numpy import stack
+from numpy import stack, searchsorted
 from eoxmagmod import vnorm
 from vires.util import include, unique, cached_property
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from ..base import Model
-from .source_extraction import ExtractSourcesMixIn
 
 
-class SourceMagneticModel(Model, ExtractSourcesMixIn):
+class SourceMagneticModel(Model):
     """ Source forward spherical harmonic expansion model. """
 
     # The dependencies are composed from the requirements of the source
@@ -56,49 +54,43 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
     def variables(self):
         return [f"{variable}_{self.name}" for variable in self.BASE_VARIABLES]
 
-    @staticmethod
-    def _get_name(name, parameters):
-        formatted_parameters = ",".join(
-            f"{key}={value}" for key, value in sorted(parameters.items())
-        )
-        return f"{name}({formatted_parameters})"
-
-    @cached_property
-    def name(self):
-        """ composed model name """
-        return self._get_name(self.short_name, self.parameters)
-
-    @property
-    def short_expression(self):
-        """ short model expression """
-        name = self.short_name
-        if "-" in name:
-            name = f"'{name}'"
-        return self._get_name(name, self.parameters)
-
     @cached_property
     def required_variables(self):
         return list(chain.from_iterable(
             variables for variables in self._source_variables.values()
         ))
 
+    @cached_property
+    def name(self):
+        """ composed model name """
+        return self.source_model.name
+
+    @cached_property
+    def short_expression(self):
+        """ short model expression """
+        return self.source_model.expression
+
+    @cached_property
+    def model(self):
+        """ Get the low-level magnetic model. """
+        return self.source_model.model
+
     @property
     def validity(self):
         """ Get model validity period. """
-        return self.model.validity
+        return self.source_model.validity
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             model_name = self.extra["model_name"]
             return f"{model_name}: {msg}", kwargs
 
-    def __init__(self, model_name, model, sources=None, parameters=None,
-                 logger=None, varmap=None):
+    def __init__(self, source_model, logger=None, varmap=None):
         super().__init__()
-        self.short_name = model_name
-        self.model = model
-        self.sources = sources or []
-        self.parameters = parameters or {}
+
+        # an instance of parsed vires.magnetic_models.parser.SourceMagneticModel
+        self.source_model = source_model
+
         varmap = varmap or {}
 
         available_data_extractors = {
@@ -111,7 +103,7 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
 
         self.data_extractors = [
             available_data_extractors[requirement]
-            for requirement in model.parameters
+            for requirement in source_model.model.parameters
         ]
 
         self._source_variables = {
@@ -119,7 +111,7 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
                 varmap.get(var, var) for var
                 in self.SOURCE_VARIABLES[requirement]
             ]
-            for requirement in model.parameters
+            for requirement in source_model.model.parameters
         }
 
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
@@ -138,13 +130,13 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
             inputs = {"scale": [1, 1, -1]}
             for extract in self.data_extractors:
                 inputs.update(extract(dataset))
-            inputs.update(self.parameters)
+            inputs.update(self.source_model.parameters)
 
             result = self.model.eval(**inputs)
             times = inputs['time']
             if times.size > 0:
                 self.product_set.update(
-                    self.extract_sources(times[0], times[-1])
+                    self._extract_sources(times[0], times[-1])
                 )
 
             for variable in variables:
@@ -172,6 +164,25 @@ class SourceMagneticModel(Model, ExtractSourcesMixIn):
                 "UNITS": "nT",
             }),
         }
+
+    def _extract_sources(self, start, end):
+        """ Extract a subset of sources matched my the given time interval. """
+        validity_start, validity_end = self.validity
+        start = max(start, validity_start)
+        end = min(end, validity_end)
+
+        product_set = set()
+
+        if start > end:
+            return product_set # not overlap
+
+        for source_list, ranges in self.source_model.sources:
+            if source_list:
+                idx_start = max(0, searchsorted(ranges[:, 1], start, "left"))
+                idx_stop = searchsorted(ranges[:, 0], end, "right")
+                product_set.update(source_list[idx_start:idx_stop])
+
+        return product_set
 
     def _extract_time(self, dataset):
         time, = self._source_variables["time"]

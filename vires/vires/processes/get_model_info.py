@@ -102,8 +102,8 @@ class GetModelInfo(WPSProcess):
             return self._json_output(models, output)
 
         raise InvalidOutputDefError(
-            'output',
-            "Unexpected output format %r requested!" % output['mime_type']
+            "output",
+            f"Unexpected output format {output['mime_type']!r} requested!"
         )
 
     @classmethod
@@ -120,7 +120,7 @@ class GetModelInfo(WPSProcess):
                 cls._format_time(validity_start),
                 cls._format_time(validity_stop),
                 model.full_expression,
-                " ".join(cls._get_sources(model)),
+                " ".join(model.sources),
             ))
         return CDFileWrapper(output_fobj, **output)
 
@@ -136,18 +136,12 @@ class GetModelInfo(WPSProcess):
                     'start': cls._format_time(validity_start),
                     'end': cls._format_time(validity_stop),
                 },
-                'sources': cls._get_sources(model),
+                'sources': model.sources,
             }
 
         return CDObject([
             _get_model_info(model) for model in models
         ], format=FormatJSON(), **output)
-
-    @staticmethod
-    def _get_sources(model):
-        return sorted(set(chain.from_iterable(
-            sources for sources, _ in model.sources
-        )))
 
     @staticmethod
     def _format_time(time):
