@@ -235,7 +235,7 @@ class FetchData(WPSProcess):
                 s.collection_identifier for l in sources.values() for s in l
             ),
             ", ".join(
-                "%s = %s" % (model.name, model.full_expression)
+                f"{model.name} = {model.expression}"
                 for model in requested_models
             ),
         )

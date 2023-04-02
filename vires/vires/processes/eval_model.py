@@ -45,7 +45,7 @@ from vires.processes.util import (
 
 
 class EvalModel(WPSProcess):
-    """ This process calculates difference of two magnetic models.
+    """ This process evaluates composed magnetic models.
     """
     identifier = "eval_model"
     title = "Evaluate model"
@@ -142,7 +142,7 @@ class EvalModel(WPSProcess):
             "request: time: %s, aoi: %s, elevation: %g, "
             "model: %s, variable: %s, image-size: (%d, %d), mime-type: %s",
             format_datetime(naive_to_utc(mjd2000_to_datetime(mean_time))),
-            bbox[0] + bbox[1], elevation, model.full_expression,
+            bbox[0] + bbox[1], elevation, model.expression,
             variable, width, height, output['mime_type'],
         )
 

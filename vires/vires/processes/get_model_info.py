@@ -119,7 +119,7 @@ class GetModelInfo(WPSProcess):
                 model.name,
                 cls._format_time(validity_start),
                 cls._format_time(validity_stop),
-                model.full_expression,
+                model.expression,
                 " ".join(model.sources),
             ))
         return CDFileWrapper(output_fobj, **output)
@@ -131,7 +131,7 @@ class GetModelInfo(WPSProcess):
             validity_start, validity_stop = model.validity
             return {
                 'name': model.name,
-                'expression': model.full_expression,
+                'expression': model.expression,
                 'validity': {
                     'start': cls._format_time(validity_start),
                     'end': cls._format_time(validity_stop),

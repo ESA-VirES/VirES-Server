@@ -35,8 +35,6 @@ from vires.cdf_util import CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from ..base import Model
 
-# FIXME: short vs full expression (full_expression => definition, short_expression => expression)
-
 
 class ComposedMagneticModel(Model):
     """ Combined forward spherical harmonic expansion model. """
@@ -59,17 +57,9 @@ class ComposedMagneticModel(Model):
         return self.composed_model.name
 
     @cached_property
-    def full_expression(self):
-        """ full composed model expression """
+    def expression(self):
+        """ Composed model expression. """
         return self.composed_model.expression
-
-    @cached_property
-    def short_expression(self):
-        """ short model expression """
-        name = self.name
-        if "-" in name:
-            name = f"'{name}'"
-        return name
 
     @property
     def validity(self):

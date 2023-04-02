@@ -66,7 +66,7 @@ class SourceMagneticModel(Model):
         return self.source_model.name
 
     @cached_property
-    def short_expression(self):
+    def expression(self):
         """ short model expression """
         return self.source_model.expression
 

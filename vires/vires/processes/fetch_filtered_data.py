@@ -238,7 +238,7 @@ class FetchFilteredData(WPSProcess):
                 s.collection_identifier for l in sources.values() for s in l
             ),
             ", ".join(
-                "%s = %s" % (model.name, model.full_expression)
+                f"{model.name} = {model.expression}"
                 for model in requested_models
             ),
             format_filters(filters)
@@ -602,7 +602,7 @@ class FetchFilteredData(WPSProcess):
                     )).replace("+00:00", "Z"),
                     "DATA_FILTERS": [str(f) for f in filters],
                     "MAGNETIC_MODELS": [
-                        "%s = %s" % (model.name, model.full_expression)
+                        f"{model.name} = {model.expression}"
                         for model in requested_models
                     ],
                     "SOURCES": list(sources.keys()),

@@ -121,10 +121,7 @@ class FetchFieldlines(WPSProcess):
         access_logger.info(
             "request: time: %s, locations: %s, models: (%s)",
             format_datetime(time), locations,
-            ", ".join(
-                "%s = %s" % (model.name, model.full_expression)
-                for model in models
-            ),
+            ", ".join(f"{model.name} = {model.expression}" for model in models),
         )
 
         def generate_field_lines():
@@ -138,13 +135,13 @@ class FetchFieldlines(WPSProcess):
 
                 self.logger.debug(
                     "%s=%s model options: %s",
-                    model.name, model.full_expression, options
+                    model.name, model.expression, options
                 )
 
                 for point in locations:
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
-                            "%s=%s field line " % (model.name, model.full_expression),
+                            f"{model.name} = {model.expression} field line ",
                             self.logger
                         ) as etl:
                         line_coords, line_field = trace_field_line(
@@ -153,7 +150,7 @@ class FetchFieldlines(WPSProcess):
                             trace_options=TRACE_OPTIONS, model_options=options,
                         )
                         etl.message += (
-                            "with %d points integrated in" % len(line_coords)
+                            f"with {len(line_coords)} points integrated in"
                         )
 
                     # convert coordinates from kilometres to metres
@@ -162,7 +159,7 @@ class FetchFieldlines(WPSProcess):
 
                 access_logger.info(
                     "model: %s=%s, lines: %d, points: %d",
-                    model.name, model.full_expression,
+                    model.name, model.expression,
                     len(locations), model_count,
                 )
                 total_count += model_count
@@ -176,7 +173,7 @@ class FetchFieldlines(WPSProcess):
         field_lines = generate_field_lines()
         info = {
             'time': format_datetime(time),
-            'models': {model.name: model.full_expression for model in models},
+            'models': {model.name: model.expression for model in models},
             'locations': [tuple(location) for location in locations]
         }
 
