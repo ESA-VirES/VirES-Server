@@ -53,13 +53,17 @@ class ExportProductCollectionSubcommand(Subcommand):
         )
 
     def handle(self, **kwargs):
-        query = ProductCollection.objects.prefetch_related('type').order_by('identifier')
+        query = (
+            ProductCollection.objects
+            .prefetch_related("type", "spacecraft", "cached_magnetic_models")
+            .order_by("identifier")
+        )
 
-        product_types = set(kwargs['product_type'] or [])
+        product_types = set(kwargs["product_type"] or [])
         if product_types:
             query = query.filter(type__identifier__in=product_types)
 
-        identifiers = set(kwargs['identifier'])
+        identifiers = set(kwargs["identifier"])
         if identifiers:
             query = query.filter(identifier__in=identifiers)
 
@@ -77,6 +81,25 @@ def serialize_collection(object_):
         "created": format_datetime(object_.created),
         "updated": format_datetime(object_.updated),
         "maxProductDuration": format_timedelta(object_.max_product_duration),
-        **object_.spacecraft_dict,
-        **object_.metadata
+        **export_metadata(object_, object_.metadata),
     }
+
+
+def export_metadata(collection, metadata):
+    metadata = {
+        **collection.spacecraft_dict,
+        **collection.metadata,
+    }
+    metadata = export_cached_models(collection, metadata)
+    return metadata
+
+
+def export_cached_models(collection, metadata):
+    if collection.cached_magnetic_models.count() > 0:
+        conf = metadata.get("cachedMagneticModels") or {}
+        conf["models"] = [
+            model.expression
+            for model in collection.cached_magnetic_models.all()
+        ]
+        metadata["cachedMagneticModels"] = conf
+    return metadata

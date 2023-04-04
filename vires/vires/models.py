@@ -335,7 +335,7 @@ class CachedMagneticModel(Model):
         **MANDATORY,
         **PROTECT,
     )
-    name = CharField(max_length=64, **MANDATORY)
+    name = CharField(max_length=128, **MANDATORY)
     expression = CharField(max_length=1024, **MANDATORY)
     metadata = JSONField(default=dict, **MANDATORY)
 
