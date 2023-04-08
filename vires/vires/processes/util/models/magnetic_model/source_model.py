@@ -170,18 +170,9 @@ class SourceMagneticModel(Model):
         validity_start, validity_end = self.validity
         start = max(start, validity_start)
         end = min(end, validity_end)
-
         product_set = set()
-
-        if start > end:
-            return product_set # not overlap
-
-        for source_list, ranges in self.source_model.sources:
-            if source_list:
-                idx_start = max(0, searchsorted(ranges[:, 1], start, "left"))
-                idx_stop = searchsorted(ranges[:, 0], end, "right")
-                product_set.update(source_list[idx_start:idx_stop])
-
+        for sources in self.source_model.extract_sources(start, end):
+            product_set.update(sources.names)
         return product_set
 
     def _extract_time(self, dataset):

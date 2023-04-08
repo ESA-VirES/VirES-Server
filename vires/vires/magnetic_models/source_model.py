@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 
 from collections import namedtuple
+from numpy import searchsorted
 from vires.util import cached_property
 from .models import MIO_MODELS, MODEL_CACHE
 
@@ -33,6 +34,15 @@ from .models import MIO_MODELS, MODEL_CACHE
 class SourceMagneticModel:
     """ Source magnetic model. """
     Sources = namedtuple("Sources", ["names", "times"])
+
+    def __str__(self):
+        return f"<SourceMagneticModel: {self.expression}>"
+
+    def __init__(self, identifier, model, sources=None, parameters=None):
+        self.identifier = identifier
+        self.model = model
+        self.sources = sources or []
+        self.parameters = parameters or {}
 
     @property
     def raw_mio_model(self):
@@ -76,11 +86,15 @@ class SourceMagneticModel:
         """ Get model validity. """
         return self.model.validity
 
-    def __init__(self, identifier, model, sources=None, parameters=None):
-        self.identifier = identifier
-        self.model = model
-        self.sources = sources or []
-        self.parameters = parameters or {}
-
-    def __str__(self):
-        return f"<SourceMagneticModel: {self.expression}>"
+    def extract_sources(self, start, end):
+        """ Extract a subset of sources matched my the given time interval. """
+        if start <= end:
+            for source_list, ranges in self.sources:
+                if source_list:
+                    selection = slice(
+                        max(0, searchsorted(ranges[:, 1], start, "left")),
+                        searchsorted(ranges[:, 0], end, "right"),
+                    )
+                    yield self.Sources(
+                        source_list[selection], ranges[selection]
+                    )

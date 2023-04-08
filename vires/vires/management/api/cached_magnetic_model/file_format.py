@@ -1,0 +1,169 @@
+#-------------------------------------------------------------------------------
+#
+# Cached magnetic models management API - file format specific operations
+#
+# Authors: Martin Paces <martin.paces@eox.at>
+#-------------------------------------------------------------------------------
+# Copyright (C) 2023 EOX IT Services GmbH
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies of this Software or works derived from this Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#-------------------------------------------------------------------------------
+
+import json
+from collections import defaultdict, namedtuple
+from numpy import stack
+from vires.cdf_util import (
+    cdf_open, pycdf, cdf_rawtime_to_mjd2000,
+    CDF_CHAR_TYPE, CDF_DOUBLE_TYPE, CDF_EPOCH_TYPE,
+    GZIP_COMPRESSION, GZIP_COMPRESSION_LEVEL4,
+)
+from vires.time_util import datetime, format_datetime, naive_to_utc
+from .common import remove_file
+
+
+CDF_COMPRESSION = dict(
+    compress=GZIP_COMPRESSION,
+    compress_param=GZIP_COMPRESSION_LEVEL4,
+)
+
+
+SourceRecord = namedtuple("SourceRecord", ["name", "start", "end"])
+
+
+def save_options(cdf, options):
+    """ Save cache options. """
+    cdf.attrs["OPTIONS"] = json.dumps(options)
+
+
+def load_options(cdf):
+    """ Load model options. """
+    return json.loads(str(cdf.attrs["OPTIONS"]))
+
+
+def read_model_cache_description(cache_file, logger):
+    """ Read the description of the model cache file. """
+
+    def _read_model_cache_description(cdf):
+        models = defaultdict(set)
+        for model_name, source_name, start, end in read_sources(cdf):
+            models[model_name].add(SourceRecord(source_name, start, end))
+        return dict(models)
+
+    try:
+        with cdf_open(cache_file, "r") as cdf:
+            return _read_model_cache_description(cdf)
+    except pycdf.CDFError as error:
+        logger.debug(
+            "Failed to read cache file description from %s! (%s)",
+            cache_file, error
+        )
+    return None
+
+
+def init_cache_file(cache_file, product, logger):
+    """ Initialize new cache file. """
+    logger.info("Creating cache file %s", cache_file)
+    with cdf_open(cache_file, "w") as cdf:
+        cdf.attrs["TITLE"] = product.identifier
+        cdf.attrs["COLLECTION"] = product.collection.identifier
+        cdf.attrs.new("MODEL_SOURCES")
+        cdf.attrs.new("SOURCE_TIME_RANGES")
+        cdf.attrs["CHANGELOG"] = f"{cdf.attrs['CREATED']} file created"
+
+
+def remove_cache_file(cache_file, logger):
+    """ Remove an existing cache file. """
+    if remove_file(cache_file):
+        logger.info("Removing cache file %s", cache_file)
+
+
+def read_sources(cdf):
+    """ Read model sources """
+    sources_attr = cdf.attrs["MODEL_SOURCES"]
+    ranges_attr = cdf.attrs["SOURCE_TIME_RANGES"]
+
+    for model_source, (start, end) in zip(sources_attr, ranges_attr):
+        name, _, source = model_source.partition("/")
+        yield name, source, start, end
+
+
+def write_sources(cdf, sources):
+    """ Write updated sources. """
+
+    def _reset_attribute(name):
+        del cdf.attrs[name]
+        cdf.attrs.new(name)
+        return cdf.attrs[name]
+
+    sources_attr = _reset_attribute("MODEL_SOURCES")
+    ranges_attr = _reset_attribute("SOURCE_TIME_RANGES")
+    for idx, (name, source, start, end) in enumerate(sources):
+        sources_attr.new(data=f"{name}/{source}", type=CDF_CHAR_TYPE, number=idx)
+        ranges_attr.new(data=(start, end), type=CDF_EPOCH_TYPE, number=idx)
+
+
+def append_log_record(cdf, message):
+    """ Append new cache-file log record. """
+    timestamp = format_datetime(naive_to_utc(
+        datetime.utcnow().replace(microsecond=0)
+    ))
+    cdf.attrs["CHANGELOG"].append(f"{timestamp} {message}")
+
+
+def read_times_and_locations_data(cdf, time_var="Timestamp",
+                              latitude_var="Latitude",
+                              longitude_var="Longitude",
+                              radius_var="Radius"):
+    """ Read times and locations from the source data file. """
+    time_var = cdf.raw_var(time_var)
+    return {
+        "time": cdf_rawtime_to_mjd2000(time_var[...], time_var.type()),
+        "location": stack((
+            # Note: radius is converted from metres to kilometres
+            cdf[latitude_var][...],
+            cdf[longitude_var][...],
+            cdf[radius_var][...] * 1e-3,
+        ), axis=1),
+    }
+
+
+def write_model_data(cdf, model_name, b_nec):
+    """ Write model data. """
+    remove_model_data(cdf, model_name)
+
+    variable_name = f"B_NEC_{model_name}"
+
+    cdf.new(variable_name, b_nec, CDF_DOUBLE_TYPE, **CDF_COMPRESSION)
+
+    cdf[variable_name].attrs.update({
+        "DESCRIPTION": (
+            "Magnetic field vector, NEC frame, calculated by "
+            f"the {model_name} model."
+        ),
+        "UNITS": "nT",
+    })
+
+
+def remove_model_data(cdf, model_name):
+    """ Remove model data. """
+
+    variable_name = f"B_NEC_{model_name}"
+
+    if variable_name in cdf:
+        del cdf[variable_name]
