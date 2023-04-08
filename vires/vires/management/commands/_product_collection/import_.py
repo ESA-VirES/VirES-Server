@@ -36,8 +36,8 @@ from vires.data.vires_settings import DEFAULT_MISSION
 from vires.models import (
     ProductCollection, ProductType, Spacecraft, CachedMagneticModel,
 )
-from vires.magnetic_models import ModelInputParser
 from .._common import Subcommand
+from ...api.cached_magnetic_model import parse_source_model
 
 
 class ImportProductCollectionSubcommand(Subcommand):
@@ -232,21 +232,3 @@ def remove_cached_models(collection, models, events):
         )
 
     db_models.delete()
-
-
-def parse_source_model(model_expression):
-    """ Parse model expression and get the canonical model expression"""
-    parser = ModelInputParser()
-    parser.parse_model_expression(model_expression)
-    if len(parser.source_models) == 0:
-        raise ValueError(
-            f"The model expression {model_expression!r} defines a model "
-            "composed of multiple source models."
-        )
-    if len(parser.source_models) == 0:
-        raise ValueError(
-            f"The model expression {model_expression!r} does not define "
-            "any source model."
-        )
-
-    return list(parser.source_models.values())[0]

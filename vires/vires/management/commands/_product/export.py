@@ -49,10 +49,7 @@ class ExportProductSubcommand(ProductSelectionSubcommand):
         )
 
     def handle(self, **kwargs):
-        products = self.select_products(
-            Product.objects.prefetch_related('collection', 'collection__type'),
-            **kwargs
-        )
+        products = self.select_products(Product.objects, **kwargs)
 
         data = [
             serialize_product_record(export_product(product))

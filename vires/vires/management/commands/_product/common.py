@@ -45,6 +45,18 @@ class ProductSelectionSubcommand(Subcommand):
             )
         )
         parser.add_argument(
+            "-m", "--mission", dest="mission", action="append", help=(
+                "Optional filter on the mission type. "
+                "Multiple missions are allowed."
+            )
+        )
+        parser.add_argument(
+            "-s", "--spacecraft", dest="spacecraft", action="append", help=(
+                "Optional filter on the spacecraft identifier. "
+                "Multiple spacecrafts are allowed."
+            )
+        )
+        parser.add_argument(
             "-c", "--collection", "--product-collection",
             dest="product_collection", action="append",
             help=(
@@ -91,6 +103,13 @@ class ProductSelectionSubcommand(Subcommand):
 
     def select_products(self, query, **kwargs):
         """ Select products based on the CLI parameters. """
+
+        query = query.prefetch_related(
+            "collection",
+            "collection__type",
+            "collection__spacecraft",
+        )
+
         if kwargs['after']:
             query = query.filter(begin_time__gte=kwargs['after'])
 
@@ -112,6 +131,14 @@ class ProductSelectionSubcommand(Subcommand):
         product_types = set(kwargs['product_type'] or [])
         if product_types:
             query = query.filter(collection__type__identifier__in=product_types)
+
+        missions = set(kwargs["mission"] or [])
+        if missions:
+            query = query.filter(collection__spacecraft__mission__in=missions)
+
+        spacecrafts = set(kwargs["spacecraft"] or [])
+        if spacecrafts:
+            query = query.filter(collection__spacecraft__spacecraft__in=spacecrafts)
 
         product_collections = set(kwargs['product_collection'] or [])
         if product_collections:

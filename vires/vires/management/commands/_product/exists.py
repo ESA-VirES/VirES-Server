@@ -44,9 +44,7 @@ class ExistsProductSubcommand(ProductSelectionSubcommand):
         self._add_selection_arguments(parser)
 
     def handle(self, **kwargs):
-        products = list(self.select_products(
-            Product.objects.prefetch_related('collection'), **kwargs
-        ))
+        products = list(self.select_products(Product.objects, **kwargs))
 
         if products:
             for product in products:

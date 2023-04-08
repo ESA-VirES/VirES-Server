@@ -34,13 +34,8 @@ class ListProductSubcommand(ProductSelectionSubcommand):
     name = "list"
     help = "List product identifiers."
 
-    #def add_arguments(self, parser):
-    #    super().add_arguments(parser)
-
     def handle(self, **kwargs):
-        products = self.select_products(
-            Product.objects.prefetch_related("collection"), **kwargs
-        )
+        products = self.select_products(Product.objects, **kwargs)
 
         for product in products:
             print("%s/%s" % (product.collection.identifier, product.identifier))
