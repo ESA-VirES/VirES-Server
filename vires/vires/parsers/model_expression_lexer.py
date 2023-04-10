@@ -114,7 +114,7 @@ class ModelExpressionLexer():
 
     @staticmethod
     def t_model_id(token):
-        r"[a-zA-Z][a-zA-Z0-9_]{0,128}"
+        r"[a-zA-Z_][a-zA-Z0-9_]{0,128}"
         return ModelExpressionLexer._check_id_length(token, 128)
 
     #---------------------------------------------------------------------------
@@ -185,7 +185,7 @@ class ModelExpressionLexer():
 
     @staticmethod
     def t_squote_model_id(token):
-        r"[a-zA-Z][a-zA-Z0-9_-]{0,128}"
+        r"[a-zA-Z_][a-zA-Z0-9_-]{0,128}"
         return ModelExpressionLexer._check_id_length(token, 128)
 
     @staticmethod

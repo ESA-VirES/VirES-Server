@@ -46,13 +46,13 @@ class TestModelListLexer(TestCase):
             list(lexer)
 
     def test_one_model_id(self):
-        self._test_lexer("MODEL-1", [('model_id', 'MODEL-1')])
+        self._test_lexer("_MODEL-1", [('model_id', '_MODEL-1')])
 
     def test_one_model_id_invalid_too_long(self):
         self._test_lexer_error("X"*129)
 
     def test_one_model_id_quoted_single(self):
-        self._test_lexer("'MODEL-1'", [('model_id', 'MODEL-1')])
+        self._test_lexer("'_MODEL-1'", [('model_id', '_MODEL-1')])
 
     def test_one_model_id_quoted_single_invalid(self):
         self._test_lexer_error("'MODEL 1'")
@@ -77,31 +77,31 @@ class TestModelListLexer(TestCase):
 
     def test_one_model_id_assigned_one_model_simple(self):
         self._test_lexer(
-            "MODEL = MODEL1",
+            "MODEL = _MODEL1",
             [
                 ('model_id', 'MODEL'),
                 ('assign', '='),
-                ('model_id', 'MODEL1'),
+                ('model_id', '_MODEL1'),
             ]
         )
 
     def test_one_model_id_assigned_one_model_quoted_single(self):
         self._test_lexer(
-            "MODEL = 'MODEL-1'",
+            "MODEL = '_MODEL-1'",
             [
                 ('model_id', 'MODEL'),
                 ('assign', '='),
-                ('model_id', 'MODEL-1'),
+                ('model_id', '_MODEL-1'),
             ]
         )
 
     def test_one_model_id_assigned_one_model_quoted_double(self):
         self._test_lexer(
-            'MODEL = "MODEL-1"',
+            'MODEL = "_MODEL-1"',
             [
                 ('model_id', 'MODEL'),
                 ('assign', '='),
-                ('model_id', 'MODEL-1'),
+                ('model_id', '_MODEL-1'),
             ]
         )
 
