@@ -37,6 +37,7 @@ from .common import (
     rename_file,
     copy_file,
     list_cache_files,
+    get_temp_cache_file,
 )
 from .seed import _extract_model_sources
 from .file_format import (
@@ -102,7 +103,7 @@ def _flush_product(product, cache_file, models, options, force_flush,
     """ Flush magnetic model cache for one product. """
     del options
 
-    tmp_cache_file = f"{cache_file}_tmp.cdf"
+    tmp_cache_file = get_temp_cache_file(cache_file)
 
     cache_description = read_model_cache_description(cache_file, logger)
 
@@ -122,7 +123,6 @@ def _flush_product(product, cache_file, models, options, force_flush,
         return
 
     try:
-        remove_file(tmp_cache_file)
         copy_file(cache_file, tmp_cache_file)
 
         _flush_models(product, tmp_cache_file, flushed_model_names, logger)

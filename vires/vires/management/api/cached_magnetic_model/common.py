@@ -32,6 +32,11 @@ from glob import iglob
 from django.conf import settings
 
 
+def get_temp_cache_file(cache_file):
+    """ Get temporary cache filename. """
+    return f"{cache_file}.tmp.cdf"
+
+
 def get_model_cache_read_only_flag():
     """ Extract the cache read-only boolean flag from settings. """
     return getattr(settings, "VIRES_MODEL_CACHE_READ_ONLY", False)
@@ -58,7 +63,8 @@ def list_cache_files(cache_dir_path, extension=".cdf"):
     """ List cache file base-names. """
     subset = slice(None, -len(extension) if extension else None)
     for item in iglob(join(cache_dir_path, f"*{extension}")):
-        yield basename(item[subset])
+        if not item.endswith(".cdf.tmp.cdf"):
+            yield basename(item[subset])
 
 
 def select_products(collection, product_filter=None):

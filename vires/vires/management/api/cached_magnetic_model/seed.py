@@ -37,6 +37,7 @@ from .common import (
     remove_file,
     rename_file,
     copy_file,
+    get_temp_cache_file,
 )
 from .model import (
     parse_source_model,
@@ -98,7 +99,7 @@ def seed_product(product, model_names=None, force_reseed=False, logger=None):
 def _seed_product(product, cache_file, models, options, force_reseed, logger):
     """ Seed magnetic model cache for one product. """
 
-    tmp_cache_file = f"{cache_file}_tmp.cdf"
+    tmp_cache_file = get_temp_cache_file(cache_file)
 
     cache_description = read_model_cache_description(cache_file, logger)
 
@@ -124,11 +125,10 @@ def _seed_product(product, cache_file, models, options, force_reseed, logger):
         return
 
     try:
-        remove_file(tmp_cache_file)
         if create_new_cache_file:
-            init_cache_file(tmp_cache_file, product, logger)
-        else:
-            copy_file(cache_file, tmp_cache_file)
+            init_cache_file(cache_file, product, logger)
+
+        copy_file(cache_file, tmp_cache_file)
 
         _seed_models(product, tmp_cache_file, seeded_models, options, logger)
 
