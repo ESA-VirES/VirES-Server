@@ -40,6 +40,6 @@ from .flush import (
 from .stats import collect_collection_cache_stats
 from .model import (
     parse_source_model,
-    extract_model_sources_mjd2000,
+    extract_model_sources_and_time_ranges_mjd2000,
     extract_model_sources_datetime,
 )

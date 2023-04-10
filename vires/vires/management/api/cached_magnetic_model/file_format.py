@@ -26,7 +26,7 @@
 #-------------------------------------------------------------------------------
 
 import json
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from numpy import stack
 from vires.cdf_util import (
     cdf_open, pycdf, cdf_rawtime_to_mjd2000,
@@ -41,9 +41,6 @@ CDF_COMPRESSION = dict(
     compress=GZIP_COMPRESSION,
     compress_param=GZIP_COMPRESSION_LEVEL4,
 )
-
-
-SourceRecord = namedtuple("SourceRecord", ["name", "start", "end"])
 
 
 def save_options(cdf, options):
@@ -61,8 +58,8 @@ def read_model_cache_description(cache_file, logger):
 
     def _read_model_cache_description(cdf):
         models = defaultdict(set)
-        for model_name, source_name, start, end in read_sources(cdf):
-            models[model_name].add(SourceRecord(source_name, start, end))
+        for model_name, source_name in read_sources(cdf):
+            models[model_name].add(source_name)
         return dict(models)
 
     try:
@@ -96,15 +93,22 @@ def remove_cache_file(cache_file, logger):
 def read_sources(cdf):
     """ Read model sources """
     sources_attr = cdf.attrs["MODEL_SOURCES"]
+
+    for model_source in sources_attr:
+        name, _, source = model_source.partition("/")
+        yield name, source
+
+
+def read_sources_with_time_ranges(cdf):
+    """ Read model sources with time-ranges. """
     ranges_attr = cdf.attrs["SOURCE_TIME_RANGES"]
 
-    for model_source, (start, end) in zip(sources_attr, ranges_attr):
-        name, _, source = model_source.partition("/")
+    for (name, source), (start, end) in zip(read_sources(cdf), ranges_attr):
         yield name, source, start, end
 
 
-def write_sources(cdf, sources):
-    """ Write updated sources. """
+def write_sources_with_time_ranges(cdf, sources):
+    """ Write updated sources with time-ranges. """
 
     def _reset_attribute(name):
         del cdf.attrs[name]

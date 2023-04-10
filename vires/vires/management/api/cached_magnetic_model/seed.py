@@ -41,14 +41,14 @@ from .common import (
 )
 from .model import (
     parse_source_model,
-    extract_model_sources_mjd2000,
+    extract_model_sources_and_time_ranges_mjd2000,
     extract_model_sources_datetime,
 )
 from .file_format import (
     init_cache_file,
     read_model_cache_description,
-    read_sources,
-    write_sources,
+    read_sources_with_time_ranges,
+    write_sources_with_time_ranges,
     append_log_record,
     read_times_and_locations_data,
     write_model_data,
@@ -173,7 +173,7 @@ def _update_attributes(cdf, model_name, model, data):
         if data["time"].size == 0:
             return
         start, end = data["time"][[0, -1]] # assuming sorted values
-        sources = extract_model_sources_mjd2000(model, start, end)
+        sources = extract_model_sources_and_time_ranges_mjd2000(model, start, end)
         for name, source_start, source_end in sources:
             yield (
                 name,
@@ -182,9 +182,10 @@ def _update_attributes(cdf, model_name, model, data):
             )
 
     new_sources = list(_extract_sources())
-    write_sources(cdf, [
+    write_sources_with_time_ranges(cdf, [
         *(
-            (name, *source) for name, *source in read_sources(cdf)
+            (name, *source) for name, *source
+            in read_sources_with_time_ranges(cdf)
             if name != model_name
         ),
         *(

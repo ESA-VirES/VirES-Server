@@ -43,8 +43,8 @@ from .seed import _extract_model_sources
 from .file_format import (
     remove_cache_file,
     read_model_cache_description,
-    read_sources,
-    write_sources,
+    read_sources_with_time_ranges,
+    write_sources_with_time_ranges,
     append_log_record,
     remove_model_data,
 )
@@ -151,9 +151,10 @@ def _flush_model(cdf, model_name):
 
 
 def _update_attributes(cdf, model_name):
-    write_sources(cdf, [
+    write_sources_with_time_ranges(cdf, [
         *(
-            (name, *source) for name, *source in read_sources(cdf)
+            (name, *source) for name, *source
+            in read_sources_with_time_ranges(cdf)
             if name != model_name
         ),
     ])

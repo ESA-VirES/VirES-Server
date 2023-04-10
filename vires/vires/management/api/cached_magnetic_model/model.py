@@ -47,8 +47,9 @@ def parse_source_model(model_expression):
     return list(parser.source_models.values())[0]
 
 
-def extract_model_sources_mjd2000(model, start, end):
-    """ Extract model sources within the given MJD2000 time interval.
+def extract_model_sources_and_time_ranges_mjd2000(model, start, end):
+    """ Extract model sources and time-ranges within the given MJD2000 time
+    interval.
     """
     for sources in model.extract_sources(start, end):
         for name, (source_start, source_end) in zip(*sources):
@@ -57,13 +58,10 @@ def extract_model_sources_mjd2000(model, start, end):
 
 def extract_model_sources_datetime(model, start, end):
     """ Extract model sources within the given datetime.datetime time interval.
+
+    This function extracts only the source names without the time intervals.
     """
     start = datetime_to_mjd2000(start)
     end = datetime_to_mjd2000(end)
-    sources = extract_model_sources_mjd2000(model, start, end)
-    for name, source_start, source_end in sources:
-        yield (
-            name,
-            mjd2000_to_datetime(source_start),
-            mjd2000_to_datetime(source_end),
-        )
+    for sources in model.extract_sources(start, end):
+        yield from sources.names
