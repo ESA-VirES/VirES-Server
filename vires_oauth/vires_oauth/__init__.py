@@ -27,6 +27,6 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring, invalid-name
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 default_app_config = 'vires_oauth.apps.ViresOauthConfig'

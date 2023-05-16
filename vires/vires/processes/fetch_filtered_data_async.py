@@ -55,6 +55,9 @@ from vires.data.vires_settings import (
     CACHED_PRODUCT_FILE, AUX_DB_KP, AUX_DB_DST, SPACECRAFTS, DEFAULT_MISSION,
     ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
 )
+from vires.filters import (
+    format_filters, MinStepSampler, GroupingSampler, ExtraSampler,
+)
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters,
@@ -73,10 +76,10 @@ from vires.processes.util.models import (
     IndexKpFromKp10,
     Identity,
     BnecToF,
+    Geodetic2GeocentricCoordinates,
 )
-from vires.processes.util.filters import (
-    MinStepSampler, GroupingSampler, ExtraSampler,
-)
+
+TIME_PRECISION = timedelta(microseconds=1)
 
 # TODO: Make the limits configurable.
 # Limit number of active jobs (ACCEPTED or STARTED) per user
@@ -141,12 +144,7 @@ class FetchFilteredDataAsync(WPSProcess):
         )),
         ("filters", LiteralData(
             'filters', str, optional=True, default="",
-            abstract=(
-                "Set of semi-colon-separated filters. The identifier and "
-                "extent are separated by a colon and the range bounds "
-                "are separated by a comma. "
-                "E.g., 'F:10000,20000;Latitude:-50,50'"
-            ),
+            abstract=("Filters' expression."),
         )),
         ("requested_variables", LiteralData(
             'variables', str, optional=True, default=None,
@@ -337,9 +335,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 "%s = %s" % (model.name, model.full_expression)
                 for model in requested_models
             ),
-            ", ".join(
-                "%s: (%g, %g)" % (f.label, f.vmin, f.vmax) for f in filters
-            ),
+            format_filters(filters)
         )
 
         if sampling_step is not None:
@@ -383,6 +379,7 @@ class FetchFilteredDataAsync(WPSProcess):
             model_subsol = SubSolarPoint()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
+            model_gd2gc = Geodetic2GeocentricCoordinates()
             copied_variables = [
                 Identity("MLT_QD", "MLT"),
                 Identity("Latitude_QD", "QDLat"),
@@ -471,7 +468,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
                 # models
                 aux_models = chain((
-                    model_bnec_intensity,
+                    model_gd2gc, model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals, copied_variables)
@@ -503,12 +500,11 @@ class FetchFilteredDataAsync(WPSProcess):
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    "; ".join(str(f) for f in resolver.filters)
+                    format_filters(resolver.filters)
                 )
                 self.logger.debug(
-                    "%s: unresolved filters: %s", label, "; ".join(
-                        str(f) for f in resolver.unresolved_filters
-                    )
+                    "%s: unresolved filters: %s", label,
+                    format_filters(resolver.unresolved_filters)
                 )
 
             # collect the common output variables
@@ -595,7 +591,7 @@ class FetchFilteredDataAsync(WPSProcess):
                             'filters',
                             "Failed to apply some of the filters "
                             "due to missing source variables! filters: %s" %
-                            "; ".join(str(f) for f in filters_left)
+                            " AND ".join(str(f) for f in filters_left)
                         )
 
                     # check if the number of samples is within the allowed limit
@@ -630,7 +626,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 for l in sources.values() for s in l
             ),
             begin_time.strftime("%Y%m%dT%H%M%S"),
-            end_time.strftime("%Y%m%dT%H%M%S"),
+            (end_time - TIME_PRECISION).strftime("%Y%m%dT%H%M%S"),
         )
 
         if output['mime_type'] == "text/csv":

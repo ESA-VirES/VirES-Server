@@ -44,6 +44,9 @@ setup(
     },
     scripts=[],
     install_requires=[
+        'django-allauth',
+        'django-oauth-toolkit>2.0',
+        'django_countries',
     ],
     zip_safe=False,
 

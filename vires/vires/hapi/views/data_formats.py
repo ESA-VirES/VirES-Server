@@ -108,6 +108,9 @@ class HapiDataResponse():
         def _handle_errors(chunks):
             try:
                 yield from chunks
+            except GeneratorExit:
+                # streaming stopped before consuming all chunks - do nothing
+                raise
             except:
                 getLogger(LOGGER_NAME).error(
                     "An error occurred while streaming HAPI data response!",

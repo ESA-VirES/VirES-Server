@@ -53,6 +53,10 @@ from vires.data.vires_settings import (
     CACHED_PRODUCT_FILE, AUX_DB_KP, AUX_DB_DST, SPACECRAFTS, DEFAULT_MISSION,
     ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
 )
+from vires.filters import (
+    format_filters, MinStepSampler, GroupingSampler, ExtraSampler,
+    BoundingBoxFilter,
+)
 from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables,
@@ -71,9 +75,7 @@ from vires.processes.util.models import (
     IndexKpFromKp10,
     Identity,
     BnecToF,
-)
-from vires.processes.util.filters import (
-    MinStepSampler, GroupingSampler, ExtraSampler, BoundingBoxFilter,
+    Geodetic2GeocentricCoordinates,
 )
 
 # TODO: Make the following parameters configurable.
@@ -302,6 +304,7 @@ class FetchData(WPSProcess):
             model_subsol = SubSolarPoint()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
+            model_gd2gc = Geodetic2GeocentricCoordinates()
             copied_variables = [
                 Identity("MLT_QD", "MLT"),
                 Identity("Latitude_QD", "QDLat"),
@@ -314,7 +317,7 @@ class FetchData(WPSProcess):
             grouping_sampler = GroupingSampler('Timestamp')
             filters = []
             if bbox:
-                filters.append(BoundingBoxFilter(['Latitude', 'Longitude'], bbox))
+                filters.append(BoundingBoxFilter('Latitude', 'Longitude', bbox))
 
             # collect all spherical-harmonics models and residuals
             models_with_residuals = []
@@ -386,7 +389,7 @@ class FetchData(WPSProcess):
 
                 # models
                 aux_models = chain((
-                    model_bnec_intensity,
+                    model_gd2gc, model_bnec_intensity,
                     model_kp, model_qdc, model_mlt, model_sun,
                     model_subsol, model_dipole, model_tilt_angle,
                 ), models_with_residuals, copied_variables)
@@ -418,12 +421,11 @@ class FetchData(WPSProcess):
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    "; ".join(str(f) for f in resolver.filters)
+                    format_filters(resolver.filters)
                 )
                 self.logger.debug(
-                    "%s: unresolved filters: %s", label, "; ".join(
-                        str(f) for f in resolver.unresolved_filters
-                    )
+                    "%s: unresolved filters: %s", label,
+                    format_filters(resolver.unresolved_filters)
                 )
 
             # collect the common output variables

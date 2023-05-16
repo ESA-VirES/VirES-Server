@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# VirES Jupyter Hub integration
+#  Data filters - composed predicates - Boolean operations - tests
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2022 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,4 +26,57 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-__version__ = "0.3.1"
+from unittest import TestCase, main
+from vires.filters import (
+    Negation,
+    Conjunction,
+    Disjunction,
+    EqualFilter,
+    GreaterThanOrEqualFilter,
+)
+from vires.filters.tests.common import FilterTestMixIn
+
+
+class TestNegation(TestCase, FilterTestMixIn):
+    CLASS = Negation
+    ARGS = (EqualFilter("I", 2),)
+    REQUIRED_VARIABLES = ("I",)
+    DATA = {"I": [4, -1, 1, 2, 5, 0, 3]}
+    STRING = "NOT I == 2"
+    RESULT = [0, 1, 2, 4, 5, 6]
+
+
+class TestConjunction(TestCase, FilterTestMixIn):
+    CLASS = Conjunction
+    ARGS = (
+        GreaterThanOrEqualFilter("I", 1),
+        GreaterThanOrEqualFilter("J", 2),
+    )
+    REQUIRED_VARIABLES = ("I", "J")
+    DATA = {
+        "I": [4, -1, 1, 2, 5, 0, 3],
+        "J": [5, 4, -1, 2, 1, 0, 3],
+    }
+    STRING = "(I >= 1 AND J >= 2)"
+    RESULT = [0, 3, 6]
+
+
+class TestDisjunction(TestCase, FilterTestMixIn):
+    CLASS = Disjunction
+    ARGS = (
+        EqualFilter("I", -1),
+        EqualFilter("I", 0),
+        EqualFilter("J", 2),
+        EqualFilter("J", 5),
+    )
+    REQUIRED_VARIABLES = ("I", "J")
+    DATA = {
+        "I": [4, -1, 1, 2, 5, 0, 3],
+        "J": [5, 4, -1, 2, 1, 0, 3],
+    }
+    STRING = "(I == -1 OR I == 0 OR J == 2 OR J == 5)"
+    RESULT = [0, 1, 3, 5]
+
+
+if __name__ == "__main__":
+    main()

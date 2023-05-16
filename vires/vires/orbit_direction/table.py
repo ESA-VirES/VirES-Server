@@ -31,7 +31,7 @@ from os import remove, rename
 from os.path import exists, basename, splitext
 from logging import getLogger
 from bisect import bisect_left, bisect_right
-from numpy import asarray, empty
+from numpy import asarray, empty, isnat
 from ..cdf_util import cdf_open, CDF_EPOCH_TYPE
 from ..cdf_data_reader import read_cdf_data
 from ..cdf_write_util import cdf_add_variable, CdfTypeEpoch
@@ -119,6 +119,9 @@ class OrbitDirectionTable():
         times = self._data.times
         pass_flags = self._data.odirs
         type_flags = self._data.flags
+
+        if isnat(times).any():
+            raise DataIntegrityError("NaT timestamp detected!")
 
         if not (times[1:] > times[:-1]).all():
             raise DataIntegrityError("Times are not strictly increasing!")

@@ -28,7 +28,7 @@
 
 import sys
 import json
-from oauth2_provider.models import Application
+from oauth2_provider.models import get_application_model
 from vires_oauth.time_utils import datetime_to_string
 from .._common import Subcommand, JSON_OPTS
 
@@ -47,7 +47,8 @@ class ExportAppSubcommand(Subcommand):
         )
 
     def handle(self, **kwargs):
-        apps = self.select_apps(Application.objects.all(), **kwargs)
+        model = get_application_model()
+        apps = self.select_apps(model.objects.all(), **kwargs)
 
         data = [serialize_app(app) for app in apps]
 

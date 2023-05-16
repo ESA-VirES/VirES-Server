@@ -4,7 +4,87 @@
 <h1>Changelog</h1>
 <hr>
 <h3>
-    Release of Service v3.8.0 (07.02.2022)
+    Release of Service v3.11.0 (2022-12-19)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>New datasets published via Heliophysics API</b><br>
+      Swarm non-MAG products (EFI LP, EFI IDM, EFI TIE, EFI TCT, EEF TMS,
+      IBI TMS, FAC TMS, TEC TMS, IPD IRR, AEJ LPL, AEJ PBL, AEJ LPS, AEJ PBS,
+      AOB FAC, MIT LP, MIT TEC, PPI FAC) have been exposed via the
+      <a target="_blank" href="/hapi">VirES HAPI interface</a>.
+    </li>
+    <li><b>Improved model performance</b><br>
+      The calculation of geo-magnetic models have been reviewed
+      and its performance have been significantly improved.
+    </li>
+</ul>
+<hr>
+<h3>
+    Release of Service v3.10.0 (2022-10-22)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>Extended data filtering API</b><br>
+      The VirES server API has been modified to allow new types of data filters.
+      It is now possible to filter data by various equality and
+      inequality predicates and masked bit flags. The new filters API
+      can be fully exploited via the
+      <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/">VirES Python client</a>.
+    </li>
+    <li><b>Bit-flags filters in web client</b><br>
+      The VirES web client now allows data filtering by binary quality
+      and calibration flags. Thanks to the new server API, the same filters
+      can be applied to the downloaded data.
+    </li>
+    <li><b>Plotting error-bars</b><br>
+      The Analytical Viewer is now capable of plotting uncertainty as error bars.
+    </li>
+    <li><b>New EFIxIDM products</b><br>
+      The new ion drift, density and effective mass products
+      (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/2860886/SLIDEM_Product_Definition.pdf">EFIxIDM</a>)
+      prepared by the <a target="_blank" href="https://earth.esa.int/eogateway/activities/slidem">SLIDEM</a> project
+      have been added to VirES. The data is accessible via both API and web-client.
+    </li>
+    <li><b>EFIxTIE and EFIxTCT products accessible via web-client</b><br>
+      The data from the Thermal Ion Imager cross track flow
+      (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf">EFIxTCT</a>, 2&nbsp;Hz)
+      and ion temperature estimate (<a target="_blank" href="https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_">EFIxTIE</a>),
+      added to VirES in the previous release, have been made accessible via the web client.
+    </li>
+    <li><b>New GOCE calibrated magnetic field measurements</b><br>
+      The calibrated magnetic field measurements from the GOCE mission
+      has been added to VirES and are accessible via the API.
+    </li>
+</ul>
+<hr>
+<h3>
+    Release of Service v3.9.0 (2022-05-20)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>New EFI TII products</b><br>
+      VirES now offers API access to data from the following EFI TII products:
+      <ul>
+        <li>2&nbsp;Hz and 16&nbsp;Hz thermal ion imager - cross track flow (<a target="_blank" href="https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf">EFIxTCT</a>)</li>
+        <li>Ion temperature estimate (<a target="_blank" href="https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_">EFIxTIE</a>)</li>
+      </ul>
+    </li>
+    <li><b>Heliophysics API</b><br>
+      Publishing CryoSat-2, GRACE and GRACE-FO calibrated platform
+      magnetometer measurements via the
+      <a target="_blank" href="/hapi">Heliophysics Application Programming Interface (HAPI)</a>.
+    </li>
+</ul>
+<hr>
+<h3>
+    Release of Service v3.8.0 (2022-02-07)
 </h3>
 <p>
     Features:
@@ -22,7 +102,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.7.0 (08.10.2021)
+    Release of Service v3.7.0 (2021-10-08)
 </h3>
 <p>
     Features:
@@ -47,7 +127,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.6.0 (23.08.2021)
+    Release of Service v3.6.0 (2021-08-23)
 </h3>
 <p>
     Features:
@@ -55,7 +135,7 @@
 <ul>
     <li><b>New Plasmapause Related boundaries in the topside Ionosphere as derived from Swarm Measurements (PRISM) products</b><br>
       The data from the new MITx_LP_2F, MITxTEC_2F, PPIxFAC_2F products prepared by the
-      <a href="https://earth.esa.int/eogateway/activities/plasmapause-related-boundaries-in-the-topside-ionosphere-as-derived-from-swarm-measurements" target="_blank">PRISM project</a> 
+      <a href="https://earth.esa.int/eogateway/activities/plasmapause-related-boundaries-in-the-topside-ionosphere-as-derived-from-swarm-measurements" target="_blank">PRISM project</a>
       have been added to VirES and they are accessible through the VirES API.
     </li>
     <li><b>New CryoSat-2, GRACE and GRACE-FO magnetic measurements</b><br>
@@ -75,7 +155,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.5.0 (15.04.2021)
+    Release of Service v3.5.0 (2021-04-15)
 </h3>
 <p>
     Features:
@@ -87,7 +167,7 @@
 <ul>
     <li><b>New virtual observatory products</b><br>
       The VOBS products prepared by the
-      <a href="https://www.space.dtu.dk/english/research/projects/project-descriptions/geomagnetic-virtual-observatories" target="_blank">GVO project</a> 
+      <a href="https://www.space.dtu.dk/english/research/projects/project-descriptions/geomagnetic-virtual-observatories" target="_blank">GVO project</a>
       are now accessible via the VirES API.
     </li>
     <li><b>New ground magnetic observatory data</b><br>
@@ -107,7 +187,7 @@
 <p>For more details on the VirES API, see the <a href="https://viresclient.readthedocs.io/en/latest/available_parameters.html" target="_blank">VirES Python Client documentation</a>.</p>
 <hr>
 <h3>
-    Release of Service v3.4.0 (02.10.2020)
+    Release of Service v3.4.0 (2020-10-02)
 </h3>
 <p>
     Features:
@@ -125,7 +205,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.3.0 (05.06.2020)
+    Release of Service v3.3.0 (2020-06-05)
 </h3>
 <p>
     Features:
@@ -166,7 +246,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.2.0 (06.04.2020)
+    Release of Service v3.2.0 (2020-04-06)
 </h3>
 <p>
     Features:
@@ -189,7 +269,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.1.3 (20.01.2020)
+    Release of Service v3.1.3 (2020-01-20)
 </h3>
 <p>
     Features:
@@ -203,7 +283,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.1.2 (11.12.2019)
+    Release of Service v3.1.2 (2019-12-11)
 </h3>
 <p>
     Features:
@@ -215,7 +295,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.1.1 (14.11.2019)
+    Release of Service v3.1.1 (2019-11-14)
 </h3>
 <p>
     Features:
@@ -246,7 +326,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.1.0 (3.9.2019)
+    Release of Service v3.1.0 (2019-09-03)
 </h3>
 <p>
     Features:
@@ -300,7 +380,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v3.0.0 (10.5.2019)
+    Release of Service v3.0.0 (2019-05-10)
 </h3>
 <p>
     Features:
@@ -359,7 +439,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v2.3.0 (22.3.2019)
+    Release of Service v2.3.0 (2019-03-22)
 </h3>
 <p>
     Features:
@@ -409,7 +489,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v2.2.3 (15.2.2019)
+    Release of Service v2.2.3 (2019-02-15)
 </h3>
 <p>
     Features:
@@ -434,7 +514,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v2.2.2 (11.1.2019)
+    Release of Service v2.2.2 (2019-01-11)
 </h3>
 <p>
     Features:
@@ -444,7 +524,7 @@
 </ul>
 <hr>
 <h3>
-    Release of Service v2.2.1 (4.9.2018)
+    Release of Service v2.2.1 (2018-09-04)
 </h3>
 <p>
     Features:
@@ -458,7 +538,7 @@
     <li><b>F10.7 index</b><br>The F10.7 index has been added as a new index layer and its source has been changed from the AUX_IMF_2_ to AUX_F10_2_ product.</li>
 </ul>
 <h3>
-    Release of Service v2.2 (4.6.2018)
+    Release of Service v2.2 (2018-06-04)
 </h3>
 <p>
     Features:
@@ -493,7 +573,7 @@
 
 <hr>
 <h3>
-    Release of Service v2.1 (20.10.2017)
+    Release of Service v2.1 (2017-10-20)
 </h3>
 <p>
     Features:
@@ -531,7 +611,7 @@
 
 <hr>
   <h3>
-    Release of Service v2.0 (20.03.2017)
+    Release of Service v2.0 (2017-03-20)
   </h3>
 
 <p>
@@ -554,7 +634,7 @@
 
 <hr>
   <h3>
-    Release of Service v1.2 (21.12.2016)
+    Release of Service v1.2 (2016-12-21)
   </h3>
 
 <p>
@@ -576,7 +656,7 @@
 
 <hr>
   <h3>
-    Release of Service v1.1 (26.09.2016)
+    Release of Service v1.1 (2016-09-26)
   </h3>
 
 <p>

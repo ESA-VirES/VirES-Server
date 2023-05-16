@@ -5,7 +5,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MOD",
-        "_order": 1,
+        "_order": 10,
         "datasets": {
             "MOD": {
                 "Timestamp": {
@@ -47,7 +47,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG_LR",
-        "_order": 2,
+        "_order": 11,
         "datasets": {
             "MDR_MAG_LR": {
                 "Timestamp": {
@@ -84,6 +84,13 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Magnetic field intensity",
+                        "UNITS": "nT"
+                    }
+                },
+                "dF_Sun": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic stray field correction intensity of Sun ASM frame",
                         "UNITS": "nT"
                     }
                 },
@@ -222,7 +229,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Magnetic_Products",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG_HR",
-        "_order": 3,
+        "_order": 12,
         "datasets": {
             "MDR_MAG_HR": {
                 "Timestamp": {
@@ -351,6 +358,10 @@
     },
     {
         "name": "SW_EFIx_LP_1B",
+        "description": "Swarm plasma data from the Langimur Probe (LP) at 2Hz rate",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#EFIX_LP_1B_Product",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 20,
         "defaultDataset": "MDR_EFI_LP",
         "datasets": {
             "MDR_EFI_LP": {
@@ -472,7 +483,537 @@
         }
     },
     {
+        "name": "SW_EFIxIDM_2_",
+        "description": "Swarm LP ion drift, density and effective mass data",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/2860886/SLIDEM_Product_Definition.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 21,
+        "defaultDataset": "EFI_IDM",
+        "datasets": {
+            "EFI_IDM": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "Latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "Longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "Height",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Height above WGS84 reference ellipsoid",
+                        "UNITS": "m"
+                    }
+                },
+                "Radius_GC": {
+                    "source": "Radius",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time",
+                        "UNITS": "hour"
+                    }
+                },
+                "V_sat_nec": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Satellite velocity in north, east, centre (NEC) reference frame.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "M_i_eff": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass.",
+                        "UNITS": "a.m.u."
+                    }
+                },
+                "M_i_eff_err": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass uncertainty.",
+                        "UNITS": "a.m.u."
+                    }
+                },
+                "M_i_eff_Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass validity flag.",
+                        "UNITS": "-"
+                    }
+                },
+                "M_i_eff_tbt_model": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion effective mass from Truhlik et al. (2015) topside empirical model.",
+                        "UNITS": "a.m.u."
+                    }
+                },
+                "V_i": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "V_i_err": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift uncertainty.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "V_i_Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift validity flag.",
+                        "UNITS": "-"
+                    }
+                },
+                "V_i_raw": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion along-track drift without high-latitude detrending.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "N_i": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion density.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "N_i_err": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion density unertainty.",
+                        "UNITS": "cm^-3"
+                    }
+                },
+                "N_i_Flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion density validity flag.",
+                        "UNITS": "-"
+                    }
+                },
+                "A_fp": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Modified-OML EFI faceplate area.",
+                        "UNITS": "m^2"
+                    }
+                },
+                "R_p": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Modified-OML Langmuir spherical probe radius.",
+                        "UNITS": "m"
+                    }
+                },
+                "T_e": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Electron temperature.",
+                        "UNITS": "K"
+                    }
+                },
+                "Phi_sc": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Spacecraft floating potential with respect to plasma potential far from satellite.",
+                        "UNITS": "V"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_EFIxTIE_2_",
+        "description": "Swarm Thermal Ion Imager (TII) ion temperatures estimate",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 22,
+        "defaultDataset": "EFI_TIE",
+        "datasets": {
+            "EFI_TIE": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "Latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "Longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "Height",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Height above WGS84 reference ellipsoid",
+                        "UNITS": "m"
+                    }
+                },
+                "Radius_GC": {
+                    "source": "Radius",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geocentric radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time",
+                        "UNITS": "hour"
+                    }
+                },
+                "Tn_msis": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Neutral temperature from NRLMSISE00 model",
+                        "UNITS": "K"
+                    }
+                },
+                "Te_adj_LP": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Corrected Swarm LP electron temperature",
+                        "UNITS": "K"
+                    }
+                },
+                "Ti_meas_drift": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion temperature estimated using Swarm TII drift at high latitudes",
+                        "UNITS": "K"
+                    }
+                },
+                "Ti_model_drift": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Ion temperature estimated using Weimer 2005 model drifts at high latitude",
+                        "UNITS": "K"
+                    }
+                },
+                "Flag_ti_meas": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterising TII-based Ti: Bit0 = 1/0: high-latitude frictional heating included/omitted, Bit1=1/0: electron temperature from low/high-gain probe, Bit2=1/0: ion temperature data available/data value is set to NaN",
+                        "UNITS": "-"
+                    }
+                },
+                "Flag_ti_model": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterising model-based Ti: Bit0 = 1/0: high-latitude frictional heating included/omitted, Bit1=1/0: electron temperature from low/high-gain probe, Bit2=1/0: ion temperature data available/data value is set to NaN",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_EFIx_TCTyy",
+        "description": "Swarm Thermal Ion Imager (TII) cross track flow at 2Hz and 16Hz",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 23,
+        "defaultDataset": "EFI_TII_CT",
+        "datasets": {
+            "EFI_TII_CT": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF – Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time",
+                        "UNITS": "hour"
+                    }
+                },
+                "Vixh": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Along-track ion drift from horizontal TII sensor in satellite-track coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vixh_error": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Random error estimate for along-track ion drift from horizontal TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vixv": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Along-track ion drift from vertical TII sensor in satellite-track coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vixv_error": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Random error estimate for along-track ion drift from vertical TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Viy": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Cross-track horizontal ion drift from horizontal TII sensor in satellite-track coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Viy_error": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Random error estimate for cross-track horizontal ion drift from horizontal TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Viz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Cross-track vertical ion drift from vertical TII sensor in satellite-track coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Viz_error": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Random error estimate for cross-track vertical ion drift from vertical TII sensor in satellite-track coordinates. Negative value indicates no estimate available.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "VsatN": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Satellite velocity N component in north-east-centre coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "VsatE": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Satellite velocity E component in north-east-centre coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "VsatC": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Satellite velocity C component in north-east-centre coordinates.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Ehx": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field x component in satellite-track coordinates, derived from -VxB with along-track ion drift from horizontal sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Ehy": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field y component in satellite-track coordinates, derived from -VxB with along-track ion drift from horizontal sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Ehz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field z component in satellite-track coordinates, derived from -VxB with along-track ion drift from horizontal sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Evx": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field x component in satellite-track coordinates, derived from -VxB with along-track ion drift from vertical sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Evy": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field y component in satellite-track coordinates, derived from -VxB with along-track ion drift from vertical sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Evz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Electric field z component in satellite-track coordinates, derived from -VxB with along-track ion drift from vertical sensor.",
+                        "UNITS": "mV/m"
+                    }
+                },
+                "Bx": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Geomagnetic field x component in satellite-track coordinates, derived from the 1 Hz product.",
+                        "UNITS": "nT"
+                    }
+                },
+                "By": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Geomagnetic field y component in satellite-track coordinates, derived from the 1 Hz product.",
+                        "UNITS": "nT"
+                    }
+                },
+                "Bz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Geomagnetic field z component in satellite-track coordinates, derived from the 1 Hz product.",
+                        "UNITS": "nT"
+                    }
+                },
+                "Vicrx": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion drift corotation signal x component in satellite-track coordinates. This has been removed from ion drift and electric field.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vicry": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion drift corotation signal y component in satellite-track coordinates. This has been removed from ion drift and electric field.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Vicrz": {
+                    "dataType": "float32",
+                    "attributes": {
+                        "DESCRIPTION": "Ion drift corotation signal z component in satellite-track coordinates. This has been removed from ion drift and electric field.",
+                        "UNITS": "m/s"
+                    }
+                },
+                "Quality_flags": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Bitwise flag for each velocity component, where a value of 1 for a particular component signifies that calibration was successful, and that the baseline 1-sigma noise level is less than or equal to 100 m/s at 2 Hz. Electric field quality can be assessed from these flags according to -vxB. Bit0 (least significant) = Vixh, bit1 = Vixv, bit2 = Viy, bit3 = Viz. Refer to the release notes for details.",
+                        "UNITS": "-"
+                    }
+                },
+                "Calibration_flags": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Information about the calibration process. Refer to the release notes for details.",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_IBIxTMS_2F",
+        "description": "Swarm ionospheric bubble index",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#IBIxTMS_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 25,
         "defaultDataset": "IBI_TMS",
         "datasets": {
             "IBI_TMS": {
@@ -553,6 +1094,10 @@
     },
     {
         "name": "SW_EEFxTMS_2F",
+        "description": "Swarm dayside equatorial electric field",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EEFxTMS_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 24,
         "defaultDataset": "EEF_TMS",
         "datasets": {
             "EEF_TMS": {
@@ -613,6 +1158,10 @@
     },
     {
         "name": "SW_FACxTMS_2F",
+        "description": "Swarm field-aligned and radial current densities",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#FACxTMS_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 26,
         "defaultDataset": "FAC_TMS",
         "datasets": {
             "FAC_TMS": {
@@ -707,6 +1256,10 @@
     },
     {
         "name": "SW_TECxTMS_2F",
+        "description": "Swarm ionospheric total electron content",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#TECxTMS_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 26,
         "defaultDataset": "TEC_TMS",
         "datasets": {
             "TEC_TMS": {
@@ -863,6 +1416,11 @@
     },
     {
         "name": "SW_IPDxIRR_2F",
+        "description": "Swarm characteristics of the plasma density and plasma irregularities",
+        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#IPDxIRR_2F",
+        "citation": "https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/2018JA026063",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 30,
         "defaultDataset": "IPD_IRR",
         "datasets": {
             "IPD_IRR": {
@@ -1125,6 +1683,10 @@
     },
     {
         "name": "SW_AEJxLPL_2F",
+        "description": "Swarm ionospheric sheet current densities determined by the Line Current (LC) method",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 40,
         "defaultDataset": "AEJ_LPL",
         "datasets": {
             "AEJ_LPL": {
@@ -1221,6 +1783,10 @@
     },
     {
         "name": "SW_AEJxPBL_2F",
+        "description": "Swarm ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 41,
         "defaultDataset": "AEJ_PBL",
         "datasets": {
             "AEJ_PBL": {
@@ -1270,7 +1836,7 @@
                     }
                 },
                 "Flags": {
-                    "dataType": "uint8",
+                    "dataType": "uint16",
                     "attributes": {
                         "DESCRIPTION": "Quality indicator",
                         "UNITS": "-"
@@ -1295,6 +1861,10 @@
     },
     {
         "name": "SW_AEJxLPS_2F",
+        "description": "Swarm ionospheric sheet current densities determined by the Spherical Elementary Current Systems (SECS) method",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 42,
         "defaultDataset": "AEJ_LPS",
         "datasets": {
             "AEJ_LPS": {
@@ -1415,6 +1985,10 @@
     },
     {
         "name": "SW_AEJxPBS_2F",
+        "description": "Swarm ionospheric auroral electrojet peaks and boundaries determined by the Spherical Elementary Current Systems (SECS) method",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 43,
         "defaultDataset": "AEJ_PBS",
         "datasets": {
             "AEJ_PBS": {
@@ -1464,7 +2038,7 @@
                     }
                 },
                 "Flags": {
-                    "dataType": "uint8",
+                    "dataType": "uint16",
                     "attributes": {
                         "DESCRIPTION": "Quality indicator",
                         "UNITS": "-"
@@ -1526,6 +2100,10 @@
     },
     {
         "name": "SW_AOBxFAC_2F",
+        "description": "Swarm aurora oval boundaries determined from the Field Aligned Current (FAC) data",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 44,
         "defaultDataset": "AOB_FAC",
         "datasets": {
             "AOB_FAC": {
@@ -1609,6 +2187,10 @@
     },
     {
         "name": "SW_MITx_LP_2F",
+        "description": "Swarm mid-latitude ionospheric trough boundaries and minima from from Langmuir Probe (LP) data",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 45,
         "defaultDataset": "MIT_minimum",
         "datasets": {
             "MIT_minimum": {
@@ -1853,7 +2435,7 @@
                 },
                 "Position_Quality": {
                     "source": "Position_Quality_ID",
-                    "dataType": "float64",
+                    "dataType": "int8",
                     "attributes": {
                         "DESCRIPTION": "Indicator characterizing the detection quality of the position",
                         "UNITS": "-"
@@ -1872,6 +2454,10 @@
     },
     {
         "name": "SW_MITxTEC_2F",
+        "description": "Swarm mid-latitude ionospheric trough boundaries and minima from from Total Electron Content (TEC) data",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 46,
         "defaultDataset": "MIT_minimum",
         "datasets": {
             "MIT_minimum": {
@@ -2101,7 +2687,7 @@
                 },
                 "Position_Quality": {
                     "source": "Position_Quality_ID",
-                    "dataType": "float64",
+                    "dataType": "int8",
                     "attributes": {
                         "DESCRIPTION": "Indicator characterizing the detection quality of the position",
                         "UNITS": "-"
@@ -2120,6 +2706,10 @@
     },
     {
         "name": "SW_PPIxFAC_2F",
+        "description": "Swarm equatorward boundary of Small-Scale Field Aligned Currents (SSFAC) and the associated midnight Plasma-Pause (PP) index",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 47,
         "defaultDataset": "SSFAC_boundary",
         "datasets": {
             "SSFAC_boundary": {
@@ -2313,7 +2903,7 @@
                 },
                 "Position_Quality": {
                     "source": "Position_Quality_ID",
-                    "dataType": "float64",
+                    "dataType": "int8",
                     "attributes": {
                         "DESCRIPTION": "Indicator characterizing the detection quality of the position",
                         "UNITS": "-"
@@ -2672,7 +3262,7 @@
         "resourceUrl": "https://doi.org/10.1186/s40623-021-01373-9",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG",
-        "_order": 101,
+        "_order": 15,
         "datasets": {
             "MDR_MAG": {
                 "Timestamp": {
@@ -2761,7 +3351,7 @@
         "citation": "https://doi.org/10.5880/GFZ.2.3.2021.002",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_FGM_ACAL",
-        "_order": 102,
+        "_order": 16,
         "datasets": {
             "MDR_FGM_ACAL": {
                 "Timestamp": {
@@ -2886,12 +3476,270 @@
         }
     },
     {
+        "name": "GO_MAG_ACAL",
+        "description": "GOCE platform magnetometer measurements.",
+        "resourceUrl": "https://doi.org/10.1186/s40623-022-01691-6",
+        "citation": "https://doi.org/10.5880/GFZ.2.3.2022.001",
+        "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
+        "defaultDataset": "MDR_MAG_ACAL",
+        "_order": 17,
+        "datasets": {
+            "MDR_MAG_ACAL": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_MAG": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_SC_NEC": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: SC ... NEC",
+                        "UNITS": "-"
+                    }
+                },
+                "q_MAG_SC": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: MAG ... SC",
+                        "UNITS": "-"
+                    }
+                },
+                "dB_MTQ_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to magnetorquer, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_XI_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 2nd order non-linearities, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_NY_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to 3rd order non-linearities, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BT_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of offsets, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_ST_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to temperature dependency of scale factors, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_SA_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to solar array currents, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BAT_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to battery currents, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_HK_SC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Disturbance field related to housekeeping data, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "dB_BLOCK_CORR": {
+                    "dataType": "float64",
+                    "dimension": [6],
+                    "attributes": {
+                        "DESCRIPTION": "Block correction for MAG2 and MAG3, MAG frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_FLAG": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flags",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GO_MAG_ACAL_ML",
+        "description": "GOCE platform magnetometer measurements (ML calibrated).",
+        "resourceUrl": "https://doi.org/10.1186/s40623-022-01695-2",
+        "citation": "https://doi.org/10.5880/GFZ.2.3.2022.002",
+        "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
+        "defaultDataset": "MDR_MAG_ACAL_ML",
+        "_order": 18,
+        "datasets": {
+            "MDR_MAG_ACAL_ML": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "QDLongitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "B_MAG": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, SC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, combined MAG, aligned, vector-vector calibrated and corrected for satellite disturbances, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_FGM_NEC": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: combined FGM ... NEC",
+                        "UNITS": "-"
+                    }
+                },
+                "B_FLAG": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flag for combined FGM (Bit field:0: Data correct,1: Outlier detected,2: FGM interpolation corrupted)",
+                        "UNITS": "-"
+                    }
+                },
+                "KP_DST_FLAG": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Kp and Dst flag (0 low magnetic activity, 1 high magnetic activity)",
+                        "UNITS": "-"
+                    }
+                },
+                "NaN_FLAG": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flag for filled NaN values with column mean value (0: Data complete,1: NaN values filled",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "CS_MAG",
         "description": "Cryosat-2 Platform magnetometer measurements",
         "resourceUrl": "https://doi.org/10.1186/s40623-020-01171-9",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG",
-        "_order": 103,
+        "_order": 14,
         "datasets": {
             "MDR_MAG": {
                 "Timestamp": {

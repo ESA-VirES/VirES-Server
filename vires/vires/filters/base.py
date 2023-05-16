@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Orbit direction - common settings
+#  Data filters - base filter class
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2016 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=
 
-from numpy import int8
 
-# point type values
-FLAG_START = int8(1)
-FLAG_END = int8(-1)
-FLAG_MIDDLE = int8(0)
+class Filter():
+    """ Base filter class. """
 
-# orbit direction values
-FLAG_ASCENDING = int8(1)
-FLAG_DESCENDING = int8(-1)
-FLAG_UNDEFINED = int8(0)
+    @property
+    def key(self):
+        """ A key uniquely identifying the filter instance. """
+        raise NotImplementedError
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def __eq__(self, other):
+        return self.key == other.key
+
+    @property
+    def required_variables(self):
+        """ Get a list of the dataset variables required by this filter.
+        """
+        raise NotImplementedError
+
+    def filter(self, dataset, index=None):
+        """ Filter dataset. Optionally a dataset subset index can be provided.
+        A new array of indices identifying the filtered data subset is returned.
+        """
+        raise NotImplementedError
+
+    def __str__(self):
+        raise NotImplementedError

@@ -86,7 +86,7 @@ def _group_datasets_by_type(dataset_infos):
 
 
 def _order_groups(groups, order):
-    return dict(sorted(groups.items(), key=lambda item: order[item[0]]))
+    return dict(sorted(groups.items(), key=lambda item: (order[item[0]], item[0])))
 
 
 def _get_example_selection(datasets):
