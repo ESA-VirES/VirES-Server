@@ -30,7 +30,7 @@
 # Required settings:
 #
 # SOCIALACCOUNT_PROVIDERS = {
-#     'eoiam': {
+#     'eoiam_ref': {
 #         'SERVER_URL': <EOIAM server URL>,
 #     },
 # }
@@ -39,13 +39,20 @@ from allauth.socialaccount import app_settings
 from allauth.socialaccount.providers.oauth2.views import (
     OAuth2CallbackView, OAuth2LoginView,
 )
-from .provider import EoiamProvider
+from .provider import EoiamRefProvider
 from ..eoiam.views_base import EoiamOAuth2AdapterBase
 
 
 class EoiamRefOAuth2Adapter(EoiamOAuth2AdapterBase):
-    provider_id = EoiamProvider.id
+    provider_id = EoiamRefProvider.id
     settings = app_settings.PROVIDERS.get(provider_id, {})
+
+    # URL used for browser-to-server connections
+    server_url = settings['SERVER_URL'].rstrip('/')
+
+    access_token_url = f'{server_url}/token'
+    authorize_url = f'{server_url}/authorize'
+    profile_url = f'{server_url}/userinfo'
 
 oauth2_login = OAuth2LoginView.adapter_view(EoiamRefOAuth2Adapter)
 oauth2_callback = OAuth2CallbackView.adapter_view(EoiamRefOAuth2Adapter)

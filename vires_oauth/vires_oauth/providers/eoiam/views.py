@@ -47,5 +47,12 @@ class EoiamOAuth2Adapter(EoiamOAuth2AdapterBase):
     provider_id = EoiamProvider.id
     settings = app_settings.PROVIDERS.get(provider_id, {})
 
+    # URL used for browser-to-server connections
+    server_url = settings['SERVER_URL'].rstrip('/')
+
+    access_token_url = f'{server_url}/token'
+    authorize_url = f'{server_url}/authorize'
+    profile_url = f'{server_url}/userinfo'
+
 oauth2_login = OAuth2LoginView.adapter_view(EoiamOAuth2Adapter)
 oauth2_callback = OAuth2CallbackView.adapter_view(EoiamOAuth2Adapter)

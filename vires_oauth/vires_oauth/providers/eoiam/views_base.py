@@ -27,21 +27,20 @@
 # pylint: disable=missing-docstring
 
 import requests
-from allauth.socialaccount import app_settings
 from allauth.socialaccount.providers.oauth2.views import OAuth2Adapter
 
 
 class EoiamOAuth2AdapterBase(OAuth2Adapter):
     basic_auth = True # pass client credentials via the HTTP Basic authentication
     provider_id = None
-    settings = app_settings.PROVIDERS.get(provider_id, {})
+    settings = None
 
     # URL used for browser-to-server connections
-    server_url = settings['SERVER_URL'].rstrip('/')
+    server_url = None
 
-    access_token_url = f'{server_url}/token'
-    authorize_url = f'{server_url}/authorize'
-    profile_url = f'{server_url}/userinfo'
+    access_token_url = None
+    authorize_url = None
+    profile_url = None
 
     @classmethod
     def read_profile(cls, token):
