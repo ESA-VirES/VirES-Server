@@ -33,6 +33,7 @@ from ...forms import SignupForm
 
 class EoiamRefProvider(EoiamProviderBase):
     id = "eoiam_ref"
+    name = "EO Sign In (reference instance)"
     logger_name = __name__
     settings = app_settings.PROVIDERS.get(id, {})
 
