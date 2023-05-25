@@ -28,7 +28,6 @@
 
 from logging import getLogger
 from allauth.account.models import EmailAddress
-from allauth.socialaccount import app_settings
 from allauth.socialaccount.providers.base import ProviderAccount
 from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
 from .utils import update_user_groups_from_permissions
@@ -55,7 +54,7 @@ class EoiamProviderBase(OAuth2Provider):
     name = "EO Sign In"
     account_class = EoiamAccount
 
-    settings = app_settings.PROVIDERS.get(id, {})
+    settings = {}
 
     # A dictionary holding a list of alternative combinations EOIAM permissions
     # required to grant a group membership. If none of the listed combinations

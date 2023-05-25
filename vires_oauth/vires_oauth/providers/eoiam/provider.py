@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+from allauth.socialaccount import app_settings
 from .provider_base import EoiamProviderBase, extract_eoiam
 from ...forms import SignupForm
 
@@ -33,6 +34,7 @@ from ...forms import SignupForm
 class EoiamProvider(EoiamProviderBase):
     id = "eoiam"
     logger_name = __name__
+    settings = app_settings.PROVIDERS.get(id, {})
 
 provider_classes = [EoiamProvider]
 
