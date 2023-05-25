@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  EOIAM provider - views
+#  Refefrence EOIAM provider - urls
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2021 EOX IT Services GmbH
+# Copyright (C) 2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,28 +24,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
-#
-# Required settings:
-#
-# SOCIALACCOUNT_PROVIDERS = {
-#     'eoiam': {
-#         'SERVER_URL': <EOIAM server URL>,
-#     },
-# }
+from allauth.socialaccount.providers.oauth2.urls import default_urlpatterns
+from .provider import EoiamRefProvider
 
-from allauth.socialaccount import app_settings
-from allauth.socialaccount.providers.oauth2.views import (
-    OAuth2CallbackView, OAuth2LoginView,
-)
-from .provider import EoiamProvider
-from .views_base import EoiamOAuth2AdapterBase
-
-
-class EoiamOAuth2Adapter(EoiamOAuth2AdapterBase):
-    provider_id = EoiamProvider.id
-    settings = app_settings.PROVIDERS.get(provider_id, {})
-
-oauth2_login = OAuth2LoginView.adapter_view(EoiamOAuth2Adapter)
-oauth2_callback = OAuth2CallbackView.adapter_view(EoiamOAuth2Adapter)
+urlpatterns = default_urlpatterns(EoiamRefProvider)

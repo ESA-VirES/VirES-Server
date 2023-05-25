@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  EOIAM provider - views
+#  EOIAM provider - views - base classes
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2021 EOX IT Services GmbH
+# Copyright (C) 2021-2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,26 +26,31 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-#
-# Required settings:
-#
-# SOCIALACCOUNT_PROVIDERS = {
-#     'eoiam': {
-#         'SERVER_URL': <EOIAM server URL>,
-#     },
-# }
-
+import requests
 from allauth.socialaccount import app_settings
-from allauth.socialaccount.providers.oauth2.views import (
-    OAuth2CallbackView, OAuth2LoginView,
-)
-from .provider import EoiamProvider
-from .views_base import EoiamOAuth2AdapterBase
+from allauth.socialaccount.providers.oauth2.views import OAuth2Adapter
 
 
-class EoiamOAuth2Adapter(EoiamOAuth2AdapterBase):
-    provider_id = EoiamProvider.id
+class EoiamOAuth2AdapterBase(OAuth2Adapter):
+    basic_auth = True # pass client credentials via the HTTP Basic authentication
+    provider_id = None
     settings = app_settings.PROVIDERS.get(provider_id, {})
 
-oauth2_login = OAuth2LoginView.adapter_view(EoiamOAuth2Adapter)
-oauth2_callback = OAuth2CallbackView.adapter_view(EoiamOAuth2Adapter)
+    # URL used for browser-to-server connections
+    server_url = settings['SERVER_URL'].rstrip('/')
+
+    access_token_url = f'{server_url}/token'
+    authorize_url = f'{server_url}/authorize'
+    profile_url = f'{server_url}/userinfo'
+
+    @classmethod
+    def read_profile(cls, token):
+        headers = {'Authorization': f'Bearer {token}'}
+        return requests.get(cls.profile_url, headers=headers)
+
+    def complete_login(self, request, app, token, response):
+        extra_data = self.read_profile(token.token).json()
+        return self.get_provider().sociallogin_from_response(request, extra_data)
+
+    def get_email(self, token):
+        raise NotImplementedError

@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2021 EOX IT Services GmbH
+# Copyright (C) 2021-2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,104 +26,15 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from logging import getLogger
-from allauth.account.models import EmailAddress
-from allauth.socialaccount import app_settings
-from allauth.socialaccount.providers.base import ProviderAccount
-from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
+from .provider_base import EoiamProviderBase, extract_eoiam
 from ...forms import SignupForm
-from .utils import update_user_groups_from_permissions
 
 
-class EoiamAccount(ProviderAccount):
-
-    def get_profile_url(self):
-        return None
-        #return self.account.extra_data.get( ... TBD ... )
-
-    def get_avatar_url(self):
-        return None
-        #return self.account.extra_data.get( ... TBD ... )
-
-    def to_str(self):
-        dflt = super(EoiamAccount, self).to_str()
-        return self.account.extra_data.get("sub", dflt)
-
-
-class EoiamProvider(OAuth2Provider):
+class EoiamProvider(EoiamProviderBase):
     id = "eoiam"
-    name = "EO Sign In"
-    account_class = EoiamAccount
-
-    settings = app_settings.PROVIDERS.get(id, {})
-
-    # A dictionary holding a list of alternative combinations EOIAM permissions
-    # required to grant a group membership. If none of the listed combinations
-    # is met the user cannot be a member of the given group.
-    required_group_permissions = {
-        group_name: list(map(frozenset, required_permissions))
-        for group_name, required_permissions
-        in settings.get("REQUIRED_GROUP_PERMISSIONS", {}).items()
-    }
-
-    @staticmethod
-    def get_default_scope():
-        return ["openid"] # "profile", "email"
-
-    @staticmethod
-    def extract_uid(data):
-        return data["sub"]
-
-    @staticmethod
-    def extract_extra_data(data):
-        if "Oa-Signed-Tcs":
-            permissions = data.pop("Oa-Signed-Tcs")
-            if isinstance(permissions, str):
-                permissions = permissions.split(",")
-        else:
-            permissions = []
-        data["permissions"] = permissions
-
-        if "Institution" in data:
-            data["institution"] = data.pop("Institution")
-
-        return data
-
-    @staticmethod
-    def extract_common_fields(data):
-        return {
-            "username": data["sub"],
-            "email": data["email"],
-            "first_name": data.get("given_name"),
-            "last_name": data.get("family_name"),
-        }
-
-    @classmethod
-    def extract_email_addresses(cls, data):
-        return [EmailAddress(
-            email=data["email"],
-            verified=bool(cls.settings.get("TRUST_EMAILS", False)),
-            primary=True
-        )]
-
-    @classmethod
-    def populate_user_from_extra_data(cls, user, extra_data):
-        update_user_groups_from_permissions(
-            user,
-            set(extra_data["permissions"]),
-            cls.required_group_permissions,
-            logger=getLogger(__name__),
-        )
-
+    logger_name = __name__
 
 provider_classes = [EoiamProvider]
 
 
-@SignupForm.extractor(EoiamProvider.id)
-def extract_eoiam(extra_data):
-    """ Extract user info from an EO-IAM user profile. """
-    data = {}
-    for key in ("country", "institution"):
-        if key in extra_data:
-            data[key] = extra_data[key]
-    return data
+SignupForm.extractor(EoiamProvider.id)(extract_eoiam)

@@ -58,6 +58,22 @@ button.socialaccount_provider:focus, button.socialaccount_provider:hover {
 }
 
 
+.socialaccount_provider.eoiam_ref  {
+  color: #ca4242;
+  font-size: 0;
+  text-decoration: none;
+}
+button.socialaccount_provider.eoiam_ref:focus, button.socialaccount_provider.eoiam_ref:hover {
+  color: #962a2a;
+}
+.socialaccount_provider.eoiam_ref::before {
+  font-family: esa-logo;
+  content: "E";
+  font-size: 40px;
+  text-decoration: none;
+}
+
+
 .socialaccount_provider.facebook  {
   font-size: 0;
   text-decoration: none;
