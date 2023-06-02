@@ -29,7 +29,7 @@
 from collections import OrderedDict, defaultdict
 from itertools import chain
 from vires.util import unique
-from vires.filters import RejectAll
+from vires.filters import Filter, RejectAll
 from .time_series import TimeSeries
 from .models import Model
 
@@ -157,7 +157,18 @@ class VariableResolver:
         self._add_producer(master.variables, master)
         self._sources.append(master)
 
-    def add_slave(self, slave, matching_variable):
+    def add_consumer(self, node):
+        """ Add generic consumer. """
+        if isinstance(node, Model):
+            self.add_model(node)
+        elif isinstance(node, TimeSeries):
+            self.add_slave(node)
+        elif isinstance(node, Filter):
+            self.add_filter(node)
+        else:
+            raise ValueError(f"Unexpected consumer type {node!r}")
+
+    def add_slave(self, slave):
         """ Add a new slave source time-series.
 
         The slave source requires the given matching variable (usually time).
@@ -165,7 +176,7 @@ class VariableResolver:
         """
         if not self._sources:
             raise RuntimeError("No master is set!")
-        _, unresolved_variables = self._add_consumer([matching_variable], slave)
+        _, unresolved_variables = self._add_consumer([slave.required_variable], slave)
         if not unresolved_variables:
             offered_variables = self._add_producer(slave.variables, slave)
             if offered_variables:

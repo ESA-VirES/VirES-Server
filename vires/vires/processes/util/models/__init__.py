@@ -28,7 +28,8 @@
 from .base import Model
 from .magnetic_model import (
     MagneticModelResidual, SourceMagneticModel, ComposedMagneticModel,
-    MagneticModelMioMultiplication, generate_magnetic_model_sources,
+    MagneticModelMioMultiplication, CachedModelGapFill,
+    generate_magnetic_model_sources,
 )
 from .geodetic_coordinates import Geodetic2GeocentricCoordinates
 from .magnetic_coordinates import QuasiDipoleCoordinates, MagneticLocalTime

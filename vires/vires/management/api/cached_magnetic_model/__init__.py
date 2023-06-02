@@ -31,6 +31,7 @@ from .common import (
     get_collection_model_cache_directory,
     get_product_model_cache_file,
 )
+from .file_format import read_sources_with_time_ranges
 from .seed import seed_collection, seed_product
 from .flush import (
     flush_collection,

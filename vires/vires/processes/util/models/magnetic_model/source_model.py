@@ -48,7 +48,8 @@ class SourceMagneticModel(Model):
         "amps": ["IMF_BY_GSM", "IMF_BZ_GSM", "IMF_V", "DipoleTiltAngle"],
     }
 
-    BASE_VARIABLES = ["F", "B_NEC"]
+    #BASE_VARIABLES = ["F", "B_NEC"]
+    BASE_VARIABLES = ["B_NEC"]
 
     @cached_property
     def variables(self):
@@ -147,15 +148,16 @@ class SourceMagneticModel(Model):
 
     @cached_property
     def _output(self):
-        f_var, b_var = self.variables
+        #f_var, b_var = self.variables
+        b_var, = self.variables
         return {
-            f_var: (vnorm, CDF_DOUBLE_TYPE, {
-                "DESCRIPTION": (
-                    "Magnetic field intensity, calculated by "
-                    f"the {self.name} spherical harmonic model"
-                ),
-                "UNITS": "nT",
-            }),
+            #f_var: (vnorm, CDF_DOUBLE_TYPE, {
+            #    "DESCRIPTION": (
+            #        "Magnetic field intensity, calculated by "
+            #        f"the {self.name} spherical harmonic model"
+            #    ),
+            #    "UNITS": "nT",
+            #}),
             b_var: (lambda r: r, CDF_DOUBLE_TYPE, {
                 "DESCRIPTION": (
                     "Magnetic field vector, NEC frame, calculated by "

@@ -103,6 +103,7 @@ def copy_file(src_filename, dst_filename):
     """ Copy file. """
     copyfile(src_filename, dst_filename)
 
+
 def rename_file(src_filename, dst_filename):
     """ Rename file. """
     rename(src_filename, dst_filename)

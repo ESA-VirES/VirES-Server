@@ -5,7 +5,7 @@
 # Authors: Martin Paces <martin.paces@eox.at>
 #          Daniel Santillan <daniel.santillan@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments,too-many-locals,too-many-branches
-# pylint: disable=too-many-statements,unused-argument
+# pylint: disable=too-many-statements,unused-argument,consider-using-f-string
 
 from itertools import chain
 from datetime import datetime, timedelta
@@ -41,7 +41,7 @@ from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError,
 )
 from vires.models import ProductCollection
-from vires.util import unique, exclude
+from vires.util import unique, exclude, pretty_list, LazyString
 from vires.access_util import get_user, get_vires_permissions
 from vires.time_util import naive_to_utc, format_timedelta, format_datetime
 from vires.cdf_util import (
@@ -156,6 +156,13 @@ class FetchData(WPSProcess):
                 "identifiers."
             ),
         )),
+        ("ignore_cached_models", LiteralData(
+            "ignore_cached_models", bool, optional=True, default=False,
+            abstract=(
+                "Optional boolean flag forcing the server to ignore "
+                "the cached models and to calculate the models on-the-fly."
+            ),
+        )),
         ("shc", ComplexData(
             "shc",
             title="Custom model coefficients.",
@@ -186,7 +193,7 @@ class FetchData(WPSProcess):
 
     def execute(self, user, permissions, collection_ids, begin_time, end_time,
                 sampling_step, bbox, requested_variables, model_ids, shc,
-                csv_time_format, output, **kwargs):
+                csv_time_format, output, ignore_cached_models, **kwargs):
         """ Execute process """
         access_logger = self.get_access_logger(**kwargs)
 
@@ -203,7 +210,7 @@ class FetchData(WPSProcess):
             "requested_variables", requested_variables
         )
         self.logger.debug(
-            "requested variables: %s", ", ".join(requested_variables)
+            "requested variables: %s", pretty_list(requested_variables)
         )
 
         # fix the time-zone of the naive date-time
@@ -213,7 +220,8 @@ class FetchData(WPSProcess):
         # fixed selection time-limit
         time_limit = MAX_TIME_SELECTION
         self.logger.debug(
-            "time-selection limit: %s", format_timedelta(time_limit)
+            "time-selection limit: %s",
+            LazyString(lambda: format_timedelta(time_limit))
         )
 
         # check the time-selection limit
@@ -334,7 +342,7 @@ class FetchData(WPSProcess):
 
                 # slaves
                 for slave in product_sources[1:]:
-                    resolver.add_slave(slave, "Timestamp")
+                    resolver.add_slave(slave)
 
                     # extra sampling for selected collections
                     if slave.metadata.get("extraSampled"):
@@ -348,7 +356,7 @@ class FetchData(WPSProcess):
 
                 # auxiliary slaves
                 for slave in (index_kp10, index_dst, index_ddst, index_f10, index_imf):
-                    resolver.add_slave(slave, "Timestamp")
+                    resolver.add_slave(slave)
 
                 # satellite specific slaves
                 spacecraft = (
@@ -359,15 +367,15 @@ class FetchData(WPSProcess):
                 resolver.add_model(SpacecraftLabel(spacecraft[1] or "-"))
 
                 for item in orbit_info.get(spacecraft, []):
-                    resolver.add_slave(item, "Timestamp")
+                    resolver.add_slave(item)
 
                 if spacecraft[0] == "Swarm" and spacecraft[1] in ("A", "B", "C"):
                     # prepare spacecraft to spacecraft differences
                     # NOTE: No residual variables required by the filters.
                     subtracted_variables = get_subtracted_variables(requested_variables)
-                    self.logger.debug("residual variables: %s", ", ".join(
-                        var for var, _ in subtracted_variables
-                    ))
+                    self.logger.debug("residual variables: %s",
+                        pretty_list(var for var, _ in subtracted_variables)
+                    )
                     grouped_diff_vars = group_subtracted_variables(
                         product_sources, subtracted_variables
                     )
@@ -383,10 +391,12 @@ class FetchData(WPSProcess):
                     ),
                     generate_magnetic_model_sources(
                         *spacecraft, requested_models, source_models,
+                        no_cache=ignore_cached_models,
+                        master=master,
                     ),
                     copied_variables,
                 ):
-                    resolver.add_model(model)
+                    resolver.add_consumer(model)
 
                 # add remaining filters
                 resolver.add_filters(filters)
@@ -400,23 +410,23 @@ class FetchData(WPSProcess):
 
                 self.logger.debug(
                     "%s: available variables: %s", label,
-                    ", ".join(resolver.available)
+                    pretty_list(resolver.available)
                 )
                 self.logger.debug(
                     "%s: evaluated variables: %s", label,
-                    ", ".join(resolver.required)
+                    pretty_list(resolver.required)
                 )
                 self.logger.debug(
                     "%s: output variables: %s", label,
-                    ", ".join(resolver.output_variables)
+                    pretty_list(resolver.output_variables)
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    format_filters(resolver.filters)
+                    LazyString(lambda: format_filters(resolver.filters))
                 )
                 self.logger.debug(
                     "%s: unresolved filters: %s", label,
-                    format_filters(resolver.unresolved_filters)
+                    LazyString(lambda: format_filters(resolver.unresolved_filters))
                 )
 
             # collect the common output variables
@@ -428,7 +438,7 @@ class FetchData(WPSProcess):
             # empty output
             output_variables = ()
 
-        self.logger.debug("output variables: %s", ", ".join(output_variables))
+        self.logger.debug("output variables: %s", pretty_list(output_variables))
 
         def _generate_data_():
             total_count = 0
