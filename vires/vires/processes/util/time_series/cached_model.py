@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=consider-using-f-string,too-many-locals
+# pylint: disable=too-many-locals
 
 from os.path import exists
 from logging import getLogger, LoggerAdapter
@@ -61,7 +61,8 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
-            return '%s: cached model: %s' % (self.extra["collection_id"], msg), kwargs
+            collection_id = self.extra["collection_id"]
+            return f"{collection_id}: cached model: {msg}", kwargs
 
     @property
     def variables(self):

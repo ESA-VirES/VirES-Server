@@ -25,7 +25,6 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods,too-many-arguments
-# pylint: disable=consider-using-f-string
 
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
@@ -113,12 +112,13 @@ class ProductTimeSeries(BaseProductTimeSeries):
     def _get_id(base_id, dataset_id, default_dataset_id):
         if dataset_id == default_dataset_id:
             return base_id
-        return "%s:%s" % (base_id, dataset_id)
+        return f"{base_id}:{dataset_id}"
 
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
-            return '%s: %s' % (self.extra["collection_id"], msg), kwargs
+            collection_id = self.extra["collection_id"]
+            return f"{collection_id}: {msg}", kwargs
 
     def __init__(self, collection, dataset_id=None, logger=None):
 
@@ -132,7 +132,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             raise ValueError("Missing mandatory dataset identifier!")
 
         if not collection.type.is_valid_dataset_id(dataset_id):
-            raise ValueError("Invalid dataset identifier %r!" % dataset_id)
+            raise ValueError(f"Invalid dataset identifier {dataset_id!r}!")
 
         params = PRODUCT_TYPE_PARAMETERS.get(
             self._get_id(
@@ -171,7 +171,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             return ProductCollection.objects.get(identifier=collection_name)
         except ProductCollection.DoesNotExist:
             raise RuntimeError(
-                "Non-existent product collection %s!" % collection_name
+                f"Non-existent product collection {collection_name}!"
             ) from None
 
     @property
@@ -324,7 +324,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 "reliably determined!"
             )
             raise RuntimeError(
-                "Empty product collection %s!" % self.collection.identifier
+                f"Empty product collection {self.collection.identifier}!"
             ) from None
         else:
             location = product.get_location(self.collection.type.default_dataset_id)

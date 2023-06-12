@@ -31,7 +31,7 @@ from numpy import stack
 from eoxmagmod import (
     eval_qdlatlon_with_base_vectors, eval_mlt, mjd2000_to_decimal_year,
 )
-from vires.util import include, unique
+from vires.util import include, unique, pretty_list
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from .base import Model
@@ -92,9 +92,9 @@ class QuasiDipoleCoordinates(Model):
             self.variables if variables is None else
             list(include(unique(variables), self.variables))
         )
-        self.logger.debug("requested variables %s", variables)
+        self.logger.debug("requested variables: %s", pretty_list(variables))
         if variables:
-            self.logger.debug("requested dataset length %s", dataset.length)
+            self.logger.debug("requested dataset length: %s", dataset.length)
 
             times, lats, lons, rads = self._extract_required_variables(dataset)
 
@@ -166,11 +166,12 @@ class MagneticLocalTime(Model):
         variable = self.VARIABLE
         proceed = variables is None or variable in variables
         self.logger.debug(
-            "requested variables %s", self.variables if proceed else []
+            "requested variables: %s",
+            pretty_list(self.variables if proceed else [])
         )
 
         if proceed:
-            self.logger.debug("requested dataset length %s", dataset.length)
+            self.logger.debug("requested dataset length: %s", dataset.length)
             times, qdlons = self._extract_required_variables(dataset)
             mlt = eval_mlt(qdlons, times)
             output_ds.set(variable, mlt, CDF_DOUBLE_TYPE, self.ATTRIB)

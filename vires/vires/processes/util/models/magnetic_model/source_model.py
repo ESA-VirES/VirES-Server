@@ -29,7 +29,7 @@ from logging import getLogger, LoggerAdapter
 from itertools import chain
 from numpy import stack, searchsorted
 from eoxmagmod import vnorm
-from vires.util import include, unique, cached_property
+from vires.util import include, unique, cached_property, pretty_list
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from ..base import Model
@@ -124,7 +124,7 @@ class SourceMagneticModel(Model):
             self.variables if variables is None else
             list(include(unique(variables), self.variables))
         )
-        self.logger.debug("requested variables %s", variables)
+        self.logger.debug("requested variables %s", pretty_list(variables))
         output_ds = Dataset()
 
         if variables:

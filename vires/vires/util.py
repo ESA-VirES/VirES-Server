@@ -146,4 +146,4 @@ class LazyString:
 
 def pretty_list(items):
     """ Pretty list of strings output. """
-    return ", ".join(items)
+    return ", ".join(items or ())

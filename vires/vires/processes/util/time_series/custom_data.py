@@ -126,7 +126,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
         self.logger.debug("subset: %s", LazyString(
             lambda: f"{format_datetime(start)}/{format_datetime(stop)}"
         ))
-        self.logger.debug("extracted variables: %s", pretty_list(variables or []))
+        self.logger.debug("extracted variables: %s", pretty_list(variables))
 
         if not variables: # stop here if no variables are requested
             return

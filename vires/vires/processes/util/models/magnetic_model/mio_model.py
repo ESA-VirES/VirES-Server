@@ -27,7 +27,7 @@
 #pylint: disable=too-many-locals,too-many-arguments,too-few-public-methods
 
 from logging import getLogger, LoggerAdapter
-from vires.util import cached_property
+from vires.util import cached_property, pretty_list
 from vires.cdf_util import CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from ..base import Model
@@ -88,7 +88,8 @@ class MagneticModelMioMultiplication(Model):
         output_ds = Dataset()
         is_requested = variables is None or self._target_variable in variables
         self.logger.debug(
-            "requested variables %s", self.variables if is_requested else []
+            "requested variables %s",
+            pretty_list(self.variables if is_requested else ())
         )
         if is_requested:
             self.logger.debug("requested dataset length %s", dataset.length)

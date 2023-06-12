@@ -24,9 +24,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=consider-using-f-string,too-many-locals
+# pylint: disable=too-many-locals
 
-from logging import getLogger, LoggerAdapter, DEBUG
+from logging import getLogger, LoggerAdapter
 from numpy import isnan, count_nonzero
 from vires.util import cached_property, LazyString
 from vires.dataset import Dataset

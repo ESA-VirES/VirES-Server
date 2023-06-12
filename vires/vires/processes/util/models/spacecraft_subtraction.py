@@ -30,6 +30,7 @@ from logging import LoggerAdapter, getLogger
 from itertools import chain
 from numpy import searchsorted, zeros
 from vires.orbit_counter import OrbitCounterReader
+from vires.util import pretty_list
 from vires.cdf_util import (
     CDF_DOUBLE_TYPE, CDF_EPOCH_TYPE,
     cdf_rawtime_to_datetime, seconds_to_cdf_rawtime, cdf_rawtime_to_seconds,
@@ -134,8 +135,8 @@ class SatSatSubtraction(Model):
         variables = self.variables if variables is None else tuple(
             include(variables, self.variables)
         )
-        self.logger.debug("requested dataset length %s", dataset.length)
-        self.logger.debug("variables: %s", ", ".join(variables))
+        self.logger.debug("requested dataset length: %s", dataset.length)
+        self.logger.debug("variables: %s", pretty_list(variables))
         if not variables:
             return output_ds # stop if no variable required
         variables = set(variables)
@@ -226,7 +227,7 @@ class SatSatSubtraction(Model):
         for col_id, (slave_source, var_pairs) in self._collections.items():
             var_pairs = tuple((u, v) for u, v in var_pairs if u in variables)
             slave_vars = tuple(v for u, v in var_pairs)
-            self.logger.debug("%s: %s", col_id, ", ".join(slave_vars))
+            self.logger.debug("%s: %s", col_id, pretty_list(slave_vars))
             slave_ds = slave_source.interpolate(
                 slave_times, slave_vars, cdf_type=time_cdf_type
             )
