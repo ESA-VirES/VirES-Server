@@ -30,6 +30,16 @@ from logging import LoggerAdapter
 from django.utils.http import is_safe_url
 
 
+def for_sender(classname):
+    """ Decorator filtering signals by the sender. """
+    def _for_sender(receiver_function):
+        def _for_sender_wrapper(sender, *args, **kwargs):
+            if issubclass(sender, classname):
+                receiver_function(sender, *args, **kwargs)
+        return _for_sender_wrapper
+    return _for_sender
+
+
 def strip_blanks(func):
     """ Decorator removing blank fields from the serialized objects """
     def _strip_blanks_(*args, **kwargs):

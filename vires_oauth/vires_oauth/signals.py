@@ -30,8 +30,10 @@
 from logging import getLogger
 from django.conf import settings
 from django.dispatch import receiver
+from django.db.models.signals import post_save
 from django.contrib.auth.models import Group
 from oauth2_provider.signals import app_authorized
+from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount import providers
 from allauth.account.signals import (
     user_logged_in, user_signed_up, password_set, password_changed,
@@ -41,10 +43,20 @@ from allauth.account.signals import (
 from allauth.socialaccount.signals import (
     social_account_added, social_account_removed,
 )
-from .utils import AccessLoggerAdapter
+from .utils import AccessLoggerAdapter, for_sender
 
 ACCESS_LOGGER_NAME_ALLAUTH = "access.auth"
 ACCESS_LOGGER_NAME_OAUTH2 = "access.oauth2_provider"
+
+
+@receiver(post_save)
+@for_sender(SocialAccount)
+def receive_post_save(sender, instance, created, *args, **kwargs):
+    provider = instance.get_provider()
+    if hasattr(provider, "populate_user_from_extra_data"):
+        provider.populate_user_from_extra_data(
+            instance.user, instance.extra_data
+        )
 
 
 @receiver(user_signed_up)
