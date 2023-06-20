@@ -231,16 +231,22 @@ class FetchFilteredDataAsync(WPSProcess):
     @staticmethod
     def on_failed(context, exception):
         """ Callback executed when an asynchronous Job fails. """
+        # The failure may happen before the Job is fully started and the start
+        # timestamp set.
         try:
+            timestamp = datetime.now(utc)
+            job = Job.objects.get(identifier=context.identifier)
             job = update_job(
-                Job.objects.get(identifier=context.identifier),
+                job,
                 status=Job.FAILED,
-                stopped=datetime.now(utc),
+                started=(job.started or timestamp),
+                stopped=timestamp,
             )
-            context.logger.info(
-                "Job failed after %.3gs running.",
-                (job.stopped - job.started).total_seconds()
-            )
+            if job.started:
+                context.logger.info(
+                    "Job failed after %.3gs running.",
+                    (job.stopped - job.started).total_seconds()
+                )
         except Job.DoesNotExist:
             context.logger.warning(
                 "Failed to update the job status! The job does not exist!"
