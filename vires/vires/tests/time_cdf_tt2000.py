@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# CDF_TT2000 time conversion utilities - test
+# CDF_TT2000 time conversion utilities - tests
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------

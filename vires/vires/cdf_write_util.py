@@ -25,9 +25,8 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from numpy import asarray, dtype
+from numpy import dtype
 from .cdf_util import (
-    CDF_EPOCH_1970,
     CDF_EPOCH_TYPE,
     CDF_CHAR_TYPE,
     CDF_INT1_TYPE,
@@ -110,12 +109,12 @@ class CdfTypeEpoch():
     @classmethod
     def decode(cls, cdf_raw_time):
         """ Convert CDF raw time to datetime64[ms]. """
-        return cdf_rawtime_to_datetime64(cdf_raw_time, CDF_EPOCH_TYPE, unit="ms")
+        return cdf_rawtime_to_datetime64(cdf_raw_time, CDF_EPOCH_TYPE).astype("datetime64[ms]")
 
     @classmethod
     def encode(cls, time):
-        """ Convert datetime64[ms] to CDF raw time. """
-        return datetime64_to_cdf_rawtime(asarray(time), CDF_EPOCH_TYPE)
+        """ Convert datetime64[*] to CDF raw time. """
+        return datetime64_to_cdf_rawtime(time, CDF_EPOCH_TYPE)
 
 
 def get_converter(cdf_type):

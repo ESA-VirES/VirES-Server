@@ -5,7 +5,7 @@
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #          Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2014-2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,139 +25,67 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,consider-using-f-string,unused-import
 
 from os.path import exists
-from datetime import datetime, timedelta
+from datetime import datetime
 import ctypes
-from numpy import (
-    nan, vectorize, object as dt_object, float64 as dt_float64,
-    ndarray, searchsorted, asarray, full, datetime_data,
-)
+from numpy import nan, full, searchsorted
 import scipy
 from scipy.interpolate import interp1d
 import spacepy
 from spacepy import pycdf
-from spacepy.pycdf import CDFError, lib
+from spacepy.pycdf import CDFError
 from . import FULL_PACKAGE_NAME
-from .time_util import (
-    mjd2000_to_decimal_year, year_to_day2k, days_per_year,
-    datetime, naive_to_utc, utc_to_naive, format_datetime,
+from .time_util import naive_to_utc, format_datetime
+from .time_cdf import (
+    UnsupportedCDFTimeTypeError,
+    cdf_epoch16_to_cdf_epoch,
+    convert_cdf_raw_times,
+    cdf_rawtime_to_datetime64,
+    datetime64_to_cdf_rawtime,
+    cdf_rawtime_delta_in_seconds,
+    cdf_rawtime_subtract_delta_in_seconds,
+    cdf_rawtime_to_timedelta,
+    timedelta_to_cdf_rawtime,
+    datetime_to_cdf_rawtime,
+    cdf_rawtime_to_datetime,
+    cdf_rawtime_to_unix_epoch,
+    cdf_rawtime_to_mjd2000,
+    mjd2000_to_cdf_rawtime,
+)
+from .cdf_data_types import (
+    CDF_EPOCH_TYPE,
+    CDF_EPOCH16_TYPE,
+    CDF_TIME_TT2000_TYPE,
+    CDF_FLOAT_TYPE,
+    CDF_DOUBLE_TYPE,
+    CDF_REAL8_TYPE,
+    CDF_REAL4_TYPE,
+    CDF_UINT1_TYPE,
+    CDF_UINT2_TYPE,
+    CDF_UINT4_TYPE,
+    CDF_INT1_TYPE,
+    CDF_INT2_TYPE,
+    CDF_INT4_TYPE,
+    CDF_INT8_TYPE,
+    CDF_CHAR_TYPE,
+    CDF_TIME_TYPES,
+    CDF_TYPE_TO_LABEL,
+    CDF_TYPE_MAP,
+    LABEL_TO_CDF_TYPE,
+    CDF_TYPE_TO_DTYPE,
+    cdf_type_map,
+    get_formatter,
 )
 
 GZIP_COMPRESSION = pycdf.const.GZIP_COMPRESSION
 GZIP_COMPRESSION_LEVEL1 = ctypes.c_long(1)
 
-CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
-CDF_EPOCH16_TYPE = pycdf.const.CDF_EPOCH16.value
-CDF_TIME_TT2000_TYPE = pycdf.const.CDF_TIME_TT2000.value
-CDF_FLOAT_TYPE = pycdf.const.CDF_FLOAT.value
-CDF_DOUBLE_TYPE = pycdf.const.CDF_DOUBLE.value
-CDF_REAL8_TYPE = pycdf.const.CDF_REAL8.value # CDF_DOUBLE != CDF_REAL8
-CDF_REAL4_TYPE = pycdf.const.CDF_REAL4.value # CDF_FLOAT != CDF_REAL4
-CDF_UINT1_TYPE = pycdf.const.CDF_UINT1.value
-CDF_UINT2_TYPE = pycdf.const.CDF_UINT2.value
-CDF_UINT4_TYPE = pycdf.const.CDF_UINT4.value
-CDF_INT1_TYPE = pycdf.const.CDF_INT1.value
-CDF_INT2_TYPE = pycdf.const.CDF_INT2.value
-CDF_INT4_TYPE = pycdf.const.CDF_INT4.value
-CDF_INT8_TYPE = pycdf.const.CDF_INT8.value
-CDF_CHAR_TYPE = pycdf.const.CDF_CHAR.value
-
-CDF_TYPE_TO_LABEL = {
-    CDF_EPOCH_TYPE: "CDF_EPOCH",
-    CDF_EPOCH16_TYPE: "CDF_EPOCH16",
-    CDF_TIME_TT2000_TYPE: "CDF_TIME_TT2000",
-    CDF_FLOAT_TYPE: "CDF_FLOAT",
-    CDF_DOUBLE_TYPE: "CDF_DOUBLE",
-    CDF_REAL4_TYPE: "CDF_REAL4",
-    CDF_REAL8_TYPE: "CDF_REAL8",
-    CDF_UINT1_TYPE: "CDF_UINT1",
-    CDF_UINT2_TYPE: "CDF_UINT2",
-    CDF_UINT4_TYPE: "CDF_UINT4",
-    CDF_INT1_TYPE: "CDF_INT1",
-    CDF_INT2_TYPE: "CDF_INT2",
-    CDF_INT4_TYPE: "CDF_INT4",
-    CDF_INT8_TYPE: "CDF_INT8",
-    CDF_CHAR_TYPE: "CDF_CHAR",
-}
-
-CDF_TYPE_MAP = {
-    CDF_REAL4_TYPE: CDF_FLOAT_TYPE,
-    CDF_REAL8_TYPE: CDF_DOUBLE_TYPE,
-}
-
-LABEL_TO_CDF_TYPE = {
-    label: cdf_type for cdf_type, label in CDF_TYPE_TO_LABEL.items()
-}
-
-CDF_TYPE_TO_DTYPE = {
-    CDF_EPOCH_TYPE: "datetime64[ms]",
-    CDF_FLOAT_TYPE: "float32",
-    CDF_DOUBLE_TYPE: "float64",
-    CDF_REAL8_TYPE: "float32",
-    CDF_REAL4_TYPE: "float64",
-    CDF_UINT1_TYPE: "uint8",
-    CDF_UINT2_TYPE: "uint16",
-    CDF_UINT4_TYPE: "uint32",
-    CDF_INT1_TYPE: "int8",
-    CDF_INT2_TYPE: "int16",
-    CDF_INT4_TYPE: "int32",
-    CDF_INT8_TYPE: "int46",
-    CDF_CHAR_TYPE: "S",
-}
-
-DATETIME_1970 = datetime(1970, 1, 1)
-CDF_EPOCH_1970 = 62167219200000.0
-CDF_EPOCH_2000 = 63113904000000.0
-
 CDF_CREATOR = "%s [%s-%s, libcdf-%s]" % (
     FULL_PACKAGE_NAME, spacepy.__name__, spacepy.__version__,
     "%s.%s.%s-%s" % pycdf.lib.version
 )
-
-CDF_EPOCH_TO_DATETIME64 = {
-    "D": 86400000.0,
-    "h": 3600000.0,
-    "m": 60000.0,
-    "s": 1000.0,
-    "ms": 1.0,
-    "us": 0.001,
-}
-
-
-def cdf_type_map(cdf_type):
-    """ CDF type conversion. """
-    return CDF_TYPE_MAP.get(cdf_type, cdf_type)
-
-
-def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
-    """ Second order function returning optimal data-type string formatter
-    function.
-    """
-    if cdf_type is None:
-        cdf_type = CDF_DOUBLE_TYPE
-    def _get_formater(shape, dtype, cdf_type):
-        if len(shape) > 1:
-            value_formater = _get_formater(shape[1:], dtype, cdf_type)
-            def formater(arr):
-                " vector formatter "
-                return "{%s}" % ";".join(
-                    value_formater(value) for value in arr
-                )
-            return formater
-        if cdf_type == CDF_DOUBLE_TYPE:
-            return lambda v: "%.9g" % v
-        if cdf_type == CDF_EPOCH_TYPE:
-            if dtype == dt_float64:
-                return lambda v: "%.14g" % v
-            if dtype == dt_object:
-                return lambda v: format_datetime(naive_to_utc(v))
-            return str
-        if cdf_type == CDF_CHAR_TYPE:
-            return lambda v: v.decode('utf-8')
-        return str
-    return _get_formater(data.shape, data.dtype, cdf_type)
 
 
 def is_cdf_file(filename):
@@ -199,157 +127,6 @@ def cdf_open(filename, mode="r", backward_compatible=True):
     else:
         raise ValueError("Invalid mode value %r!" % mode)
     return cdf
-
-
-def cdf_rawtime_to_datetime64(cdf_raw_time, cdf_type, unit="ms", count=1, tiebreak=0):
-    """ Convert CDF raw time to numpy.datetime64. """
-    if cdf_type == CDF_EPOCH_TYPE:
-        tmp = cdf_raw_time - CDF_EPOCH_1970
-        scale = 1 / (CDF_EPOCH_TO_DATETIME64[unit] * count)
-        if scale != 1:
-            tmp *= scale
-        if tiebreak != 0:
-            tmp += tiebreak
-        return asarray(tmp).astype(f'datetime64[{count}{unit}]')
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def datetime64_to_cdf_rawtime(time, cdf_type):
-    """ Convert numpy.datetime64 to CDF raw-time. """
-    if cdf_type == CDF_EPOCH_TYPE:
-        unit, count = datetime_data(time.dtype)
-        scale = CDF_EPOCH_TO_DATETIME64[unit] * count
-        tmp = time.astype('float64')
-        if scale != 1:
-            tmp *= scale
-        tmp += CDF_EPOCH_1970
-        return tmp
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def cdf_rawtime_to_seconds(raw_time_delta, cdf_type):
-    """ Convert CDF raw time to second. The epoch offset is unchanged.
-    """
-    if cdf_type == CDF_EPOCH_TYPE:
-        # TODO: handle vectors
-        return raw_time_delta * 1e-3
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def seconds_to_cdf_rawtime(time_seconds, cdf_type):
-    """ Convert time in seconds to CDF raw time. The epoch offset is unchanged.
-    """
-    if cdf_type == CDF_EPOCH_TYPE:
-        # TODO: handle vectors
-        return time_seconds * 1e3
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def cdf_rawtime_to_timedelta(raw_time_delta, cdf_type):
-    """ Convert a CDF raw time difference to `datetime.timedelta` object.
-    """
-    if cdf_type == CDF_EPOCH_TYPE:
-        # TODO: handle vectors
-        return timedelta(seconds=raw_time_delta*1e-3)
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def timedelta_to_cdf_rawtime(time_delta, cdf_type):
-    """ Convert `datetime.timedelta` object to CDF raw time scale.
-    """
-    if cdf_type == CDF_EPOCH_TYPE:
-        # TODO: handle vectors
-        return time_delta.total_seconds() * 1e3
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def datetime_to_cdf_rawtime(time, cdf_type):
-    """ Convert `datetime.datetime` object to CDF raw time. """
-    if cdf_type == CDF_EPOCH_TYPE:
-        if isinstance(time, ndarray):
-            return vectorize(datetime_to_cdf_epoch, otypes=('float64',))(time)
-        return datetime_to_cdf_epoch(time)
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def datetime_to_cdf_epoch(dtobj):
-    """ Convert raw CDF_EPOCH values to datetime.datetime object. """
-    return (utc_to_naive(dtobj) - DATETIME_1970).total_seconds()*1e3  + CDF_EPOCH_1970
-
-
-def cdf_rawtime_to_datetime(raw_time, cdf_type):
-    """ Convert an array of CDF raw time values to an array
-    of `dateitme.datetime` objects.
-    """
-    if cdf_type == CDF_EPOCH_TYPE:
-        if isinstance(raw_time, ndarray):
-            return vectorize(cdf_epoch_to_datetime, otypes=('object',))(raw_time)
-        return cdf_epoch_to_datetime(raw_time)
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def cdf_epoch_to_datetime(cdf_epoch):
-    """ Convert raw CDF_EPOCH values to datetime.datetime object. """
-    return DATETIME_1970 + timedelta(milliseconds=(cdf_epoch - CDF_EPOCH_1970))
-
-
-def cdf_rawtime_to_unix_epoch(raw_time, cdf_type):
-    """ Convert an array of CDF raw time values to an array of Unix epoch values.
-    """
-    if cdf_type == CDF_EPOCH_TYPE:
-        return (raw_time - CDF_EPOCH_1970) * 1e-3
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def cdf_rawtime_to_mjd2000(raw_time, cdf_type):
-    """ Convert an array of CDF raw time values to array of MJD2000 values.
-    """
-    if cdf_type == CDF_EPOCH_TYPE:
-        return (raw_time - CDF_EPOCH_2000) / 86400000.0
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def mjd2000_to_cdf_rawtime(time, cdf_type):
-    """ Convert an array of MJD2000 values to an array of CDF raw time values.
-    """
-    if cdf_type == CDF_EPOCH_TYPE:
-        return CDF_EPOCH_2000 + time * 86400000.0
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def cdf_rawtime_to_decimal_year_fast(raw_time, cdf_type, year):
-    """ Convert an array of CDF raw time values to an array of decimal years.
-    This function assumes all dates to be of the same year and this year has
-    to be provided as a parameter.
-    """
-    if cdf_type == CDF_EPOCH_TYPE:
-        year_offset = year_to_day2k(year) * 86400000.0 + CDF_EPOCH_2000
-        year_length = days_per_year(year) * 86400000.0
-        return year + (raw_time - year_offset) / year_length
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-
-
-def cdf_rawtime_to_decimal_year(raw_time, cdf_type):
-    """ Convert an array of CDF raw time values to an array of decimal years.
-    This function makes not assumption about the year and does the full fledged
-    conversion for each item.
-    """
-    v_mjd2000_to_decimal_year = vectorize(
-        mjd2000_to_decimal_year, otypes=(dt_float64,)
-    )
-    return v_mjd2000_to_decimal_year(cdf_rawtime_to_mjd2000(raw_time, cdf_type))
-
-
-def cdf_epoch16_to_epoch(time):
-    """ Convert CDF_EPOCH16 to CDF_EPOCH. """
-    time = asarray(time)
-    _epoch16_to_epoch = lambda a, b: lib.epoch16_to_epoch((a, b))
-    return vectorize(_epoch16_to_epoch)(time[..., 0], time[..., 1])
-
-
-def cdf_tt2000_to_epoch(time):
-    """ Convert CDF_TIME_TT2000 to CDF_EPOCH. """
-    return vectorize(lib.tt2000_to_epoch)(time)
 
 
 def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):

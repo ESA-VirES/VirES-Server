@@ -27,7 +27,9 @@
 
 from datetime import datetime, timedelta
 from numpy import asarray, empty, int64, datetime64, isnat, nan, isnan
+from vires.time_util import utc_to_naive
 from vires.leap_seconds import LEAP_NANOSECONDS_TABLE, LookupTable
+
 
 SECONDS_PER_DAY = 60 * 60 * 24
 SECONDS_PER_NANOSECOND = 1e-9
@@ -186,6 +188,22 @@ def cdf_epoch_to_cdf_tt2000(epoch):
     return tt2000
 
 
+def timedelta_to_nanoseconds(delta):
+    """ Convert datetime.timedelta to nanoseconds. """
+    return (
+        delta.days * NANOSECONDS_PER_DAY +
+        delta.seconds * NANOSECONDS_PER_SECOND +
+        delta.microseconds * NANOSECONDS_PER_MICROSECOND
+    )
+
+
+def nanoseconds_to_timedelta(delta_ns):
+    """ Convert nanoseconds to datetime.timedelta. """
+    return timedelta(
+        microseconds=(delta_ns // NANOSECONDS_PER_MICROSECOND)
+    )
+
+
 def cdf_tt2000_to_utc_datetime(tt2000):
     """ Convert CDF_TT2000 to UTC datetime.datetime object
     """
@@ -195,9 +213,7 @@ def cdf_tt2000_to_utc_datetime(tt2000):
     # Python integer does not overflow.
     utc2000 = int(tt2000) - int(OFFSET_TT2000(tt2000))
 
-    return DT_EPOCH_2000 + timedelta(
-        microseconds=(utc2000 // NANOSECONDS_PER_MICROSECOND)
-    )
+    return DT_EPOCH_2000 + nanoseconds_to_timedelta(utc2000)
 
 
 def utc_datetime_to_cdf_tt2000(dtobj):
@@ -206,12 +222,9 @@ def utc_datetime_to_cdf_tt2000(dtobj):
     if dtobj == DT_INVALID_VALUE:
         return int64(CDF_TT2000_INVALID_VALUE)
 
-    delta = dtobj - DT_EPOCH_2000
-    utc2000ns = (
-        delta.days * NANOSECONDS_PER_DAY +
-        delta.seconds * NANOSECONDS_PER_SECOND +
-        delta.microseconds * NANOSECONDS_PER_MICROSECOND
-    )
+    dtobj = utc_to_naive(dtobj)
+
+    utc2000ns = timedelta_to_nanoseconds(dtobj - DT_EPOCH_2000)
     offset_ns = int(OFFSET_UTC2000(int(utc2000ns // NANOSECONDS_PER_DAY)))
 
     tt2000ns = utc2000ns + offset_ns
