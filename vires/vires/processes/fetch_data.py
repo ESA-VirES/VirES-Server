@@ -519,7 +519,7 @@ class FetchData(WPSProcess):
                     data_item = dataset.get(variable)
                     # convert time variables to the target file-format
                     cdf_type = dataset.cdf_type.get(variable)
-                    if cdf_type == CDF_TIME_TYPES:
+                    if cdf_type in CDF_TIME_TYPES:
                         data_item = time_convertor(data_item, cdf_type)
                     # collect all data items
                     data.append(data_item)
@@ -562,7 +562,7 @@ class FetchData(WPSProcess):
                             )
                     else:
                         cdf_type = dataset.cdf_type.get(variable)
-                        if cdf_type == CDF_TIME_TYPES:
+                        if cdf_type in CDF_TIME_TYPES:
                             data_item = time_convertor(data_item, cdf_type)
 
                         if output_data is None:

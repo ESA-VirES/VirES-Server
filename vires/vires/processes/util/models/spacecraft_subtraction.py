@@ -32,6 +32,7 @@ from numpy import searchsorted, zeros
 from vires.orbit_counter import OrbitCounterReader
 from vires.cdf_util import (
     CDF_DOUBLE_TYPE, CDF_TIME_TYPES,
+    convert_cdf_raw_times,
     cdf_rawtime_to_datetime,
     cdf_rawtime_delta_in_seconds,
     cdf_rawtime_subtract_delta_in_seconds,
@@ -236,7 +237,7 @@ class SatSatSubtraction(Model):
 
             for output_var, source_var in var_pairs:
                 cdf_type = dataset.cdf_type[source_var]
-                if cdf_type == CDF_TIME_TYPES:
+                if cdf_type in CDF_TIME_TYPES:
                     # NOTE: times must be converted to the same type
                     data = cdf_rawtime_delta_in_seconds(
                         dataset[source_var],
@@ -264,7 +265,7 @@ class SatSatSubtraction(Model):
             cdf_attr["DESCRIPTION"] = (
                 "%s %s" % (self._attr_label, description)
             )
-        if cdf_type == CDF_TIME_TYPES:
+        if cdf_type in CDF_TIME_TYPES:
             cdf_type = CDF_DOUBLE_TYPE
             cdf_attr["UNITS"] = "sec"
         return cdf_type, cdf_attr
