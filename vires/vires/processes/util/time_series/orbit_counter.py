@@ -27,7 +27,7 @@
 # pylint: disable=too-few-public-methods
 
 from vires.cdf_util import (
-    CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE, CDF_INT1_TYPE, CDF_INT4_TYPE,
+    CDF_DOUBLE_TYPE, CDF_INT1_TYPE, CDF_INT4_TYPE,
 )
 from vires.cdf_util import mjd2000_to_cdf_rawtime
 from vires.orbit_counter import OrbitCounterReader
@@ -37,20 +37,22 @@ from .auxiliary_data import AuxiliaryDataTimeSeries
 class OrbitCounter(AuxiliaryDataTimeSeries):
     """ Orbit counter time-series class. """
     CDF_TYPE = {
-        'AscendingNodeTime': CDF_EPOCH_TYPE,
+        'AscendingNodeTime': AuxiliaryDataTimeSeries.TIMESTAMP_TYPE,
         'OrbitNumber': CDF_INT4_TYPE,               # uses -1 as NaN
         'AscendingNodeLongitude': CDF_DOUBLE_TYPE,   # NaN
         'OrbitSource': CDF_INT1_TYPE,               # uses -1 as NaN
     }
     CDF_INTERP_TYPE = {
-        'AscendingNodeTime': CDF_EPOCH_TYPE,
+        'AscendingNodeTime': AuxiliaryDataTimeSeries.TIMESTAMP_TYPE,
         'OrbitNumber': CDF_INT4_TYPE,               # uses -1 as NaN
         'AscendingNodeLongitude': CDF_DOUBLE_TYPE,   # NaN
         'OrbitSource': CDF_INT1_TYPE,               # uses -1 as NaN
     }
     DATA_CONVERSION = {
         'AscendingNodeTime': (
-            lambda data: mjd2000_to_cdf_rawtime(data, CDF_EPOCH_TYPE)
+            lambda data: mjd2000_to_cdf_rawtime(
+                data, AuxiliaryDataTimeSeries.TIMESTAMP_TYPE
+            )
         ),
     }
     CDF_ATTR = {
