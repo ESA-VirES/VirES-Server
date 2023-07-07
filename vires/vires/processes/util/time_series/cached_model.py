@@ -30,7 +30,7 @@ from os.path import exists
 from logging import getLogger, LoggerAdapter
 from collections import defaultdict
 from numpy import empty, full, nan
-from vires.cdf_util import cdf_rawtime_to_datetime, CDF_EPOCH_TYPE
+from vires.cdf_util import cdf_rawtime_to_datetime
 from vires.time_util import naive_to_utc, format_datetime
 from vires.util import include, exclude, pretty_list, LazyString
 from vires.models import Product
@@ -41,6 +41,7 @@ from vires.management.api.cached_magnetic_model import (
     read_sources_with_time_ranges,
     extract_model_sources_datetime,
 )
+from .base import TimeSeries
 from .base_product import BaseProductTimeSeries
 from .product import DEFAULT_PRODUCT_TYPE_PARAMETERS
 from .data_extraction import CDFDataset
@@ -113,7 +114,7 @@ class CachedModelExtraction(BaseProductTimeSeries):
             self.logger.debug("using master collection")
         self.logger.debug("interpolation kind: %s", inderpolation_kind)
 
-    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the given time array.
         """
         times, cdf_type = self._convert_time(times, cdf_type)
@@ -191,6 +192,7 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
             with CDFDataset(
                 source_dataset['location'], translation=self.translate_fw,
+                time_type=self.TIMESTAMP_TYPE,
             ) as cdf_ds:
                 subset, nrv_shape = cdf_ds.get_temporal_subset(
                     self.time_variable,
@@ -208,6 +210,7 @@ class CachedModelExtraction(BaseProductTimeSeries):
             self.logger.debug("dataset length: %s", dataset.length)
 
             model_variables = set(include(variables, self.models))
+            available_model_variables = set()
             extracted_model_variables = set()
             cache_file = get_product_model_cache_file(
                 cache_directory, product.identifier
@@ -216,6 +219,7 @@ class CachedModelExtraction(BaseProductTimeSeries):
             if exists(cache_file):
                 with CDFDataset(
                     cache_file, translation=self.translate_fw_models,
+                    time_type=self.TIMESTAMP_TYPE,
                 ) as cdf_ds:
 
                     # get available model variables
@@ -289,8 +293,8 @@ class CachedModelExtraction(BaseProductTimeSeries):
     def _get_empty_dataset(self, variables):
         """ Generate an empty dataset. """
         dataset = Dataset()
-        times = empty((0,), dtype="float64")
-        dataset.set(self.time_variable, times, CDF_EPOCH_TYPE, {})
+        times = self._convert_time(empty((0,), dtype="float64"), None)
+        dataset.set(self.time_variable, times, self.TIMESTAMP_TYPE, {})
         self._fill_missing_model_variables(
             dataset, set(include(variables, self.models))
         )
