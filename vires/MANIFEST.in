@@ -1,2 +1,3 @@
 include vires/data/*.json
+include vires/data/*.txt
 recursive-include vires/templates *
