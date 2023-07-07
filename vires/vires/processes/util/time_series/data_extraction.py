@@ -122,12 +122,10 @@ class CDFDataset:
             if cdf_variable.rv() and nrv_shape is None:
                 nrv_ndim = max(0, data.ndim - cdf_variable.ndim - 1)
                 nrv_shape = data.shape[:nrv_ndim]
+            cdf_type = cdf_type_map(cdf_variable.type())
             if cdf_type in CDF_TIME_TYPES:
                 data, cdf_type = self._convert_time(data, cdf_type)
-            dataset.set(
-                variable, data, cdf_type_map(cdf_variable.type()),
-                cdf_variable.attrs
-            )
+            dataset.set(variable, data, cdf_type, cdf_variable.attrs)
         return dataset
 
     def extact_variable(self, variable, subset=Ellipsis, nrv_shape=None):
