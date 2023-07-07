@@ -26,7 +26,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods
 
-from vires.cdf_util import CDF_INT1_TYPE, CDF_EPOCH_TYPE
+from vires.cdf_util import CDF_INT1_TYPE, CDF_EPOCH_TYPE, convert_cdf_raw_times
 from vires.orbit_direction import OrbitDirectionReader
 from .auxiliary_data import AuxiliaryDataTimeSeries
 
@@ -63,11 +63,11 @@ class OrbitDirection(AuxiliaryDataTimeSeries):
 
     @staticmethod
     def _encode_time(times, cdf_type):
-        return assert_cdf_epoch_type(times, cdf_type)
+        return convert_cdf_raw_times(times, cdf_type, CDF_EPOCH_TYPE)
 
     @staticmethod
     def _decode_time(times, cdf_type):
-        return assert_cdf_epoch_type(times, cdf_type)
+        return convert_cdf_raw_times(times, CDF_EPOCH_TYPE, cdf_type)
 
     def __init__(self, name, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
@@ -109,11 +109,11 @@ class QDOrbitDirection(AuxiliaryDataTimeSeries):
 
     @staticmethod
     def _encode_time(times, cdf_type):
-        return assert_cdf_epoch_type(times, cdf_type)
+        return convert_cdf_raw_times(times, cdf_type, CDF_EPOCH_TYPE)
 
     @staticmethod
     def _decode_time(times, cdf_type):
-        return assert_cdf_epoch_type(times, cdf_type)
+        return convert_cdf_raw_times(times, CDF_EPOCH_TYPE, cdf_type)
 
     def __init__(self, name, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
@@ -122,10 +122,3 @@ class QDOrbitDirection(AuxiliaryDataTimeSeries):
                 'BoundaryType': 'QDOrbitDirectionBoundaryType',
             }, logger
         )
-
-
-def assert_cdf_epoch_type(times, cdf_type):
-    """ Assert CDF EPOCH time. """
-    if cdf_type == CDF_EPOCH_TYPE:
-        return times
-    raise TypeError("Unsupported CDF time type %r !" % cdf_type)

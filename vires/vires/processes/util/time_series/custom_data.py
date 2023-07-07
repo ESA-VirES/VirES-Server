@@ -31,12 +31,13 @@ from logging import getLogger, LoggerAdapter
 from numpy import empty, argsort, searchsorted, broadcast_to, asarray
 from vires.cdf_util import (
     cdf_open, cdf_rawtime_to_datetime, datetime_to_cdf_rawtime,
-    cdf_type_map, CDF_EPOCH_TYPE,
+    cdf_type_map, CDF_TIME_TYPES, CDF_TYPE_TO_LABEL,
 )
 from vires.models import CustomDataset
 from vires.dataset import Dataset
 from vires.util import cached_property
 from vires.views.custom_data import sanitize_info
+from .base import TimeSeries
 from .product import BaseProductTimeSeries, DEFAULT_PRODUCT_TYPE_PARAMETERS
 
 
@@ -80,7 +81,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     def variables(self):
         return list(self._variables)
 
-    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the give array time array.
         """
         times, cdf_type = self._convert_time(times, cdf_type)
@@ -139,7 +140,17 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
             with cdf_open(dataset.location) as cdf:
                 # temporal sub-setting
                 temp_var = cdf.raw_var(self.TIME_VARIABLE)
-                times, time_type = temp_var[:], temp_var.type()
+                times, time_type = self._convert_time(
+                    temp_var[:], temp_var.type()
+                )
+
+                if temp_var.type() != time_type:
+                    self.logger.debug(
+                        "%s: converting time from %s to %s",
+                        self.TIME_VARIABLE,
+                        CDF_TYPE_TO_LABEL[temp_var.type()],
+                        CDF_TYPE_TO_LABEL[time_type],
+                    )
 
                 # note: data are not ordered!
                 idx = argsort(times)
@@ -185,8 +196,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
 
         return dataset
 
-    @staticmethod
-    def _extract_dataset(cdf, extracted_variables, idx):
+    def _extract_dataset(self, cdf, extracted_variables, idx):
         """ Extract dataset from a product. """
         if idx.size == 0:
             idx_low, idx_high = 0, 0
@@ -198,14 +208,21 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
         dataset = Dataset()
         for variable in extracted_variables:
             cdf_var = cdf.raw_var(variable)
+            cdf_type = cdf_type_map(cdf_var.type())
             if cdf_var.rv(): # regular record variable
                 data = cdf_var[idx_low:idx_high][idx]
             else: # NRV variable
                 value = asarray(cdf_var[...])
                 data = broadcast_to(value, (idx.size,) + value.shape[1:])
-            dataset.set(
-                variable, data, cdf_type_map(cdf_var.type()), cdf_var.attrs
-            )
+            if cdf_type in CDF_TIME_TYPES:
+                data, cdf_type = self._convert_time(data, cdf_type)
+                self.logger.debug(
+                    "%s: converting time from %s to %s",
+                    variable,
+                    CDF_TYPE_TO_LABEL[cdf_var.type()],
+                    CDF_TYPE_TO_LABEL[cdf_type],
+                )
+            dataset.set(variable, data, cdf_type, cdf_var.attrs)
         return dataset
 
     def _subset_qs(self, start, stop):

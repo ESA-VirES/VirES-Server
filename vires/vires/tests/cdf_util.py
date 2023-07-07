@@ -38,13 +38,12 @@ from scipy.interpolate import interp1d
 from spacepy import pycdf
 from django.utils.timezone import get_fixed_timezone, utc
 from vires.time_util import (
-    datetime_to_mjd2000, datetime_to_unix_epoch, datetime_to_decimal_year,
+    datetime_to_mjd2000, datetime_to_unix_epoch
 )
 from vires.cdf_util import (
     CDF_EPOCH_TYPE, cdf_open, cdf_time_subset, cdf_time_interp,
     cdf_rawtime_to_datetime, cdf_rawtime_to_unix_epoch,
-    cdf_rawtime_to_mjd2000, cdf_rawtime_to_decimal_year,
-    cdf_rawtime_to_decimal_year_fast, datetime_to_cdf_rawtime,
+    cdf_rawtime_to_mjd2000, datetime_to_cdf_rawtime,
     mjd2000_to_cdf_rawtime, array_slice,
     cdf_rawtime_to_datetime64, datetime64_to_cdf_rawtime,
     CDF_EPOCH_1970, CDF_EPOCH_2000,
@@ -54,289 +53,7 @@ from vires.tests.aux_dst import TEST_DST, DATA_DST
 from vires.tests import ArrayMixIn
 
 
-class TestCDFEpochTimeBaseline(ArrayMixIn, unittest.TestCase):
 
-    def test_cdf_rawtime_to_datetime_subms_scalar(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime(63570441599979.984, CDF_EPOCH_TYPE),
-            datetime(2014, 6, 19, 23, 59, 59, 979984)
-        )
-
-    def test_cdf_rawtime_to_datetime_subms_midnight_scalar(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime(63570441599999.984, CDF_EPOCH_TYPE),
-            datetime(2014, 6, 19, 23, 59, 59, 999984)
-        )
-
-    def test_cdf_rawtime_to_datetime_subms_array(self):
-        input_ = array([
-            [63570441599939.984, 63570441599959.984],
-            [63570441599979.984, 63570441599999.984],
-        ])
-        expected = array([
-            [
-                datetime(2014, 6, 19, 23, 59, 59, 939984),
-                datetime(2014, 6, 19, 23, 59, 59, 959984),
-            ],
-            [
-                datetime(2014, 6, 19, 23, 59, 59, 979984),
-                datetime(2014, 6, 19, 23, 59, 59, 999984),
-            ],
-        ])
-        self.assertAllEqual(
-            cdf_rawtime_to_datetime(input_, CDF_EPOCH_TYPE), expected
-        )
-
-    def test_cdf_rawtime_to_datetime_subms_empty_array(self):
-        input_ = array([], 'float64')
-        expected = array([], 'object')
-        self.assertAllEqual(
-            cdf_rawtime_to_datetime(input_, CDF_EPOCH_TYPE), expected
-        )
-
-    def test_datetime_to_cdf_rawtime_subms_scalar(self):
-        self.assertEqual(
-            datetime_to_cdf_rawtime(
-                datetime(2014, 6, 19, 23, 59, 59, 979984), CDF_EPOCH_TYPE
-            ), 63570441599979.984
-        )
-
-    def test_datetime_to_cdf_rawtime_subms_midnight_scalar(self):
-        self.assertEqual(
-            datetime_to_cdf_rawtime(
-                datetime(2014, 6, 19, 23, 59, 59, 999984), CDF_EPOCH_TYPE
-            ), 63570441599999.984
-        )
-
-    def test_datetime_to_cdf_rawtime_subms_array(self):
-        input_ = array([
-            [
-                datetime(2014, 6, 19, 23, 59, 59, 939984),
-                datetime(2014, 6, 19, 23, 59, 59, 959984),
-            ],
-            [
-                datetime(2014, 6, 19, 23, 59, 59, 979984),
-                datetime(2014, 6, 19, 23, 59, 59, 999984),
-            ],
-        ])
-        expected = array([
-            [63570441599939.984, 63570441599959.984],
-            [63570441599979.984, 63570441599999.984],
-        ])
-        self.assertAllEqual(
-            datetime_to_cdf_rawtime(input_, CDF_EPOCH_TYPE), expected
-        )
-
-    def test_datetime_to_cdf_rawtime_subms_empty_array(self):
-        input_ = array([], 'object')
-        expected = array([], 'float64')
-        self.assertAllEqual(
-            datetime_to_cdf_rawtime(input_, CDF_EPOCH_TYPE), expected
-        )
-
-    def test_datetime_tzaware_to_cdf_rawtime_subms_scalar(self):
-        self.assertEqual(
-            datetime_to_cdf_rawtime(
-                datetime(2014, 6, 19, 23, 59, 59, 979984, utc), CDF_EPOCH_TYPE
-            ), 63570441599979.984
-        )
-
-    def test_datetime_tzaware_to_cdf_rawtime_subms_midnight_scalar(self):
-        self.assertEqual(
-            datetime_to_cdf_rawtime(
-                datetime(2014, 6, 19, 22, 59, 59, 999984, get_fixed_timezone(-60)),
-                CDF_EPOCH_TYPE
-            ), 63570441599999.984
-        )
-
-    def test_datetime_tzaware_to_cdf_rawtime_subms_array(self):
-        input_ = array([
-            [
-                datetime(2014, 6, 19, 23, 59, 59, 939984, utc),
-                datetime(2014, 6, 19, 23, 59, 59, 959984, utc),
-            ],
-            [
-                datetime(2014, 6, 19, 22, 59, 59, 979984, get_fixed_timezone(-60)),
-                datetime(2014, 6, 20, 0, 59, 59, 999984, get_fixed_timezone(+60)),
-            ],
-        ])
-        expected = array([
-            [63570441599939.984, 63570441599959.984],
-            [63570441599979.984, 63570441599999.984],
-        ])
-        self.assertAllEqual(
-            datetime_to_cdf_rawtime(input_, CDF_EPOCH_TYPE), expected
-        )
-
-    def test_cdf_rawtime_to_datetime64_default_scalar(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(63570441599939.984, CDF_EPOCH_TYPE),
-            datetime64("2014-06-19T23:59:59.939")
-        )
-
-    def test_cdf_rawtime_to_datetime64_default_array(self):
-        self.assertAllEqual(
-            cdf_rawtime_to_datetime64(array([
-                63570441599939.984,
-                CDF_EPOCH_1970,
-                CDF_EPOCH_2000,
-            ]), CDF_EPOCH_TYPE),
-            array([
-                "2014-06-19T23:59:59.939",
-                "1970-01-01T00:00:00.000",
-                "2000-01-01T00:00:00.000",
-            ], 'datetime64[ms]')
-        )
-
-    def test_cdf_rawtime_to_datetime64_millisecond(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(
-                63570441599939.984, CDF_EPOCH_TYPE, unit="ms"
-            ),
-            datetime64("2014-06-19T23:59:59.939")
-        )
-
-    def test_cdf_rawtime_to_datetime64_millisecond_rounded(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(
-                63570441599939.984, CDF_EPOCH_TYPE, unit="ms", tiebreak=0.5
-            ),
-            datetime64("2014-06-19T23:59:59.940")
-        )
-
-    def test_cdf_rawtime_to_datetime64_microseconds(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(
-                63570441599939.984, CDF_EPOCH_TYPE, unit="us"
-            ),
-            datetime64("2014-06-19T23:59:59.939984")
-        )
-
-    def test_cdf_rawtime_to_datetime64_100microseconds(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(
-                63570441599939.984, CDF_EPOCH_TYPE, unit="us", count=100,
-            ),
-            datetime64("2014-06-19T23:59:59.9399")
-        )
-
-    def test_cdf_rawtime_to_datetime64_100microseconds_rounded(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(
-                63570441599939.984, CDF_EPOCH_TYPE, unit="us", count=100,
-                tiebreak=0.5,
-            ),
-            datetime64("2014-06-19T23:59:59.9400")
-        )
-
-    def test_cdf_rawtime_to_datetime64_second(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(
-                63570441599939.984, CDF_EPOCH_TYPE, unit="s"
-            ),
-            datetime64("2014-06-19T23:59:59")
-        )
-
-    def test_cdf_rawtime_to_datetime64_second_rounded(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(
-                63570441599939.984, CDF_EPOCH_TYPE, unit="s", tiebreak=0.5,
-            ),
-            datetime64("2014-06-20T00:00:00")
-        )
-
-    def test_cdf_rawtime_to_datetime64_minute(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(
-                63570441599939.984, CDF_EPOCH_TYPE, unit="m"
-            ),
-            datetime64("2014-06-19T23:59")
-        )
-
-    def test_cdf_rawtime_to_datetime64_minute_rounded(self):
-        self.assertEqual(
-            cdf_rawtime_to_datetime64(
-                63570441599939.984, CDF_EPOCH_TYPE, unit="m", tiebreak=0.5,
-            ),
-            datetime64("2014-06-20T00:00")
-        )
-
-    def test_datetime64_to_cdf_rawtime_array(self):
-        self.assertAllEqual(
-            datetime64_to_cdf_rawtime(array([
-                "2014-06-19T23:59:59.939",
-                "1970-01-01T00:00:00.000",
-                "2000-01-01T00:00:00.000",
-            ], 'datetime64[ms]'), CDF_EPOCH_TYPE),
-            array([
-                63570441599939.000,
-                CDF_EPOCH_1970,
-                CDF_EPOCH_2000,
-            ])
-        )
-
-    def test_datetime64_to_cdf_rawtime_microseconds(self):
-        self.assertEqual(
-            datetime64_to_cdf_rawtime(
-                datetime64("2014-06-19T23:59:59.939984", "us"),
-                CDF_EPOCH_TYPE,
-            ),
-            63570441599939.984
-        )
-
-    def test_datetime64_to_cdf_rawtime_100microseconds(self):
-        self.assertEqual(
-            datetime64_to_cdf_rawtime(
-                datetime64("2014-06-19T23:59:59.9399", "100us"),
-                CDF_EPOCH_TYPE,
-            ),
-            63570441599939.9
-        )
-
-    def test_datetime64_to_cdf_rawtime_milliseconds(self):
-        self.assertEqual(
-            datetime64_to_cdf_rawtime(
-                datetime64("2014-06-19T23:59:59.939", "ms"),
-                CDF_EPOCH_TYPE,
-            ),
-            63570441599939.0
-        )
-
-    def test_datetime64_to_cdf_rawtime_seconds(self):
-        self.assertEqual(
-            datetime64_to_cdf_rawtime(
-                datetime64("2014-06-19T23:59:59", "s"),
-                CDF_EPOCH_TYPE,
-            ),
-            63570441599000.0
-        )
-
-    def test_datetime64_to_cdf_rawtime_minutes(self):
-        self.assertEqual(
-            datetime64_to_cdf_rawtime(
-                datetime64("2014-06-19T23:59", "m"),
-                CDF_EPOCH_TYPE,
-            ),
-            63570441540000.0
-        )
-
-    def test_datetime64_to_cdf_rawtime_hour(self):
-        self.assertEqual(
-            datetime64_to_cdf_rawtime(
-                datetime64("2014-06-19T23", "h"),
-                CDF_EPOCH_TYPE,
-            ),
-            63570438000000.0
-        )
-
-    def test_datetime64_to_cdf_rawtime_day(self):
-        self.assertEqual(
-            datetime64_to_cdf_rawtime(
-                datetime64("2014-06-19", "D"),
-                CDF_EPOCH_TYPE,
-            ),
-            63570355200000.0
-        )
 
 
 class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):
@@ -428,32 +145,12 @@ class TestCDFEpochTime00(ArrayMixIn, unittest.TestCase):
                 ), v_datetime_to_unix_epoch(cdf['time'][:]), 1e-5
             )
 
-    def test_cdf_rawtime_to_decimal_year(self):
-        v_datetime_to_decimal_year = vectorize(datetime_to_decimal_year)
-        with cdf_open(self.FILE) as cdf:
-            self.assertAllAlmostEqual(
-                cdf_rawtime_to_decimal_year(
-                    cdf.raw_var('time')[:], CDF_EPOCH_TYPE
-                ), v_datetime_to_decimal_year(cdf['time'][:]), 1e-5
-            )
-        # empty array test
-        cdf_rawtime_to_decimal_year(array([]), CDF_EPOCH_TYPE)
-
 
 class TestCDFEpochTimeBase01(TestCDFEpochTime00):
     FILE = "./test_tmp_cdf_epoch1.cdf"
     START = datetime(2016, 3, 30, 0, 0, 0)
     STOP = datetime(2016, 3, 31, 0, 0, 0)
     STEP = timedelta(seconds=7)
-
-    def test_cdf_rawtime_to_decimal_year_fast(self):
-        v_datetime_to_decimal_year = vectorize(datetime_to_decimal_year)
-        with cdf_open(self.FILE) as cdf:
-            self.assertAllAlmostEqual(
-                cdf_rawtime_to_decimal_year_fast(
-                    cdf.raw_var('time')[:], CDF_EPOCH_TYPE, 2016
-                ), v_datetime_to_decimal_year(cdf['time'][:]), 1e-5
-            )
 
 
 class TestCDF(ArrayMixIn, unittest.TestCase):

@@ -31,7 +31,7 @@ from numpy import array, empty
 from vires.util import include
 from vires.cdf_util import (
     mjd2000_to_cdf_rawtime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_datetime,
-    CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE,
+    CDF_DOUBLE_TYPE,
 )
 from vires.dataset import Dataset
 from .base import TimeSeries
@@ -96,7 +96,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         return dataset
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
-                    cdf_type=CDF_EPOCH_TYPE, valid_only=False):
+                    cdf_type=TimeSeries.TIMESTAMP_TYPE, valid_only=False):
         times, cdf_type = self._convert_time(times, cdf_type)
 
         if times.size == 0: # return an empty dataset

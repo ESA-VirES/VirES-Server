@@ -47,8 +47,8 @@ from vires.access_util import get_vires_permissions
 from vires.time_util import naive_to_utc, format_timedelta, format_datetime
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
-    timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE, cdf_open,
-    CDF_CHAR_TYPE,
+    timedelta_to_cdf_rawtime, get_formatter, cdf_open,
+    CDF_CHAR_TYPE, CDF_TIME_TYPES,
 )
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
@@ -65,7 +65,7 @@ from vires.processes.util import (
     extract_product_names, get_time_limit,
 )
 from vires.processes.util.time_series import (
-    ProductTimeSeries,
+    TimeSeries, ProductTimeSeries,
     IndexKp10, IndexDst, IndexDDst, IndexF107,
     OrbitCounter, OrbitDirection, QDOrbitDirection,
 )
@@ -348,7 +348,7 @@ class FetchFilteredDataAsync(WPSProcess):
             self.logger.debug("sampling step: %s", sampling_step)
 
         # resolve data sources, models and filters and variables dependencies
-        resolvers = dict()
+        resolvers = {}
 
         if sources:
             orbit_info = {
@@ -409,7 +409,7 @@ class FetchFilteredDataAsync(WPSProcess):
             # optional sub-sampling filters
             if sampling_step:
                 sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
-                    sampling_step, CDF_EPOCH_TYPE
+                    sampling_step, TimeSeries.TIMESTAMP_TYPE
                 ))
                 grouping_sampler = GroupingSampler('Timestamp')
             else:
@@ -653,7 +653,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         data_item = dataset.get(variable)
                         # convert time variables to the target file-format
                         cdf_type = dataset.cdf_type.get(variable)
-                        if cdf_type == CDF_EPOCH_TYPE:
+                        if cdf_type in CDF_TIME_TYPES:
                             data_item = time_convertor(data_item, cdf_type)
                         # collect all data items
                         data.append(data_item)

@@ -32,7 +32,7 @@ from datetime import timedelta
 from numpy import searchsorted, broadcast_to, asarray
 from vires.cdf_util import (
     cdf_open, datetime_to_cdf_rawtime, cdf_rawtime_to_datetime,
-    timedelta_to_cdf_rawtime, cdf_type_map, CDF_EPOCH_TYPE,
+    timedelta_to_cdf_rawtime, cdf_type_map, CDF_TIME_TYPES, CDF_TYPE_TO_LABEL,
 )
 from vires.time_util import naive_to_utc
 from vires.models import Product, ProductCollection
@@ -119,7 +119,7 @@ class BaseProductTimeSeries(TimeSeries):
         """
         raise NotImplementedError
 
-    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the give array time array.
         """
         raise NotImplementedError
@@ -132,7 +132,7 @@ class BaseProductTimeSeries(TimeSeries):
         variables = self.get_extracted_variables(variables)
         return iter(self._subset(start, stop, variables))
 
-    def subset_times(self, times, variables=None, cdf_type=CDF_EPOCH_TYPE):
+    def subset_times(self, times, variables=None, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the given time array.
         """
         variables = self.get_extracted_variables(variables)
@@ -140,7 +140,7 @@ class BaseProductTimeSeries(TimeSeries):
         return self._subset_times(times, variables, cdf_type)
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
-                    cdf_type=CDF_EPOCH_TYPE, valid_only=False):
+                    cdf_type=TimeSeries.TIMESTAMP_TYPE, valid_only=False):
 
         variables = self.get_extracted_variables(variables)
         self.logger.debug("requested variables %s", variables)
@@ -276,15 +276,22 @@ class ProductTimeSeries(BaseProductTimeSeries):
         dataset = Dataset()
         for variable in extracted_variables:
             cdf_var = cdf.raw_var(self.translate_fw.get(variable, variable))
+            cdf_type = cdf_type_map(cdf_var.type())
             if cdf_var.rv(): # regular record variable
                 data = cdf_var[idx_low:idx_high]
             else: # NRV variable
                 value = asarray(cdf_var[...])
                 size = max(0, idx_high - idx_low)
                 data = broadcast_to(value, (size,) + value.shape)
-            dataset.set(
-                variable, data, cdf_type_map(cdf_var.type()), cdf_var.attrs
-            )
+            if cdf_type in CDF_TIME_TYPES:
+                data, cdf_type = self._convert_time(data, cdf_type)
+                self.logger.debug(
+                    "%s: converting time from %s to %s",
+                    variable,
+                    CDF_TYPE_TO_LABEL[cdf_var.type()],
+                    CDF_TYPE_TO_LABEL[cdf_type],
+                )
+            dataset.set(variable, data, cdf_type, cdf_var.attrs)
         return dataset
 
     def _get_empty_dataset(self, variables):
@@ -316,7 +323,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 return self._extract_dataset(cdf, variables, 0, 0)
 
 
-    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the given time array.
         """
         times, cdf_type = self._convert_time(times, cdf_type)
@@ -393,7 +400,17 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 temp_var = cdf.raw_var(
                     self.translate_fw.get(self.time_variable, self.time_variable)
                 )
-                times, time_type = temp_var[:], temp_var.type()
+                times, time_type = self._convert_time(
+                    temp_var[:], temp_var.type()
+                )
+
+                if temp_var.type() != time_type:
+                    self.logger.debug(
+                        "%s: converting time from %s to %s",
+                        self.time_variable,
+                        CDF_TYPE_TO_LABEL[temp_var.type()],
+                        CDF_TYPE_TO_LABEL[time_type],
+                    )
 
                 dataset = extract_time_subset(
                     cdf, variables, times, start_index, stop_index,

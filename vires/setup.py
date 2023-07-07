@@ -40,6 +40,7 @@ setup(
     package_data={
         'vires': [
             'data/*.json',
+            'data/*.txt',
             'colormaps/*.cm',
             'tests/data/*.cdf',
         ]

@@ -5,7 +5,7 @@
 # Authors: Fabian Schindler <fabian.schindler@eox.at>
 #          Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2014-2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,13 +25,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,too-few-public-methods
 
 from vires.time_util import naive_to_utc
 from vires.cdf_util import cdf_rawtime_to_datetime
 
 
-class SwarmProductMetadataReader():
+class CDFReader:
+    @staticmethod
+    def _cdf_rawtime_to_datetime(time, cdf_type):
+        return naive_to_utc(cdf_rawtime_to_datetime(time, cdf_type))
+
+
+class SwarmProductMetadataReader(CDFReader):
 
     TIME_EXTENT_ATTRIBUTE = "TIME_EXTENT"
 
@@ -42,14 +48,14 @@ class SwarmProductMetadataReader():
         "t",
     ]
 
-    @staticmethod
-    def _read_time_extent(attr):
+    @classmethod
+    def _read_time_extent(cls, attr):
         attr._raw = True # pylint: disable=protected-access
         cdf_type = attr.type(0)
         begin_time, end_time = attr[0]
         return (
-            naive_to_utc(cdf_rawtime_to_datetime(begin_time, cdf_type)),
-            naive_to_utc(cdf_rawtime_to_datetime(end_time, cdf_type)),
+            cls._cdf_rawtime_to_datetime(begin_time, cdf_type),
+            cls._cdf_rawtime_to_datetime(end_time, cdf_type),
         )
 
     @classmethod
@@ -75,8 +81,8 @@ class SwarmProductMetadataReader():
             raise ValueError("Incorrect dimension of the time-stamp array!")
 
         return (
-            naive_to_utc(cdf_rawtime_to_datetime(times[0], times.type())),
-            naive_to_utc(cdf_rawtime_to_datetime(times[-1], times.type())),
+            cls._cdf_rawtime_to_datetime(times[0], times.type()),
+            cls._cdf_rawtime_to_datetime(times[-1], times.type()),
         )
 
     @classmethod
@@ -90,15 +96,11 @@ class SwarmProductMetadataReader():
         }
 
 
-class ObsProductMetadataReader():
+class ObsProductMetadataReader(CDFReader):
 
     TIME_VARIABLE = "Timestamp"
     SITE_CODES_ATTR = "IAGA_CODES"
     INDEX_RANGES_ATTR = "INDEX_RANGES"
-
-    @staticmethod
-    def epoch_to_datetime(time, cdf_type):
-        return naive_to_utc(cdf_rawtime_to_datetime(time, cdf_type))
 
     @classmethod
     def read_times(cls, cdf, time_variable):
@@ -136,16 +138,16 @@ class ObsProductMetadataReader():
         datasets = {
             code: {
                 'index_range': (start, stop),
-                'begin_time': cls.epoch_to_datetime(times[start], cdf_type),
-                'end_time': cls.epoch_to_datetime(times[stop - 1], cdf_type),
+                'begin_time': cls._cdf_rawtime_to_datetime(times[start], cdf_type),
+                'end_time': cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
             }
             for code, (start, stop) in index_ranges.items()
 
         }
 
         return (
-            cls.epoch_to_datetime(times.min(), cdf_type),
-            cls.epoch_to_datetime(times.max(), cdf_type),
+            cls._cdf_rawtime_to_datetime(times.min(), cdf_type),
+            cls._cdf_rawtime_to_datetime(times.max(), cdf_type),
             datasets,
         )
 
@@ -183,23 +185,23 @@ class VObsProductMetadataReader(ObsProductMetadataReader):
             **{
                 code: {
                     'index_range': (start, stop),
-                    'begin_time': cls.epoch_to_datetime(times[start], cdf_type),
-                    'end_time': cls.epoch_to_datetime(times[stop - 1], cdf_type),
+                    'begin_time': cls._cdf_rawtime_to_datetime(times[start], cdf_type),
+                    'end_time': cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
                 }
                 for code, (start, stop) in index_ranges.items()
             },
             **{
                 f'{cls.SV_DATASET}:{code}': {
                     'index_range': (start, stop),
-                    'begin_time': cls.epoch_to_datetime(times_sv[start], cdf_type),
-                    'end_time': cls.epoch_to_datetime(times_sv[stop - 1], cdf_type),
+                    'begin_time': cls._cdf_rawtime_to_datetime(times_sv[start], cdf_type),
+                    'end_time': cls._cdf_rawtime_to_datetime(times_sv[stop - 1], cdf_type),
                 }
                 for code, (start, stop) in index_ranges_sv.items()
             },
         }
 
         return (
-            cls.epoch_to_datetime(times.min(), cdf_type),
-            cls.epoch_to_datetime(times.max(), cdf_type),
+            cls._cdf_rawtime_to_datetime(times.min(), cdf_type),
+            cls._cdf_rawtime_to_datetime(times.max(), cdf_type),
             datasets,
         )
