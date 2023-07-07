@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Miscellaneous data files.
+#  Reference EOIAM provider - tests
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
-from os.path import join, dirname
+from allauth.socialaccount.tests import OAuth2TestsMixin
+from allauth.tests import MockedResponse, TestCase
+from .provider import EoiamRefProvider
 
-_DIRNAME = dirname(__file__)
 
-PRODUCT_TYPES = join(_DIRNAME, "product_types.json")
-PRODUCT_COLLECTIONS = join(_DIRNAME, "product_collections.json")
+class EoiamRefTestsMinimal(OAuth2TestsMixin, TestCase):
+    provider_id = EoiamRefProvider.id
 
-# CDF Leap Seconds table to be used for CDF_TT2000 conversions
-CDF_LEAP_SECONDS = join(_DIRNAME, "CDFLeapSeconds.txt")
+    def get_mocked_response(self):
+        return MockedResponse(200, '{"sub":"john.doe@eox.at"}')
+
+
+class EoiamRefTestsFull(OAuth2TestsMixin, TestCase):
+    provider_id = EoiamRefProvider.id
+
+    def get_mocked_response(self):
+        return MockedResponse(
+            200,
+            '{"sub":"john.doe@eox.at","first_name":"John","last_name":"Doe"}'
+        )

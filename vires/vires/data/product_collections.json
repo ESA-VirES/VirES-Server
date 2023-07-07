@@ -117,21 +117,21 @@
     },
     {
         "name": "SW_OPER_EFIA_LP_1B",
-        "description": "Swarm A plasma data from the Langimur Probe (LP) at 2Hz rate",
+        "description": "Swarm A plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
         "spacecraft": "A"
     },
     {
         "name": "SW_OPER_EFIB_LP_1B",
-        "description": "Swarm B plasma data from the Langimur Probe (LP) at 2Hz rate",
+        "description": "Swarm B plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_EFIC_LP_1B",
-        "description": "Swarm C plasma data from the Langimur Probe (LP) at 2Hz rate",
+        "description": "Swarm C plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
         "spacecraft": "C"

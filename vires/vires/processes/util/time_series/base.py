@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,12 +27,18 @@
 # pylint: disable=too-many-arguments
 
 from numpy import asarray
-from vires.cdf_util import CDF_EPOCH_TYPE, mjd2000_to_cdf_rawtime
+from vires.cdf_util import (
+    CDF_EPOCH_TYPE,
+    mjd2000_to_cdf_rawtime,
+    convert_cdf_raw_times,
+)
 from vires.util import include, unique
 
 
 class TimeSeries():
     """ Base time-series data source class. """
+
+    TIMESTAMP_TYPE = CDF_EPOCH_TYPE
 
     def __init__(self):
         self.product_set = set() # stores all recorded source products
@@ -73,7 +79,7 @@ class TimeSeries():
         raise NotImplementedError
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
-                    cdf_type=CDF_EPOCH_TYPE, valid_only=False):
+                    cdf_type=TIMESTAMP_TYPE, valid_only=False):
         """ Get time-series interpolated from the provided time-line.
         Optionally, the returned variables can be restricted by the user defined
         list of variables.
@@ -91,19 +97,19 @@ class TimeSeries():
         raise NotImplementedError
 
     @staticmethod
-    def _convert_time(times, cdf_type):
+    def _convert_time(times, cdf_type, target_cdf_type=TIMESTAMP_TYPE):
         # handle scalar input
         times = asarray(times)
         if times.ndim == 0:
             times = times.reshape(1)
 
-        if cdf_type != CDF_EPOCH_TYPE:
+        if cdf_type != target_cdf_type:
             if cdf_type is None:
-                times = mjd2000_to_cdf_rawtime(times, CDF_EPOCH_TYPE)
-                cdf_type = CDF_EPOCH_TYPE
+                times = mjd2000_to_cdf_rawtime(times, target_cdf_type)
             else:
-                raise TypeError("Unsupported CDF time type %r !" % cdf_type)
-        return times, cdf_type
+                times = convert_cdf_raw_times(times, cdf_type, target_cdf_type)
+
+        return times, target_cdf_type
 
     def __str__(self):
         name = self.__class__.__name__

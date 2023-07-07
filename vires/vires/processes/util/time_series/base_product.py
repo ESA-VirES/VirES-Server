@@ -58,7 +58,7 @@ class BaseProductTimeSeries(TimeSeries):
         """
         raise NotImplementedError
 
-    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the given time array.
         """
         raise NotImplementedError
@@ -71,7 +71,7 @@ class BaseProductTimeSeries(TimeSeries):
         variables = self.get_extracted_variables(variables)
         return iter(self._subset(start, stop, variables))
 
-    def subset_times(self, times, variables=None, cdf_type=CDF_EPOCH_TYPE):
+    def subset_times(self, times, variables=None, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the given time array.
         """
         variables = self.get_extracted_variables(variables)
@@ -79,7 +79,7 @@ class BaseProductTimeSeries(TimeSeries):
         return self._subset_times(times, variables, cdf_type)
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
-                    cdf_type=CDF_EPOCH_TYPE, valid_only=False):
+                    cdf_type=TimeSeries.TIMESTAMP_TYPE, valid_only=False):
 
         variables = self.get_extracted_variables(variables)
         self.logger.debug("requested variables: %s", pretty_list(variables))

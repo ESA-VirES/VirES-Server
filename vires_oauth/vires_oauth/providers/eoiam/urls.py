@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Miscellaneous data files.
+#  EOIAM provider - urls
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2021 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,12 +25,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from os.path import join, dirname
+from allauth.socialaccount.providers.oauth2.urls import default_urlpatterns
+from .provider import EoiamProvider
 
-_DIRNAME = dirname(__file__)
-
-PRODUCT_TYPES = join(_DIRNAME, "product_types.json")
-PRODUCT_COLLECTIONS = join(_DIRNAME, "product_collections.json")
-
-# CDF Leap Seconds table to be used for CDF_TT2000 conversions
-CDF_LEAP_SECONDS = join(_DIRNAME, "CDFLeapSeconds.txt")
+urlpatterns = default_urlpatterns(EoiamProvider)

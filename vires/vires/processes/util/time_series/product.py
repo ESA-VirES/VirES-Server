@@ -29,10 +29,11 @@
 from logging import getLogger, LoggerAdapter
 from datetime import timedelta
 from vires.util import pretty_list, LazyString
-from vires.cdf_util import cdf_rawtime_to_datetime, CDF_EPOCH_TYPE
+from vires.cdf_util import cdf_rawtime_to_datetime
 from vires.time_util import naive_to_utc, format_datetime
 from vires.models import Product, ProductCollection
 from vires.dataset import Dataset
+from .base import TimeSeries
 from .base_product import BaseProductTimeSeries
 from .data_extraction import CDFDataset
 
@@ -194,7 +195,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             self.collection.type.get_dataset_definition(self.dataset_id)
         )
 
-    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the given time array.
         """
         times, cdf_type = self._convert_time(times, cdf_type)
@@ -267,7 +268,8 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 time_subset = slice(*subset[:2])
 
             with CDFDataset(
-                source_dataset['location'], translation=self.translate_fw
+                source_dataset['location'], translation=self.translate_fw,
+                time_type=self.TIMESTAMP_TYPE,
             ) as cdf_ds:
                 subset, nrv_shape = cdf_ds.get_temporal_subset(
                     time_variable=self.time_variable,
@@ -331,7 +333,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             # generate an empty dataset from the sample product
             self.logger.debug("template product: %s", product.identifier)
             self.logger.debug("reading file: %s", location)
-            with CDFDataset(location) as cdf_ds:
+            with CDFDataset(location, time_type=self.TIMESTAMP_TYPE) as cdf_ds:
                 return cdf_ds.extract_datset(
                     variables=[
                         self.translate_fw.get(variable, variable)

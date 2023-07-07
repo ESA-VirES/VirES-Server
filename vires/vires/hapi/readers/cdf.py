@@ -149,5 +149,7 @@ class CdfTimeSeriesReader():
         """ Covert raw CDF data into a native Numpy format. """
         if cdf_type == CDF_EPOCH_TYPE:
             unit = TIME_PRECISION[options.get("timePrecision")]
-            return cdf_rawtime_to_datetime64(raw_data, cdf_type, unit=unit)
+            return (
+                cdf_rawtime_to_datetime64(raw_data, cdf_type)
+            ).astype(f"datetime64[{unit}]")
         return raw_data

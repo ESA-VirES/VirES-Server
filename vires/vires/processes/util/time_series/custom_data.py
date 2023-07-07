@@ -31,11 +31,12 @@ from logging import getLogger, LoggerAdapter
 from numpy import empty
 from vires.util import pretty_list, LazyString
 from vires.time_util import format_datetime
-from vires.cdf_util import cdf_rawtime_to_datetime, CDF_EPOCH_TYPE
+from vires.cdf_util import cdf_rawtime_to_datetime
 from vires.models import CustomDataset
 from vires.dataset import Dataset
 from vires.util import cached_property
 from vires.views.custom_data import sanitize_info
+from .base import TimeSeries
 from .base_product import BaseProductTimeSeries
 from .product import DEFAULT_PRODUCT_TYPE_PARAMETERS
 from .data_extraction import CDFDataset
@@ -82,7 +83,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     def variables(self):
         return list(self._variables)
 
-    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the give array time array.
         """
         times, cdf_type = self._convert_time(times, cdf_type)
@@ -138,7 +139,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
 
             self.product_set.add(dataset.filename) # record source filename
 
-            with CDFDataset(dataset.location) as cdf_ds:
+            with CDFDataset(dataset.location, time_type=self.TIMESTAMP_TYPE) as cdf_ds:
                 subset, nrv_shape = cdf_ds.get_temporal_subset(
                     self.TIME_VARIABLE, start, stop, is_sorted=False,
                 )

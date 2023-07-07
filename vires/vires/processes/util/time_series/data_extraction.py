@@ -27,7 +27,10 @@
 # pylint: disable=too-many-arguments
 
 from numpy import broadcast_to, asarray, argsort, searchsorted, arange
-from vires.cdf_util import cdf_open, datetime_to_cdf_rawtime, cdf_type_map
+from vires.cdf_util import (
+    cdf_open, datetime_to_cdf_rawtime, cdf_type_map,
+    convert_cdf_raw_times, CDF_EPOCH_TYPE, CDF_TIME_TYPES,
+)
 from vires.dataset import Dataset
 
 SLICE_ALL = slice(None)
@@ -36,11 +39,12 @@ SLICE_ALL = slice(None)
 class CDFDataset:
     """ Convenience wrapper around the CDF object. """
 
-    def __init__(self, filename, translation=None):
+    def __init__(self, filename, translation=None, time_type=CDF_EPOCH_TYPE):
         self.cdf = None
         self.open(filename)
         # variable name translation
         self._translation = translation or {}
+        self._time_type = time_type
 
     def __del__(self):
         self.close()
@@ -67,7 +71,7 @@ class CDFDataset:
         """ Extract temporal subset and NVR shape. """
 
         times, cdf_variable = self._extract_variable(time_variable)
-        time_type = cdf_variable.type()
+        times, time_type = self._convert_time(times, cdf_variable.type())
 
         # empty dataset
         if times.size == 0:
@@ -118,6 +122,8 @@ class CDFDataset:
             if cdf_variable.rv() and nrv_shape is None:
                 nrv_ndim = max(0, data.ndim - cdf_variable.ndim - 1)
                 nrv_shape = data.shape[:nrv_ndim]
+            if cdf_type in CDF_TIME_TYPES:
+                data, cdf_type = self._convert_time(data, cdf_type)
             dataset.set(
                 variable, data, cdf_type_map(cdf_variable.type()),
                 cdf_variable.attrs
@@ -171,3 +177,10 @@ class CDFDataset:
             index = index - index_min
 
         return slice(index_min, index_max), SLICE_ALL
+
+    def _convert_time(self, times, cdf_type):
+        """ Convert times to the expected time data type. """
+        return (
+            convert_cdf_raw_times(times, cdf_type, self._time_type),
+            self._time_type
+        )

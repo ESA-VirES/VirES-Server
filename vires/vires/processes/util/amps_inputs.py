@@ -28,9 +28,9 @@
 
 from vires.dataset import Dataset
 from vires.models import ProductCollection
-from vires.cdf_util import CDF_EPOCH_TYPE, mjd2000_to_cdf_rawtime
+from vires.cdf_util import mjd2000_to_cdf_rawtime
 from .models import SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle
-from .time_series import ProductTimeSeries
+from .time_series import TimeSeries, ProductTimeSeries
 
 IMF_BY_VARIABLE = "IMF_BY_GSM"
 IMF_BZ_VARIABLE = "IMF_BZ_GSM"
@@ -51,8 +51,8 @@ def get_amps_inputs(mjd2000):
 
     dataset = Dataset()
     dataset.set("Timestamp", [
-        mjd2000_to_cdf_rawtime(mjd2000, CDF_EPOCH_TYPE)
-    ], CDF_EPOCH_TYPE)
+        mjd2000_to_cdf_rawtime(mjd2000, TimeSeries.TIMESTAMP_TYPE)
+    ], TimeSeries.TIMESTAMP_TYPE)
     dataset.set("Latitude", [0.0])
     dataset.set("Longitude", [0.0])
     dataset.set("Radius", [0.0])

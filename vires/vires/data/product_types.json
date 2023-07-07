@@ -358,7 +358,7 @@
     },
     {
         "name": "SW_EFIx_LP_1B",
-        "description": "Swarm plasma data from the Langimur Probe (LP) at 2Hz rate",
+        "description": "Swarm plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#EFIX_LP_1B_Product",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 20,
