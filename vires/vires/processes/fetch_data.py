@@ -61,10 +61,10 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names, TimeSeries,
+    extract_product_names,
 )
 from vires.processes.util.time_series import (
-    ProductTimeSeries, CustomDatasetTimeSeries,
+    TimeSeries, ProductTimeSeries, CustomDatasetTimeSeries,
     IndexKp10, IndexDst, IndexDDst, IndexF107,
     OrbitCounter, OrbitDirection, QDOrbitDirection,
 )

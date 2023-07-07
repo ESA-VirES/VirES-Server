@@ -37,6 +37,7 @@ from vires.models import CustomDataset
 from vires.dataset import Dataset
 from vires.util import cached_property
 from vires.views.custom_data import sanitize_info
+from .base import TimeSeries
 from .product import BaseProductTimeSeries, DEFAULT_PRODUCT_TYPE_PARAMETERS
 
 
@@ -80,7 +81,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     def variables(self):
         return list(self._variables)
 
-    def _subset_times(self, times, variables, cdf_type=BaseProductTimeSeries.TIMESTAMP_TYPE):
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the give array time array.
         """
         times, cdf_type = self._convert_time(times, cdf_type)

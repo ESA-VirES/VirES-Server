@@ -30,13 +30,14 @@ from vires.cdf_util import CDF_DOUBLE_TYPE, CDF_UINT2_TYPE
 from vires.aux_kp import KpReader
 from vires.aux_dst import DstReader, DDstReader
 from vires.aux_f107 import F10_2_Reader
+from .base import TimeSeries
 from .auxiliary_data import AuxiliaryDataTimeSeries
 
 
 class IndexKp10(AuxiliaryDataTimeSeries):
     """ Kp10 index time-series source class. """
     CDF_TYPE = {
-        'Timestamp': AuxiliaryDataTimeSeries.TIMESTAMP_TYPE,
+        'Timestamp': TimeSeries.TIMESTAMP_TYPE,
         'Kp10': CDF_UINT2_TYPE,
     }
     CDF_INTERP_TYPE = {'Kp': CDF_DOUBLE_TYPE}
@@ -61,7 +62,7 @@ class IndexKp10(AuxiliaryDataTimeSeries):
 class IndexDDst(AuxiliaryDataTimeSeries):
     """ Dst index time-series source class. """
     CDF_TYPE = {
-        'Timestamp': AuxiliaryDataTimeSeries.TIMESTAMP_TYPE,
+        'Timestamp': TimeSeries.TIMESTAMP_TYPE,
         'Dst': CDF_DOUBLE_TYPE,
     }
     CDF_INTERP_TYPE = {'DDst': CDF_DOUBLE_TYPE}
@@ -88,7 +89,7 @@ class IndexDDst(AuxiliaryDataTimeSeries):
 class IndexDst(AuxiliaryDataTimeSeries):
     """ Dst index time-series source class. """
     CDF_TYPE = {
-        'Timestamp': AuxiliaryDataTimeSeries.TIMESTAMP_TYPE,
+        'Timestamp': TimeSeries.TIMESTAMP_TYPE,
         'Dst': CDF_DOUBLE_TYPE,
     }
     CDF_INTERP_TYPE = {'Dst': CDF_DOUBLE_TYPE}
@@ -113,7 +114,7 @@ class IndexDst(AuxiliaryDataTimeSeries):
 class IndexF107(AuxiliaryDataTimeSeries):
     """ F10.7 index (AUX_F10_2_) time-series source class. """
     CDF_TYPE = {
-        'Timestamp': AuxiliaryDataTimeSeries.TIMESTAMP_TYPE,
+        'Timestamp': TimeSeries.TIMESTAMP_TYPE,
         'F107': CDF_DOUBLE_TYPE,
     }
     CDF_INTERP_TYPE = {'F107': CDF_DOUBLE_TYPE}

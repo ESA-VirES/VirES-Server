@@ -31,19 +31,20 @@ from vires.cdf_util import (
 )
 from vires.cdf_util import mjd2000_to_cdf_rawtime
 from vires.orbit_counter import OrbitCounterReader
+from .base import TimeSeries
 from .auxiliary_data import AuxiliaryDataTimeSeries
 
 
 class OrbitCounter(AuxiliaryDataTimeSeries):
     """ Orbit counter time-series class. """
     CDF_TYPE = {
-        'AscendingNodeTime': AuxiliaryDataTimeSeries.TIMESTAMP_TYPE,
+        'AscendingNodeTime': TimeSeries.TIMESTAMP_TYPE,
         'OrbitNumber': CDF_INT4_TYPE,               # uses -1 as NaN
         'AscendingNodeLongitude': CDF_DOUBLE_TYPE,   # NaN
         'OrbitSource': CDF_INT1_TYPE,               # uses -1 as NaN
     }
     CDF_INTERP_TYPE = {
-        'AscendingNodeTime': AuxiliaryDataTimeSeries.TIMESTAMP_TYPE,
+        'AscendingNodeTime': TimeSeries.TIMESTAMP_TYPE,
         'OrbitNumber': CDF_INT4_TYPE,               # uses -1 as NaN
         'AscendingNodeLongitude': CDF_DOUBLE_TYPE,   # NaN
         'OrbitSource': CDF_INT1_TYPE,               # uses -1 as NaN
@@ -51,7 +52,7 @@ class OrbitCounter(AuxiliaryDataTimeSeries):
     DATA_CONVERSION = {
         'AscendingNodeTime': (
             lambda data: mjd2000_to_cdf_rawtime(
-                data, AuxiliaryDataTimeSeries.TIMESTAMP_TYPE
+                data, TimeSeries.TIMESTAMP_TYPE
             )
         ),
     }
