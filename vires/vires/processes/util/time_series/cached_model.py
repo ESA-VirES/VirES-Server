@@ -188,96 +188,36 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
             time_subset = source_dataset.get('indexRange')
             if time_subset:
-                time_subset = slice(*subset[:2])
+                time_subset = slice(*time_subset[:2])
 
-            with CDFDataset(
-                source_dataset['location'], translation=self.translate_fw,
-                time_type=self.TIMESTAMP_TYPE,
-            ) as cdf_ds:
-                subset, nrv_shape = cdf_ds.get_temporal_subset(
-                    self.time_variable,
-                    start=start,
-                    stop=stop,
-                    subset=time_subset,
-                    is_sorted=source_dataset.get('isSorted', True),
-                )
-                dataset = cdf_ds.extract_datset(
-                    variables=list(exclude(variables, self.models)),
-                    subset=subset,
-                    nrv_shape=nrv_shape
-                )
+            temporal_subset_options = dict(
+                start=start,
+                stop=stop,
+                time_variable=self.time_variable,
+                subset=time_subset,
+                is_sorted=source_dataset.get('isSorted', True),
+            )
 
-            self.logger.debug("dataset length: %s", dataset.length)
-
-            model_variables = set(include(variables, self.models))
-            available_model_variables = set()
-            extracted_model_variables = set()
             cache_file = get_product_model_cache_file(
                 cache_directory, product.identifier
             )
-
             if exists(cache_file):
-                with CDFDataset(
-                    cache_file, translation=self.translate_fw_models,
-                    time_type=self.TIMESTAMP_TYPE,
-                ) as cdf_ds:
-
-                    # get available model variables
-                    available_model_variables = set(
-                        variable for variable in model_variables
-                        if self.translate_fw_models[variable] in cdf_ds.cdf
-                    )
-
-                    # get expected model source
-                    expected_sources = self._extract_model_sources(
-                        start, stop,
-                        variables=available_model_variables,
-                    )
-
-                    # get sources of the cached models
-                    cached_sources = self._extract_cached_model_sources(
-                        start, stop,
-                        variables=available_model_variables,
-                        sources=read_sources_with_time_ranges(cdf_ds.cdf),
-                    )
-
-                    # filter out outdated cached models
-                    extracted_model_variables = set(
-                        variable for variable in available_model_variables
-                        if expected_sources[variable] == cached_sources[variable]
-                    )
-
-                    dataset.merge(cdf_ds.extract_datset(
-                        variables=extracted_model_variables,
-                        subset=subset,
-                        nrv_shape=nrv_shape
-                    ))
-
-                    self._update_sources(cached_sources, extracted_model_variables)
-
-            self.logger.debug(
-                "extracted model variables: %s",
-                pretty_list(extracted_model_variables)
-            )
-
-            obsolete_variables = available_model_variables - extracted_model_variables
-            if obsolete_variables:
-                self.logger.warning(
-                    "obsolete cached models detected: %s",
-                    pretty_list(
-                        self.models[variable].name
-                        for variable in obsolete_variables
-                    )
+                self.logger.debug("cache file exists")
+                dataset, missing_model_variables = self._extract_cached_data(
+                    cache_file, variables, **temporal_subset_options
+                )
+            else:
+                self.logger.debug("cache file is missing")
+                dataset, missing_model_variables = self._extract_product_data(
+                    source_dataset['location'], variables,
+                    **temporal_subset_options,
                 )
 
-            missing_model_variables = (
-                model_variables.difference(extracted_model_variables)
-            )
-
-            self.logger.debug(
-                "missing model variables: %s",
-                pretty_list(missing_model_variables)
-            )
+            if missing_model_variables:
+                self.logger.debug(
+                    "missing model variables: %s",
+                    pretty_list(missing_model_variables)
+                )
 
             self._fill_missing_model_variables(dataset, missing_model_variables)
 
@@ -289,6 +229,107 @@ class CachedModelExtraction(BaseProductTimeSeries):
             dataset = self._get_empty_dataset(variables)
             if dataset:
                 yield dataset
+
+
+    def _extract_product_data(self, filename, variables, **temporal_subset_options):
+        """ Fallback extraction of variables from the original product. """
+
+        extracted_variables = set(exclude(variables, self.models))
+        missing_model_variables = set(include(variables, self.models))
+
+        with CDFDataset(
+            filename, translation=self.translate_fw,
+            time_type=self.TIMESTAMP_TYPE,
+        ) as cdf_ds:
+            subset, nrv_shape = cdf_ds.get_temporal_subset(
+                **temporal_subset_options,
+            )
+            dataset = cdf_ds.extract_datset(
+                variables=extracted_variables,
+                subset=subset,
+                nrv_shape=nrv_shape
+            )
+
+        return dataset, missing_model_variables
+
+    def _extract_cached_data(self, filename, variables, **temporal_subset_options):
+        """ Extraction of variables from the cache file. """
+
+        extracted_other_variables = set(exclude(variables, self.models))
+        model_variables = set(include(variables, self.models))
+        available_model_variables = set()
+        extracted_model_variables = set()
+
+        start = temporal_subset_options["start"]
+        stop = temporal_subset_options["stop"]
+
+        with CDFDataset(
+            filename, translation=self.translate_fw_models,
+            time_type=self.TIMESTAMP_TYPE,
+        ) as cdf_ds:
+
+            subset, nrv_shape = cdf_ds.get_temporal_subset(
+                **temporal_subset_options,
+            )
+
+            # get available model variables
+            available_model_variables = set(
+                variable for variable in model_variables
+                if self.translate_fw_models[variable] in cdf_ds.cdf
+            )
+
+            # get expected model source
+            expected_sources = self._extract_model_sources(
+                start, stop,
+                variables=available_model_variables,
+            )
+
+            # get sources of the cached models
+            cached_sources = self._extract_cached_model_sources(
+                start, stop,
+                variables=available_model_variables,
+                sources=read_sources_with_time_ranges(cdf_ds.cdf),
+            )
+
+            # filter out outdated cached models
+            extracted_model_variables = set(
+                variable for variable in available_model_variables
+                if expected_sources[variable] == cached_sources[variable]
+            )
+
+            dataset = cdf_ds.extract_datset(
+                variables=(
+                    extracted_other_variables | extracted_model_variables
+                ),
+                subset=subset,
+                nrv_shape=nrv_shape
+            )
+
+        if extracted_model_variables:
+            self.logger.debug(
+                "extracted model variables: %s",
+                pretty_list(extracted_model_variables)
+            )
+
+        obsolete_variables = (
+            available_model_variables - extracted_model_variables
+        )
+        if obsolete_variables:
+            self.logger.warning(
+                "obsolete cached models detected: %s",
+                pretty_list(
+                    self.models[variable].name
+                    for variable in obsolete_variables
+                )
+            )
+
+        missing_model_variables = (
+            model_variables.difference(extracted_model_variables)
+        )
+
+        return dataset, missing_model_variables
+
+
 
     def _get_empty_dataset(self, variables):
         """ Generate an empty dataset. """
