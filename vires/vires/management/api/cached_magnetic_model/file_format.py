@@ -89,7 +89,7 @@ def read_model_cache_description(cache_file, logger):
 def init_cache_file(cache_file, product, logger):
     """ Initialize new cache file. """
     logger.info("Creating cache file %s", cache_file)
-    with cdf_open(cache_file, "w") as cdf:
+    with cdf_open(cache_file, "w", backward_compatible=False) as cdf:
         cdf.attrs["TITLE"] = product.identifier
         cdf.attrs["COLLECTION"] = product.collection.identifier
         cdf.attrs.new("MODEL_SOURCES")
