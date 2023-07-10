@@ -98,3 +98,5 @@ class StatsCachedMagneticModelsSubcommand(CachedMagneticModelsSubcommand):
             print(f"{alignment}missing files:   {file_stats['missing_file_count']}")
         if file_stats['loose_file_count'] > 0:
             print(f"{alignment}loose files:     {file_stats['loose_file_count']}")
+        if file_stats['missing_variables_file_count'] > 0:
+            print(f"{alignment}files with missing variables: {file_stats['missing_variables_file_count']}")

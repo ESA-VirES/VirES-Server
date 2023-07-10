@@ -56,6 +56,7 @@ def collect_collection_cache_stats(collection, model_names=None, logger=None):
         "product_count": product_selection.count(),
         "missing_file_count": 0,
         "loose_file_count": 0,
+        "missing_variables_file_count": 0,
     }
 
     def _new_model_stats():
@@ -80,7 +81,16 @@ def collect_collection_cache_stats(collection, model_names=None, logger=None):
             collection_stats["synced"] = False
             continue
 
-        cache_description = read_model_cache_description(cache_file, logger) or {}
+        (
+            cache_description, has_missing_variables,
+        ) = read_model_cache_description(cache_file, logger)
+
+        if has_missing_variables:
+            file_stats["missing_variables_file_count"] += 1
+
+        if not cache_description:
+            cache_description = {}
+
         model_list = set(cache_description)
 
         for model in models:

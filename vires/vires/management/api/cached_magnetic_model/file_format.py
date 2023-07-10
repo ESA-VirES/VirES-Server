@@ -37,6 +37,13 @@ from vires.time_util import datetime, format_datetime, naive_to_utc
 from .common import remove_file
 
 
+TIME_VAR = "Timestamp"
+LATITUDE_VAR = "Latitude"
+LONGITUDE_VAR = "Longitude"
+RADIUS_VAR = "Radius"
+
+REQUIRED_VARIABLES = [TIME_VAR, LATITUDE_VAR, LONGITUDE_VAR, RADIUS_VAR]
+
 CDF_COMPRESSION = dict(
     compress=GZIP_COMPRESSION,
     compress_param=GZIP_COMPRESSION_LEVEL4,
@@ -56,6 +63,9 @@ def load_options(cdf):
 def read_model_cache_description(cache_file, logger):
     """ Read the description of the model cache file. """
 
+    def _has_missing_variables(cdf):
+        return bool(get_missing_variables(cdf, REQUIRED_VARIABLES))
+
     def _read_model_cache_description(cdf):
         models = defaultdict(set)
         for model_name, source_name in read_sources(cdf):
@@ -64,13 +74,16 @@ def read_model_cache_description(cache_file, logger):
 
     try:
         with cdf_open(cache_file, "r") as cdf:
-            return _read_model_cache_description(cdf)
+            return (
+                _read_model_cache_description(cdf),
+                _has_missing_variables(cdf),
+            )
     except pycdf.CDFError as error:
         logger.debug(
             "Failed to read cache file description from %s! (%s)",
             cache_file, error
         )
-    return None
+    return None, True
 
 
 def init_cache_file(cache_file, product, logger):
@@ -130,10 +143,38 @@ def append_log_record(cdf, message):
     cdf.attrs["CHANGELOG"].append(f"{timestamp} {message}")
 
 
-def read_times_and_locations_data(cdf, time_var="Timestamp",
-                              latitude_var="Latitude",
-                              longitude_var="Longitude",
-                              radius_var="Radius"):
+def copy_missing_variables(cdf, product_file):
+    """ Copy missing common variables from the original product. """
+    missing_variables = get_missing_variables(cdf, REQUIRED_VARIABLES)
+    if missing_variables:
+        with cdf_open(product_file) as cdf_src:
+            copy_variables(cdf_src, cdf, missing_variables)
+
+
+def get_missing_variables(cdf, variables):
+    """ Get list of common variables not present in the checked CDF file. """
+    return [
+        variable for variable in variables if variable not in cdf
+    ]
+
+
+def copy_variables(cdf_src, cdf_dst, variables):
+    """ Copy selected variables. """
+    for variable in variables:
+        cdf_var_src = cdf_src.raw_var(variable)
+        cdf_var_dst = cdf_dst.new(
+            name=variable,
+            data=cdf_var_src[...],
+            type=cdf_var_src.type(),
+            **CDF_COMPRESSION
+        )
+        cdf_var_dst.attrs = cdf_var_src.attrs
+
+
+def read_times_and_locations_data(cdf, time_var=TIME_VAR,
+                                  latitude_var=LATITUDE_VAR,
+                                  longitude_var=LONGITUDE_VAR,
+                                  radius_var=RADIUS_VAR):
     """ Read times and locations from the source data file. """
     time_var = cdf.raw_var(time_var)
     return {

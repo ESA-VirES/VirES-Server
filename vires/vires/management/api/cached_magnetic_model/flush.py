@@ -105,7 +105,7 @@ def _flush_product(product, cache_file, models, options, force_flush,
 
     tmp_cache_file = get_temp_cache_file(cache_file)
 
-    cache_description = read_model_cache_description(cache_file, logger)
+    cache_description, _ = read_model_cache_description(cache_file, logger)
 
     if cache_description is None:
         # cache file does not exist => nothing to be done

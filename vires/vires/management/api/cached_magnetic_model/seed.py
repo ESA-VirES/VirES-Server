@@ -53,6 +53,7 @@ from .file_format import (
     read_times_and_locations_data,
     write_model_data,
     save_options,
+    copy_missing_variables,
 )
 
 
@@ -101,7 +102,9 @@ def _seed_product(product, cache_file, models, options, force_reseed, logger):
 
     tmp_cache_file = get_temp_cache_file(cache_file)
 
-    cache_description = read_model_cache_description(cache_file, logger)
+    (
+        cache_description, has_missing_variables,
+    ) = read_model_cache_description(cache_file, logger)
 
     create_new_cache_file = cache_description is None
     if create_new_cache_file:
@@ -121,7 +124,7 @@ def _seed_product(product, cache_file, models, options, force_reseed, logger):
         if _is_not_seeded(model) or _is_obsolete(model)
     ]
 
-    if not seeded_models:
+    if not seeded_models and not has_missing_variables:
         return
 
     try:
@@ -144,11 +147,14 @@ def _seed_models(product, cache_file, models, options, logger):
         product.collection.type.default_dataset_id
     )
 
-    with cdf_open(product_file) as cdf:
+    with cdf_open(cache_file, "w") as cdf:
+
+        save_options(cdf, options)
+
+        copy_missing_variables(cdf, product_file)
+
         data = read_times_and_locations_data(cdf)
 
-    with cdf_open(cache_file, "w") as cdf:
-        save_options(cdf, options)
         for model in models:
             _seed_model(cdf, model, data, options)
             logger.info(
