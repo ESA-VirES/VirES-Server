@@ -53,6 +53,12 @@ class TimeSeries():
         """ Get list of the provided variables. """
         raise NotImplementedError
 
+    @property
+    def required_variable(self):
+        """ Get the input dataset variable required by the slave time-series.
+        """
+        return "Timestamp"
+
     def get_extracted_variables(self, variables):
         """ Expand/filter input variables into applicable variables. """
         if variables is None:
@@ -104,3 +110,9 @@ class TimeSeries():
                 times = convert_cdf_raw_times(times, cdf_type, target_cdf_type)
 
         return times, target_cdf_type
+
+    def __str__(self):
+        name = self.__class__.__name__
+        inputs = self.required_variable
+        outputs = ",".join(self.variables)
+        return f"{name}([{inputs}] -> [{outputs}])"

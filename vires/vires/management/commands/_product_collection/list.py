@@ -27,32 +27,17 @@
 # pylint: disable=missing-docstring
 
 from vires.models import ProductCollection
-from .._common import Subcommand
+from .common import ProductCollectionSelectionSubcommand
 
 
-class ListProductCollectionSubcommand(Subcommand):
+class ListProductCollectionSubcommand(ProductCollectionSelectionSubcommand):
     name = "list"
     help = "List product collection identifiers."
-
-    def add_arguments(self, parser):
-        parser.add_argument("identifier", nargs="*")
-        parser.add_argument(
-            "-t", "--product-type", dest="product_type", action='append', help=(
-                "Optional filter on the collection product types. "
-                "Multiple product types are allowed."
-            )
-        )
 
     def handle(self, **kwargs):
         query = ProductCollection.objects.order_by("identifier")
 
-        product_types = set(kwargs['product_type'] or [])
-        if product_types:
-            query = query.filter(type__identifier__in=product_types)
-
-        identifiers = set(kwargs['identifier'])
-        if identifiers:
-            query = query.filter(identifier__in=identifiers)
+        query = self.select_collections(query, **kwargs)
 
         for product_collection in query.all():
             print(product_collection.identifier)

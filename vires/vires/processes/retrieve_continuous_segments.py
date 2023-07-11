@@ -88,7 +88,7 @@ class RetrieveContinuousSegments(WPSProcess):
         try:
             time_series = ProductTimeSeries(
                 ProductCollection.objects
-                .select_related('type')
+                .select_related('type', 'spacecraft')
                 .filter(type__identifier__in=ALLOWED_COLLECTIONS)
                 .get(identifier=collection_id)
             )
@@ -129,7 +129,7 @@ def _write_csv(output, records):
 
 
 def _generate_pairs(time_series, begin_time, end_time):
-    metadata = _Metadata(time_series.collection.metadata)
+    metadata = _Metadata(time_series.collection)
     secondary_time_series = get_spacecraft_time_series(
         metadata.mission, metadata.spacecraft,
     )
@@ -156,12 +156,12 @@ def _generate_pairs(time_series, begin_time, end_time):
 
 
 class _Metadata():
-    def __init__(self, collection_metadata):
-        self.mission = collection_metadata.get('mission') or DEFAULT_MISSION
-        self.spacecraft = collection_metadata['spacecraft']
-        self.split_by = collection_metadata.get('splitBy', {})
+    def __init__(self, collection):
+        metadata =collection.metadata
+        self.mission, self.spacecraft = collection.spacecraft_tuple
+        self.split_by = metadata.get('splitBy', {})
         self.time_threshold = parse_duration(
-            collection_metadata['nominalSampling']
+            metadata['nominalSampling']
         )
 
 

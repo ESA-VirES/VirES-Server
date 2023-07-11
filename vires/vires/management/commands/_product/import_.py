@@ -70,10 +70,7 @@ class ImportProductSubcommand(ProductSelectionSubcommand):
         )
 
     def handle(self, **kwargs):
-        products = self.select_products(
-            Product.objects.prefetch_related('collection', 'collection__type'),
-            **kwargs
-        )
+        products = self.select_products(Product.objects, **kwargs)
 
         filename = kwargs['filename']
 

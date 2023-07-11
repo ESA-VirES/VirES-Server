@@ -64,39 +64,39 @@ class FetchFieldlines(WPSProcess):
 
     inputs = WPSProcess.inputs + [
         ("model_ids", LiteralData(
-            'model_ids', str, optional=False,
+            "model_ids", str, optional=False,
             abstract="String input for model identifiers (comma separator)",
         )),
         ("shc", ComplexData(
-            'shc',
+            "shc",
             title="Custom model coefficients.",
             abstract=(
                 "Custom forward magnetic field model coefficients encoded "
                 " in the SHC plain-text format."
             ),
             optional=True,
-            formats=(FormatText('text/plain'),)
+            formats=(FormatText("text/plain"),)
         )),
         ("time", LiteralData(
-            'time', datetime, optional=False,
+            "time", datetime, optional=False,
             abstract="Time at which the fields lines are calculated.",
         )),
         ("locations", ComplexData(
-            'locations', optional=False,
+            "locations", optional=False,
             title="Set of geocentric spherical coordinates in ITRF frame.",
             abstract=(
                 "Set of geocentric Latitude (deg), Longitude (deg) and Radius "
                 "(m) coordinates in ITRF frame.",
             ),
             formats=[
-                FormatText('text/csv'),
+                FormatText("text/csv"),
             ],
         )),
     ]
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Fields lines",
+            "output", title="Fields lines",
             abstract="Calculated field lines and coloured field strength.",
             formats=(
                 FormatJSON(),
@@ -121,10 +121,7 @@ class FetchFieldlines(WPSProcess):
         access_logger.info(
             "request: time: %s, locations: %s, models: (%s)",
             format_datetime(time), locations,
-            ", ".join(
-                "%s = %s" % (model.name, model.full_expression)
-                for model in models
-            ),
+            ", ".join(f"{model.name} = {model.expression}" for model in models),
         )
 
         def generate_field_lines():
@@ -138,13 +135,13 @@ class FetchFieldlines(WPSProcess):
 
                 self.logger.debug(
                     "%s=%s model options: %s",
-                    model.name, model.full_expression, options
+                    model.name, model.expression, options
                 )
 
                 for point in locations:
                     # get field-line coordinates and field vectors
                     with ElapsedTimeLogger(
-                            "%s=%s field line " % (model.name, model.full_expression),
+                            f"{model.name} = {model.expression} field line ",
                             self.logger
                         ) as etl:
                         line_coords, line_field = trace_field_line(
@@ -153,7 +150,7 @@ class FetchFieldlines(WPSProcess):
                             trace_options=TRACE_OPTIONS, model_options=options,
                         )
                         etl.message += (
-                            "with %d points integrated in" % len(line_coords)
+                            f"with {len(line_coords)} points integrated in"
                         )
 
                     # convert coordinates from kilometres to metres
@@ -162,31 +159,31 @@ class FetchFieldlines(WPSProcess):
 
                 access_logger.info(
                     "model: %s=%s, lines: %d, points: %d",
-                    model.name, model.full_expression,
+                    model.name, model.expression,
                     len(locations), model_count,
                 )
                 total_count += model_count
 
             access_logger.info(
                 "response: lines: %d, points: %d, mime-type: %s",
-                len(locations) * len(models), total_count, output['mime_type'],
+                len(locations) * len(models), total_count, output["mime_type"],
             )
 
         # data colouring
         field_lines = generate_field_lines()
         info = {
-            'time': format_datetime(time),
-            'models': {model.name: model.full_expression for model in models},
-            'locations': [tuple(location) for location in locations]
+            "time": format_datetime(time),
+            "models": {model.name: model.expression for model in models},
+            "locations": [tuple(location) for location in locations]
         }
 
-        if output['mime_type'] == "application/json":
+        if output["mime_type"] == "application/json":
             return self._write_json(field_lines, info, output)
-        if output['mime_type'] in ("application/msgpack", "application/x-msgpack"):
+        if output["mime_type"] in ("application/msgpack", "application/x-msgpack"):
             return self._write_msgpack(field_lines, info, output)
         raise InvalidOutputDefError(
-            'output',
-            "Unexpected output format %r requested!" % output['mime_type']
+            "output",
+            f"Unexpected output format {output['mime_type']!r} requested!"
         )
 
     @classmethod
@@ -211,16 +208,16 @@ class FetchFieldlines(WPSProcess):
             apex_point, apex_height = cls._find_apex(coords)
             ground_points = cls._find_ground_intersection(coords)
             fieldlines[model_id].append({
-                'start_point': start.tolist(),
-                'ground_points': ground_points.tolist(),
-                'apex_point': None if apex_point is None else apex_point.tolist(),
-                'apex_height': apex_height,
-                'coordinates': coords.tolist(),
-                'values': values.tolist(),
+                "start_point": start.tolist(),
+                "ground_points": ground_points.tolist(),
+                "apex_point": None if apex_point is None else apex_point.tolist(),
+                "apex_height": apex_height,
+                "coordinates": coords.tolist(),
+                "values": values.tolist(),
             })
         return {
-            'info': info,
-            'fieldlines': dict(fieldlines),
+            "info": info,
+            "fieldlines": dict(fieldlines),
         }
 
     @staticmethod

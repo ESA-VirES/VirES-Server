@@ -29,7 +29,7 @@
 from logging import getLogger, LoggerAdapter
 from numpy import stack, ones
 from eoxmagmod import sunpos, convert, GEOCENTRIC_SPHERICAL, GEOCENTRIC_CARTESIAN
-from vires.util import include, unique
+from vires.util import include, unique, pretty_list
 from vires.cdf_util import cdf_rawtime_to_mjd2000, CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from .base import Model
@@ -92,7 +92,7 @@ class SunPosition(Model):
             self.variables if variables is None else
             list(include(unique(variables), self.variables))
         )
-        self.logger.debug("requested variables %s", variables)
+        self.logger.debug("requested variables: %s", pretty_list(variables))
 
         output_ds = Dataset()
 
@@ -170,7 +170,8 @@ class SubSolarPoint(Model):
         output_ds = Dataset()
         variables = set(self.variables if variables is None else variables)
         self.logger.debug(
-            "requested variables %s", list(set(self.variables) & variables)
+            "requested variables: %s",
+            pretty_list(set(self.variables) & variables)
         )
 
         if not variables:

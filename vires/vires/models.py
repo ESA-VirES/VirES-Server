@@ -142,11 +142,47 @@ class ClientState(Model):
     state = JSONField(**MANDATORY)
 
 
+class Spacecraft(Model):
+    mission = CharField(max_length=64, **MANDATORY)
+    spacecraft = CharField(max_length=32, **OPTIONAL)
+    metadata = JSONField(default=dict, **MANDATORY)
+
+    def __str__(self):
+        return self.as_string
+
+    class Meta:
+        unique_together = ('mission', 'spacecraft')
+
+    @property
+    def as_tuple(self):
+        """ Get mission/spacecraft tuple. """
+        return (self.mission, self.spacecraft)
+
+    @property
+    def as_dict(self):
+        """ Get mission/spacecraft tuple. """
+        result = {"mission": self.mission}
+        if self.spacecraft:
+            result["spacecraft"] = self.spacecraft
+        return result
+
+    @property
+    def as_string(self):
+        """ Get mission/spacecraft string. """
+        return (
+            f"{self.mission}-{self.spacecraft}"
+            if self.spacecraft else self.mission
+        )
+
+
 class ProductType(Model):
     identifier = CharField(max_length=64, validators=[ID_VALIDATOR], **MANDATORY, **UNIQUE)
     created = DateTimeField(auto_now_add=True)
     updated = DateTimeField(auto_now=True)
     definition = JSONField(**MANDATORY)
+
+    def __str__(self):
+        return self.identifier
 
     class Meta:
         verbose_name = "Product Type"
@@ -190,24 +226,29 @@ class ProductType(Model):
 class ProductCollection(Model):
     identifier = CharField(max_length=256, validators=[ID_VALIDATOR], **MANDATORY, **UNIQUE)
     type = ForeignKey(ProductType, related_name='collections', **MANDATORY, **PROTECT)
+    spacecraft = ForeignKey(Spacecraft, related_name='collections', **OPTIONAL, **PROTECT)
     created = DateTimeField(auto_now_add=True)
     updated = DateTimeField(auto_now=True)
     max_product_duration = DurationField(default=timedelta(0), **MANDATORY)
     metadata = JSONField(default=dict, **MANDATORY)
 
-    @property
-    def spacecraft(self):
-        """ Get mission/spacecraft tuple. """
-        return (
-            self.metadata.get('mission', 'Swarm'),
-            self.metadata.get('spacecraft'),
-        )
+    def __str__(self):
+        return self.identifier
 
     @property
-    def formatted_spacecraft(self):
+    def spacecraft_tuple(self):
+        """ Get mission/spacecraft tuple. """
+        return self.spacecraft.as_tuple if self.spacecraft else (None, None)
+
+    @property
+    def spacecraft_dict(self):
+        """ Get mission/spacecraft tuple. """
+        return self.spacecraft.as_dict if self.spacecraft else {}
+
+    @property
+    def spacecraft_string(self):
         """ Get mission/spacecraft string. """
-        mission, spacecraft = self.spacecraft
-        return "%s-%s" % (mission, spacecraft) if spacecraft else mission
+        return self.spacecraft.as_string if self.spacecraft else (None, None)
 
     @classmethod
     def select_permitted(cls, permissions):
@@ -239,6 +280,9 @@ class Product(Model):
     updated = DateTimeField(auto_now=True)
     metadata = JSONField(default=dict, **MANDATORY)
     datasets = JSONField(default=dict, **MANDATORY)
+
+    def __str__(self):
+        return self.identifier
 
     class Meta:
         unique_together = ('collection', 'identifier')
@@ -282,3 +326,22 @@ class ProductLocation(Model):
     class Meta:
         managed = False
         db_table = 'vires_productlocation'
+
+
+class CachedMagneticModel(Model):
+    collection = ForeignKey(
+        ProductCollection,
+        related_name='cached_magnetic_models',
+        **MANDATORY,
+        **PROTECT,
+    )
+    name = CharField(max_length=128, **MANDATORY)
+    expression = CharField(max_length=1024, **MANDATORY)
+    metadata = JSONField(default=dict, **MANDATORY)
+
+    def __str__(self):
+        return f"{self.name}={self.expression}"
+
+    class Meta:
+        unique_together = ('collection', 'name')
+        unique_together = ('collection', 'expression')

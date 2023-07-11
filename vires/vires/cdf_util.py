@@ -81,6 +81,14 @@ from .cdf_data_types import (
 
 GZIP_COMPRESSION = pycdf.const.GZIP_COMPRESSION
 GZIP_COMPRESSION_LEVEL1 = ctypes.c_long(1)
+GZIP_COMPRESSION_LEVEL2 = ctypes.c_long(2)
+GZIP_COMPRESSION_LEVEL3 = ctypes.c_long(3)
+GZIP_COMPRESSION_LEVEL4 = ctypes.c_long(4)
+GZIP_COMPRESSION_LEVEL5 = ctypes.c_long(5)
+GZIP_COMPRESSION_LEVEL6 = ctypes.c_long(6)
+GZIP_COMPRESSION_LEVEL7 = ctypes.c_long(7)
+GZIP_COMPRESSION_LEVEL8 = ctypes.c_long(8)
+GZIP_COMPRESSION_LEVEL9 = ctypes.c_long(9)
 
 CDF_CREATOR = "%s [%s-%s, libcdf-%s]" % (
     FULL_PACKAGE_NAME, spacepy.__name__, spacepy.__version__,

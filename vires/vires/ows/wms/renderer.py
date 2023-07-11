@@ -68,7 +68,7 @@ def render_wms_response(layers, srid, bbox, elevation, time, width, height,
         "request: time: %s, aoi: %s, elevation: %g, "
         "model: %s, variable: %s, image-size: (%d, %d), mime-type: %s",
         format_datetime(naive_to_utc(time)),
-        bbox, elevation, models[-1].full_expression,
+        bbox, elevation, models[-1].expression,
         variable, width, height, response_format,
     )
 

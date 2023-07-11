@@ -132,3 +132,18 @@ class AttributeDict(dict):
     """ A dictionary whose keys can be accessed as object attributes. """
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
+
+
+class LazyString:
+    """ Lazy string conversion. """
+
+    def __init__(self, get_string):
+        self.get_string = get_string
+
+    def __str__(self):
+        return self.get_string()
+
+
+def pretty_list(items):
+    """ Pretty list of strings output. """
+    return ", ".join(items or ())

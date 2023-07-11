@@ -38,9 +38,7 @@ class DeregisterProductSubcommand(ProductSelectionSubcommandProtected):
     help = "Deregister products."
 
     def handle(self, **kwargs):
-        products = self.select_products(
-            Product.objects.prefetch_related('collection'), **kwargs
-        )
+        products = self.select_products(Product.objects, **kwargs)
         self.deregister_products(products, **kwargs)
 
     def deregister_products(self, products, **kwargs):

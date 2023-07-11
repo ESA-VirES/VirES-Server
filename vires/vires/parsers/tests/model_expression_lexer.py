@@ -86,9 +86,9 @@ class TestModelExpressionLexer(TestCase):
 
     def test_model_with_params(self):
         self._test_lexer(
-            "'MODEL-1'( abc_01 = 0 , b = +123456789, c = -123456789)",
+            "'_MODEL-1'( abc_01 = 0 , b = +123456789, c = -123456789)",
             [
-                ('model_id', 'MODEL-1'),
+                ('model_id', '_MODEL-1'),
                 ('left_parenthesis', '('),
                 ('parameter_id', 'abc_01'),
                 ('assign', '='),
@@ -119,13 +119,13 @@ class TestModelExpressionLexer(TestCase):
 
     def test_model_expression_simple(self):
         self._test_lexer(
-            "MODEL1 + 'MODEL-2' - \"MODEL-3\"",
+            "_MODEL1 + '_MODEL-2' - \"_MODEL-3\"",
             [
-                ('model_id', 'MODEL1'),
+                ('model_id', '_MODEL1'),
                 ('plus', '+'),
-                ('model_id', 'MODEL-2'),
+                ('model_id', '_MODEL-2'),
                 ('minus', '-'),
-                ('model_id', 'MODEL-3'),
+                ('model_id', '_MODEL-3'),
             ]
         )
 

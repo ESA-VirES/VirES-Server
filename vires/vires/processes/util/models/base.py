@@ -54,3 +54,9 @@ class Model():
         Specific models can define additional keyword parameters.
         """
         raise NotImplementedError
+
+    def __str__(self):
+        name = self.__class__.__name__
+        inputs = ",".join(self.required_variables)
+        outputs = ",".join(self.variables)
+        return f"{name}([{inputs}] -> [{outputs}])"
