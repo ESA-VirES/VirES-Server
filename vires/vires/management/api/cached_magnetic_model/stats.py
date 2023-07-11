@@ -122,6 +122,9 @@ def collect_collection_cache_stats(collection, model_names=None, logger=None):
     if file_stats["loose_file_count"] > 0:
         collection_stats["clean"] = False
 
+    if file_stats["missing_variables_file_count"] > 0:
+        collection_stats["clean"] = False
+
     return {
         "collection": collection_stats,
         "files": file_stats,
