@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2021 EOX IT Services GmbH
+# Copyright (C) 2021-2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,92 +24,74 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring,unused-argument,too-few-public-methods
-# pylint: disable=too-few-public-methods,too-many-arguments
+# pylint: disable=too-few-public-methods
 
-from logging import getLogger, LoggerAdapter
-from vires.time_util import naive_to_utc, format_datetime
-from vires.models import Product
-from .readers import CdfTimeSeriesReader
+from vires.processes.util.time_series import ProductTimeSeries
+from vires.cdf_util import CDF_TIME_TYPES, cdf_rawtime_to_datetime64
+from .data_type import parse_data_type, TIME_PRECISION
 
 
-class TimeSeries():
-    """ Product time-series class. """
-
-    @staticmethod
-    def _get_id(base_id, dataset_id, default_dataset_id):
-        if dataset_id and dataset_id == default_dataset_id:
-            return "%s:%s" % (base_id, dataset_id)
-        return base_id
-
-    class _LoggerAdapter(LoggerAdapter):
-        def process(self, msg, kwargs):
-            return '%s: %s' % (self.extra["collection_id"], msg), kwargs
+class TimeSeries:
+    """ Product time-series class - wrapper around the WPS TimeSeries """
+    CHUNK_SIZE = 10800 # equivalent of 3h of 1Hz data
 
     def __init__(self, collection, dataset_id, logger=None):
-        default_dataset_id = collection.type.default_dataset_id
-        self.collection = collection
-        self.dataset_id = dataset_id or default_dataset_id
-        self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
-            "collection_id": self._get_id(
-                collection.identifier, dataset_id, default_dataset_id
-            ),
-        })
+        self.master = ProductTimeSeries(
+            collection=collection,
+            dataset_id=dataset_id,
+            logger=logger
+        )
 
     def subset(self, start, stop, parameters):
-        return _TimeSeriesSubsetIterator(
-            self.collection, self.dataset_id,
-            start, stop, parameters, logger=self.logger,
+        """ Iterate chunks of the extracted data. """
+        variables = list(parameters)
+        datasets = self._split_datasets_to_chunks(
+            self.master.subset(start, stop, variables)
         )
+        for dataset in datasets:
+            yield self._convert_data_types(dataset, parameters)
 
+    @classmethod
+    def _split_datasets_to_chunks(cls, datasets):
+        """ Yield chunks of the datasets from the passed iterator. """
+        for dataset in datasets:
+            yield from cls._split_dataset_to_chunks(dataset)
 
-class _TimeSeriesSubsetIterator():
-    """ Time-series subset iterator yielding datasets objects.  """
+    @classmethod
+    def _split_dataset_to_chunks(cls, dataset):
+        """ Yield chunks of the passed dataset. """
+        size = dataset.length
+        for idx_start in range(0, dataset.length, cls.CHUNK_SIZE):
+            idx_stop = min(idx_start + cls.CHUNK_SIZE, size)
+            yield dataset.subset(slice(idx_start, idx_stop))
 
-    def __iter__(self):
-        return self._items
+    @classmethod
+    def _convert_data_types(cls, dataset, parameters):
+        for variable, data in dataset.items():
+            options = parameters[variable]
+            cdf_type = dataset.cdf_type.get(variable)
+            if cdf_type in CDF_TIME_TYPES:
+                dataset[variable] = data = cls._convert_cdf_time(
+                    data, cdf_type, options,
+                )
+            cls._check_declared_type(variable, data, options)
+        return dataset
 
-    def __init__(self, collection, dataset_id, start, stop, parameters, logger):
-        self.logger = logger
-
-        self.sources = set()
-
-        self.logger.debug("subset: %s/%s", format_datetime(start), format_datetime(stop))
-        self.logger.debug("extracted parameters: %s", ", ".join(parameters.keys()))
-
-        time_parameter, time_parameter_options = self._find_timestamp(parameters)
-
-        self._items = self._read_data(
-            self._query(collection, naive_to_utc(start), naive_to_utc(stop)),
-            dataset_id,
-            CdfTimeSeriesReader(
-                start, stop, parameters,
-                time_parameter=time_parameter,
-                time_parameter_options=time_parameter_options,
+    @staticmethod
+    def _check_declared_type(variable, data, options):
+        """ Assert that the extracted data type matches the data type declared
+        in parameter's metadata.
+        """
+        declared = parse_data_type(options)
+        if data.dtype != declared.dtype:
+            raise TypeError(
+                f"{variable}: mismatch between the declared and extracted "
+                f"data type! {declared.dtype} != {data.dtype}"
             )
-        )
 
     @staticmethod
-    def _find_timestamp(parameters):
-        for name, details in parameters.items():
-            if details.get('primaryTimestamp'):
-                return name, details
-        raise ValueError("Primary time-stamp not found!")
-
-    @staticmethod
-    def _query(collection, start, stop):
-        """ Subset Django query set. """
-        return Product.objects.prefetch_related('collection__type').filter(
-            collection=collection,
-            begin_time__lt=stop,
-            end_time__gte=start,
-            begin_time__gte=(start - collection.max_product_duration),
-        )
-
-    def _read_data(self, query, dataset_id, reader):
-        """ Yield extracted products' subsets. """
-        for product in query:
-            source_dataset = product.get_dataset(dataset_id)
-            if source_dataset:
-                self.sources.add(product.identifier)
-                yield from reader(source_dataset)
+    def _convert_cdf_time(data, cdf_type, options):
+        """ Covert raw CDF data into the native numpy.datetim64 type. """
+        unit = TIME_PRECISION[options.get("timePrecision")]
+        dtype = f"datetime64[{unit}]"
+        return cdf_rawtime_to_datetime64(data, cdf_type).astype(dtype)
