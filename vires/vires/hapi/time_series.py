@@ -26,30 +26,102 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods
 
+from vires.data.vires_settings import DEFAULT_MISSION
+from vires.processes.util import VariableResolver
+from vires.processes.util.models import generate_magnetic_model_sources
 from vires.processes.util.time_series import ProductTimeSeries
 from vires.cdf_util import CDF_TIME_TYPES, cdf_rawtime_to_datetime64
 from .data_type import parse_data_type, TIME_PRECISION
+from .magnetic_model import parse_model_list
 
 
 class TimeSeries:
     """ Product time-series class - wrapper around the WPS TimeSeries """
     CHUNK_SIZE = 10800 # equivalent of 3h of 1Hz data
 
-    def __init__(self, collection, dataset_id, logger=None):
+    def __init__(self, collection, dataset_id, options, logger=None):
+
         self.master = ProductTimeSeries(
             collection=collection,
             dataset_id=dataset_id,
             logger=logger
         )
 
+        spacecraft = (
+            collection.metadata.get("mission") or DEFAULT_MISSION,
+            collection.metadata.get("spacecraft")
+        )
+
+        # magnetic models and residuals
+        requested_models, source_models = self._parse_models(
+            options.get("magneticModels") or []
+        )
+
+        self.models = list(generate_magnetic_model_sources(
+            *spacecraft, requested_models, source_models,
+            no_cache=False, master=self.master,
+        ))
+
     def subset(self, start, stop, parameters):
         """ Iterate chunks of the extracted data. """
-        variables = list(parameters)
-        datasets = self._split_datasets_to_chunks(
-            self.master.subset(start, stop, variables)
-        )
+        resolver = self._resolve_variables(list(parameters))
+
+        datasets = resolver.master.subset(start, stop, resolver.required)
+        datasets = self._interpolate_slave_datasets(datasets, resolver)
+        datasets = self._split_datasets_to_chunks(datasets)
+        datasets = self._evaluate_model_datasets(datasets, resolver)
+
+        yield from self._finalize_datasets(datasets, parameters)
+
+    def _resolve_variables(self, variables):
+        resolver = VariableResolver()
+        resolver.add_master(self.master)
+        for model in self.models:
+            resolver.add_consumer(model)
+        resolver.add_output_variables(variables)
+        resolver.reduce()
+        return resolver
+
+    @classmethod
+    def _finalize_datasets(cls, datasets, parameters):
+        output_variables = list(parameters)
         for dataset in datasets:
-            yield self._convert_data_types(dataset, parameters)
+            dataset = dataset.extract(output_variables)
+            dataset = cls._convert_data_types(dataset, parameters)
+            yield dataset
+
+    @staticmethod
+    def _interpolate_slave_datasets(datasets, resolver):
+        time_variable = resolver.master.time_variable
+        variables = resolver.required
+        for dataset in datasets:
+            for slave in resolver.slaves:
+                dataset.merge(
+                    slave.interpolate(
+                        times=dataset[time_variable],
+                        variables=variables,
+                        interp1d_kinds={},
+                        cdf_type=dataset.cdf_type[time_variable],
+                    )
+                )
+            yield dataset
+
+    @staticmethod
+    def _evaluate_model_datasets(datasets, resolver):
+        variables = resolver.required
+        for dataset in datasets:
+            for model in resolver.models:
+                dataset.merge(model.eval(dataset, variables))
+            yield dataset
+
+    @staticmethod
+    def _parse_models(models):
+        if not models:
+            return [], []
+        model_list = ", ".join(
+            "{name} = {expression}".format(**model) for model in models
+        )
+        return parse_model_list(model_list)
 
     @classmethod
     def _split_datasets_to_chunks(cls, datasets):

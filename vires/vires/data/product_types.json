@@ -47,6 +47,18 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG_LR",
+        "hapiOptions": {
+            "MDR_MAG_LR": {
+                "magneticModels": [
+                    {
+                        "name": "Model",
+                        "description": "CHAOS magnetic model",
+                        "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
+                    }
+                ],
+                "magneticModelResiduals": ["F", "B_NEC"]
+            }
+        },
         "_order": 11,
         "datasets": {
             "MDR_MAG_LR": {
@@ -229,6 +241,12 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Magnetic_Products",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG_HR",
+        "hapiOptions": {
+            "MDR_MAG_HR": {
+                "magneticModels": [],
+                "magneticModelResiduals": ["B_NEC"]
+            }
+        },
         "_order": 12,
         "datasets": {
             "MDR_MAG_HR": {
@@ -3262,6 +3280,18 @@
         "resourceUrl": "https://doi.org/10.1186/s40623-021-01373-9",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG",
+        "hapiOptions": {
+            "MDR_MAG": {
+                "magneticModels": [
+                    {
+                        "name": "Model",
+                        "description": "CHAOS magnetic model",
+                        "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
+                    }
+                ],
+                "magneticModelResiduals": ["F", "B_NEC"]
+            }
+        },
         "_order": 15,
         "datasets": {
             "MDR_MAG": {
@@ -3351,6 +3381,18 @@
         "citation": "https://doi.org/10.5880/GFZ.2.3.2021.002",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_FGM_ACAL",
+        "hapiOptions": {
+            "MDR_FGM_ACAL": {
+                "magneticModels": [
+                    {
+                        "name": "Model",
+                        "description": "CHAOS magnetic model",
+                        "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
+                    }
+                ],
+                "magneticModelResiduals": ["B_NEC"]
+            }
+        },
         "_order": 16,
         "datasets": {
             "MDR_FGM_ACAL": {
@@ -3482,6 +3524,18 @@
         "citation": "https://doi.org/10.5880/GFZ.2.3.2022.001",
         "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
         "defaultDataset": "MDR_MAG_ACAL",
+        "hapiOptions": {
+            "MDR_MAG_ACAL": {
+                "magneticModels": [
+                    {
+                        "name": "Model",
+                        "description": "CHAOS magnetic model",
+                        "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
+                    }
+                ],
+                "magneticModelResiduals": ["B_NEC"]
+            }
+        },
         "_order": 17,
         "datasets": {
             "MDR_MAG_ACAL": {
@@ -3636,6 +3690,18 @@
         "citation": "https://doi.org/10.5880/GFZ.2.3.2022.002",
         "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
         "defaultDataset": "MDR_MAG_ACAL_ML",
+        "hapiOptions": {
+            "MDR_MAG_ACAL_ML": {
+                "magneticModels": [
+                    {
+                        "name": "Model",
+                        "description": "CHAOS magnetic model",
+                        "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
+                    }
+                ],
+                "magneticModelResiduals": ["B_NEC"]
+            }
+        },
         "_order": 18,
         "datasets": {
             "MDR_MAG_ACAL_ML": {
@@ -3739,6 +3805,18 @@
         "resourceUrl": "https://doi.org/10.1186/s40623-020-01171-9",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "defaultDataset": "MDR_MAG",
+        "hapiOptions": {
+            "MDR_MAG": {
+                "magneticModels": [
+                    {
+                        "name": "Model",
+                        "description": "CHAOS magnetic model",
+                        "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
+                    }
+                ],
+                "magneticModelResiduals": ["F", "B_NEC", "B_NEC1", "B_NEC2", "B_NEC3"]
+            }
+        },
         "_order": 14,
         "datasets": {
             "MDR_MAG": {

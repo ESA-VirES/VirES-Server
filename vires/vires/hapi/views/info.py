@@ -55,26 +55,26 @@ EXTRA_METADATA_FIELDS = [
 @map_parameters(("dataset", "id"))
 @required_parameters("dataset")
 def info(request):
-    collection, dataset_id, dataset_def = parse_dataset_and_parameters(
+    collection, dataset_id, dataset_def, options = parse_dataset_and_parameters(
         request.GET.get('dataset'), request.GET.get('parameters')
     )
-    return HapiResponse(get_info_response(collection, dataset_id, dataset_def))
+    return HapiResponse(get_info_response(collection, dataset_id, dataset_def, options))
 
 
 def parse_dataset_and_parameters(hapi_dataset_id, parameters):
     """ Parse dataset id and the requested parameters. """
     try:
-        collection, dataset_id, dataset_def = parse_dataset(hapi_dataset_id)
+        collection, dataset_id, dataset_def, options = parse_dataset(hapi_dataset_id)
     except (KeyError, ValueError):
         raise HapiError(hapi_status=1406) from None
     try:
         dataset_def = _parse_parameters(parameters, dataset_def)
     except ValueError as error:
         raise HapiError(hapi_status=1407, message=str(error)) from None
-    return collection, dataset_id, dataset_def
+    return collection, dataset_id, dataset_def, options
 
 
-def get_info_response(collection, dataset_id, dataset_def):
+def get_info_response(collection, dataset_id, dataset_def, options):
     """ Build info response. """
 
     metadata = {

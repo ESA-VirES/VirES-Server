@@ -57,7 +57,7 @@ def data(request):
 
     access_logger = get_access_logger("data", request)
 
-    collection, dataset_id, dataset_def = parse_dataset_and_parameters(
+    collection, dataset_id, dataset_def, options = parse_dataset_and_parameters(
         request.GET.get('dataset'), request.GET.get('parameters')
     )
 
@@ -69,7 +69,7 @@ def data(request):
 
     include_header = _parse_header_flag(request.GET.get('include'))
 
-    source = TimeSeries(collection, dataset_id)
+    source = TimeSeries(collection, dataset_id, options)
 
     # log the request
     access_logger.info(
@@ -84,7 +84,7 @@ def data(request):
     return get_data_formatter(format_)(
         datasets=source.subset(start, stop, dataset_def),
         header=(
-            get_info_response(collection, dataset_id, dataset_def)
+            get_info_response(collection, dataset_id, dataset_def, options)
             if include_header else None
         ),
         logger=access_logger,

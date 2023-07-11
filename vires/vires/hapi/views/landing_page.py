@@ -60,10 +60,10 @@ def landing_page(request):
 
 
 def _get_info(hapi_dataset_id):
-    collection, dataset_id, dataset_def = parse_dataset(hapi_dataset_id)
+    collection, dataset_id, dataset_def, options = parse_dataset(hapi_dataset_id)
     dataset_def = sort_dataset_definition(dataset_def)
     return {
-        **get_info_response(collection, dataset_id, dataset_def),
+        **get_info_response(collection, dataset_id, dataset_def, options),
         "x_dataTypeOrder": collection.type.definition.get("_order", DEFAULT_ORDER),
     }
 

@@ -65,14 +65,16 @@ def parse_dataset(requested_dataset):
     try:
         collection = ProductCollection.select_public().get(identifier=collection_id)
     except ProductCollection.DoesNotExist:
-        raise ValueError("Invalid datasets identifier!")
+        raise ValueError("Invalid datasets identifier!") from None
 
-    dataset_definition = collection.type.get_dataset_definition(dataset_id)
+    options = collection.type.get_hapi_options(dataset_id)
+    dataset_definition = dict(collection.type.get_dataset_definition(dataset_id))
+    dataset_definition = _extend_dataset_definition(dataset_definition, options)
 
     if dataset_definition is None:
         raise ValueError("Invalid datasets identifier!")
 
-    return collection, dataset_id, dataset_definition
+    return collection, dataset_id, dataset_definition, options
 
 
 def get_public_collections():
@@ -109,3 +111,55 @@ def list_public_datasets():
                 else:
                     yield f"{collection.identifier}:{dataset}"
     return list(_public_datasets())
+
+
+def _extend_dataset_definition(dataset_definition, options):
+    """ Extend dataset definition by adding generated parameters. """
+    order = len(dataset_definition)
+
+    # resolve magnetic models and residuals
+    magnetic_models = options.get("magneticModels") or []
+    residuals = options.get("magneticModelResiduals") or []
+
+    for model in magnetic_models:
+        name = model["name"]
+        description = model["description"]
+
+        order += 1
+        dataset_definition[f"B_NEC_{name}"] = {
+            "_order": order,
+            "dataType": "float64",
+            "dimension": [3],
+            "attributes": {
+                "UNITS": "nT",
+                "DESCRIPTION": description,
+            }
+        }
+
+        if "F" in dataset_definition:
+            order += 1
+            dataset_definition[f"F_{name}"] = {
+                "_order": order,
+                "dataType": "float64",
+                "attributes": {
+                    "UNITS": "nT",
+                    "DESCRIPTION": f"{description}, field intensity",
+                }
+            }
+
+        for parameter in residuals:
+            order += 1
+            # copy metadata of the measurement record
+            measurement = dataset_definition[parameter]
+            measurement_description = measurement["attributes"]["DESCRIPTION"]
+            residual = dict(measurement)
+            residual.update({
+                "_order": order,
+                "attributes": {
+                    "UNITS": "nT",
+                    "DESCRIPTION": f"{measurement_description}, {description} residual",
+                }
+            })
+            dataset_definition[f"{parameter}_res_{name}"] = residual
+
+    return dataset_definition
