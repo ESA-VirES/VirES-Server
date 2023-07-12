@@ -218,6 +218,11 @@ class ProductType(Model):
         datasets = self.definition['datasets']
         return datasets.get(self.get_base_dataset_id(dataset_id))
 
+    def get_hapi_options(self, dataset_id):
+        """ Get dataset definition matched by the given identifier. """
+        options = self.definition.get('hapiOptions') or {}
+        return options.get(self.get_base_dataset_id(dataset_id)) or {}
+
     @property
     def default_dataset_id(self):
         return self.definition.get('defaultDataset')
