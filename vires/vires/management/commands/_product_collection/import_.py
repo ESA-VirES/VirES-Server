@@ -36,6 +36,7 @@ from vires.data.vires_settings import DEFAULT_MISSION
 from vires.models import (
     ProductCollection, ProductType, Spacecraft, CachedMagneticModel,
 )
+from vires.magnetic_models import ModelLoadError
 from .._common import Subcommand
 from ...api.cached_magnetic_model import parse_source_model
 
@@ -175,6 +176,17 @@ def get_spacecraft(mission, spacecraft, events):
 def update_cached_models(collection, events):
     """ Update configuration of the cached magnetic models. """
 
+    def _parse_source_models(models):
+        for source_model_expression in models:
+            try:
+                yield parse_source_model(source_model_expression)
+            except ModelLoadError as error:
+                events.append(
+                    f"Skipping cached model {source_model_expression}. "
+                    "The model has likely not been initialized yet. "
+                    "Fix the model and reload the product collection again."
+                )
+
     if "cachedMagneticModels" not in collection.metadata:
         return
 
@@ -182,10 +194,7 @@ def update_cached_models(collection, events):
 
     models = metadata["cachedMagneticModels"].pop("models", None) or []
 
-    models = [
-        parse_source_model(source_model_expression)
-        for source_model_expression in models
-    ]
+    models = list(_parse_source_models(models))
 
     remove_cached_models(collection, models, events)
 

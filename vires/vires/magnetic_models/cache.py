@@ -28,7 +28,7 @@
 from logging import getLogger
 
 
-class ModelError(Exception):
+class ModelLoadError(Exception):
     """ Model error exception. """
 
 
@@ -78,7 +78,9 @@ class ModelCache():
                     else f"{model_id_orig}({model_id})",
                     exc_info=True
                 )
-                raise ModelError("Failed to load model %s!" % model_id_orig) from error
+                raise ModelLoadError(
+                    "Failed to load model %s!" % model_id_orig
+                ) from error
 
             self.cache[model_id] = model
             self.sources[model_id] = sources = model_factory.sources
