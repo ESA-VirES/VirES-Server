@@ -143,7 +143,7 @@ class Dataset(OrderedDict):
     def extract(self, variables):
         """ Get new subset containing only the selected variables. """
         dataset = Dataset()
-        for variable in set(variables):
+        for variable in unique(variables):
             try:
                 data = self[variable]
             except KeyError:
