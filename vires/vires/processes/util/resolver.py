@@ -124,13 +124,24 @@ class VariableResolver:
         This is an iterative process as each removed producer can lead
         to a new one. The reduction is repeated until there is no non-consumed
         producer left.
+
+        The reduction algorithm also removes unresolved and unnecessary
+        consumers.
         """
+        # removed any unresolved consumers
+        if self._unresolved:
+            removed = set()
+            for unresolved in self._unresolved.values():
+                removed.update(unresolved)
+            self._remove_consumers(removed)
+
+        # perform the iterative reduction
         while True:
             removed = self._get_nonconsumed_producters()
             if not removed:
                 break
-            self._remove_producer(removed)
-            self._remove_consumer(removed)
+            self._remove_producers(removed)
+            self._remove_consumers(removed)
 
     def add_output_variables(self, variables):
         """ Add requested output variables.
@@ -225,8 +236,8 @@ class VariableResolver:
                 offered_variables.append(variable)
         return offered_variables
 
-    def _remove_producer(self, removed):
-        """ Remove the given producer from the resolver.  """
+    def _remove_producers(self, removed):
+        """ Remove the given producers from the resolver. """
         for variable, producer in list(self._producers.items()):
             if producer in removed:
                 del self._producers[variable]
@@ -252,8 +263,8 @@ class VariableResolver:
                 unresolved_variables.append(variable)
         return resolved_variables, unresolved_variables
 
-    def _remove_consumer(self, removed):
-        """ Remove the given consumer from the resolver. """
+    def _remove_consumers(self, removed):
+        """ Remove the given consumers from the resolver. """
         for variable, consumers in list(self._consumers.items()):
             consumers.difference_update(removed)
             if not consumers:
