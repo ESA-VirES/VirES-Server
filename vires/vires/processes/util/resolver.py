@@ -126,13 +126,12 @@ class VariableResolver:
         producer left.
 
         The reduction algorithm also removes unresolved and unnecessary
-        consumers.
+        consumers, except the special output consumer (set to None).
         """
-        # removed any unresolved consumers
         if self._unresolved:
             removed = set()
             for unresolved in self._unresolved.values():
-                removed.update(unresolved)
+                removed.update(item for item in unresolved if item)
             self._remove_consumers(removed)
 
         # perform the iterative reduction
@@ -146,7 +145,7 @@ class VariableResolver:
     def add_output_variables(self, variables):
         """ Add requested output variables.
 
-        The output is a special type of consumer with required variables.
+        The output is a special type of consumer (None) with required variables.
         Currently, the unresolved variables are ignored, i.e., the output
         is fed with the resolved variables only.
         """
