@@ -252,6 +252,9 @@ class ProductTimeSeries(BaseProductTimeSeries):
     def _subset(self, start, stop, variables):
         """ Get subset of the time series overlapping the given time range.
         """
+        start = naive_to_utc(start)
+        stop = naive_to_utc(stop)
+
         self.logger.debug("subset: %s", LazyString(
             lambda: f"{format_datetime(start)}/{format_datetime(stop)}"
         ))
@@ -260,18 +263,39 @@ class ProductTimeSeries(BaseProductTimeSeries):
         if not variables: # stop here if no variables are requested
             return
 
+        def _iter_products(query):
+            """ Iterate over products returned by the query. Resolve temporal
+            overlays of the products to prevent duplicate time coverage and
+            yield applicable products and their time subset to be extracted.
+            """
+            products = iter(query.order_by('begin_time'))
+            try:
+                product = next(products)
+            except StopIteration:
+                return
+
+            for next_product in products:
+                end_time = min(product.end_time, next_product.begin_time)
+                if end_time > product.begin_time:
+                    yield product.begin_time, end_time, product
+                product = next_product
+
+            yield product.begin_time, product.end_time, product
+
         counter = 0
-        for product in self._subset_qs(start, stop).order_by('begin_time'):
+        for data_start, data_stop, product in _iter_products(self._subset_qs(start, stop)):
+            data_start = max(start, data_start)
+            data_stop = min(stop, data_stop)
             source_dataset = product.get_dataset(self.dataset_id)
 
             if not source_dataset:
                 continue
 
             self.logger.debug("product: %s ", product.identifier)
-            self.logger.debug("product time span: %s", LazyString(
+            self.logger.debug("subset time span: %s", LazyString(
                 lambda: (
-                    f"{format_datetime(product.begin_time,)}/"
-                    f"{format_datetime(product.end_time)}"
+                    f"{format_datetime(data_start)}/"
+                    f"{format_datetime(data_stop)}"
                 )
             ))
 
@@ -287,8 +311,8 @@ class ProductTimeSeries(BaseProductTimeSeries):
             ) as cdf_ds:
                 subset, nrv_shape = cdf_ds.get_temporal_subset(
                     time_variable=self.time_variable,
-                    start=start,
-                    stop=stop,
+                    start=data_start,
+                    stop=data_stop,
                     subset=time_subset,
                     is_sorted=source_dataset.get('isSorted', True),
                 )
@@ -313,8 +337,8 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
     def _subset_qs(self, start, stop):
         """ Subset Django query set. """
-        _start = naive_to_utc(start) - self.time_tolerance
-        _stop = naive_to_utc(stop) + self.time_tolerance
+        _start = start - self.time_tolerance
+        _stop = stop + self.time_tolerance
         return Product.objects.prefetch_related('collection__type').filter(
             collection=self.collection,
             begin_time__lt=_stop,
