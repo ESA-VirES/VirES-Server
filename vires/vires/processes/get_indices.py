@@ -201,7 +201,9 @@ class GetIndices(WPSProcess):
     def _convert_time(time, csv_time_format):
         if csv_time_format == "ISO date-time":
             time_format = "%s"
-            time = vectorize(mjd2000_to_datetime, otypes=(object,))(time)
+            time = vectorize(
+                lambda t: format_datetime(naive_to_utc(mjd2000_to_datetime(t))),
+            )(time)
         elif csv_time_format == "Unix epoch":
             time_format = "%.14g"
             time = mjd2000_to_unix_epoch(time)
