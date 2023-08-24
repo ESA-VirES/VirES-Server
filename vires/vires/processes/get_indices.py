@@ -136,7 +136,9 @@ class GetIndices(WPSProcess):
         time, data = self._read_data(reader, begin_time, end_time, fields=fields)
         if index_id == 'ddst':
             time, data = self._fix_ddst(time, data)
-            time, data = self._reduce_binned_data(time, data, lessen)
+            time, data = self._reduce_stepwise_data(time, data, lessen)
+        if index_id == 'kp':
+            time, data = self._reduce_stepwise_data(time, data, lessen)
         else:
             time, data = self._reduce_data(time, data, lessen)
         time, time_format = self._convert_time(time, csv_time_format)
@@ -184,10 +186,11 @@ class GetIndices(WPSProcess):
         return time, data
 
     @staticmethod
-    def _reduce_binned_data(time, data, lessen, max_count=500):
-        if data.size > max_count:
-            bin_size = (data.size - 1)//max_count + 1
-            bin_count = data.size // bin_size
+    def _reduce_stepwise_data(time, data, lessen, max_count=500):
+        n_steps = time.size - 1
+        if n_steps > max_count:
+            bin_size = (n_steps - 1)// max_count + 1
+            bin_count = n_steps // bin_size
             shape = (bin_count, bin_size)
             size = bin_size * bin_count
             data = lessen(data[:size].reshape(shape), 1)
