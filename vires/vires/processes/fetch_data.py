@@ -50,7 +50,7 @@ from vires.cdf_util import (
 )
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
-    CACHED_PRODUCT_FILE, AUX_DB_KP, AUX_DB_DST, SPACECRAFTS, DEFAULT_MISSION,
+    CACHED_PRODUCT_FILE, AUX_DB_DST, SPACECRAFTS, DEFAULT_MISSION,
     ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
 )
 from vires.filters import (
@@ -65,14 +65,13 @@ from vires.processes.util import (
 )
 from vires.processes.util.time_series import (
     TimeSeries, ProductTimeSeries, CustomDatasetTimeSeries,
-    IndexKp10, IndexDst, IndexDDst, IndexF107,
+    IndexDst, IndexDDst, IndexF107,
     OrbitCounter, OrbitDirection, QDOrbitDirection,
 )
 from vires.processes.util.models import (
     QuasiDipoleCoordinates, MagneticLocalTime,
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
-    IndexKpFromKp10,
     Identity,
     BnecToF,
     Geodetic2GeocentricCoordinates,
@@ -296,7 +295,11 @@ class FetchData(WPSProcess):
                 ]
                 for spacecraft in SPACECRAFTS
             }
-            index_kp10 = IndexKp10(cache_path(AUX_DB_KP))
+            index_kp = ProductTimeSeries(
+                ProductCollection.objects.get(
+                    identifier="GFZ_KP"
+                )
+            )
             index_dst = IndexDst(cache_path(AUX_DB_DST))
             index_ddst = IndexDDst(cache_path(AUX_DB_DST))
             index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
@@ -306,7 +309,6 @@ class FetchData(WPSProcess):
                 )
             )
             model_bnec_intensity = BnecToF()
-            model_kp = IndexKpFromKp10()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
@@ -355,7 +357,7 @@ class FetchData(WPSProcess):
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
-                for slave in (index_kp10, index_dst, index_ddst, index_f10, index_imf):
+                for slave in (index_kp, index_dst, index_ddst, index_f10, index_imf):
                     resolver.add_slave(slave)
 
                 # satellite specific slaves
@@ -386,7 +388,7 @@ class FetchData(WPSProcess):
                 for model in chain(
                     (
                         model_gd2gc, model_bnec_intensity,
-                        model_kp, model_qdc, model_mlt, model_sun,
+                        model_qdc, model_mlt, model_sun,
                         model_subsol, model_dipole, model_tilt_angle,
                     ),
                     generate_magnetic_model_sources(
