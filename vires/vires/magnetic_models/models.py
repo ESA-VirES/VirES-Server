@@ -69,6 +69,8 @@ PREDEFINED_COMPOSED_MODELS = {
     "CHAOS-MMA": "'CHAOS-MMA-Primary' + 'CHAOS-MMA-Secondary'",
     "MMA_SHA_2C": "'MMA_SHA_2C-Primary' + 'MMA_SHA_2C-Secondary'",
     "MMA_SHA_2F": "'MMA_SHA_2F-Primary' + 'MMA_SHA_2F-Secondary'",
+    "_MIO_SHA_2C": "'_MIO_SHA_2C-Primary' + '_MIO_SHA_2C-Secondary'",
+    "_MIO_SHA_2D": "'_MIO_SHA_2D-Primary' + '_MIO_SHA_2D-Secondary'",
     "MIO_SHA_2C": "'MIO_SHA_2C-Primary' + 'MIO_SHA_2C-Secondary'",
     "MIO_SHA_2D": "'MIO_SHA_2D-Primary' + 'MIO_SHA_2D-Secondary'",
     "SwarmCI": (
@@ -77,6 +79,21 @@ PREDEFINED_COMPOSED_MODELS = {
         "+ 'MIO_SHA_2C-Primary' + 'MIO_SHA_2C-Secondary'"
     )
 }
+
+
+def mio_loader_without_f107(mio_loader, removed_parameter="f107"):
+    """  Special wrapper of the MIO model loader stripping F10.7 requirement.
+    As result of this the model will not be multiplied by the (1 + N*F10.7)
+    factor.
+    """
+    def _mio_loader_without_f107(*args, **kwargs):
+        model = mio_loader(*args, **kwargs)
+        model.parameters = tuple(
+            parameter for parameter in model.parameters
+            if parameter != removed_parameter
+        )
+        return model
+    return _mio_loader_without_f107
 
 
 def shc_validity_reader(file_):
@@ -160,6 +177,22 @@ MODEL_FACTORIES = {
         load_model_swarm_mma_2f_geo_internal,
         [CachedComposedModelFile("MMA_SHA_2F")]
     ),
+    "_MIO_SHA_2C-Primary": ModelFactory(
+        mio_loader_without_f107(load_model_swarm_mio_external),
+        [CachedModelFileWithSourceFile("MIO_SHA_2C", mio_validity_reader)]
+    ),
+    "_MIO_SHA_2C-Secondary": ModelFactory(
+        mio_loader_without_f107(load_model_swarm_mio_internal),
+        [CachedModelFileWithSourceFile("MIO_SHA_2C", mio_validity_reader)]
+    ),
+    "_MIO_SHA_2D-Primary": ModelFactory(
+        mio_loader_without_f107(load_model_swarm_mio_external),
+        [CachedModelFileWithSourceFile("MIO_SHA_2D", mio_validity_reader)]
+    ),
+    "_MIO_SHA_2D-Secondary": ModelFactory(
+        mio_loader_without_f107(load_model_swarm_mio_internal),
+        [CachedModelFileWithSourceFile("MIO_SHA_2D", mio_validity_reader)]
+    ),
     "MIO_SHA_2C-Primary": ModelFactory(
         load_model_swarm_mio_external,
         [CachedModelFileWithSourceFile("MIO_SHA_2C", mio_validity_reader)]
@@ -192,11 +225,24 @@ MODEL_FACTORIES = {
     ),
 }
 
+# MIO MODELS multiplied by the (1 + N*F10.7) factor and their mapping
+# to models without the multiplication factor
+
+MIO_MODELS = {
+    "MIO_SHA_2C": "_MIO_SHA_2C",
+    "MIO_SHA_2D": "_MIO_SHA_2D",
+    "MIO_SHA_2C-Primary": "_MIO_SHA_2C-Primary",
+    "MIO_SHA_2C-Secondary": "_MIO_SHA_2C-Secondary",
+    "MIO_SHA_2D-Primary": "_MIO_SHA_2D-Primary",
+    "MIO_SHA_2D-Secondary": "_MIO_SHA_2D-Secondary",
+}
+
 # list of all available models
 MODEL_LIST = (
     list(MODEL_FACTORIES)
     + list(MODEL_ALIASES)
     + list(PREDEFINED_COMPOSED_MODELS)
 )
+
 
 MODEL_CACHE = ModelCache(MODEL_FACTORIES, MODEL_ALIASES, getLogger(__name__))

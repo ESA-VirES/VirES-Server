@@ -33,6 +33,15 @@
         "nominalSampling": "PT1S",
         "subtractableCollections": {
             "C": "SW_OPER_MAGC_LR_1B"
+        },
+        "cachedMagneticModels": {
+            "interpolationKind": "linear",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
         }
     },
     {
@@ -40,7 +49,16 @@
         "description": "Swarm B vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
-        "spacecraft": "B"
+        "spacecraft": "B",
+        "cachedMagneticModels": {
+            "interpolationKind": "linear",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
     },
     {
         "name": "SW_OPER_MAGC_LR_1B",
@@ -50,6 +68,15 @@
         "spacecraft": "C",
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_LR_1B"
+        },
+        "cachedMagneticModels": {
+            "interpolationKind": "linear",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
         }
     },
     {
@@ -60,6 +87,9 @@
         "spacecraft": "A",
         "subtractableCollections": {
             "C": "SW_OPER_MAGC_HR_1B"
+        },
+        "cachedMagneticModels": {
+            "noCache": true
         }
     },
     {
@@ -67,7 +97,10 @@
         "description": "Swarm B vector (VFM) magnetic field measurements at 50Hz rate.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
-        "spacecraft": "B"
+        "spacecraft": "B",
+        "cachedMagneticModels": {
+            "noCache": true
+        }
     },
     {
         "name": "SW_OPER_MAGC_HR_1B",
@@ -77,25 +110,28 @@
         "spacecraft": "C",
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_HR_1B"
+        },
+        "cachedMagneticModels": {
+            "noCache": true
         }
     },
     {
         "name": "SW_OPER_EFIA_LP_1B",
-        "description": "Swarm A plasma data from the Langimur Probe (LP) at 2Hz rate",
+        "description": "Swarm A plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
         "spacecraft": "A"
     },
     {
         "name": "SW_OPER_EFIB_LP_1B",
-        "description": "Swarm B plasma data from the Langimur Probe (LP) at 2Hz rate",
+        "description": "Swarm B plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
         "spacecraft": "B"
     },
     {
         "name": "SW_OPER_EFIC_LP_1B",
-        "description": "Swarm C plasma data from the Langimur Probe (LP) at 2Hz rate",
+        "description": "Swarm C plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
         "spacecraft": "C"
@@ -592,7 +628,16 @@
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "GRACE",
-        "spacecraft": "1"
+        "spacecraft": "1",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
     },
     {
         "name": "GRACE_B_MAG",
@@ -601,7 +646,16 @@
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "GRACE",
-        "spacecraft": "2"
+        "spacecraft": "2",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
     },
     {
         "name": "GF1_OPER_FGM_ACAL_CORR",
@@ -610,7 +664,16 @@
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "GRACE-FO",
-        "spacecraft": "1"
+        "spacecraft": "1",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
     },
     {
         "name": "GF2_OPER_FGM_ACAL_CORR",
@@ -619,7 +682,16 @@
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "GRACE-FO",
-        "spacecraft": "2"
+        "spacecraft": "2",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
     },
     {
         "name": "GO_MAG_ACAL_CORR",
@@ -627,7 +699,16 @@
         "productType": "GO_MAG_ACAL",
         "nominalSampling": "PT16S",
         "calculateOrbitDirection": true,
-        "mission": "GOCE"
+        "mission": "GOCE",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
     },
     {
         "name": "GO_MAG_ACAL_CORR_ML",
@@ -635,7 +716,16 @@
         "productType": "GO_MAG_ACAL_ML",
         "nominalSampling": "PT16S",
         "calculateOrbitDirection": false,
-        "mission": "GOCE"
+        "mission": "GOCE",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
     },
     {
         "name": "CS_OPER_MAG",
@@ -643,6 +733,15 @@
         "productType": "CS_MAG",
         "nominalSampling": "PT4S",
         "calculateOrbitDirection": true,
-        "mission": "CryoSat-2"
+        "mission": "CryoSat-2",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
     }
 ]

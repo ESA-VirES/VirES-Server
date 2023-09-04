@@ -5,7 +5,7 @@
 # Authors: Martin Paces <martin.paces@eox.at>
 #          Daniel Santillan <daniel.santillan@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,
 # pylint: disable=too-many-branches,too-many-statements,unused-argument
+# pylint: disable=consider-using-f-string
 
 from os import remove
 from os.path import exists
@@ -42,13 +43,13 @@ from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError, ServerBusy,
 )
 from vires.models import ProductCollection, Job, get_user
-from vires.util import unique, exclude, include
+from vires.util import unique, exclude, include, pretty_list, LazyString
 from vires.access_util import get_vires_permissions
 from vires.time_util import naive_to_utc, format_timedelta, format_datetime
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
-    timedelta_to_cdf_rawtime, get_formatter, CDF_EPOCH_TYPE, cdf_open,
-    CDF_CHAR_TYPE,
+    timedelta_to_cdf_rawtime, get_formatter, cdf_open,
+    CDF_CHAR_TYPE, CDF_TIME_TYPES,
 )
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
@@ -65,18 +66,19 @@ from vires.processes.util import (
     extract_product_names, get_time_limit,
 )
 from vires.processes.util.time_series import (
-    ProductTimeSeries,
+    TimeSeries, ProductTimeSeries,
     IndexKp10, IndexDst, IndexDDst, IndexF107,
     OrbitCounter, OrbitDirection, QDOrbitDirection,
 )
 from vires.processes.util.models import (
-    MagneticModelResidual, QuasiDipoleCoordinates, MagneticLocalTime,
+    QuasiDipoleCoordinates, MagneticLocalTime,
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
     IndexKpFromKp10,
     Identity,
     BnecToF,
     Geodetic2GeocentricCoordinates,
+    generate_magnetic_model_sources,
 )
 
 TIME_PRECISION = timedelta(microseconds=1)
@@ -119,9 +121,9 @@ class FetchFilteredDataAsync(WPSProcess):
     asynchronous = True
 
     inputs = WPSProcess.inputs + [
-        ('permissions', RequestParameter(get_vires_permissions)),
+        ("permissions", RequestParameter(get_vires_permissions)),
         ("collection_ids", ComplexData(
-            'collection_ids', title="Collection identifiers", abstract=(
+            "collection_ids", title="Collection identifiers", abstract=(
                 "JSON object defining the merged data collections. "
                 "The input is required to be the following form: "
                 "{<label1>: [<collection11>, <collection12>, ...], "
@@ -130,47 +132,54 @@ class FetchFilteredDataAsync(WPSProcess):
             ), formats=FormatJSON()
         )),
         ("begin_time", LiteralData(
-            'begin_time', datetime, optional=False, title="Begin time",
+            "begin_time", datetime, optional=False, title="Begin time",
             abstract="Start of the selection time interval",
         )),
         ("end_time", LiteralData(
-            'end_time', datetime, optional=False, title="End time",
+            "end_time", datetime, optional=False, title="End time",
             abstract="End of the selection time interval",
         )),
         ("sampling_step", LiteralData(
-            'sampling_step', timedelta, optional=True, title="Sampling step",
+            "sampling_step", timedelta, optional=True, title="Sampling step",
             allowed_values=AllowedRange(timedelta(0), None, dtype=timedelta),
             abstract="Optional output data sampling step.",
         )),
         ("filters", LiteralData(
-            'filters', str, optional=True, default="",
+            "filters", str, optional=True, default="",
             abstract=("Filters' expression."),
         )),
         ("requested_variables", LiteralData(
-            'variables', str, optional=True, default=None,
+            "variables", str, optional=True, default=None,
             title="Data variables",
             abstract="Comma-separated list of the extracted data variables."
         )),
         ("model_ids", LiteralData(
-            'model_ids', str, optional=True, default="",
+            "model_ids", str, optional=True, default="",
             title="Model identifiers",
             abstract=(
                 "Optional list of the forward Earth magnetic field model "
                 "identifiers."
             ),
         )),
+        ("ignore_cached_models", LiteralData(
+            "ignore_cached_models", bool, optional=True, default=False,
+            abstract=(
+                "Optional boolean flag forcing the server to ignore "
+                "the cached models and to calculate the models on-the-fly."
+            ),
+        )),
         ("shc", ComplexData(
-            'shc',
+            "shc",
             title="Custom model coefficients.",
             abstract=(
                 "Custom forward magnetic field model coefficients encoded "
                 " in the SHC plain-text format."
             ),
             optional=True,
-            formats=(FormatText('text/plain'),)
+            formats=(FormatText("text/plain"),)
         )),
         ("csv_time_format", LiteralData(
-            'csv_time_format', str, optional=True, title="CSV time  format",
+            "csv_time_format", str, optional=True, title="CSV time  format",
             abstract="Optional time format used by the CSV output.",
             allowed_values=CDF_RAW_TIME_FORMATS,
             default=CDF_RAW_TIME_FORMATS[0],
@@ -179,15 +188,15 @@ class FetchFilteredDataAsync(WPSProcess):
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Output data", formats=(
-                FormatText('text/csv'),
+            "output", title="Output data", formats=(
+                FormatText("text/csv"),
                 FormatBinaryRaw("application/cdf"),
                 FormatBinaryRaw("application/x-cdf"),
             )
         )),
         ("source_products", ComplexData(
-            'source_products', title="List of source products.", formats=(
-                FormatText('text/plain'),
+            "source_products", title="List of source products.", formats=(
+                FormatText("text/plain"),
             )
         )),
     ]
@@ -231,16 +240,22 @@ class FetchFilteredDataAsync(WPSProcess):
     @staticmethod
     def on_failed(context, exception):
         """ Callback executed when an asynchronous Job fails. """
+        # The failure may happen before the Job is fully started and the start
+        # timestamp set.
         try:
+            timestamp = datetime.now(utc)
+            job = Job.objects.get(identifier=context.identifier)
             job = update_job(
-                Job.objects.get(identifier=context.identifier),
+                job,
                 status=Job.FAILED,
-                stopped=datetime.now(utc),
+                started=(job.started or timestamp),
+                stopped=timestamp,
             )
-            context.logger.info(
-                "Job failed after %.3gs running.",
-                (job.stopped - job.started).total_seconds()
-            )
+            if job.started:
+                context.logger.info(
+                    "Job failed after %.3gs running.",
+                    (job.stopped - job.started).total_seconds()
+                )
         except Job.DoesNotExist:
             context.logger.warning(
                 "Failed to update the job status! The job does not exist!"
@@ -259,10 +274,10 @@ class FetchFilteredDataAsync(WPSProcess):
         """ Asynchronous process initialization. """
         context.logger.info(
             "Received %s WPS request from %s.",
-            self.identifier, inputs['\\username'] or "an anonymous user"
+            self.identifier, inputs["\\username"] or "an anonymous user"
         )
 
-        user = get_user(inputs['\\username'])
+        user = get_user(inputs["\\username"])
 
         if count_active_jobs(user) >= MAX_ACTIVE_JOBS:
             message = (
@@ -284,24 +299,25 @@ class FetchFilteredDataAsync(WPSProcess):
 
     def execute(self, permissions, collection_ids, begin_time, end_time,
                 filters, sampling_step, requested_variables, model_ids, shc,
-                csv_time_format, output, source_products, context, **kwargs):
+                csv_time_format, output, source_products, ignore_cached_models,
+                context, **kwargs):
         """ Execute process """
         access_logger = self.get_access_logger(**kwargs)
         #workspace_dir = ""
 
         # parse inputs
         sources = parse_collections(
-            'collection_ids', collection_ids.data, permissions=permissions,
+            "collection_ids", collection_ids.data, permissions=permissions,
         )
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
         )
         filters = parse_filters("filters", filters)
         requested_variables = parse_variables(
-            'requested_variables', requested_variables
+            "requested_variables", requested_variables
         )
         self.logger.debug(
-            "requested variables: %s", ", ".join(requested_variables)
+            "requested variables: %s", pretty_list(requested_variables)
         )
 
         # fix the time-zone of the naive date-time
@@ -311,7 +327,8 @@ class FetchFilteredDataAsync(WPSProcess):
         # adjust the time limit to the data sampling
         time_limit = get_time_limit(sources, sampling_step, MAX_TIME_SELECTION)
         self.logger.debug(
-            "time-selection limit: %s", format_timedelta(time_limit)
+            "time-selection limit: %s",
+            LazyString(lambda: format_timedelta(time_limit))
         )
 
         # check the time-selection limit
@@ -321,7 +338,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 format_timedelta(time_limit)
             )
             access_logger.warning(message)
-            raise InvalidInputValueError('end_time', message)
+            raise InvalidInputValueError("end_time", message)
 
         # log the request
         access_logger.info(
@@ -332,7 +349,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 s.collection_identifier for l in sources.values() for s in l
             ),
             ", ".join(
-                "%s = %s" % (model.name, model.full_expression)
+                f"{model.name} = {model.expression}"
                 for model in requested_models
             ),
             format_filters(filters)
@@ -342,7 +359,7 @@ class FetchFilteredDataAsync(WPSProcess):
             self.logger.debug("sampling step: %s", sampling_step)
 
         # resolve data sources, models and filters and variables dependencies
-        resolvers = dict()
+        resolvers = {}
 
         if sources:
             orbit_info = {
@@ -386,26 +403,12 @@ class FetchFilteredDataAsync(WPSProcess):
                 Identity("Longitude_QD", "QDLon"),
             ]
 
-            # collect all spherical-harmonics models and residuals
-            models_with_residuals = []
-            for model in source_models:
-                models_with_residuals.append(model)
-            for model in requested_models:
-                models_with_residuals.append(model)
-                for variable in model.BASE_VARIABLES:
-                    models_with_residuals.append(
-                        MagneticModelResidual(model.name, variable)
-                    )
-                for variable in MagneticModelResidual.MODEL_VARIABLES:
-                    models_with_residuals.append(
-                        MagneticModelResidual(model.name, variable)
-                    )
             # optional sub-sampling filters
             if sampling_step:
-                sampler = MinStepSampler('Timestamp', timedelta_to_cdf_rawtime(
-                    sampling_step, CDF_EPOCH_TYPE
+                sampler = MinStepSampler("Timestamp", timedelta_to_cdf_rawtime(
+                    sampling_step, TimeSeries.TIMESTAMP_TYPE
                 ))
-                grouping_sampler = GroupingSampler('Timestamp')
+                grouping_sampler = GroupingSampler("Timestamp")
             else:
                 sampler, grouping_sampler = None, None
 
@@ -423,43 +426,43 @@ class FetchFilteredDataAsync(WPSProcess):
 
                 # slaves
                 for slave in product_sources[1:]:
-                    resolver.add_slave(slave, 'Timestamp')
+                    resolver.add_slave(slave)
 
                     # optional extra sampling for selected collections
-                    if sampler and slave.metadata.get('extraSampled'):
+                    if sampler and slave.metadata.get("extraSampled"):
                         resolver.add_filter(ExtraSampler(
-                            'Timestamp', slave.collection_identifier, slave
+                            "Timestamp", slave.collection_identifier, slave
                         ))
 
                 # optional sample grouping
-                if grouping_sampler and master.metadata.get('groupSamples'):
+                if grouping_sampler and master.metadata.get("groupSamples"):
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
                 for slave in (index_kp10, index_dst, index_ddst, index_f10, index_imf):
-                    resolver.add_slave(slave, 'Timestamp')
+                    resolver.add_slave(slave)
 
                 # satellite specific slaves
                 spacecraft = (
-                    master.metadata.get('mission') or DEFAULT_MISSION,
-                    master.metadata.get('spacecraft')
+                    master.metadata.get("mission") or DEFAULT_MISSION,
+                    master.metadata.get("spacecraft")
                 )
                 #TODO: add mission label
-                resolver.add_model(SpacecraftLabel(spacecraft[1] or '-'))
+                resolver.add_model(SpacecraftLabel(spacecraft[1] or "-"))
 
                 for item in orbit_info.get(spacecraft, []):
-                    resolver.add_slave(item, 'Timestamp')
+                    resolver.add_slave(item)
 
-                if spacecraft[0] == "Swarm" and spacecraft[1] in ('A', 'B', 'C'):
+                if spacecraft[0] == "Swarm" and spacecraft[1] in ("A", "B", "C"):
                     # prepare spacecraft to spacecraft differences
                     subtracted_variables = get_subtracted_variables(unique(chain(
                         requested_variables, chain.from_iterable(
                             filter_.required_variables for filter_ in filters
                         )
                     )))
-                    self.logger.debug("residual variables: %s", ", ".join(
-                        var for var, _ in subtracted_variables
-                    ))
+                    self.logger.debug("residual variables: %s",
+                        pretty_list(var for var, _ in subtracted_variables)
+                    )
                     grouped_diff_vars = group_subtracted_variables(
                         product_sources, subtracted_variables
                     )
@@ -467,14 +470,20 @@ class FetchFilteredDataAsync(WPSProcess):
                         resolver.add_model(SatSatSubtraction(msc, ssc, cols))
 
                 # models
-                aux_models = chain((
-                    model_gd2gc, model_bnec_intensity,
-                    model_kp, model_qdc, model_mlt, model_sun,
-                    model_subsol, model_dipole, model_tilt_angle,
-                ), models_with_residuals, copied_variables)
-
-                for model in aux_models:
-                    resolver.add_model(model)
+                for model in chain(
+                    (
+                        model_gd2gc, model_bnec_intensity,
+                        model_kp, model_qdc, model_mlt, model_sun,
+                        model_subsol, model_dipole, model_tilt_angle,
+                    ),
+                    generate_magnetic_model_sources(
+                        *spacecraft, requested_models, source_models,
+                        no_cache=ignore_cached_models,
+                        master=master,
+                    ),
+                    copied_variables,
+                ):
+                    resolver.add_consumer(model)
 
                 # add remaining filters
                 resolver.add_filters(filters)
@@ -488,23 +497,23 @@ class FetchFilteredDataAsync(WPSProcess):
 
                 self.logger.debug(
                     "%s: available variables: %s", label,
-                    ", ".join(resolver.available)
+                    pretty_list(resolver.available)
                 )
                 self.logger.debug(
                     "%s: evaluated variables: %s", label,
-                    ", ".join(resolver.required)
+                    pretty_list(resolver.required)
                 )
                 self.logger.debug(
                     "%s: output variables: %s", label,
-                    ", ".join(resolver.output_variables)
+                    pretty_list(resolver.output_variables)
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    format_filters(resolver.filters)
+                    LazyString(lambda: format_filters(resolver.filters))
                 )
                 self.logger.debug(
                     "%s: unresolved filters: %s", label,
-                    format_filters(resolver.unresolved_filters)
+                    LazyString(lambda: format_filters(resolver.unresolved_filters))
                 )
 
             # collect the common output variables
@@ -516,7 +525,7 @@ class FetchFilteredDataAsync(WPSProcess):
             # empty output
             output_variables = ()
 
-        self.logger.debug("output variables: %s", ", ".join(output_variables))
+        self.logger.debug("output variables: %s", pretty_list(output_variables))
 
         def _generate_data_():
             total_count = 0
@@ -571,7 +580,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         dataset.merge(
                             slave.interpolate(times, variables, {}, cdf_type)
                         )
-                    dataset, filters_left = dataset.filter(filters_left)
+                        dataset, filters_left = dataset.filter(filters_left)
 
                     # models
                     for model in resolver.models:
@@ -588,7 +597,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         # the unresolved filters should be detected by the
                         # resolver.
                         raise InvalidInputValueError(
-                            'filters',
+                            "filters",
                             "Failed to apply some of the filters "
                             "due to missing source variables! filters: %s" %
                             " AND ".join(str(f) for f in filters_left)
@@ -603,7 +612,7 @@ class FetchFilteredDataAsync(WPSProcess):
                             total_count, MAX_SAMPLES_COUNT,
                         )
                         raise InvalidInputValueError(
-                            'end_time',
+                            "end_time",
                             "Requested data exceeds the maximum limit of %d "
                             "records!" % MAX_SAMPLES_COUNT
                         )
@@ -612,7 +621,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
             access_logger.info(
                 "response: count: %d samples, mime-type: %s, variables: (%s)",
-                total_count, output['mime_type'], ", ".join(output_variables)
+                total_count, output["mime_type"], ", ".join(output_variables)
             )
 
         # === OUTPUT ===
@@ -629,7 +638,7 @@ class FetchFilteredDataAsync(WPSProcess):
             (end_time - TIME_PRECISION).strftime("%Y%m%dT%H%M%S"),
         )
 
-        if output['mime_type'] == "text/csv":
+        if output["mime_type"] == "text/csv":
             temp_filename = temp_basename + ".csv"
             #result_filename = result_basename + ".csv"
             time_convertor = CDF_RAW_TIME_CONVERTOR[csv_time_format]
@@ -647,7 +656,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         data_item = dataset.get(variable)
                         # convert time variables to the target file-format
                         cdf_type = dataset.cdf_type.get(variable)
-                        if cdf_type == CDF_EPOCH_TYPE:
+                        if cdf_type in CDF_TIME_TYPES:
                             data_item = time_convertor(data_item, cdf_type)
                         # collect all data items
                         data.append(data_item)
@@ -667,7 +676,7 @@ class FetchFilteredDataAsync(WPSProcess):
 
             product_names = extract_product_names(resolvers.values())
 
-        elif output['mime_type'] in ("application/cdf", "application/x-cdf"):
+        elif output["mime_type"] in ("application/cdf", "application/x-cdf"):
             # TODO: proper no-data value configuration
             temp_filename = temp_basename + ".cdf"
             result_filename = temp_filename #result_basename + ".cdf"
@@ -676,7 +685,7 @@ class FetchFilteredDataAsync(WPSProcess):
                 remove(temp_filename)
 
             record_count = 0
-            with cdf_open(temp_filename, 'w') as cdf:
+            with cdf_open(temp_filename, "w") as cdf:
                 for _, dataset in _generate_data_():
 
                     available = tuple(include(output_variables, dataset))
@@ -724,12 +733,13 @@ class FetchFilteredDataAsync(WPSProcess):
                 # add the global attributes
                 cdf.attrs.update({
                     "TITLE": result_filename,
-                    "DATA_TIMESPAN": ("%s/%s" % (
-                        format_datetime(begin_time), format_datetime(end_time),
-                    )).replace("+00:00", "Z"),
+                    "DATA_TIMESPAN": "%s/%s" % (
+                        format_datetime(begin_time),
+                        format_datetime(end_time),
+                    ),
                     "DATA_FILTERS": [str(f) for f in filters],
                     "MAGNETIC_MODELS": [
-                        "%s = %s" % (model.name, model.full_expression)
+                        f"{model.name} = {model.expression}"
                         for model in requested_models
                     ],
                     "SOURCES": list(sources.keys()),
@@ -738,8 +748,8 @@ class FetchFilteredDataAsync(WPSProcess):
 
         else:
             raise InvalidOutputDefError(
-                'output',
-                "Unexpected output format %r requested!" % output['mime_type']
+                "output",
+                f"Unexpected output format {output['mime_type']!r} requested!"
             )
 
         source_products_filename = temp_basename + "_sources.txt"
@@ -748,8 +758,8 @@ class FetchFilteredDataAsync(WPSProcess):
                 print(product_name, file=output_fobj)
 
         return {
-            'output': Reference(*context.publish(temp_filename), **output),
-            'source_products': Reference(
+            "output": Reference(*context.publish(temp_filename), **output),
+            "source_products": Reference(
                 *context.publish(source_products_filename), **source_products
             ),
         }

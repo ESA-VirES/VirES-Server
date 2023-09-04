@@ -28,6 +28,7 @@
 
 from logging import getLogger, LoggerAdapter
 from numpy import full
+from vires.util import pretty_list
 from vires.cdf_util import CDF_CHAR_TYPE
 from vires.dataset import Dataset
 from .base import Model
@@ -67,7 +68,7 @@ class Label(Model):
             self.variables if variables is None or self._variable in variables
             else []
         )
-        self.logger.debug("requested variables %s", variables)
+        self.logger.debug("requested variables: %s", pretty_list(variables))
         if variables:
             labels = full(dataset.length, self._label, self._dtype)
             output_ds.set(self._variable, labels, CDF_CHAR_TYPE, {

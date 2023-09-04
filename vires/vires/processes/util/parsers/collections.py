@@ -114,9 +114,12 @@ def _parse_collection_ids(ids, custom_dataset, permissions):
 
     available_collections = {
         collection.identifier: collection for collection
-        in ProductCollection.select_permitted(permissions).filter(
-            identifier__in=set(cid for cid, _ in collection_dataset_ids)
-        )
+        in ProductCollection \
+            .select_permitted(permissions) \
+            .select_related("type", "spacecraft") \
+            .filter(
+                identifier__in=set(cid for cid, _ in collection_dataset_ids)
+            )
     }
 
     collections = []

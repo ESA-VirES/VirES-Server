@@ -32,8 +32,13 @@ import json
 from traceback import print_exc
 from django.db import transaction
 from vires.data import PRODUCT_COLLECTIONS
-from vires.models import ProductCollection, ProductType
+from vires.data.vires_settings import DEFAULT_MISSION
+from vires.models import (
+    ProductCollection, ProductType, Spacecraft, CachedMagneticModel,
+)
+from vires.magnetic_models import ModelLoadError
 from .._common import Subcommand
+from ...api.cached_magnetic_model import parse_source_model
 
 
 class ImportProductCollectionSubcommand(Subcommand):
@@ -68,8 +73,9 @@ class ImportProductCollectionSubcommand(Subcommand):
 
         for item in data:
             identifier = item.get("name")
+            events = []
             try:
-                is_updated = save_product_collection(item)
+                is_updated = save_product_collection(item, events)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
@@ -81,10 +87,13 @@ class ImportProductCollectionSubcommand(Subcommand):
             else:
                 updated_count += is_updated
                 created_count += not is_updated
-                self.logger.info(
-                    "product collection %s updated" if is_updated else
-                    "product collection %s created", identifier
-                )
+                for event in events:
+                    self.logger.info("%s", event)
+
+                #self.logger.info(
+                #    "product collection %s updated" if is_updated else
+                #    "product collection %s created", identifier
+                #)
             finally:
                 total_count += 1
 
@@ -110,14 +119,24 @@ class ImportProductCollectionSubcommand(Subcommand):
 
 
 @transaction.atomic
-def save_product_collection(data):
+def save_product_collection(data, events):
     identifier = data.pop("name")
     for key in ["updated", "removed", "maxProductDuration"]:
         data.pop(key, None)
     is_updated, product_collection = get_product_collection(identifier)
     product_collection.type = get_product_type(data.pop("productType"))
+    product_collection.spacecraft = get_spacecraft(
+        data.pop("mission", None),
+        data.pop("spacecraft", None),
+        events=events,
+    )
     product_collection.metadata = data
     product_collection.save()
+    events.append(
+        f"product collection {identifier} "
+        f"{'updated' if is_updated else 'created'}"
+    )
+    update_cached_models(product_collection, events=events)
     return is_updated
 
 
@@ -130,3 +149,95 @@ def get_product_collection(identifier):
 
 def get_product_type(identifier):
     return ProductType.objects.get(identifier=identifier)
+
+
+def get_spacecraft(mission, spacecraft, events):
+
+    def _create_spacecraft(mission, spacecraft):
+        spacecraft = Spacecraft(mission=mission, spacecraft=spacecraft)
+        spacecraft.save()
+        return spacecraft
+
+    if not spacecraft and not mission:
+        return None
+
+    if spacecraft and not mission:
+        mission = DEFAULT_MISSION
+
+    try:
+        spacecraft = Spacecraft.objects.get(mission=mission, spacecraft=spacecraft)
+    except Spacecraft.DoesNotExist:
+        spacecraft = _create_spacecraft(mission, spacecraft)
+        events.append(f"spacecraft {spacecraft.as_string} created")
+
+    return spacecraft
+
+
+def update_cached_models(collection, events):
+    """ Update configuration of the cached magnetic models. """
+
+    def _parse_source_models(models):
+        for source_model_expression in models:
+            try:
+                yield parse_source_model(source_model_expression)
+            except ModelLoadError as error:
+                events.append(
+                    f"Skipping cached model {source_model_expression}. "
+                    "The model has likely not been initialized yet. "
+                    "Fix the model and reload the product collection again."
+                )
+
+    if "cachedMagneticModels" not in collection.metadata:
+        return
+
+    metadata = collection.metadata
+
+    models = metadata["cachedMagneticModels"].pop("models", None) or []
+
+    models = list(_parse_source_models(models))
+
+    remove_cached_models(collection, models, events)
+
+    for model in models:
+        update_cached_model(collection, model, events)
+
+    collection.metadata = metadata
+    collection.save()
+
+
+def update_cached_model(collection, model, events):
+    try:
+        db_model = CachedMagneticModel.objects.get(
+            collection=collection, name=model.name
+        )
+        db_model.expression = model.expression
+        db_model.metadata = {}
+        event = "updated"
+    except CachedMagneticModel.DoesNotExist:
+        db_model = CachedMagneticModel(
+            collection=collection,
+            name=model.name,
+            expression=model.expression,
+            metadata={},
+        )
+        event = "created"
+    db_model.save()
+    events.append(
+        f"cached magnetic model {collection.identifier}/{model.name} {event}"
+    )
+
+
+def remove_cached_models(collection, models, events):
+    db_models = (
+        CachedMagneticModel.objects
+        .filter(collection=collection)
+        .exclude(name__in=[model.name for model in models])
+    )
+
+    for db_model in db_models:
+        events.append(
+            f"cached magnetic model {collection.identifier}/{db_model.name} "
+            "removed"
+        )
+
+    db_models.delete()

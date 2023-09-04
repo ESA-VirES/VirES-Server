@@ -4,6 +4,27 @@
 <h1>Changelog</h1>
 <hr>
 <h3>
+    Release of Service v3.12.0 (2023-09-04)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>Caching of selected slow magnetic models</b><br>
+        To speed-up the calculation of the most frequently use magnetic models
+        (CHAOS, Swarm-CI) selected slow-to-calculate MLI (CHAOS-Static,
+        SW_MLI_SHA_2C) and MIO (SW_MIO_SHA_2C) magnetic modes are
+        pre-calculated for the spacecraft locations are pulled from the cache
+        rather that calculated on the fly.
+    </li>
+    <li><b>MAG products served via HAPI provide reference magnetic model</b><br>
+        All MAG products served by VirES via the HAPI except the Swarm MG HR
+        provide reference values calculated from the complete CHAOS model
+        and the residuals when subtracted from the measurements.
+    </li>
+</ul>
+<hr>
+<h3>
     Release of Service v3.11.0 (2022-12-19)
 </h3>
 <p>

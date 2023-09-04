@@ -52,6 +52,11 @@ from .conjunctions import (
     sync_conjunctions_table,
     rebuild_conjunctions_table,
 )
+from .cached_magnetic_model import (
+    seed_product,
+    flush_product_loose_file,
+    get_model_cache_read_only_flag,
+)
 
 LOG_FORMAT = "product %s/%s %s"
 
@@ -109,7 +114,7 @@ def _log_registered_products(command):
 
     @wraps(command)
     def wrapped_command(*args, **kawrags):
-        logger = kawrags.pop('logger', None) or getLogger(__name__)
+        logger = kawrags.get('logger') or getLogger(__name__)
 
         result = command(*args, **kawrags)
 
@@ -130,6 +135,25 @@ def _log_registered_products(command):
     return wrapped_command
 
 
+def _postregisteration_cleanup(command):
+
+    @wraps(command)
+    def wrapped_command(*args, **kawrags):
+        logger = kawrags.get('logger') or getLogger(__name__)
+
+        result = command(*args, **kawrags)
+
+        collection_id = result.product.collection.identifier
+        if not get_model_cache_read_only_flag():
+            for product_id in result.deregistered:
+                flush_product_loose_file(collection_id, product_id, logger)
+
+        return result
+
+    return wrapped_command
+
+
+@_postregisteration_cleanup
 @_log_registered_products
 def import_product(record, update_existing=True, **kwargs):
     """ Import product record.
@@ -215,6 +239,7 @@ def export_product(product):
     )
 
 
+@_postregisteration_cleanup
 @_log_registered_products
 def register_product(collection, data_file, metadata,
                      update_existing=True, resolve_time_overlaps=True, **kwargs):
@@ -295,6 +320,9 @@ def deregister_product(product, logger=None):
 
     logger.info(LOG_FORMAT, collection_id, product_id, "de-registered")
 
+    if not get_model_cache_read_only_flag():
+        flush_product_loose_file(collection_id, product_id, logger)
+
 
 def execute_post_registration_actions(product, logger=None):
     """ Execute post-registration actions. """
@@ -307,6 +335,12 @@ def execute_post_registration_actions(product, logger=None):
     if product.collection.metadata.get("calculateConjunctions"):
         for other_collection in find_pair_collections(product.collection):
             _update_conjunctions(product, other_collection)
+
+    if (
+        not get_model_cache_read_only_flag() and
+        product.collection.cached_magnetic_models.exists()
+    ):
+        seed_product(product, logger=logger)
 
 
 def _update_orbit_direction(product, logger=None):

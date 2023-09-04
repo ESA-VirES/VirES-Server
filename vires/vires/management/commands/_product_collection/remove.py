@@ -30,41 +30,17 @@ import sys
 from traceback import print_exc
 from django.db import transaction
 from vires.models import ProductCollection
-from .._common import Subcommand
+from .common import ProductCollectionSelectionProtectedSubcommand
 
 
-class RemoveProductCollectionSubcommand(Subcommand):
+class RemoveProductCollectionSubcommand(ProductCollectionSelectionProtectedSubcommand):
     name = "remove"
     help = "Remove product collections."
-
-    def add_arguments(self, parser):
-        parser.add_argument("identifier", nargs="*")
-        parser.add_argument(
-            "-a", "--all", dest="select_all", action="store_true", default=False,
-            help="Select all product collections."
-        )
-        parser.add_argument(
-            "-t", "--product-type", dest="product_type", action='append', help=(
-                "Optional filter on the collection product types. "
-                "Multiple product types are allowed."
-            )
-        )
 
     def handle(self, **kwargs):
         query = ProductCollection.objects.order_by('identifier')
 
-        product_types = set(kwargs['product_type'] or [])
-        if product_types:
-            query = query.filter(type__identifier__in=product_types)
-
-        identifiers = set(kwargs['identifier'])
-        if identifiers or not kwargs['select_all']:
-            query = query.filter(identifier__in=identifiers)
-            if not identifiers:
-                self.warning(
-                    "No identifier selected and no collection will be removed. "
-                    "Use the --all option to remove all matched items."
-                )
+        query = self.select_collections(query, **kwargs)
 
         self.remove_product_collections(query.all(), **kwargs)
 

@@ -29,6 +29,7 @@
 
 from logging import getLogger, LoggerAdapter
 from eoxmagmod import vnorm
+from vires.util import pretty_list
 from vires.cdf_util import CDF_DOUBLE_TYPE
 from vires.dataset import Dataset
 from .base import Model
@@ -42,10 +43,10 @@ class VectorIntensity(Model):
 
         def __init__(self, logger, extra, source, target):
             super(VectorIntensity._LoggerAdapter, self).__init__(logger, extra)
-            self._label = "VectorIntensity[%s=>%s]:" % (source, target)
+            self._label = f"VectorIntensity[{source}=>{target}]"
 
         def process(self, msg, kwargs):
-            return '%s: %s' % (self._label, msg), kwargs
+            return f"{self._label}: {msg}", kwargs
 
     @property
     def variables(self):
@@ -56,7 +57,7 @@ class VectorIntensity(Model):
         return [self._source_variable]
 
     def __init__(self, source, target, attrs=None, logger=None, varmap=None):
-        super(VectorIntensity, self).__init__()
+        super().__init__()
         self._source_variable = (varmap or {}).get(source, source)
         self._target_variable = target
         self._attrs = attrs or {}
@@ -70,7 +71,7 @@ class VectorIntensity(Model):
         variables = (self.variables if (
             variables is None or self._target_variable in variables
         ) else [])
-        self.logger.debug("requested variables %s", variables)
+        self.logger.debug("requested variables: %s", pretty_list(variables))
         if variables:
             data = vnorm(dataset[self._source_variable])
             output_ds.set(self._target_variable, data, CDF_DOUBLE_TYPE, self._attrs)
@@ -81,7 +82,7 @@ class BnecToF(VectorIntensity):
     """ Calculate intensity of the B_NEC vector. """
 
     def __init__(self, *args, **kwargs):
-        super(BnecToF, self).__init__("B_NEC", "F", {
+        super().__init__("B_NEC", "F", {
             'DESCRIPTION': 'Total magnetic field strength',
             'UNITS': 'nT',
         }, *args, **kwargs)

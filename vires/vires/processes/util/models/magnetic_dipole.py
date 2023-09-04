@@ -30,6 +30,8 @@ from math import pi
 from logging import getLogger, LoggerAdapter
 from numpy import empty, broadcast_to, arcsin, arctan2
 from eoxmagmod import vnorm
+from vires.util import LazyString, pretty_list
+from vires.time_util import format_datetime
 from vires.cdf_util import (
     cdf_rawtime_to_mjd2000,
     CDF_DOUBLE_TYPE,
@@ -75,7 +77,7 @@ class MagneticDipole(Model):
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
-            return 'MageticDipole: %s' % msg, kwargs
+            return f"MageticDipole: {msg}", kwargs
 
     def __init__(self, model=DIPOLE_MODEL, logger=None, varmap=None):
         super().__init__()
@@ -108,15 +110,15 @@ class MagneticDipole(Model):
         time_start, time_end = times.min(), times.max()
         mean_time = 0.5*(time_start + time_end)
 
+        self.logger.debug("requested time-span: %s", LazyString(lambda: (
+            f"{format_datetime(mjd2000_to_datetime(time_start))}/"
+            f"{format_datetime(mjd2000_to_datetime(time_end))}"
+        )))
         self.logger.debug(
-            "requested time-span %s, %s",
-            mjd2000_to_datetime(time_start),
-            mjd2000_to_datetime(time_end)
-        )
-        self.logger.debug(
-            "applied mean time %s (%s)",
-            mjd2000_to_datetime(mean_time), mean_time
-        )
+            "applied mean time: %s", LazyString(lambda: (
+            f"{format_datetime(mjd2000_to_datetime(mean_time))}"
+            f" (MJD: {mean_time})"
+        )))
 
         # construct north pointing unit vector of the dipole axis
         # from the spherical harmonic coefficients
@@ -132,7 +134,8 @@ class MagneticDipole(Model):
         output_ds = Dataset()
         variables = set(self.variables if variables is None else variables)
         self.logger.debug(
-            "requested variables %s", list(set(self.variables) & variables)
+            "requested variables: %s",
+            pretty_list(set(self.variables) & variables)
         )
 
         if not variables:
@@ -190,7 +193,7 @@ class DipoleTiltAngle(Model):
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
-            return 'DipoleTiltAngle: %s' % msg, kwargs
+            return f"DipoleTiltAngle: {msg}", kwargs
 
     def __init__(self, logger=None, varmap=None):
         super().__init__()
@@ -215,7 +218,8 @@ class DipoleTiltAngle(Model):
         output_ds = Dataset()
         variables = set(self.variables if variables is None else variables)
         self.logger.debug(
-            "requested variables %s", list(set(self.variables) & variables)
+            "requested variables: %s",
+            pretty_list(set(self.variables) & variables)
         )
 
         if not variables:

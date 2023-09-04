@@ -28,16 +28,18 @@
 import json
 from ctypes import c_long
 from logging import getLogger, LoggerAdapter
-from numpy import empty, argsort, searchsorted, broadcast_to, asarray
-from vires.cdf_util import (
-    cdf_open, cdf_rawtime_to_datetime, datetime_to_cdf_rawtime,
-    cdf_type_map, CDF_EPOCH_TYPE,
-)
+from numpy import empty
+from vires.util import pretty_list, LazyString
+from vires.time_util import format_datetime
+from vires.cdf_util import cdf_rawtime_to_datetime
 from vires.models import CustomDataset
 from vires.dataset import Dataset
 from vires.util import cached_property
 from vires.views.custom_data import sanitize_info
-from .product import BaseProductTimeSeries, DEFAULT_PRODUCT_TYPE_PARAMETERS
+from .base import TimeSeries
+from .base_product import BaseProductTimeSeries
+from .product import DEFAULT_PRODUCT_TYPE_PARAMETERS
+from .data_extraction import CDFDataset
 
 
 class CustomDatasetTimeSeries(BaseProductTimeSeries):
@@ -52,7 +54,8 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
-            return 'CustomDataset[%s]: %s' % (self.extra["username"], msg), kwargs
+            username = self.extra["username"]
+            return f"CustomDataset[{username}]: {msg}", kwargs
 
     def __init__(self, user, logger=None):
         params = DEFAULT_PRODUCT_TYPE_PARAMETERS
@@ -80,7 +83,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     def variables(self):
         return list(self._variables)
 
-    def _subset_times(self, times, variables, cdf_type=CDF_EPOCH_TYPE):
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the give array time array.
         """
         times, cdf_type = self._convert_time(times, cdf_type)
@@ -101,21 +104,19 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
             variables,
         )
 
-        self.logger.debug(
-            "requested time-span [%s, %s]",
-            cdf_rawtime_to_datetime(start, cdf_type),
-            cdf_rawtime_to_datetime(stop, cdf_type)
-        )
+        self.logger.debug("requested time-span: %s", LazyString(lambda: (
+            f"{format_datetime(cdf_rawtime_to_datetime(start, cdf_type))}/"
+            f"{format_datetime(cdf_rawtime_to_datetime(stop, cdf_type))}"
+        )))
 
         dataset = Dataset()
         for item in dataset_iterator:
             if item and item.length > 0:
                 _times = item[self.time_variable]
-                self.logger.debug(
-                    "item time-span [%s, %s]",
-                    cdf_rawtime_to_datetime(_times.min(), cdf_type),
-                    cdf_rawtime_to_datetime(_times.max(), cdf_type),
-                )
+                self.logger.debug("item time-span: %s", LazyString(lambda: (
+                    f"{format_datetime(cdf_rawtime_to_datetime(_times.min(), cdf_type))}/"
+                    f"{format_datetime(cdf_rawtime_to_datetime(_times.max(), cdf_type))}"
+                )))
             else:
                 self.logger.debug("item time-span is empty")
             dataset.append(item)
@@ -123,8 +124,10 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
         return dataset
 
     def _subset(self, start, stop, variables):
-        self.logger.debug("subset: %s %s", start, stop)
-        self.logger.debug("extracted variables %s", variables)
+        self.logger.debug("subset: %s", LazyString(
+            lambda: f"{format_datetime(start)}/{format_datetime(stop)}"
+        ))
+        self.logger.debug("extracted variables: %s", pretty_list(variables))
 
         if not variables: # stop here if no variables are requested
             return
@@ -136,30 +139,13 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
 
             self.product_set.add(dataset.filename) # record source filename
 
-            with cdf_open(dataset.location) as cdf:
-                # temporal sub-setting
-                temp_var = cdf.raw_var(self.TIME_VARIABLE)
-                times, time_type = temp_var[:], temp_var.type()
-
-                # note: data are not ordered!
-                idx = argsort(times)
-
-                self.logger.debug(
-                    "dataset time span %s %s",
-                    cdf_rawtime_to_datetime(times[idx[0]], time_type),
-                    cdf_rawtime_to_datetime(times[idx[-1]], time_type),
+            with CDFDataset(dataset.location, time_type=self.TIMESTAMP_TYPE) as cdf_ds:
+                subset, nrv_shape = cdf_ds.get_temporal_subset(
+                    self.TIME_VARIABLE, start, stop, is_sorted=False,
                 )
-
-                low, high = searchsorted(times[idx], [
-                    datetime_to_cdf_rawtime(start, time_type),
-                    datetime_to_cdf_rawtime(stop, time_type),
-                ], 'left')
-
-                idx = idx[low:high]
-
-                self.logger.debug("product slice %s:%s", low, high)
-
-                dataset = self._extract_dataset(cdf, variables, idx)
+                dataset = cdf_ds.extract_datset(
+                    variables, subset=subset, nrv_shape=nrv_shape
+                )
 
             self.logger.debug("dataset length: %s ", dataset.length)
 
@@ -168,7 +154,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     def _get_empty_dataset(self, variables):
         """ Get empty dataset. """
         self.logger.debug("empty dataset")
-        self.logger.debug("extracted variables %s", variables)
+        self.logger.debug("extracted variables: %s", pretty_list(variables))
 
         variable_types = self._variables
 
@@ -183,29 +169,6 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
                 c_long(type_['cdf_type']), type_.get('attributes', {})
             )
 
-        return dataset
-
-    @staticmethod
-    def _extract_dataset(cdf, extracted_variables, idx):
-        """ Extract dataset from a product. """
-        if idx.size == 0:
-            idx_low, idx_high = 0, 0
-        else:
-            idx_low, idx_high = idx.min(), idx.max() + 1
-            if idx_low != 0:
-                idx = idx - idx_low
-
-        dataset = Dataset()
-        for variable in extracted_variables:
-            cdf_var = cdf.raw_var(variable)
-            if cdf_var.rv(): # regular record variable
-                data = cdf_var[idx_low:idx_high][idx]
-            else: # NRV variable
-                value = asarray(cdf_var[...])
-                data = broadcast_to(value, (idx.size,) + value.shape[1:])
-            dataset.set(
-                variable, data, cdf_type_map(cdf_var.type()), cdf_var.attrs
-            )
         return dataset
 
     def _subset_qs(self, start, stop):
@@ -244,14 +207,15 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
             )
 
         #Note only variables common to all datasets are published.
-        variables = None
-        for dataset in self._all_qs():
-            dataset_variables = _load_variables(dataset)
-            if variables is None:
-                variables = dataset_variables
-            else:
-                for variable, type_ in dataset_variables.items():
-                    type__ref = variables.get(variable)
-                    if type__ref and _not_equal(type__ref, type_):
-                        del variables[variable]
-        return variables or {}
+        datasets = iter(self._all_qs())
+        try:
+            dataset = next(datasets)
+        except StopIteration:
+            return {}
+        variables = _load_variables(dataset)
+        for dataset in datasets:
+            for variable, type_ in _load_variables(dataset).items():
+                type__ref = variables.get(variable)
+                if type__ref and _not_equal(type__ref, type_):
+                    del variables[variable]
+        return variables

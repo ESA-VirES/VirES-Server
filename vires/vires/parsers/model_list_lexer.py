@@ -82,7 +82,7 @@ class ModelListLexer():
 
     @staticmethod
     def t_model_id(token):
-        r"[a-zA-Z][a-zA-Z0-9_-]{0,128}"
+        r"[a-zA-Z_][a-zA-Z0-9_-]{0,128}"
         return ModelListLexer._check_id_length(token, 128)
 
     @staticmethod
@@ -126,7 +126,7 @@ class ModelListLexer():
 
     @staticmethod
     def t_expression_model_id(token):
-        r"[a-zA-Z][a-zA-Z0-9_]{0,128}"
+        r"[a-zA-Z_][a-zA-Z0-9_]{0,128}"
         return ModelListLexer._check_id_length(token, 128)
 
     @staticmethod

@@ -28,10 +28,11 @@
 
 from logging import getLogger, LoggerAdapter
 from numpy import array, empty
-from vires.util import include
+from vires.util import include, LazyString, pretty_list
+from vires.time_util import format_datetime
 from vires.cdf_util import (
     mjd2000_to_cdf_rawtime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_datetime,
-    CDF_EPOCH_TYPE, CDF_DOUBLE_TYPE,
+    CDF_DOUBLE_TYPE,
 )
 from vires.dataset import Dataset
 from .base import TimeSeries
@@ -47,7 +48,8 @@ class AuxiliaryDataTimeSeries(TimeSeries):
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
-            return '%s: %s' % (self.extra["index_name"], msg), kwargs
+            index_name = self.extra["index_name"]
+            return f"{index_name}: {msg}", kwargs
 
     @staticmethod
     def _encode_time(times, cdf_type):
@@ -77,8 +79,10 @@ class AuxiliaryDataTimeSeries(TimeSeries):
 
     def subset(self, start, stop, variables=None):
         variables = self.get_extracted_variables(variables)
-        self.logger.debug("subset: %s %s", start, stop)
-        self.logger.debug("variables: %s", variables)
+        self.logger.debug("subset: %s", LazyString(
+            lambda: f"{format_datetime(start)}/{format_datetime(stop)}"
+        ))
+        self.logger.debug("variables: %s", pretty_list(variables))
         dataset = Dataset()
         if variables:
             src_data = self._reader.subset(start, stop, fields=tuple(
@@ -96,7 +100,7 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         return dataset
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
-                    cdf_type=CDF_EPOCH_TYPE, valid_only=False):
+                    cdf_type=TimeSeries.TIMESTAMP_TYPE, valid_only=False):
         times, cdf_type = self._convert_time(times, cdf_type)
 
         if times.size == 0: # return an empty dataset
@@ -116,13 +120,12 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         dependent_variables = [
             variable for variable in variables if variable != self.TIME_VARIABLE
         ]
-        self.logger.debug(
-            "requested time-span %s, %s",
-            cdf_rawtime_to_datetime(times.min(), cdf_type),
-            cdf_rawtime_to_datetime(times.max(), cdf_type)
-        )
-        self.logger.debug("requested dataset length %s", times.size)
-        self.logger.debug("variables: %s", variables)
+        self.logger.debug("requested time-span: %s", LazyString(lambda: (
+            f"{format_datetime(cdf_rawtime_to_datetime(times.min(), cdf_type))}/"
+            f"{format_datetime(cdf_rawtime_to_datetime(times.max(), cdf_type))}"
+        )))
+        self.logger.debug("requested dataset length: %s", times.size)
+        self.logger.debug("variables: %s", pretty_list(variables))
         dataset = Dataset()
         if self.TIME_VARIABLE in variables:
             dataset.set(

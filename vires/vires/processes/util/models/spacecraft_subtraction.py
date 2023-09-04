@@ -30,9 +30,13 @@ from logging import LoggerAdapter, getLogger
 from itertools import chain
 from numpy import searchsorted, zeros
 from vires.orbit_counter import OrbitCounterReader
+from vires.util import pretty_list
 from vires.cdf_util import (
-    CDF_DOUBLE_TYPE, CDF_EPOCH_TYPE,
-    cdf_rawtime_to_datetime, seconds_to_cdf_rawtime, cdf_rawtime_to_seconds,
+    CDF_DOUBLE_TYPE, CDF_TIME_TYPES,
+    convert_cdf_raw_times,
+    cdf_rawtime_to_datetime,
+    cdf_rawtime_delta_in_seconds,
+    cdf_rawtime_subtract_delta_in_seconds,
 )
 from vires.util import include
 from vires.time_util import format_datetime, naive_to_utc
@@ -134,8 +138,8 @@ class SatSatSubtraction(Model):
         variables = self.variables if variables is None else tuple(
             include(variables, self.variables)
         )
-        self.logger.debug("requested dataset length %s", dataset.length)
-        self.logger.debug("variables: %s", ", ".join(variables))
+        self.logger.debug("requested dataset length: %s", dataset.length)
+        self.logger.debug("variables: %s", pretty_list(variables))
         if not variables:
             return output_ds # stop if no variable required
         variables = set(variables)
@@ -219,14 +223,14 @@ class SatSatSubtraction(Model):
             )
 
         # traverse the sources and collections and evaluate the residuals
-        slave_times = (
-            time_master - seconds_to_cdf_rawtime(dtime_anx, time_cdf_type)[idx]
+        slave_times = cdf_rawtime_subtract_delta_in_seconds(
+            time_master, dtime_anx[idx] , time_cdf_type
         )
 
         for col_id, (slave_source, var_pairs) in self._collections.items():
             var_pairs = tuple((u, v) for u, v in var_pairs if u in variables)
             slave_vars = tuple(v for u, v in var_pairs)
-            self.logger.debug("%s: %s", col_id, ", ".join(slave_vars))
+            self.logger.debug("%s: %s", col_id, pretty_list(slave_vars))
             slave_ds = slave_source.interpolate(
                 slave_times, slave_vars, cdf_type=time_cdf_type
             )
@@ -234,9 +238,20 @@ class SatSatSubtraction(Model):
 
             for output_var, source_var in var_pairs:
                 cdf_type = dataset.cdf_type[source_var]
-                data = dataset[source_var] - slave_ds[source_var]
-                if cdf_type == CDF_EPOCH_TYPE:
-                    data = cdf_rawtime_to_seconds(data, cdf_type)
+                if cdf_type in CDF_TIME_TYPES:
+                    # NOTE: times must be converted to the same type
+                    data = cdf_rawtime_delta_in_seconds(
+                        dataset[source_var],
+                        convert_cdf_raw_times(
+                            slave_ds[source_var],
+                            slave_ds.cdf_type[source_var],
+                            cdf_type,
+                        ),
+                        cdf_type
+                    )
+                else:
+                    data = dataset[source_var] - slave_ds[source_var]
+
                 cdf_type, cdf_attr = self._delta_cdf_type(
                     cdf_type, dict(dataset.cdf_attr.get(source_var, {}))
                 )
@@ -251,7 +266,7 @@ class SatSatSubtraction(Model):
             cdf_attr["DESCRIPTION"] = (
                 "%s %s" % (self._attr_label, description)
             )
-        if cdf_type == CDF_EPOCH_TYPE:
+        if cdf_type in CDF_TIME_TYPES:
             cdf_type = CDF_DOUBLE_TYPE
             cdf_attr["UNITS"] = "sec"
         return cdf_type, cdf_attr

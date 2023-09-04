@@ -30,4 +30,9 @@ from .models import (
     MODEL_CACHE,
     DIPOLE_MODEL,
     PREDEFINED_COMPOSED_MODELS,
+    MIO_MODELS,
 )
+from .cache import ModelLoadError
+from .parser import ModelInputParser
+from .source_model import SourceMagneticModel
+from .composed_model import ComposedMagneticModel

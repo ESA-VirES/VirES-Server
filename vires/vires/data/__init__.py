@@ -31,3 +31,6 @@ _DIRNAME = dirname(__file__)
 
 PRODUCT_TYPES = join(_DIRNAME, "product_types.json")
 PRODUCT_COLLECTIONS = join(_DIRNAME, "product_collections.json")
+
+# CDF Leap Seconds table to be used for CDF_TT2000 conversions
+CDF_LEAP_SECONDS = join(_DIRNAME, "CDFLeapSeconds.txt")

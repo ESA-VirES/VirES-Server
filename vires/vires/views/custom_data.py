@@ -41,7 +41,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from ..time_util import datetime, naive_to_utc, format_datetime, Timer
 from ..cdf_util import (
-    is_cdf_file, cdf_open, cdf_epoch16_to_epoch, cdf_tt2000_to_epoch, CDFError,
+    is_cdf_file, cdf_open, convert_cdf_raw_times, CDFError,
     CDF_EPOCH_TYPE, CDF_EPOCH16_TYPE, CDF_TIME_TT2000_TYPE, CDF_DOUBLE_TYPE,
     CDF_REAL8_TYPE, CDF_TYPE_TO_LABEL, LABEL_TO_CDF_TYPE, CDF_TYPE_TO_DTYPE,
 )
@@ -543,16 +543,13 @@ def _convert_input_cdf(filename):
 
 def _convert_time_variables_to_cdf_epoch(cdf):
     """ Convert CDF EPOCH16 and TT2000 variables in CDF EPOCH. """
-    convert = {
-        CDF_EPOCH16_TYPE: cdf_epoch16_to_epoch,
-        CDF_TIME_TT2000_TYPE: cdf_tt2000_to_epoch,
-    }
+    converted_time_types = {CDF_EPOCH16_TYPE, CDF_TIME_TT2000_TYPE}
 
     for variable in cdf:
         raw_var = cdf.raw_var(variable)
-        if raw_var.type() not in convert:
+        if raw_var.type() not in converted_time_types:
             continue
-        data = convert[raw_var.type()](raw_var[...])
+        data = convert_cdf_raw_times(raw_var[...], raw_var.type(), CDF_EPOCH)
         attributes = raw_var.attrs
         compress, compress_param = raw_var.compress()
         del cdf[variable]

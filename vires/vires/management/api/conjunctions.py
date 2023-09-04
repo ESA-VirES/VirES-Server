@@ -60,8 +60,8 @@ def sync_conjunctions_table(collection1, collection2, logger=None, counter=None)
 
     table = ConjunctionsTable(
         tuple(sorted((
-            collection1.formatted_spacecraft,
-            collection2.formatted_spacecraft
+            collection1.spacecraft_string,
+            collection2.spacecraft_string
         ))),
         cache_path(
             ORBIT_CONJUNCTION_FILE[
@@ -100,8 +100,8 @@ def rebuild_conjunctions_table(collection1, collection2, logger=None, counter=No
 
     table = ConjunctionsTable(
         tuple(sorted((
-            collection1.formatted_spacecraft,
-            collection2.formatted_spacecraft
+            collection1.spacecraft_string,
+            collection2.spacecraft_string
         ))),
         cache_path(
             ORBIT_CONJUNCTION_FILE[
@@ -160,8 +160,8 @@ def update_conjunctions_table(product, other_collection, logger=None, counter=No
 
     table = ConjunctionsTable(
         tuple(sorted((
-            collection.formatted_spacecraft,
-            other_collection.formatted_spacecraft
+            collection.spacecraft_string,
+            other_collection.spacecraft_string
         ))),
         cache_path(
             ORBIT_CONJUNCTION_FILE[
@@ -289,18 +289,18 @@ def pair_products(products1, products2):
 
 def find_pair_collections(collection):
     """ Find pair orbit collection matching given collection. """
-    spacecraft = collection.spacecraft
+    spacecraft = collection.spacecraft_tuple
     other_spacecrafts = {
         sc1 if spacecraft == sc2 else sc2
         for sc1, sc2 in ORBIT_CONJUNCTION_FILE
         if spacecraft in (sc1, sc2)
     }
-    query = ProductCollection.objects.order_by('identifier')
+    query = ProductCollection.objects.select_related('spacecraft').order_by('identifier')
     query = query.filter(metadata__calculateConjunctions=True)
 
     return [
         collection for collection in query
-        if collection.spacecraft in other_spacecrafts
+        if collection.spacecraft_tuple in other_spacecrafts
     ]
 
 
@@ -349,13 +349,15 @@ def get_data_file(product):
 
 def get_spacecrafts_string(collection, other_collection):
     return "%s/%s" % tuple(sorted((
-        collection.formatted_spacecraft,
-        other_collection.formatted_spacecraft
+        collection.spacecraft_string,
+        other_collection.spacecraft_string
     )))
 
 
 def get_spacecrafts_tuple(collection, other_collection):
-    return tuple(sorted((collection.spacecraft, other_collection.spacecraft)))
+    return tuple(sorted(
+        (collection.spacecraft_tuple, other_collection.spacecraft_tuple)
+    ))
 
 
 def _init_logger_and_counter(logger, counter):

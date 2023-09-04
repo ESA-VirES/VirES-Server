@@ -30,38 +30,31 @@ import sys
 import json
 from vires.models import ProductCollection
 from vires.time_util import format_timedelta, format_datetime
-from .._common import Subcommand, JSON_OPTS
+from .._common import JSON_OPTS
+from .common import ProductCollectionSelectionSubcommand
 
 
-class ExportProductCollectionSubcommand(Subcommand):
+class ExportProductCollectionSubcommand(ProductCollectionSelectionSubcommand):
     name = "export"
     help = "Export product collection definitions as a JSON file."
 
     def add_arguments(self, parser):
-        parser.add_argument("identifier", nargs="*")
+        super().add_arguments(parser)
         parser.add_argument(
             "-f", "--file", dest="filename", default="-", help=(
                 "Optional file-name the output is written to. "
                 "By default it is written to the standard output."
             )
         )
-        parser.add_argument(
-            "-t", "--product-type", dest="product_type", action='append', help=(
-                "Optional filter on the collection product types. "
-                "Multiple product types are allowed."
-            )
-        )
 
     def handle(self, **kwargs):
-        query = ProductCollection.objects.prefetch_related('type').order_by('identifier')
+        query = (
+            ProductCollection.objects
+            .prefetch_related("type", "spacecraft", "cached_magnetic_models")
+            .order_by("identifier")
+        )
 
-        product_types = set(kwargs['product_type'] or [])
-        if product_types:
-            query = query.filter(type__identifier__in=product_types)
-
-        identifiers = set(kwargs['identifier'])
-        if identifiers:
-            query = query.filter(identifier__in=identifiers)
+        query = self.select_collections(query, **kwargs)
 
         data = [serialize_collection(collection) for collection in query.all()]
 
@@ -77,5 +70,25 @@ def serialize_collection(object_):
         "created": format_datetime(object_.created),
         "updated": format_datetime(object_.updated),
         "maxProductDuration": format_timedelta(object_.max_product_duration),
-        **object_.metadata
+        **export_metadata(object_, object_.metadata),
     }
+
+
+def export_metadata(collection, metadata):
+    metadata = {
+        **collection.spacecraft_dict,
+        **collection.metadata,
+    }
+    metadata = export_cached_models(collection, metadata)
+    return metadata
+
+
+def export_cached_models(collection, metadata):
+    if collection.cached_magnetic_models.count() > 0:
+        conf = metadata.get("cachedMagneticModels") or {}
+        conf["models"] = [
+            model.expression
+            for model in collection.cached_magnetic_models.all()
+        ]
+        metadata["cachedMagneticModels"] = conf
+    return metadata
