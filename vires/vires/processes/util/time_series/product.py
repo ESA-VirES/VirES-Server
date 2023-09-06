@@ -265,7 +265,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
             time_subset = source_dataset.get('indexRange')
             if time_subset:
-                time_subset = slice(*subset[:2])
+                time_subset = slice(*time_subset[:2])
 
             with CDFDataset(
                 source_dataset['location'], translation=self.translate_fw,
