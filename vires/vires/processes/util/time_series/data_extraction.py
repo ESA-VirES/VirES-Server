@@ -100,7 +100,7 @@ class CDFDataset:
     def _extract_subset_sorted(times, time_bounds):
         index_low, index_high = searchsorted(times, time_bounds, 'left')
         subset = slice(index_low, index_high)
-        nrv_shape = index_high - index_low
+        nrv_shape = (index_high - index_low,)
         return subset, nrv_shape
 
     @staticmethod
@@ -147,7 +147,7 @@ class CDFDataset:
         if cdf_variable.rv(): # regular variable
             data = cdf_variable[subset1, ...][subset2, ...]
         else: # NRV variable
-            data = cdf_variable[...]
+            data = asarray(cdf_variable[...])
             if nrv_shape:
                 data = broadcast_to(data, (*nrv_shape, *data.shape))
         return data, cdf_variable
