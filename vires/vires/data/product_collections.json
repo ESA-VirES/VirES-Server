@@ -743,5 +743,11 @@
                 "'MLI_SHA_2C'"
             ]
         }
+    },
+    {
+        "name": "GFZ_KP",
+        "nominalSampling": "PT3H",
+        "productType": "GFZ_KP",
+        "requiredPermission": "__restricted__"
     }
 ]

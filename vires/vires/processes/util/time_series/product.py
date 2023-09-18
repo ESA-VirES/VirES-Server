@@ -71,6 +71,19 @@ class AuxImf2Parameters(SwarmDefaultParameters):
     }
 
 
+class GfzKpParameters(SwarmDefaultParameters):
+    """ GFZ_KP parameters """
+    INTERPOLATION_KIND = "zero"
+    TIME_TOLERANCE = timedelta(minutes=181) # time selection tolerance
+    TIME_OVERLAP = timedelta(hours=6) # time interpolation overlap
+    TIME_GAP_THRESHOLD = timedelta(minutes=181) # gap time threshold
+    TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=180)
+    VARIABLE_INTERPOLATION_KINDS = {
+        'Kp': 'zero',
+        'ap': 'zero',
+    }
+
+
 class OmniHr1MinParameters(SwarmDefaultParameters):
     """ OMNI HR 1min parameters """
     INTERPOLATION_KIND = "zero"
@@ -93,6 +106,7 @@ PRODUCT_TYPE_PARAMETERS = {
     "SW_MAGx_LR_1B": MagLRParameters,
     "SW_AUX_IMF_2_": AuxImf2Parameters,
     "OMNI_HR_1min": OmniHr1MinParameters,
+    "GFZ_KP": GfzKpParameters,
 }
 
 
