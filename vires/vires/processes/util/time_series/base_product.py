@@ -96,7 +96,7 @@ class BaseProductTimeSeries(TimeSeries):
 
         self.logger.debug("requested dataset length: %s", len(times))
 
-        if dataset and dataset.length > 0:
+        if not dataset.is_empty:
             _times = dataset[self.time_variable]
             self.logger.debug(
                 "interpolated time-span: %s", LazyString(lambda: (
@@ -108,7 +108,7 @@ class BaseProductTimeSeries(TimeSeries):
 
         self.logger.debug("interpolated dataset length: %s ", dataset.length)
 
-        if not dataset:
+        if dataset.is_empty:
             return dataset
 
         return dataset.interpolate(
