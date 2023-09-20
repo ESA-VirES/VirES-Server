@@ -79,12 +79,14 @@ class TestDataset(ArrayMixIn, TestCase):
         self.assertEqual(set(dataset), set([]))
         self.assertEqual(len(dataset), 0)
         self.assertEqual(dataset.length, 0)
+        self.assertTrue(dataset.is_empty)
 
     def test_zero_size(self):
         """Test non-empty dataset with zero-length arrays."""
         dataset = Dataset()
         self.assertEqual(len(dataset), 0)
         self.assertEqual(dataset.length, 0)
+        self.assertTrue(dataset.is_empty)
 
         dataset.set('A', DATA_ZERO_SCALAR)
         dataset.set('B', DATA_ZERO_VECTOR, CDF_DOUBLE_TYPE, TEST_ATTRIB)
@@ -115,6 +117,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 4)
         self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
         self.assertEqual(set(dataset), set(['A', 'B', 'C', 'D']))
 
         self.assertAllEqual(dataset['A'], DATA_A)
@@ -155,6 +158,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 3)
         self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
         self.assertEqual(set(dataset), set(['A', 'B', 'C']))
 
         self.assertAllEqual(dataset['A'], DATA_A)
@@ -192,6 +196,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 3)
         self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
         self.assertEqual(set(dataset), set(['A', 'B', 'C']))
 
         self.assertAllEqual(dataset['A'], DATA_A)
@@ -235,6 +240,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, 2*N)
+        self.assertFalse(dataset.is_empty)
         self.assertEqual(set(dataset), set(['A', 'B']))
 
         self.assertAllEqual(dataset['A'], concatenate((DATA_A, DATA_C), axis=0))
@@ -258,6 +264,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
         self.assertEqual(set(dataset), set(['B', 'D']))
 
         self.assertAllEqual(dataset['B'], DATA_B)
@@ -281,6 +288,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, N_SUBSET)
+        self.assertFalse(dataset.is_empty)
         self.assertEqual(set(dataset), set(['A', 'B']))
 
         self.assertAllEqual(dataset['A'], DATA_A[index])
@@ -313,6 +321,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, 0)
+        self.assertTrue(dataset.is_empty)
         self.assertEqual(set(dataset), set(['A', 'B']))
 
         self.assertAllEqual(dataset['A'], DATA_ZERO_SCALAR)
@@ -334,6 +343,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
         self.assertEqual(set(dataset), set(['A', 'B']))
 
         self.assertAllEqual(dataset['A'], DATA_A)
@@ -355,6 +365,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
         self.assertEqual(set(dataset), set(['A', 'B']))
 
         self.assertAllEqual(dataset['A'], DATA_A)
@@ -387,6 +398,7 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 4)
         self.assertEqual(dataset.length, N >> 2)
+        self.assertFalse(dataset.is_empty)
         self.assertEqual(set(dataset), set(['A', 'B', 'C', 'D']))
 
         self.assertAllEqual(dataset['A'], DATA_A[:(N >> 2)])
@@ -421,6 +433,8 @@ class TestDataset(ArrayMixIn, TestCase):
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, 0)
+        self.assertTrue(dataset.is_empty)
+
         self.assertEqual(set(dataset), set(['A', 'B']))
 
         self.assertAllEqual(dataset['A'], DATA_ZERO_SCALAR)
@@ -475,7 +489,7 @@ class TestDataset(ArrayMixIn, TestCase):
         dataset = dataset_source.interpolate(data_x, "T", kinds=kinds)
 
         self.assertEqual(dataset.length, len(data_x))
-
+        self.assertFalse(dataset.is_empty)
 
         self.assertAllEqual(dataset['A'], array([
             nan, nan, nan, 1.0, 1.0, 3.0, 3.0,
@@ -548,6 +562,7 @@ class TestDataset(ArrayMixIn, TestCase):
         )
 
         self.assertEqual(dataset.length, len(data_x))
+        self.assertFalse(dataset.is_empty)
 
         self.assertAllEqual(dataset['A'], array([
             nan, nan, 1.0, 1.0, nan, nan, 3.0,

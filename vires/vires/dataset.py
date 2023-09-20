@@ -45,6 +45,11 @@ class Dataset(OrderedDict):
             self.update(dataset)
 
     @property
+    def is_empty(self):
+        """ Get True if the dataset does not contain any data. """
+        return self.length == 0
+
+    @property
     def length(self):
         """ Get length of the dataset (length of the arrays held by the
         dataset).

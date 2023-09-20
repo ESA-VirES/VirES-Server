@@ -237,7 +237,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
 
         dataset = Dataset()
         for item in dataset_iterator:
-            if item and item.length > 0:
+            if not item.is_empty:
                 _times = item[self.time_variable]
                 self.logger.debug("item time-span: %s", LazyString(lambda: (
                     f"{format_datetime(cdf_rawtime_to_datetime(_times.min(), cdf_type))}/"
@@ -347,12 +347,12 @@ class ProductTimeSeries(BaseProductTimeSeries):
             # generate an empty dataset from the sample product
             self.logger.debug("template product: %s", product.identifier)
             self.logger.debug("reading file: %s", location)
-            with CDFDataset(location, time_type=self.TIMESTAMP_TYPE) as cdf_ds:
+            with CDFDataset(
+                location, translation=self.translate_fw,
+                time_type=self.TIMESTAMP_TYPE,
+            ) as cdf_ds:
                 return cdf_ds.extract_datset(
-                    variables=[
-                        self.translate_fw.get(variable, variable)
-                        for variable in variables
-                    ],
+                    variables=variables,
                     subset=slice(0, 0),
                     nrv_shape=(0,),
                 )
