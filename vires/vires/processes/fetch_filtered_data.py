@@ -596,7 +596,7 @@ class FetchFilteredData(WPSProcess):
                             dataset.cdf_attr.get(variable, {})
                         )
 
-                    if dataset.length > 0: # write the follow-on dataset
+                    if not dataset.is_empty: # write the follow-on dataset
                         for variable in available:
                             cdf[variable].extend(dataset[variable])
 

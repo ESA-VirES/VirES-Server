@@ -142,7 +142,7 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
         dataset = Dataset()
         for item in dataset_iterator:
-            if item and item.length > 0:
+            if not item.is_empty:
                 _times = item[self.time_variable]
                 self.logger.debug("item time-span: %s", LazyString(lambda: (
                     f"{format_datetime(cdf_rawtime_to_datetime(_times.min(), cdf_type))}/"

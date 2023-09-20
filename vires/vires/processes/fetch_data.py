@@ -559,7 +559,7 @@ class FetchData(WPSProcess):
                     if data_item is None:
                         if output_data is not None:
                             output_data.extend(
-                                [] if dataset.length == 0 else full(
+                                [] if dataset.is_empty else full(
                                     (dataset.length,) + output_shape[variable], nan
                                 ).tolist()
                             )

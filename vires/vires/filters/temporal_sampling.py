@@ -171,7 +171,7 @@ class ExtraSampler(Filter):
 
         dataset = self.time_series.subset_times(data, [self.variable])
 
-        if dataset.length == 0:
+        if dataset.is_empty:
             return empty(0, 'int64')
 
         return NearestNeighbour1DInterpolator(

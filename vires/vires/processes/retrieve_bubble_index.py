@@ -104,7 +104,7 @@ class RetrieveBubbleIndex(WPSProcess):
         def _generate_pairs():
             variables = [TIME_VARIABLE, DATA_VARIABLE]
             for dataset in time_series.subset(begin_time, end_time, variables):
-                if dataset.length == 0:
+                if dataset.is_empty:
                     continue
                 cdf_type = dataset.cdf_type[TIME_VARIABLE]
                 time = dataset[TIME_VARIABLE]

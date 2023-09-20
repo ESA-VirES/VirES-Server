@@ -136,7 +136,7 @@ def _generate_pairs(time_series, begin_time, end_time):
     variables = [TIME_VARIABLE] + list(metadata.split_by)
 
     for dataset in time_series.subset(begin_time, end_time, variables):
-        if dataset.length == 0:
+        if dataset.is_empty:
             continue
 
         cdf_type = dataset.cdf_type[TIME_VARIABLE]
