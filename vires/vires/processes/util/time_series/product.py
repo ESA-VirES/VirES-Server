@@ -338,10 +338,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 time_type=self.TIMESTAMP_TYPE,
             ) as cdf_ds:
                 return cdf_ds.extract_datset(
-                    variables=[
-                        self.translate_fw.get(variable, variable)
-                        for variable in variables
-                    ],
+                    variables=variables,
                     subset=slice(0, 0),
                     nrv_shape=(0,),
                 )
