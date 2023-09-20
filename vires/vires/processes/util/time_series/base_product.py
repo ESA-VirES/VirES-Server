@@ -108,8 +108,8 @@ class BaseProductTimeSeries(TimeSeries):
 
         self.logger.debug("interpolated dataset length: %s ", dataset.length)
 
-        if dataset.is_empty:
-            return dataset
+        if not dataset:
+            raise ValueError("Unexpected uninitialized dataset!")
 
         return dataset.interpolate(
             times, self.time_variable, variables,
