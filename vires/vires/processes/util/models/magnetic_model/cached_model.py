@@ -87,6 +87,9 @@ class CachedModelGapFill(Model):
             result_ds = self.model.eval(subset_ds, [self.target_variable])
             data[gap_mask, ...] = result_ds[self.target_variable]
 
+            # record source models
+            self.product_set.update(self.model.product_set)
+
         output_ds.set(self.target_variable, data, cdf_type, attrs)
 
         return output_ds

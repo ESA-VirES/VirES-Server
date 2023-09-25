@@ -226,6 +226,7 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
         # try to yield at least one empty dataset for a non-empty collection
         if counter < 1:
+            self.logger.debug("no product selected")
             dataset = self._get_empty_dataset(variables)
             if dataset:
                 yield dataset
@@ -304,6 +305,10 @@ class CachedModelExtraction(BaseProductTimeSeries):
                 subset=subset,
                 nrv_shape=nrv_shape
             )
+
+        # record source models
+        for variable in extracted_model_variables:
+            self.product_set.update(cached_sources[variable])
 
         if extracted_model_variables:
             self.logger.debug(
