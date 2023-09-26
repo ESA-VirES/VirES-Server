@@ -263,27 +263,26 @@ class ProductTimeSeries(BaseProductTimeSeries):
         if not variables: # stop here if no variables are requested
             return
 
-        def _iter_products(query):
+        def _iter_products(start, end):
             """ Iterate over products returned by the query. Resolve temporal
             overlays of the products to prevent duplicate time coverage and
             yield applicable products and their time subset to be extracted.
             """
-            products = iter(query.order_by('begin_time'))
+            products = iter(self._subset_qs(start, end).order_by('begin_time'))
+
             try:
                 product = next(products)
             except StopIteration:
                 return
 
             for next_product in products:
-                end_time = min(product.end_time, next_product.begin_time)
-                if end_time > product.begin_time:
-                    yield product.begin_time, end_time, product
+                yield product.begin_time, next_product.begin_time, product
                 product = next_product
 
-            yield product.begin_time, product.end_time, product
+            yield product.begin_time, end, product
 
         counter = 0
-        for data_start, data_stop, product in _iter_products(self._subset_qs(start, stop)):
+        for data_start, data_stop, product in _iter_products(start, stop):
             data_start = max(start, data_start)
             data_stop = min(stop, data_stop)
             source_dataset = product.get_dataset(self.dataset_id)
