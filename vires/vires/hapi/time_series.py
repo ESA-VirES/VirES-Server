@@ -48,8 +48,8 @@ class TimeSeries:
         )
 
         spacecraft = (
-            collection.metadata.get("mission") or DEFAULT_MISSION,
-            collection.metadata.get("spacecraft")
+            collection.spacecraft_dict.get("mission") or DEFAULT_MISSION,
+            collection.spacecraft_dict.get("spacecraft"),
         )
 
         # magnetic models and residuals
