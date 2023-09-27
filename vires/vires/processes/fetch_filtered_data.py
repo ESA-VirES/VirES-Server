@@ -346,7 +346,8 @@ class FetchFilteredData(WPSProcess):
                 # satellite specific slaves
                 spacecraft = (
                     master.metadata.get("mission") or DEFAULT_MISSION,
-                    master.metadata.get("spacecraft")
+                    master.metadata.get("spacecraft"),
+                    master.metadata.get("grade"),
                 )
                 #TODO: add mission label
                 resolver.add_model(SpacecraftLabel(spacecraft[1] or "-"))
