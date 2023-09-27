@@ -192,9 +192,12 @@ class ProductTimeSeries(BaseProductTimeSeries):
     @property
     def metadata(self):
         """ Get collection metadata. """
-        metadata = self.collection.metadata
-        metadata.update(self.collection.spacecraft_dict)
-        return metadata
+        collection = self.collection
+        return {
+            **collection.metadata,
+            **collection.spacecraft_dict,
+            "grade": collection.grade,
+        }
 
     @property
     def collection_identifier(self):
