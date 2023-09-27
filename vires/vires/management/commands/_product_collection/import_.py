@@ -130,7 +130,7 @@ def save_product_collection(data, events):
         data.pop("spacecraft", None),
         events=events,
     )
-    product_collection.grade = data.pop("grade") or None
+    product_collection.grade = data.pop("grade", None) or None
     product_collection.metadata = data
     product_collection.save()
     events.append(
