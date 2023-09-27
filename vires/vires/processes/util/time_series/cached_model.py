@@ -31,7 +31,7 @@ from logging import getLogger, LoggerAdapter
 from collections import defaultdict
 from numpy import empty, full, nan
 from vires.cdf_util import cdf_rawtime_to_datetime
-from vires.time_util import naive_to_utc, format_datetime
+from vires.time_util import naive_to_utc, utc_to_naive, format_datetime
 from vires.util import include, exclude, pretty_list, LazyString
 from vires.models import Product
 from vires.dataset import Dataset
@@ -254,7 +254,6 @@ class CachedModelExtraction(BaseProductTimeSeries):
             if dataset:
                 yield dataset
 
-
     def _extract_product_data(self, filename, variables, **temporal_subset_options):
         """ Fallback extraction of variables from the original product. """
 
@@ -357,8 +356,6 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
         return dataset, missing_model_variables
 
-
-
     def _get_empty_dataset(self, variables):
         """ Generate an empty dataset. """
         dataset = Dataset()
@@ -393,6 +390,8 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
     def _extract_cached_model_sources(self, start, end, variables, sources):
         """ Extract sources of the cached model values. """
+        start = utc_to_naive(start)
+        end = utc_to_naive(end)
         model_to_variable = {
             self.models[variable].name: variable
             for variable in variables
