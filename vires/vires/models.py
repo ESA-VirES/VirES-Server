@@ -232,6 +232,7 @@ class ProductCollection(Model):
     identifier = CharField(max_length=256, validators=[ID_VALIDATOR], **MANDATORY, **UNIQUE)
     type = ForeignKey(ProductType, related_name='collections', **MANDATORY, **PROTECT)
     spacecraft = ForeignKey(Spacecraft, related_name='collections', **OPTIONAL, **PROTECT)
+    grade = CharField(max_length=128, **OPTIONAL)
     created = DateTimeField(auto_now_add=True)
     updated = DateTimeField(auto_now=True)
     max_product_duration = DurationField(default=timedelta(0), **MANDATORY)
