@@ -576,9 +576,9 @@ class FetchFilteredDataAsync(WPSProcess):
                     dataset, filters_left = dataset.filter(resolver.filters)
 
                     # subordinate interpolated datasets
-                    times = dataset[resolver.master.time_variable]
                     cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
+                        times = dataset[resolver.master.time_variable]
                         dataset.merge(
                             slave.interpolate(times, variables, {}, cdf_type)
                         )
