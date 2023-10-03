@@ -51,7 +51,7 @@ def sync_orbit_direction_tables(collection, logger=None, counter=None):
     thresholds = get_orbit_direction_thresholds(*collection.spacecraft_tuple)
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(*collection.spacecraft_tuple),
+        *get_orbit_direction_tables(*collection.spacecraft_tuple, collection.grade),
         **thresholds, logger=logger
     )
 
@@ -95,7 +95,7 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
     thresholds = get_orbit_direction_thresholds(*collection.spacecraft_tuple)
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(*collection.spacecraft_tuple),
+        *get_orbit_direction_tables(*collection.spacecraft_tuple, collection.grade),
         **thresholds, reset=True, logger=logger
     )
 
@@ -155,16 +155,15 @@ def update_orbit_direction_tables(product, logger=None):
     thresholds = get_orbit_direction_thresholds(*collection.spacecraft_tuple)
 
     od_tables = OrbitDirectionTables(
-        *get_orbit_direction_tables(*collection.spacecraft_tuple),
+        *get_orbit_direction_tables(*collection.spacecraft_tuple, collection.grade),
         **thresholds, logger=logger
     )
 
     def _check_neighbour_product(product):
         if product.identifier not in od_tables:
             raise DataIntegrityError(
-                "%s not found in orbit direction lookup tables! " % (
-                    product.identifier,
-                )
+                f"{product.identifier} not found in orbit direction lookup "
+                "table!"
             )
 
     processed = _update_orbit_direction_tables(
@@ -217,16 +216,17 @@ def get_orbit_direction_thresholds(mission, spacecraft):
     return OD_THRESHOLDS.get((mission, spacecraft), OD_THRESHOLDS_DEFAULT)
 
 
-def get_orbit_direction_tables(mission, spacecraft):
+def get_orbit_direction_tables(mission, spacecraft, grade):
     """ Get orbit direction tables for the given spacecraft identifier. """
     try:
         return (
-            cache_path(ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft)]),
-            cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft)]),
+            cache_path(ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft, grade)]),
+            cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)]),
         )
     except KeyError:
         raise ValueError(
-            "Invalid mission/spacecraft ids %s %s!" % (mission, spacecraft)
+            f"Unexpected mission/spacecraft/grade ids "
+            f"{mission}/{spacecraft}/{grade or '<none>'}!"
         ) from None
 
 

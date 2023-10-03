@@ -55,6 +55,12 @@ CACHED_PRODUCT_FILE = {
     "AUXAODBMAG": "SW_VIRE_AUXAODBMAG.cdf",
     "AUXBODBMAG": "SW_VIRE_AUXBODBMAG.cdf",
     "AUXCODBMAG": "SW_VIRE_AUXCODBMAG.cdf",
+    "FAST_AUXAODBGEO": "SW_FAST_AUXAODBGEO.cdf",
+    "FAST_AUXBODBGEO": "SW_FAST_AUXBODBGEO.cdf",
+    "FAST_AUXCODBGEO": "SW_FAST_AUXCODBGEO.cdf",
+    "FAST_AUXAODBMAG": "SW_FAST_AUXAODBMAG.cdf",
+    "FAST_AUXBODBMAG": "SW_FAST_AUXBODBMAG.cdf",
+    "FAST_AUXCODBMAG": "SW_FAST_AUXCODBMAG.cdf",
     "GR1_ORBCNT": "GR1_ORBCNT.cdf",
     "GR2_ORBCNT": "GR2_ORBCNT.cdf",
     "GF1_ORBCNT": "GF1_ORBCNT.cdf",
@@ -101,12 +107,21 @@ ORBIT_COUNTER_FILE = {}
 ORBIT_DIRECTION_GEO_FILE = {}
 ORBIT_DIRECTION_MAG_FILE = {}
 
+grade = None
 for mission, spacecraft in SPACECRAFTS:
     prefix = MISSION_TO_FILE_PREFIX[mission].format(spacecraft=spacecraft)
     ORBIT_COUNTER_FILE[(mission, spacecraft)] = CACHED_PRODUCT_FILE[f"{prefix}ORBCNT"]
-    ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft)] = CACHED_PRODUCT_FILE[f"{prefix}ODBGEO"]
-    ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft)] = CACHED_PRODUCT_FILE[f"{prefix}ODBMAG"]
-del mission, spacecraft, prefix
+    ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft, grade)] = CACHED_PRODUCT_FILE[f"{prefix}ODBGEO"]
+    ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)] = CACHED_PRODUCT_FILE[f"{prefix}ODBMAG"]
+
+grade = "FAST"
+mission = "Swarm"
+for spacecraft in ["A", "B", "C"]:
+    prefix = MISSION_TO_FILE_PREFIX[mission].format(spacecraft=spacecraft)
+    ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft, grade)] = CACHED_PRODUCT_FILE[f"{grade}_{prefix}ODBGEO"]
+    ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)] = CACHED_PRODUCT_FILE[f"{grade}_{prefix}ODBMAG"]
+
+del mission, spacecraft, prefix, grade
 
 ORBIT_CONJUNCTION_FILE = {
     (("Swarm", "A"), ("Swarm", "B")): CACHED_PRODUCT_FILE["CNJ_SWA_SWB"],

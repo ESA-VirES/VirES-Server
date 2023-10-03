@@ -59,7 +59,7 @@ def update_cached_product(product_type, *data_files, logger=None):
 
     product_info = CACHED_PRODUCTS.get(product_type)
     if product_info is None:
-        raise ValueError("Invalid cached product type %s!" % product_type)
+        raise ValueError(f"Invalid cached product type {product_type}!")
 
     _update_cached_product(
         sources=data_files,
@@ -139,31 +139,33 @@ def get_cached_product_configuration():
 
         if mission == "Swarm":
             _configure_cached_product(
-                "AUX%sORBCNT" % spacecraft,
-                label="Swarm %s orbit counter" % spacecraft,
+                f"AUX{spacecraft}ORBCNT",
+                label=f"Swarm {spacecraft} orbit counter",
                 updater=simple_cached_product_updater(update_orbit_counter_file),
                 tmp_extension=".tmp.cdf"
             )
-            cached_products.pop("AUX%sODBGEO" % spacecraft)
-            cached_products.pop("AUX%sODBMAG" % spacecraft)
+            cached_products.pop(f"AUX{spacecraft}ODBGEO")
+            cached_products.pop(f"AUX{spacecraft}ODBMAG")
+            cached_products.pop(f"FAST_AUX{spacecraft}ODBGEO")
+            cached_products.pop(f"FAST_AUX{spacecraft}ODBMAG")
         elif mission == "GRACE":
             _configure_cached_product(
-                "GR%s_ORBCNT" % spacecraft,
-                label="GRACE-%s orbit counter" % spacecraft,
+                f"GR{spacecraft}_ORBCNT",
+                label=f"GRACE-{spacecraft} orbit counter",
                 updater=simple_cached_product_updater(update_gfz_orbit_counter_file),
                 tmp_extension=".tmp.cdf"
             )
-            cached_products.pop("GR%s_ODBGEO" % spacecraft)
-            cached_products.pop("GR%s_ODBMAG" % spacecraft)
+            cached_products.pop(f"GR{spacecraft}_ODBGEO")
+            cached_products.pop(f"GR{spacecraft}_ODBMAG")
         elif mission == "GRACE-FO":
             _configure_cached_product(
-                "GF%s_ORBCNT" % spacecraft,
-                label="GRACE-FO-%s orbit counter" % spacecraft,
+                f"GF{spacecraft}_ORBCNT",
+                label=f"GRACE-FO-{spacecraft} orbit counter",
                 updater=simple_cached_product_updater(update_gfz_orbit_counter_file),
                 tmp_extension=".tmp.cdf"
             )
-            cached_products.pop("GF%s_ODBGEO" % spacecraft)
-            cached_products.pop("GF%s_ODBMAG" % spacecraft)
+            cached_products.pop(f"GF{spacecraft}_ODBGEO")
+            cached_products.pop(f"GF{spacecraft}_ODBMAG")
         elif mission == "CryoSat-2":
             _configure_cached_product(
                 "CS2_ORBCNT",
