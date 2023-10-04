@@ -32,7 +32,8 @@
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "A",
         "grade": "FAST",
-        "nominalSampling": "PT1S"
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true
     },
     {
         "requiredPermission": "swarm_advanced",
@@ -41,7 +42,8 @@
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "B",
         "grade": "FAST",
-        "nominalSampling": "PT1S"
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true
     },
     {
         "requiredPermission": "swarm_advanced",
@@ -50,7 +52,8 @@
         "productType": "SW_MODx_SC_1B",
         "spacecraft": "C",
         "grade": "FAST",
-        "nominalSampling": "PT1S"
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true
     },
     {
         "name": "SW_OPER_MAGA_LR_1B",

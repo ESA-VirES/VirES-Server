@@ -104,9 +104,12 @@ class OrbitDirectionTable():
         self._changed = True
 
     def update(self, data, product_id, start_time, end_time,
+               product_id_before, end_time_before,
                margin_before, margin_after):
         """ Update orbit direction table file. """
         self._merge_data(data, start_time, end_time, margin_before, margin_after)
+        if product_id_before is not None:
+            self._trim_product(product_id_before, end_time_before)
         self._insert_product(product_id, start_time, end_time)
         self._changed = True
 
@@ -170,6 +173,12 @@ class OrbitDirectionTable():
         )
         self._product_set.remove(product_id)
         return start_time, end_time
+
+    def _trim_product(self, product_id, end_time):
+        idx = self._products.names.index(product_id)
+        end_time_old = self._products.end_times[idx]
+        if end_time < end_time_old:
+            self._products.end_times[idx] = end_time
 
     def _insert_product(self, product_id, start_time, end_time):
         idx_start = bisect_left(self._products.end_times, start_time)
