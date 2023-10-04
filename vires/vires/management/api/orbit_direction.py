@@ -27,7 +27,7 @@
 #pylint: disable=missing-docstring,broad-except
 
 from logging import getLogger
-from vires.cdf_util import cdf_open
+from collections import namedtuple
 from vires.time_util import naive_to_utc
 from vires.models import ProductCollection, Product
 from vires.exceptions import DataIntegrityError
@@ -61,15 +61,16 @@ def sync_orbit_direction_tables(collection, logger=None, counter=None):
     )
 
     for product_id in od_tables.products.difference(
-            product.identifier for product in list_collection(collection)
-        ):
+        item.id for item in iter_product_items(collection)
+    ):
         od_tables.remove(product_id)
         counter.removed += 1
 
-    for product in list_collection(collection):
+    for item in iter_product_items(collection):
         counter.total += 1
+
         processed = _update_orbit_direction_tables(
-            od_tables, collection, product, **thresholds,
+            od_tables, collection, item, **thresholds,
         )
 
         if processed:
@@ -112,31 +113,33 @@ def rebuild_orbit_direction_tables(collection, logger=None, counter=None):
         "%s ...", collection.identifier
     )
 
-    last_data_file = None
-    last_end_time = None
+    last_item = None
     max_product_gap = thresholds["max_product_gap"]
 
-    for product in list_collection(collection):
+    for item in iter_product_items(collection):
         counter.total += 1
 
-        data_file = get_data_file(product)
-        _, start_time, end_time = get_product_id_and_time_range(data_file)
+        if item.start > item.end:
+            raise ValueError(f"Product end before start! {item.id}")
 
-        if not last_data_file or last_end_time < start_time:
-            data_file_before = last_data_file if (
-                last_data_file
-                and (start_time - last_end_time) < max_product_gap
-            ) else None
-            od_tables.update(
-                product.identifier, data_file, data_file_before, None
+        if not last_item or last_item.start < item.start:
+            use_last_item = (
+                last_item and (item.start - last_item.end) < max_product_gap
             )
-            last_data_file = data_file
-            last_end_time = end_time
+
+            od_tables.update(
+                item.id,
+                item.filename,
+                last_item.id if use_last_item else None,
+                last_item.filename if use_last_item else None,
+                None,
+            )
+
+            last_item = item
             counter.processed += 1
         else:
             logger.warning(
-                "%s orbit direction lookup table extraction skipped",
-                product.identifier
+                "%s orbit direction lookup table extraction skipped", item.id
             )
             counter.skipped += 1
 
@@ -167,7 +170,8 @@ def update_orbit_direction_tables(product, logger=None):
             )
 
     processed = _update_orbit_direction_tables(
-        od_tables, collection, product, check_products=_check_neighbour_product,
+        od_tables, collection, extract_product_item(product),
+        check_product=_check_neighbour_product,
         **thresholds
     )
 
@@ -176,36 +180,42 @@ def update_orbit_direction_tables(product, logger=None):
     return processed
 
 
-def _update_orbit_direction_tables(od_tables, collection, product,
+def _update_orbit_direction_tables(od_tables, collection, product_item,
                                    min_product_gap, max_product_gap,
                                    check_product=None, **_):
 
-    if product.identifier in od_tables:
+    if product_item.id in od_tables:
         return False
-
-    data_file = get_data_file(product)
-    _, start_time, end_time = get_product_id_and_time_range(data_file)
 
     def _extract_and_check_data_file(product):
         if product is None:
-            return None
+            return None, None
         if check_product:
             check_product(product)
-        return get_data_file(product)
+        return product.identifier, get_data_file(product)
 
-    data_file_before = _extract_and_check_data_file(
+    product_id_before, data_file_before = _extract_and_check_data_file(
         find_product_by_time_interval(
-            collection, start_time - max_product_gap, start_time - min_product_gap
+            collection,
+            product_item.start - max_product_gap,
+            product_item.start - min_product_gap,
         )
     )
-    data_file_after = _extract_and_check_data_file(
+
+    _, data_file_after = _extract_and_check_data_file(
         find_product_by_time_interval(
-            collection, end_time + min_product_gap, end_time + max_product_gap
+            collection,
+            product_item.end + min_product_gap,
+            product_item.end + max_product_gap,
         )
     )
 
     od_tables.update(
-        product.identifier, data_file, data_file_before, data_file_after
+        product_item.id,
+        product_item.filename,
+        product_id_before,
+        data_file_before,
+        data_file_after,
     )
 
     return True
@@ -256,9 +266,34 @@ def _find_product(query_set, **filters):
     return products[0] if products else None
 
 
-def list_collection(collection):
-    """ Locate product matched by the given time interval. """
-    return collection.products.order_by("begin_time")
+ProductItem = namedtuple("ProductItem", ["id", "filename", "start", "end"])
+
+
+def extract_product_item(product):
+    """ Convert product model in into ProductItem named tuple. """
+    return ProductItem(
+        product.identifier,
+        get_data_file(product),
+        product.begin_time,
+        product.end_time,
+    )
+
+
+def iter_product_items(collection):
+    """ Yield ProductItem named tuples for products in the given collection. """
+
+    products = iter(collection.products.order_by("begin_time"))
+
+    try:
+        product = next(products)
+    except StopIteration:
+        return
+
+    for next_product in products:
+        yield extract_product_item(product)
+        product = next_product
+
+    yield extract_product_item(product)
 
 
 def get_data_file(product):
@@ -276,11 +311,6 @@ def get_collection(collection_id):
         )
     except ProductCollection.DoesNotExist:
         return None
-
-
-def get_product_id_and_time_range(data_file):
-    with cdf_open(data_file) as cdf:
-        return str(cdf.attrs['TITLE']), cdf['Timestamp'][0], cdf['Timestamp'][-1]
 
 
 class Counter():
