@@ -77,6 +77,7 @@ def serialize_collection(object_):
 def export_metadata(collection, metadata):
     metadata = {
         **collection.spacecraft_dict,
+        **({"grade": collection.grade} if collection.grade else {}),
         **collection.metadata,
     }
     metadata = export_cached_models(collection, metadata)

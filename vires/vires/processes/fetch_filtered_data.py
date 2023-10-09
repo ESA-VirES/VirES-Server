@@ -55,8 +55,7 @@ from vires.cdf_util import (
 )
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
-    CACHED_PRODUCT_FILE, AUX_DB_DST, SPACECRAFTS, DEFAULT_MISSION,
-    ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
+    CACHED_PRODUCT_FILE, AUX_DB_DST, DEFAULT_MISSION,
 )
 from vires.filters import (
     format_filters, MinStepSampler, GroupingSampler, ExtraSampler,
@@ -65,12 +64,11 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names, get_time_limit,
+    extract_product_names, get_time_limit, get_orbit_sources,
 )
 from vires.processes.util.time_series import (
     TimeSeries, ProductTimeSeries,
     IndexDst, IndexDDst, IndexF107,
-    OrbitCounter, OrbitDirection, QDOrbitDirection,
 )
 from vires.processes.util.models import (
     QuasiDipoleCoordinates, MagneticLocalTime,
@@ -260,23 +258,6 @@ class FetchFilteredData(WPSProcess):
         resolvers = {}
 
         if sources:
-            orbit_info = {
-                spacecraft: [
-                    OrbitCounter(
-                        ":".join(["OrbitCounter", spacecraft[0], spacecraft[1] or ""]),
-                        cache_path(ORBIT_COUNTER_FILE[spacecraft])
-                    ),
-                    OrbitDirection(
-                        ":".join(["OrbitDirection", spacecraft[0], spacecraft[1] or ""]),
-                        cache_path(ORBIT_DIRECTION_GEO_FILE[spacecraft])
-                    ),
-                    QDOrbitDirection(
-                        ":".join(["QDOrbitDirection", spacecraft[0], spacecraft[1] or ""]),
-                        cache_path(ORBIT_DIRECTION_MAG_FILE[spacecraft])
-                    ),
-                ]
-                for spacecraft in SPACECRAFTS
-            }
             index_kp = ProductTimeSeries(
                 ProductCollection.objects.get(
                     identifier="GFZ_KP"
@@ -344,17 +325,17 @@ class FetchFilteredData(WPSProcess):
                     resolver.add_slave(slave)
 
                 # satellite specific slaves
-                spacecraft = (
-                    master.metadata.get("mission") or DEFAULT_MISSION,
-                    master.metadata.get("spacecraft")
-                )
-                #TODO: add mission label
-                resolver.add_model(SpacecraftLabel(spacecraft[1] or "-"))
+                mission = master.metadata.get("mission") or DEFAULT_MISSION
+                spacecraft = master.metadata.get("spacecraft")
+                grade = master.metadata.get("grade")
 
-                for item in orbit_info.get(spacecraft, []):
+                #TODO: add mission label
+                resolver.add_model(SpacecraftLabel(spacecraft or "-"))
+
+                for item in get_orbit_sources(mission, spacecraft, grade):
                     resolver.add_slave(item)
 
-                if spacecraft[0] == "Swarm" and spacecraft[1] in ("A", "B", "C"):
+                if mission == "Swarm" and spacecraft in ("A", "B", "C"):
                     # prepare spacecraft to spacecraft differences
                     subtracted_variables = get_subtracted_variables(unique(chain(
                         requested_variables, chain.from_iterable(
@@ -378,7 +359,8 @@ class FetchFilteredData(WPSProcess):
                         model_subsol, model_dipole, model_tilt_angle,
                     ),
                     generate_magnetic_model_sources(
-                        *spacecraft, requested_models, source_models,
+                        mission, spacecraft, grade,
+                        requested_models, source_models,
                         no_cache=ignore_cached_models,
                         master=master,
                     ),

@@ -31,7 +31,7 @@ from logging import getLogger, LoggerAdapter
 from collections import defaultdict
 from numpy import empty, full, nan
 from vires.cdf_util import cdf_rawtime_to_datetime
-from vires.time_util import naive_to_utc, format_datetime
+from vires.time_util import naive_to_utc, utc_to_naive, format_datetime
 from vires.util import include, exclude, pretty_list, LazyString
 from vires.models import Product
 from vires.dataset import Dataset
@@ -157,6 +157,9 @@ class CachedModelExtraction(BaseProductTimeSeries):
     def _subset(self, start, stop, variables):
         """ Get subset of the time series overlapping the given time range.
         """
+        start = naive_to_utc(start)
+        stop = naive_to_utc(stop)
+
         self.logger.debug("subset: %s", LazyString(
             lambda: f"{format_datetime(start)}/{format_datetime(stop)}"
         ))
@@ -169,18 +172,38 @@ class CachedModelExtraction(BaseProductTimeSeries):
             self.collection.identifier
         )
 
+        def _iter_products(start, end):
+            """ Iterate over products returned by the query. Resolve temporal
+            overlays of the products to prevent duplicate time coverage and
+            yield applicable products and their time subset to be extracted.
+            """
+            products = iter(self._subset_qs(start, end).order_by('begin_time'))
+
+            try:
+                product = next(products)
+            except StopIteration:
+                return
+
+            for next_product in products:
+                yield product.begin_time, next_product.begin_time, product
+                product = next_product
+
+            yield product.begin_time, end, product
+
         counter = 0
-        for product in self._subset_qs(start, stop).order_by('begin_time'):
+        for data_start, data_stop, product in _iter_products(start, stop):
+            data_start = max(start, data_start)
+            data_stop = min(stop, data_stop)
             source_dataset = product.get_dataset(self.dataset_id)
 
             if not source_dataset:
                 continue
 
             self.logger.debug("product: %s ", product.identifier)
-            self.logger.debug("product time span: %s", LazyString(
+            self.logger.debug("subset time span: %s", LazyString(
                 lambda: (
-                    f"{format_datetime(product.begin_time,)}/"
-                    f"{format_datetime(product.end_time)}"
+                    f"{format_datetime(data_start)}/"
+                    f"{format_datetime(data_stop)}"
                 )
             ))
 
@@ -190,13 +213,13 @@ class CachedModelExtraction(BaseProductTimeSeries):
             if time_subset:
                 time_subset = slice(*time_subset[:2])
 
-            temporal_subset_options = dict(
-                start=start,
-                stop=stop,
-                time_variable=self.time_variable,
-                subset=time_subset,
-                is_sorted=source_dataset.get('isSorted', True),
-            )
+            temporal_subset_options = {
+                "start": data_start,
+                "stop": data_stop,
+                "time_variable": self.time_variable,
+                "subset": time_subset,
+                "is_sorted": source_dataset.get('isSorted', True),
+            }
 
             cache_file = get_product_model_cache_file(
                 cache_directory, product.identifier
@@ -230,7 +253,6 @@ class CachedModelExtraction(BaseProductTimeSeries):
             dataset = self._get_empty_dataset(variables)
             if dataset:
                 yield dataset
-
 
     def _extract_product_data(self, filename, variables, **temporal_subset_options):
         """ Fallback extraction of variables from the original product. """
@@ -334,8 +356,6 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
         return dataset, missing_model_variables
 
-
-
     def _get_empty_dataset(self, variables):
         """ Generate an empty dataset. """
         dataset = Dataset()
@@ -370,6 +390,8 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
     def _extract_cached_model_sources(self, start, end, variables, sources):
         """ Extract sources of the cached model values. """
+        start = utc_to_naive(start)
+        end = utc_to_naive(end)
         model_to_variable = {
             self.models[variable].name: variable
             for variable in variables
@@ -394,11 +416,9 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
     def _subset_qs(self, start, stop):
         """ Subset Django query set. """
-        _start = naive_to_utc(start)
-        _stop = naive_to_utc(stop)
         return Product.objects.prefetch_related('collection__type').filter(
             collection=self.collection,
-            begin_time__lt=_stop,
-            end_time__gte=_start,
-            begin_time__gte=(_start - self.collection.max_product_duration),
+            begin_time__lt=stop,
+            end_time__gte=start,
+            begin_time__gte=(start - self.collection.max_product_duration),
         )

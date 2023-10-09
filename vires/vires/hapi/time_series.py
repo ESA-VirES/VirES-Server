@@ -50,6 +50,7 @@ class TimeSeries:
         spacecraft = (
             collection.spacecraft_dict.get("mission") or DEFAULT_MISSION,
             collection.spacecraft_dict.get("spacecraft"),
+            collection.grade,
         )
 
         # magnetic models and residuals

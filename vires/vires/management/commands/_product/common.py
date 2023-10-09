@@ -57,6 +57,12 @@ class ProductSelectionSubcommand(Subcommand):
             )
         )
         parser.add_argument(
+            "-g", "--grade", "--class", dest="grade", action="append", help=(
+                "Optional filter on the product grade (class). "
+                "Multiple values are allowed. "
+            )
+        )
+        parser.add_argument(
             "-c", "--collection", "--product-collection",
             dest="product_collection", action="append",
             help=(
@@ -71,7 +77,7 @@ class ProductSelectionSubcommand(Subcommand):
                 "Select products by the data file location rather than "
                 "by the product identifier."
             )
-        ),
+        )
         parser.add_argument(
             "--after", type=time_spec, required=False,
             help="Select products after the given date."
@@ -139,6 +145,10 @@ class ProductSelectionSubcommand(Subcommand):
         spacecrafts = set(kwargs["spacecraft"] or [])
         if spacecrafts:
             query = query.filter(collection__spacecraft__spacecraft__in=spacecrafts)
+
+        grades = set(kwargs["grade"] or [])
+        if grades:
+            query = query.filter(collection__grade__in=grades)
 
         product_collections = set(kwargs['product_collection'] or [])
         if product_collections:

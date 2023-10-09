@@ -37,9 +37,9 @@ from ...time_series import CachedModelExtraction
 LOGGER = getLogger(__name__)
 
 
-def generate_magnetic_model_sources(mission, spacecraft, requested_models,
-                                    source_models, no_cache=False,
-                                    master=None):
+def generate_magnetic_model_sources(mission, spacecraft, grade,
+                                    requested_models, source_models,
+                                    no_cache=False, master=None):
     """ Generate resolver models and other sources from the input
     model specification.
 
@@ -63,7 +63,9 @@ def generate_magnetic_model_sources(mission, spacecraft, requested_models,
         ):
             no_cache = True
 
-    available_cached_models = _get_available_cached_models(mission, spacecraft)
+    available_cached_models = _get_available_cached_models(
+        mission, spacecraft, grade
+    )
 
     # process source models required by the requested named composed models
     source_models = _handle_source_mio_models(source_models)
@@ -84,12 +86,13 @@ def generate_magnetic_model_sources(mission, spacecraft, requested_models,
             yield MagneticModelResidual(model.name, variable)
 
 
-def _get_available_cached_models(mission, spacecraft):
+def _get_available_cached_models(mission, spacecraft, grade):
     return {
         model.name: model
         for model in CachedMagneticModel.objects.filter(
             collection__spacecraft__mission=mission,
             collection__spacecraft__spacecraft=spacecraft,
+            collection__grade=grade,
         )
     }
 

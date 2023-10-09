@@ -46,17 +46,15 @@ class OrderedIntervalsContainer():
             ):
             if start > end:
                 raise DataIntegrityError(
-                    "%s start %s after %s end %s" % (item, start, item, end)
+                    f"{item} start {start} after {item} end {end}"
                 )
         for end_before, start_after, item_before, item_after in zip(
                 self.ends[:-1], self.starts[1:], self.items[:-1], self.items[1:],
             ):
             if end_before > start_after:
                 raise DataIntegrityError(
-                    "%s end %s after %s start %s" % (
-                        item_before, end_before,
-                        item_after, start_after
-                    )
+                    f"{item_before} end {end_before} after "
+                    f"{item_after} start {start_after}"
                 )
 
     def __len__(self):
@@ -115,10 +113,7 @@ class OrderedIntervalsContainer():
         return removed
 
     def __str__(self):
-        return "%s(%s)" % (
-            self.__class__.__name__,
-            ", ".join([str(self.starts), str(self.ends), str(self.items)]),
-        )
+        return f"{self.__class__.__name__}({self.starts}, {self.ends}, {self.items})"
 
     def __repr__(self):
         return str(self)
@@ -193,7 +188,7 @@ class OutputData(namedtuple("OutputData", ["times", "dists"])):
     def dump(self, prefix=""):
         """ Dump content to stdout. """
         for time, adist in zip(*self):
-            print(prefix, time, "%6.3f" % adist)
+            print(prefix, time, f"{adist:6.3f}")
 
 
 def _sorted_range(data, start, end, left_closed=True, right_closed=True,

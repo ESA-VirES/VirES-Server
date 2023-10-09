@@ -31,6 +31,7 @@ from os.path import basename
 from numpy import (
     asarray, datetime64, timedelta64,
     concatenate, argsort, arange,
+    searchsorted,
 )
 from eoxmagmod import mjd2000_to_decimal_year, eval_qdlatlon
 from ..cdf_util import cdf_open
@@ -103,11 +104,17 @@ class OrbitDirectionTables():
             "%s removed from orbit direction lookup tables", product_id
         )
 
-    def update(self, product_id, data_file, data_file_before, data_file_after):
+    def update(self, product_id, data_file, product_id_before,
+               data_file_before, data_file_after):
         """ Update orbit direction tables. """
-        data, start_time, end_time, margin_before, margin_after = (
-            self._load_data(data_file, data_file_before, data_file_after)
-        )
+        (
+            data,
+            end_time_before,
+            start_time,
+            end_time,
+            margin_before,
+            margin_after,
+        ) = self._load_data(data_file, data_file_before, data_file_after)
 
         self._geo_table.update(
             extract_orbit_directions(
@@ -115,7 +122,9 @@ class OrbitDirectionTables():
                 nominal_sampling=self.nominal_sampling,
                 gap_threshold=self.gap_threshold,
             ),
-            product_id, start_time, end_time, margin_before, margin_after,
+            product_id, start_time, end_time,
+            product_id_before, end_time_before,
+            margin_before, margin_after,
         )
 
         self._mag_table.update(
@@ -124,7 +133,9 @@ class OrbitDirectionTables():
                 nominal_sampling=self.nominal_sampling,
                 gap_threshold=self.gap_threshold,
             ),
-            product_id, start_time, end_time, margin_before, margin_after,
+            product_id, start_time, end_time,
+            product_id_before, end_time_before,
+            margin_before, margin_after,
         )
 
         self.logger.info(
@@ -132,39 +143,60 @@ class OrbitDirectionTables():
         )
 
     def _load_data(self, data_file, data_file_before, data_file_after):
+
+        def _pack_data_items(head, body, tail):
+            data_items = []
+            if head:
+                data_items.append(head)
+            data_items.append(body)
+            if tail:
+                data_items.append(tail)
+            return InputData.join(*data_items)
+
+
+        # load data from the main product
+        head, tail = None, None
         body = self._load_data_from_product(data_file)
         start_time, end_time = body.times[[0, -1]]
         margin_before = timedelta64(0, 'ms')
         margin_after = self.nominal_sampling
 
-        data_items = []
+        head_trim_time, body_trim_time = None, end_time
 
+        # load data from the previous product
         if data_file_before is not None:
             head = self._load_data_from_product(
-                data_file_before, slice(-INPUT_MARGIN, None)
+                data_file_before, slice_=slice(-INPUT_MARGIN, None),
+                trim_time=start_time,
             )
             margin_before = start_time - head.times[-TRIM_MARGIN:][0]
-            data_items.append(head)
+            head_trim_time = head.times[-1]
 
-        data_items.append(body)
-
+        # load data from the next products
         if data_file_after is not None:
             tail = self._load_data_from_product(
-                data_file_after, slice(None, INPUT_MARGIN)
+                data_file_after, slice_=slice(None, INPUT_MARGIN)
             )
             margin_after = max(
                 margin_after, tail.times[:TRIM_MARGIN][-1] - end_time
             )
-            data_items.append(tail)
+
+            # trim main data by the start time of the next product
+            body = body[:searchsorted(body.times, tail.times[0], side='left')]
+            if body.times.size == 0:
+                raise ValueError(f"Empty time selection! {data_file}")
+            body_trim_time = body.times[-1]
 
         return (
-            InputData.join(*data_items),
-            start_time, end_time,
+            _pack_data_items(head, body, tail),
+            head_trim_time, start_time, body_trim_time,
             margin_before, margin_after,
         )
 
-    def _load_data_from_product(self, filename, slice_=Ellipsis):
-        """ Load data concatenated from a single product. """
+    def _load_data_from_product(self, filename, slice_=Ellipsis, trim_time=None):
+        """ Load slice data from a single product, optionally trimmed by the
+        given trim end time.
+        """
         def _load(filename):
             with cdf_open(filename) as cdf:
                 dataset = read_cdf_data(
@@ -200,7 +232,12 @@ class OrbitDirectionTables():
 
             return data[index_sort[index_unique]]
 
-        return _sanitize(_load(filename))[slice_]
+        data = _sanitize(_load(filename))
+
+        if trim_time is not None:
+            data = data[:searchsorted(data.times, trim_time, side='left')]
+
+        return data[slice_]
 
 
 def get_times_and_latitudes(times, lats, lons, rads): # pylint: disable=unused-argument

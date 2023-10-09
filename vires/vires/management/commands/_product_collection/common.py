@@ -53,6 +53,12 @@ class ProductCollectionSelectionSubcommand(Subcommand):
                 "Multiple spacecrafts are allowed."
             )
         )
+        parser.add_argument(
+            "-g", "--grade", "--class", dest="grade", action="append", help=(
+                "Optional filter on the product grade (class). "
+                "Multiple values are allowed. "
+            )
+        )
 
     def select_collections(self, query, **kwargs):
         """ Select products based on the CLI parameters. """
@@ -69,6 +75,10 @@ class ProductCollectionSelectionSubcommand(Subcommand):
         spacecrafts = set(kwargs["spacecraft"] or [])
         if spacecrafts:
             query = query.filter(spacecraft__spacecraft__in=spacecrafts)
+
+        grades = set(kwargs["grade"] or [])
+        if grades:
+            query = query.filter(grade__in=grades)
 
         query = self._select_collections_by_id(query, **kwargs)
 

@@ -345,25 +345,43 @@ def execute_post_registration_actions(product, logger=None):
 
 def _update_orbit_direction(product, logger=None):
     """ Update orbit directions from the given product. """
+    local_logger = logger or getLogger(__name__)
     try:
         update_orbit_direction_tables(product, logger)
-    except DataIntegrityError:
+    except DataIntegrityError as error1:
+        local_logger.warning(
+            "Failed to update orbit direction table for %s product! %s",
+            product.identifier, error1, exc_info=True
+        )
         try:
             sync_orbit_direction_tables(product.collection, logger=logger)
-        except DataIntegrityError:
+        except DataIntegrityError as error2:
+            local_logger.warning(
+                "Failed to synchronize orbit direction table for %s collection!"
+                " %s", product.collection.identifier, error2, exc_info=True
+            )
             rebuild_orbit_direction_tables(product.collection, logger=logger)
 
 
 def _update_conjunctions(product, other_collection, logger=None):
     """ Update conjunctions from the given product. """
+    local_logger = logger or getLogger(__name__)
     try:
         update_conjunctions_table(product, other_collection, logger=logger)
-    except DataIntegrityError:
+    except DataIntegrityError as error1:
+        local_logger.warning(
+            "Failed to update conjunctions table for %s product! %s",
+            product.identifier, error1, exc_info=True
+        )
         try:
             sync_conjunctions_table(
                 product.collection, other_collection, logger=logger
             )
-        except DataIntegrityError:
+        except DataIntegrityError as error2:
+            local_logger.warning(
+                "Failed to synchronize conjunctions table for %s collection!"
+                " %s", product.collection.identifier, error2, exc_info=True
+            )
             rebuild_conjunctions_table(
                 product.collection, other_collection, logger=logger
             )
