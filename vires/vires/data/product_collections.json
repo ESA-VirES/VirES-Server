@@ -33,6 +33,7 @@
         "spacecraft": "A",
         "grade": "FAST",
         "nominalSampling": "PT1S",
+        "calculateConjunctions": true,
         "calculateOrbitDirection": true
     },
     {
@@ -43,6 +44,7 @@
         "spacecraft": "B",
         "grade": "FAST",
         "nominalSampling": "PT1S",
+        "calculateConjunctions": true,
         "calculateOrbitDirection": true
     },
     {
@@ -53,6 +55,7 @@
         "spacecraft": "C",
         "grade": "FAST",
         "nominalSampling": "PT1S",
+        "calculateConjunctions": true,
         "calculateOrbitDirection": true
     },
     {
