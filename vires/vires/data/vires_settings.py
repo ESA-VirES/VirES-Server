@@ -80,6 +80,7 @@ CACHED_PRODUCT_FILE = {
     "GO_ODBMAG": "GO_ODBMAG.cdf",
     "CS2_ODBMAG": "CS2_ODBMAG.cdf",
     "CNJ_SWA_SWB": "CNJ_SWA_SWB.cdf",
+    "CNJ_FAST_SWA_SWB": "CNJ_FAST_SWA_SWB.cdf",
 }
 
 SPACECRAFTS = [
@@ -124,7 +125,12 @@ for spacecraft in ["A", "B", "C"]:
 del mission, spacecraft, prefix, grade
 
 ORBIT_CONJUNCTION_FILE = {
-    (("Swarm", "A"), ("Swarm", "B")): CACHED_PRODUCT_FILE["CNJ_SWA_SWB"],
+    (("Swarm", "A", None), ("Swarm", "B", None)): CACHED_PRODUCT_FILE["CNJ_SWA_SWB"],
+    (("Swarm", "A", "FAST"), ("Swarm", "B", "FAST")): CACHED_PRODUCT_FILE["CNJ_FAST_SWA_SWB"],
+}
+
+ORBIT_CONJUNCTION_GRADES = {
+    (("Swarm", "A"), ("Swarm", "B")): (None, "FAST")
 }
 
 SPACECRAFTS = list(ORBIT_COUNTER_FILE)

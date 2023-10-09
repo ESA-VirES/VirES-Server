@@ -42,6 +42,7 @@ from vires.processes.base import WPSProcess
 
 
 RE_CSL_DEMIMITER = re.compile(r"\s*,\s*")
+RE_ID = re.compile("[a-zA-Z0-9_-]{0,128}")
 
 
 class GetCollectionInfo(WPSProcess):
@@ -58,6 +59,22 @@ class GetCollectionInfo(WPSProcess):
             "collection", str, optional=True, default=None,
             title="Optional comma separated list of collection identifiers."
         )),
+        ("type_ids", LiteralData(
+            "type", str, optional=True, default=None,
+            title="Optional comma separated list of product type identifiers."
+        )),
+        ("mission_ids", LiteralData(
+            "mission", str, optional=True, default=None,
+            title="Optional comma separated list of mission identifiers."
+        )),
+        ("spacecraft_ids", LiteralData(
+            "spacecraft", str, optional=True, default=None,
+            title="Optional comma separated list of spacecraft identifiers."
+        )),
+        ("grade_id", LiteralData(
+            "grade", str, optional=True, default=None,
+            title="Optional grade identifier."
+        )),
     ]
 
     outputs = [
@@ -69,17 +86,38 @@ class GetCollectionInfo(WPSProcess):
         )),
     ]
 
-    def execute(self, permissions, collection_ids, output, **kwargs):
+    def execute(self, permissions, collection_ids, type_ids,
+                mission_ids, spacecraft_ids, grade_id,
+                output, **kwargs):
         """ Execute process """
         access_logger = self.get_access_logger(**kwargs)
 
-        collection_ids = self._parse_collection_ids(collection_ids)
-        collections = self._get_collections(collection_ids, permissions)
+        collection_ids = self._parse_ids(collection_ids)
+        type_ids = self._parse_ids(type_ids)
+        mission_ids = self._parse_ids(mission_ids)
+        spacecraft_ids = self._parse_ids(spacecraft_ids)
+        grade_id = self._parse_id(grade_id)
+
+        collections = self._get_collections(permissions,
+            collection_ids=collection_ids,
+            type_ids=type_ids,
+            mission_ids=mission_ids,
+            spacecraft_ids=spacecraft_ids,
+            grade_id=grade_id,
+        )
 
         access_logger.info(
-            "request: collection_ids: %s, ",
-            "<all>" if collection_ids is None else
-            "(%s)" % ", ".join(collection_ids)
+            "request: "
+            "collection_ids: %s, "
+            "type_ids: %s, "
+            "mission_ids: %s, "
+            "spacecraft_ids: %s, "
+            "grade_id: %s",
+            self._format_ids(collection_ids),
+            self._format_ids(type_ids),
+            self._format_ids(mission_ids),
+            self._format_ids(spacecraft_ids),
+            self._format_id(grade_id),
         )
 
         if output['mime_type'] == "text/csv":
@@ -88,24 +126,43 @@ class GetCollectionInfo(WPSProcess):
             return self._json_output(collections, output)
 
         raise InvalidOutputDefError(
-            'output',
-            "Unexpected output format %r requested!" % output['mime_type']
+            'output', f"Unexpected output format {output['mime_type']} requested!"
         )
 
     @staticmethod
-    def _parse_collection_ids(collection_ids):
-        if collection_ids is None:
-            return None
-        collection_ids = collection_ids.strip()
-        if not collection_ids:
-            return []
-        return list(unique(RE_CSL_DEMIMITER.split(collection_ids)))
+    def _format_ids(ids):
+        return "<all>" if ids is None else "(%s)" % ", ".join(ids)
 
     @staticmethod
-    def _get_collections(collection_ids, permisisons):
+    def _format_id(id_):
+        return "<any>" if id_ is None else ("<none>" if not id_ else id_)
 
-        collections = ProductCollection.select_permitted(permisisons).values(
-            'identifier', 'type__identifier', 'metadata'
+    @staticmethod
+    def _parse_ids(ids):
+        if ids is None:
+            return None
+        ids = ids.strip()
+        if not ids:
+            return []
+        return list(unique(
+            id_ for id_ in RE_CSL_DEMIMITER.split(ids) if RE_ID.match(id_)
+        ))
+
+    @staticmethod
+    def _parse_id(id_):
+        if id_ is not None:
+            id_ = id_.strip()
+            if RE_ID.match(id_):
+                return id_
+        return None
+
+    @staticmethod
+    def _get_collections(permissions, collection_ids, type_ids, mission_ids,
+                         spacecraft_ids, grade_id):
+
+        collections = ProductCollection.select_permitted(permissions).values(
+            'identifier', 'type__identifier', 'metadata',
+            'spacecraft__mission', 'spacecraft__spacecraft', 'grade',
         ).annotate(
             product_count=Count('products'),
             begin_time=Min('products__begin_time'),
@@ -114,6 +171,18 @@ class GetCollectionInfo(WPSProcess):
 
         if collection_ids is not None:
             collections = collections.filter(identifier__in=collection_ids)
+
+        if type_ids is not None:
+            collections = collections.filter(type__identifier__in=type_ids)
+
+        if mission_ids is not None:
+            collections = collections.filter(spacecraft__mission__in=mission_ids)
+
+        if spacecraft_ids is not None:
+            collections = collections.filter(spacecraft__spacecraft__in=spacecraft_ids)
+
+        if grade_id is not None:
+            collections = collections.filter(grade=(grade_id or None))
 
         return collections
 
@@ -137,6 +206,15 @@ class GetCollectionInfo(WPSProcess):
     @classmethod
     def _json_output(cls, collections, output):
 
+        extra_keys = [
+            'spacecraft__mission', 'spacecraft__spacecraft', 'grade',
+        ]
+        key_mapping = {
+            'spacecraft__mission': 'mission',
+            'spacecraft__spacecraft': 'spacecraft',
+
+        }
+
         def _get_collection_info(collection):
             time_extent = {} if collection['product_count'] == 0 else {
                 'timeExtent': {
@@ -144,8 +222,15 @@ class GetCollectionInfo(WPSProcess):
                     'end': format_datetime(collection['end_time']),
                 },
             }
+
+            extra_metadata = {}
+            for key in extra_keys:
+                if collection[key]:
+                    extra_metadata[key_mapping.get(key, key)] = collection[key]
+
             return {
                 'name': collection['identifier'],
+                **extra_metadata,
                 'productType': collection['type__identifier'],
                 'productCount': collection['product_count'],
                 **time_extent,

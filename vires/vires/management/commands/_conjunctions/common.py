@@ -26,22 +26,29 @@
 #-------------------------------------------------------------------------------
 #pylint: disable=missing-docstring,too-few-public-methods
 
-from vires.management.api.conjunctions import Counter as BaseCounter
+from vires.management.api.conjunctions import (
+    Counter as BaseCounter, get_spacecrafts_tuple
+)
 from vires.data.vires_settings import ORBIT_CONJUNCTION_FILE
+from vires.util import unique
 
 
 def pair_collections(collections):
-    tail = sorted(collections, key=lambda c: c.identifier)
-    while tail:
-        first, tail = tail[0], tail[1:]
-        for second in tail:
-            if is_valid_spacecraft_pair(first, second):
-                yield first, second
+
+    def _pair_collections(collections):
+        tail = sorted(collections, key=lambda c: c.identifier)
+        while tail:
+            first, tail = tail[0], tail[1:]
+            for second in tail:
+                if is_valid_spacecraft_pair(first, second):
+                    yield first, second
+
+    yield from unique(_pair_collections(collections))
 
 
 def is_valid_spacecraft_pair(collection1, collection2):
     return (
-        (collection1.spacecraft_tuple, collection2.spacecraft_tuple)
+        get_spacecrafts_tuple(collection1, collection2)
         in ORBIT_CONJUNCTION_FILE
     )
 
@@ -54,27 +61,16 @@ class Counter(BaseCounter):
 
     def print_report(self, print_fcn):
         if self.processed > 0:
-            print_fcn(
-                "%d of %d product(s) processed."
-                % (self.processed, self.total)
-            )
+            print_fcn(f"{self.processed} of {self.total} product(s) processed.")
 
         if self.skipped > 0:
-            print_fcn(
-                "%d of %d product(s) skipped."
-                % (self.skipped, self.total)
-            )
+            print_fcn(f"{self.skipped} of {self.total} product(s) skipped.")
 
         if self.failed > 0:
-            print_fcn(
-                "Failed to process %d of %d product(s)."
-                % (self.failed, self.total)
-            )
+            print_fcn(f"Failed to process {self.failed} of {self.total} product(s).")
 
         if self.removed > 0:
-            print_fcn(
-                "%d old product(s) removed from lookup tables." % self.removed
-            )
+            print_fcn(f"{self.removed} old product(s) removed from lookup tables.")
 
         if self.total == 0:
             print_fcn("No product processed.")
