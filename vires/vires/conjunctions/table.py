@@ -27,6 +27,7 @@
 # pylint: disable=missing-module-docstring,too-few-public-methods
 
 from logging import getLogger, LoggerAdapter
+from collections import namedtuple
 from os import remove, rename
 from os.path import exists, basename, splitext
 from numpy import asarray, empty
@@ -41,9 +42,12 @@ from .util import OrderedIntervalsContainer, InputData, OutputData
 class ConjunctionsTable():
     """ Low-level conjunction table class """
 
+    ProductPair = namedtuple("ProductPair", ["start", "end", "ids"])
+
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
-            return '%s conjunctions: %s' % (self.extra["spacecrafts"], msg), kwargs
+            label = self.extra["label"]
+            return f"{label} conjunctions: {msg}", kwargs
 
     def __init__(self, spacecrafts, filename, reset=False, logger=None):
         self._spacecrafts = spacecrafts
@@ -53,7 +57,7 @@ class ConjunctionsTable():
         self._data = None
         self._changed = None
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {
-            "spacecrafts": "%s/%s" % spacecrafts,
+            "label": "%s/%s" % spacecrafts,
         })
 
         if not reset and exists(filename):
@@ -99,8 +103,10 @@ class ConjunctionsTable():
         self._changed = True
         self.logger.info("%s/%s interval removed", start_time, end_time)
 
-    def update(self, start_time, end_time, orbit1, orbit2, product_pair):
+    def update(self, start_time, end_time, orbit1, orbit2,
+               product_pair, previous_pair_trim_time):
         """ Update table """
+        product_pair = self.ProductPair(*product_pair)
 
         def _convert_input_data(dataset):
             return InputData(
@@ -111,9 +117,27 @@ class ConjunctionsTable():
             _convert_input_data(orbit1),
             _convert_input_data(orbit2),
         ))
-        for removed_pair in self._products.insert(*product_pair):
-            del self._product_set[removed_pair[2]]
-        self._product_set[product_pair[2]] = product_pair[:2]
+        for start, end, removed_pair_ids in self._products.insert(*product_pair):
+            if start < start_time and end > previous_pair_trim_time:
+                # re-insert trimmed pair
+                reinserted_pair = self.ProductPair(
+                    start, previous_pair_trim_time, removed_pair_ids
+                )
+                for removed_pair in self._products.insert(*reinserted_pair):
+                    raise DataIntegrityError(
+                        "Re-inserted trimmed data pair is not expected to remove another pair! "
+                        f"inserted_pair: {product_pair} "
+                        f"trimmed_pair: {self.ProductPair(start, end, removed_pair_ids)} "
+                        f"reinserted_pair: {reinserted_pair} "
+                        f"removed_pair: {self.ProductPair(*removed_pair)}"
+                    )
+                continue
+            # complete pair removal
+            del self._product_set[removed_pair_ids]
+
+        self._product_set[product_pair.ids] = (
+            product_pair.start, product_pair.end
+        )
         self._changed = True
         self.logger.info(
             "%s/%s interval updated from %s",
@@ -202,7 +226,7 @@ class ConjunctionsTable():
         cdf.attrs["PRODUCT_DESCRIPTION"] = "%s/%s conjunctions" % self._spacecrafts
         cdf.attrs["SPACECRAFTS"] = self._spacecrafts
         cdf.attrs["SOURCES"] = [
-            "%s %s" % (first, second) for first, second in self._products.items
+            f"{first} {second}" for first, second in self._products.items
         ]
         cdf.attrs.new("SOURCE_TIME_RANGES")
         _write_time_ranges(
