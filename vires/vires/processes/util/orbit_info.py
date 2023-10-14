@@ -43,17 +43,20 @@ def get_orbit_sources(mission, spacecraft, grade):
     """ Construct OrbitCounter, OrbitDirection and QDOrbitDirection time series
     objects for the given mission, spacecraft and grade values.
     """
-    return OrbitSources(
-        OrbitCounter(
-            ":".join(["OrbitCounter", mission, spacecraft or ""]),
-            cache_path(ORBIT_COUNTER_FILE[(mission, spacecraft)])
-        ),
-        OrbitDirection(
-            ":".join(["OrbitDirection", mission, spacecraft or "", grade or ""]),
-            cache_path(ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft, grade)])
-        ),
-        QDOrbitDirection(
-            ":".join(["QDOrbitDirection", mission, spacecraft or "", grade or ""]),
-            cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)])
-        ),
-    )
+    try:
+        return OrbitSources(
+            OrbitCounter(
+                ":".join(["OrbitCounter", mission, spacecraft or ""]),
+                cache_path(ORBIT_COUNTER_FILE[(mission, spacecraft)])
+            ),
+            OrbitDirection(
+                ":".join(["OrbitDirection", mission, spacecraft or "", grade or ""]),
+                cache_path(ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft, grade)])
+            ),
+            QDOrbitDirection(
+                ":".join(["QDOrbitDirection", mission, spacecraft or "", grade or ""]),
+                cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)])
+            ),
+        )
+    except KeyError:
+        return ()
