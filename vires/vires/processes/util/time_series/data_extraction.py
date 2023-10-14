@@ -174,7 +174,7 @@ class CDFDataset:
         if index_min != 0:
             index = index - index_min
 
-        return slice(index_min, index_max), SLICE_ALL
+        return slice(index_min, index_max), index
 
     def _convert_time(self, times, cdf_type):
         """ Convert times to the expected time data type. """
