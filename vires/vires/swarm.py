@@ -137,9 +137,9 @@ class ObsProductMetadataReader(CDFReader):
 
         datasets = {
             code: {
-                'index_range': (start, stop),
-                'begin_time': cls._cdf_rawtime_to_datetime(times[start], cdf_type),
-                'end_time': cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
+                "index_range": (start, stop),
+                "begin_time": cls._cdf_rawtime_to_datetime(times[start], cdf_type),
+                "end_time": cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
             }
             for code, (start, stop) in index_ranges.items()
 
@@ -184,17 +184,17 @@ class VObsProductMetadataReader(ObsProductMetadataReader):
         datasets = {
             **{
                 code: {
-                    'index_range': (start, stop),
-                    'begin_time': cls._cdf_rawtime_to_datetime(times[start], cdf_type),
-                    'end_time': cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
+                    "index_range": (start, stop),
+                    "begin_time": cls._cdf_rawtime_to_datetime(times[start], cdf_type),
+                    "end_time": cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
                 }
                 for code, (start, stop) in index_ranges.items()
             },
             **{
-                f'{cls.SV_DATASET}:{code}': {
-                    'index_range': (start, stop),
-                    'begin_time': cls._cdf_rawtime_to_datetime(times_sv[start], cdf_type),
-                    'end_time': cls._cdf_rawtime_to_datetime(times_sv[stop - 1], cdf_type),
+                f"{cls.SV_DATASET}:{code}": {
+                    "index_range": (start, stop),
+                    "begin_time": cls._cdf_rawtime_to_datetime(times_sv[start], cdf_type),
+                    "end_time": cls._cdf_rawtime_to_datetime(times_sv[stop - 1], cdf_type),
                 }
                 for code, (start, stop) in index_ranges_sv.items()
             },
