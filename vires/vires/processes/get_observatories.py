@@ -149,35 +149,50 @@ class GetObservatories(WPSProcess):
                     continue
                 code = match.groups()[0]
                 begin_time, end_time = record["beginTime"], record["endTime"]
-                begin_time_min, end_time_max = (
-                    result.get(code) or (begin_time, end_time)
+                location = record.get("geographicLocation") or None
+                begin_time_min, end_time_max, previous_location = (
+                    result.get(code) or (begin_time, end_time, location)
                 )
                 result[code] = (
                     min(begin_time_min, begin_time),
                     max(end_time_max, end_time),
+                    location or previous_location,
                 )
         return result
 
     @classmethod
     def _csv_output(cls, data, output):
         output_fobj = StringIO(newline="\r\n")
-        print("site,startTime,endTime", file=output_fobj)
+        print(
+            "site,startTime,endTime,Latitude,Longitude,Radius",
+            file=output_fobj
+        )
         for code in sorted(data):
-            begin_time, end_time = data[code]
-            print("%s,%s,%s" % (code, begin_time, end_time), file=output_fobj)
+            begin_time, end_time, location = data[code]
+            if not location or location.get("crs") != "ITRF":
+                location = {}
+            print("%s,%s,%s,%s,%s,%s" % (
+                code,
+                begin_time,
+                end_time,
+                location.get("longitude") or "",
+                location.get("latitude") or "",
+                location.get("radius") or "",
+            ), file=output_fobj)
         return CDFileWrapper(output_fobj, **output)
 
     @classmethod
     def _json_output(cls, data, output):
 
         def _get_obs_info(code):
-            begin_time, end_time = data[code]
+            begin_time, end_time, location = data[code]
             return {
                 "name": code,
                 "timeExtent": {
                     "start": begin_time,
                     "end": end_time,
                 },
+                **({"geographicLocation": location} if location else {}),
             }
 
         return CDObject([

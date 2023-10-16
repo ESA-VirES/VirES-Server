@@ -436,6 +436,7 @@ def _get_datasets_from_datasets_metadata(data_file, datasets):
             "indexRange": metadata.get("index_range"),
             "beginTime": format_datetime(metadata.get("begin_time")),
             "endTime": format_datetime(metadata.get("end_time")),
+            "geographicLocation": metadata.get("location"),
         }) for name, metadata in datasets.items()
     }
 
