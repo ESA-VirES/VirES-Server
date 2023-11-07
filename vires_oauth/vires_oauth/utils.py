@@ -27,7 +27,7 @@
 # pylint: disable=missing-docstring
 
 from logging import LoggerAdapter
-from django.utils.http import is_safe_url
+from django.utils.http import url_has_allowed_host_and_scheme
 
 
 def for_sender(classname):
@@ -70,7 +70,7 @@ def get_next_redirect_url(request, redirect_field='next', allowed_hosts=None):
     redirect_url = (
         request.POST.get(redirect_field) or request.GET.get(redirect_field)
     )
-    if is_safe_url(redirect_url, allowed_hosts=allowed_hosts):
+    if url_has_allowed_host_and_scheme(redirect_url, allowed_hosts=allowed_hosts):
         return redirect_url
     return None
 
