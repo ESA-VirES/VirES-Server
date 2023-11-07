@@ -1045,7 +1045,7 @@ _viridis_data = [[0.267004, 0.004874, 0.329415],
                  [0.983868, 0.904867, 0.136897],
                  [0.993248, 0.906157, 0.143936]]
 
-cmaps = dict(
+colormaps = dict(
     (name, ListedColormap(data, name=name)) for name, data in [
         ('magma', _magma_data),
         ('inferno', _inferno_data),
@@ -1054,7 +1054,7 @@ cmaps = dict(
     ]
 )
 
-magma = cmaps['magma']
-inferno = cmaps['inferno']
-plasma = cmaps['plasma']
-viridis = cmaps['viridis']
+magma = colormaps['magma']
+inferno = colormaps['inferno']
+plasma = colormaps['plasma']
+viridis = colormaps['viridis']

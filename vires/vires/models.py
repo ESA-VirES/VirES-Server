@@ -38,7 +38,7 @@ from django.db.models import (
     PROTECT as ON_DELETE_PROTECT,
     DO_NOTHING as ON_DELETE_DO_NOTHING,
 )
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.contrib.auth.models import User
 from .time_util import parse_duration
 
