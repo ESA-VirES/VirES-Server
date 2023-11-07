@@ -181,7 +181,7 @@ class FiltersLexer():
 
     @classmethod
     def t_number(cls, token):
-        r"(?i)[+-]?((\.[0-9]+|[0-9]+(\.[0-9]*)?)(e[+-]?([1-9][0-9]*|0))?|nan|inf)\w{0,128}"
+        r"(?i:[+-]?((\.[0-9]+|[0-9]+(\.[0-9]*)?)(e[+-]?([1-9][0-9]*|0))?|nan|inf)\w{0,128})"
 
         cls._check_token_length(token, 128)
 

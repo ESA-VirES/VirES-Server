@@ -26,10 +26,12 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-many-return-statements,consider-using-f-string
 
-from numpy import object as dt_object, float64 as dt_float64
+from numpy import dtype
 from spacepy import pycdf
 from .time_util import naive_to_utc, format_datetime
 
+DT_OBJECT = dtype('object')
+DT_FLOAT64 = dtype('float64')
 
 CDF_EPOCH_TYPE = pycdf.const.CDF_EPOCH.value
 CDF_EPOCH16_TYPE = pycdf.const.CDF_EPOCH16.value
@@ -114,9 +116,9 @@ def get_formatter(data, cdf_type=CDF_DOUBLE_TYPE):
         if cdf_type == CDF_DOUBLE_TYPE:
             return lambda v: "%.9g" % v
         if cdf_type == CDF_EPOCH_TYPE:
-            if dtype == dt_float64:
+            if dtype == DT_FLOAT64:
                 return lambda v: "%.14g" % v
-            if dtype == dt_object:
+            if dtype == DT_OBJECT:
                 return lambda v: format_datetime(naive_to_utc(v))
             return str
         if cdf_type == CDF_CHAR_TYPE:

@@ -31,7 +31,7 @@
 from django.conf.urls import url, include
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 from allauth.account.views import logout as account_logout, account_inactive
 from allauth.socialaccount.views import (
     login_cancelled as socialaccount_login_cancelled,
