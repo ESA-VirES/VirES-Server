@@ -175,7 +175,7 @@ def _extract_login_info(social_account):
 
 
 def _extract_user_info(social_account):
-    social_provider = providers.registry.by_id(social_account.provider)
+    social_provider = social_account.get_provider()
     data = social_provider.extract_common_fields(social_account.extra_data)
 
     first_name = data.pop('first_name', None)
