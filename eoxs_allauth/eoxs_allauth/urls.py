@@ -28,7 +28,8 @@
 # pylint: disable=missing-docstring, invalid-name
 
 #from logging import INFO, WARNING
-from django.conf.urls import url, include
+from django.conf.urls import include
+from django.urls import re_path
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 from django.templatetags.static import static
@@ -45,26 +46,26 @@ from .views import (
 
 
 urlpatterns = [
-    url(
+    re_path(
         r'^login/cancelled/$',
         socialaccount_login_cancelled,
         name='socialaccount_login_cancelled'
     ),
-    url(
+    re_path(
         r'^login/error/$',
         socialaccount_login_error,
         name='socialaccount_login_error'
     ),
-    url(r'^', include('eoxs_allauth.vires_oauth.urls')),
-    url(r"^logout/$", account_logout, name="account_logout"),
-    url(r"^inactive/$", account_inactive, name="account_inactive"),
-    url(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
-    url(r'^api/tokens/?$', AccessTokenCollectionAPIView.as_view(), name='account_tokens_api'),
-    url(r'^api/tokens/(?P<identifier>[A-Za-z0-9_-]{16,16})/?$', AccessTokenObjectAPIView.as_view()),
+    re_path(r'^', include('eoxs_allauth.vires_oauth.urls')),
+    re_path(r"^logout/$", account_logout, name="account_logout"),
+    re_path(r"^inactive/$", account_inactive, name="account_inactive"),
+    re_path(r'^tokens/$', AccessTokenManagerView.as_view(), name='account_manage_access_tokens'),
+    re_path(r'^api/tokens/?$', AccessTokenCollectionAPIView.as_view(), name='account_tokens_api'),
+    re_path(r'^api/tokens/(?P<identifier>[A-Za-z0-9_-]{16,16})/?$', AccessTokenObjectAPIView.as_view()),
 ]
 
 document_urlpatterns = [
-    url(r'^%s$' % name, TemplateView.as_view(template_name=("documents/%s.html" % name)), name=name)
+    re_path(r'^%s$' % name, TemplateView.as_view(template_name=("documents/%s.html" % name)), name=name)
     for name in [
         'changelog',
         'custom_data_format_description',
@@ -73,7 +74,7 @@ document_urlpatterns = [
         'privacy_notice',
     ]
 ] + [
-    url(
+    re_path(
         r'^data_terms$',
         RedirectView.as_view(url=static('other/T&C_for_ESA_Dataset-v1.pdf').replace("%", "%%")),
         name="data_terms"
