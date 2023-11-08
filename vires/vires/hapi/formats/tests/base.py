@@ -167,6 +167,11 @@ def random_integer_array(shape, type_):
     return randint(iinfo(type_).min, iinfo(type_).max, shape, type_)
 
 
+def random_nonnegative_integer_array(shape, type_):
+    type_ = dtype(type_)
+    return randint(0, iinfo(type_).max, shape, type_)
+
+
 def random_datetime64_array(shape, unit, base="2020-01-01T00:00:00",
                             dtmin=-1000, dtmax=1001):
     return (
