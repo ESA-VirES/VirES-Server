@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-# Swarm orbit number file handling.
+# Orbit counter file reader
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
