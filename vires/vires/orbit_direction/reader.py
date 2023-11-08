@@ -36,7 +36,7 @@ class OrbitDirectionReader(CdfEpochTimeMixIn, BaseReader):
     DATA_FIELDS = ("OrbitDirection", "BoundaryType")
     TYPES = {"OrbitDirection": "int8", "BoundaryType": "int8"}
     NODATA = {"OrbitDirection": 0, "BoundaryType": -1}
-    INTERPOLATION_KIND = "zero"
+    INTERPOLATION_KIND = "previous"
 
     def _update_product_set(self, cdf, start, end):
 

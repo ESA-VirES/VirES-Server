@@ -55,6 +55,7 @@ class Interp1D():
         self._iterpolator_classes = {
             'nearest': NearestNeighbour1DInterpolator,
             'zero': PreviousNeighbour1DInterpolator,
+            'previous': PreviousNeighbour1DInterpolator,
             'linear': Linear1DInterpolator,
         }
 
@@ -180,7 +181,7 @@ class PreviousNeighbour1DInterpolator(BaseNeighbour1DInterpolator):
     @staticmethod
     def _find_indices(x_in, i_in, x_out):
         options = {
-            "kind": "zero",
+            "kind": "previous",
             "bounds_error": False,
             "copy": False,
         }

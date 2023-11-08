@@ -58,35 +58,35 @@ class MagLRParameters(SwarmDefaultParameters):
 
 class AuxImf2Parameters(SwarmDefaultParameters):
     """ AUX_IMF_2_ parameters """
-    INTERPOLATION_KIND = "zero"
+    INTERPOLATION_KIND = "previous"
     TIME_TOLERANCE = timedelta(minutes=61) # time selection tolerance
     TIME_OVERLAP = timedelta(hours=2) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(minutes=61) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=60)
     VARIABLE_INTERPOLATION_KINDS = {
-        'F10_INDEX': 'zero',
-        'IMF_BY_GSM': 'zero',
-        'IMF_BZ_GSM': 'zero',
-        'IMF_V': 'zero',
+        'F10_INDEX': 'previous',
+        'IMF_BY_GSM': 'previous',
+        'IMF_BZ_GSM': 'previous',
+        'IMF_V': 'previous',
     }
 
 
 class GfzKpParameters(SwarmDefaultParameters):
     """ GFZ_KP parameters """
-    INTERPOLATION_KIND = "zero"
+    INTERPOLATION_KIND = "previous"
     TIME_TOLERANCE = timedelta(minutes=181) # time selection tolerance
     TIME_OVERLAP = timedelta(hours=6) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(minutes=181) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=180)
     VARIABLE_INTERPOLATION_KINDS = {
-        'Kp': 'zero',
-        'ap': 'zero',
+        'Kp': 'previous',
+        'ap': 'previous',
     }
 
 
 class OmniHr1MinParameters(SwarmDefaultParameters):
     """ OMNI HR 1min parameters """
-    INTERPOLATION_KIND = "zero"
+    INTERPOLATION_KIND = "previous"
     TIME_TOLERANCE = timedelta(0) # time selection tolerance
     TIME_OVERLAP = timedelta(minutes=120) # time interpolation overlap
     TIME_GAP_THRESHOLD = timedelta(seconds=61) # gap time threshold
