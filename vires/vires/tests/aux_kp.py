@@ -88,7 +88,7 @@ class TestIndexKp(TestCase):
         times = linspace(start, stop, count)
         data = KpReader(self.FILE).interpolate(times)
         expected_values = interp1d(
-            DATA_KP['time'], DATA_KP['kp'], bounds_error=False, kind="nearest"
+            DATA_KP['time'], DATA_KP['kp'], bounds_error=False, kind="previous"
         )(times)
         assert_equal(data['kp'], expected_values)
 
