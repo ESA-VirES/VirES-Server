@@ -130,24 +130,30 @@ class TestCDF(ArrayMixIn, TestCase):
         self._cdf_time_interp(-732.00, -728.00, 80)
         self._cdf_time_interp(-732.00, -728.00, 80, kind="nearest")
         self._cdf_time_interp(-732.00, -728.00, 80, kind="zero")
+        self._cdf_time_interp(-732.00, -728.00, 80, kind="previous")
         # touching the bounds
         self._cdf_time_interp(-728.56251, -728.00, 5)
         self._cdf_time_interp(-728.56251, -728.00, 5, kind="nearest")
         self._cdf_time_interp(-728.56251, -728.00, 5, kind="zero")
+        self._cdf_time_interp(-728.56251, -728.00, 5, kind="previous")
         self._cdf_time_interp(-732.00, -729.979169, 5)
         self._cdf_time_interp(-732.00, -729.979169, 5, kind="nearest")
         self._cdf_time_interp(-732.00, -729.979169, 5, kind="zero")
+        self._cdf_time_interp(-732.00, -729.979169, 5, kind="previous")
         # out of bounds
         self._cdf_time_interp(-728.00, -726.00, 5)
         self._cdf_time_interp(-728.00, -726.00, 5, kind="nearest")
         self._cdf_time_interp(-728.00, -726.00, 5, kind="zero")
+        self._cdf_time_interp(-728.00, -726.00, 5, kind="previous")
         self._cdf_time_interp(-734.00, -732.00, 5)
         self._cdf_time_interp(-734.00, -732.00, 5, kind="nearest")
         self._cdf_time_interp(-734.00, -732.00, 5, kind="zero")
+        self._cdf_time_interp(-734.00, -732.00, 5, kind="previous")
         # single value
         self._cdf_time_interp(-729.00, -729.00, 1)
         self._cdf_time_interp(-729.00, -729.00, 1, kind="nearest")
         self._cdf_time_interp(-729.00, -729.00, 1, kind="zero")
+        self._cdf_time_interp(-729.00, -729.00, 1, kind="previous")
 
     def test_array_slice_equidistant(self):
         test_array = arange(11, dtype='float')

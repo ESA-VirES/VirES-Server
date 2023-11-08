@@ -36,7 +36,7 @@ class OrbitCounterReader(SingleSourceMixIn, MJD2000TimeMixIn, CdfReader):
     DATA_FIELDS = ("orbit", "phi_AN", "Source")
     TYPES = {"orbit": "int32", "Source": "int8"}
     NODATA = {"orbit": -1, "Source": -1}
-    INTERPOLATION_KIND = "zero"
+    INTERPOLATION_KIND = "previous"
 
 
 def get_orbit_timerange(filename, start_orbit, end_orbit):

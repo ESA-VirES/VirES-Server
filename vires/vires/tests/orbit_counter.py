@@ -204,25 +204,25 @@ DATA_ORBCNT = {
 
 INT_CONF_ORBCNT = {
     'orbit': {
-        'kind': 'zero',
+        'kind': 'previous',
         'dtype': 'int32',
         'nodata': -1,
         'is_nodata': (lambda v: v == -1),
     },
     #'MJD2000': {
-    #    'kind': 'zero',
+    #    'kind': 'previous',
     #    'dtype': 'float',
     #    'nodata': nan,
     #    'is_nodata': isnan,
     #},
     'phi_AN': {
-        'kind': 'zero',
+        'kind': 'previous',
         'dtype': 'float',
         'nodata': nan,
         'is_nodata': isnan,
     },
     'Source': {
-        'kind': 'zero',
+        'kind': 'previous',
         'dtype': 'int8',
         'nodata': -1,
         'is_nodata': (lambda v: v == -1),

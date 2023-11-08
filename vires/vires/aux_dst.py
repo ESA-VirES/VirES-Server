@@ -89,4 +89,4 @@ class DDstReader(SingleSourceMixIn, MJD2000TimeMixIn, CdfReader):
     """ dDst data reader class. """
     TIME_FIELD = "time"
     DATA_FIELDS = ("ddst",)
-    INTERPOLATION_KIND = "zero"
+    INTERPOLATION_KIND = "previous"
