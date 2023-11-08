@@ -58,7 +58,7 @@ NODATA = {
     ORBIT_DIRECTION_FIELD: 0,
     BOUNDARY_TYPE_FIELD: -1,
 }
-INTERPOLATION_KIND = "zero"
+INTERPOLATION_KIND = "previous"
 
 
 class OrbitDirectionReader(CdfEpochTimeMixIn, BaseReader):

@@ -481,7 +481,7 @@ class TestDataset(ArrayMixIn, TestCase):
         # with kind specification - all variables
         kinds = {
             "B": "nearest",
-            "C": "zero",
+            "C": "previous",
             "L": "nearest",
             "M": "zero",
         }
@@ -553,7 +553,7 @@ class TestDataset(ArrayMixIn, TestCase):
             "B": "nearest",
             "C": "zero",
             "L": "nearest",
-            "M": "zero",
+            "M": "previous",
         }
 
         dataset = dataset_source.interpolate(
