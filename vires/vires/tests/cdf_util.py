@@ -46,8 +46,8 @@ from vires.cdf_util import (
     cdf_rawtime_to_mjd2000, datetime_to_cdf_rawtime,
     mjd2000_to_cdf_rawtime, array_slice,
     cdf_rawtime_to_datetime64, datetime64_to_cdf_rawtime,
-    CDF_EPOCH_1970, CDF_EPOCH_2000,
 )
+from vires.time_cdf_epoch import CDF_EPOCH_1970, CDF_EPOCH_2000
 from vires.aux_dst import parse_dst
 from vires.tests.aux_dst import TEST_DST, DATA_DST
 from vires.tests import ArrayMixIn

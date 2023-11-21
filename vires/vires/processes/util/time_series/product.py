@@ -24,145 +24,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-few-public-methods,too-many-arguments
+# pylint: disable=too-few-public-methods,too-many-arguments,too-many-locals
 
 from logging import getLogger, LoggerAdapter
-from datetime import timedelta
-from vires.util import pretty_list, LazyString
-from vires.cdf_util import cdf_rawtime_to_datetime
+from numpy import full
+from vires.util import pretty_list, LazyString, cached_property
+from vires.cdf_util import cdf_rawtime_to_datetime, CDF_UINT1_TYPE
 from vires.time_util import naive_to_utc, format_datetime
-from vires.models import Product, ProductCollection
 from vires.dataset import Dataset
 from .base import TimeSeries
 from .base_product import BaseProductTimeSeries
 from .data_extraction import CDFDataset
 
 
-class SwarmDefaultParameters():
-    """ Default SWARM product parameters. """
-    TIME_VARIABLE = "Timestamp"
-    TIME_TOLERANCE = timedelta(microseconds=0) # time selection tolerance
-    TIME_OVERLAP = timedelta(seconds=60) # time interpolation overlap
-    TIME_GAP_THRESHOLD = timedelta(seconds=30) # gap time threshold
-    TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=0.5)
-    VARIABLE_INTERPOLATION_KINDS = {}
-
-
-class MagLRParameters(SwarmDefaultParameters):
-    """ MAGx_LR_1B parameters """
-    VARIABLE_INTERPOLATION_KINDS = {
-        "B_NEC": "linear",
-        "F": "linear",
-    }
-
-
-class AuxImf2Parameters(SwarmDefaultParameters):
-    """ AUX_IMF_2_ parameters """
-    INTERPOLATION_KIND = "zero"
-    TIME_TOLERANCE = timedelta(minutes=61) # time selection tolerance
-    TIME_OVERLAP = timedelta(hours=2) # time interpolation overlap
-    TIME_GAP_THRESHOLD = timedelta(minutes=61) # gap time threshold
-    TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=60)
-    VARIABLE_INTERPOLATION_KINDS = {
-        'F10_INDEX': 'zero',
-        'IMF_BY_GSM': 'zero',
-        'IMF_BZ_GSM': 'zero',
-        'IMF_V': 'zero',
-    }
-
-
-class GfzKpParameters(SwarmDefaultParameters):
-    """ GFZ_KP parameters """
-    INTERPOLATION_KIND = "zero"
-    TIME_TOLERANCE = timedelta(minutes=181) # time selection tolerance
-    TIME_OVERLAP = timedelta(hours=6) # time interpolation overlap
-    TIME_GAP_THRESHOLD = timedelta(minutes=181) # gap time threshold
-    TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=180)
-    VARIABLE_INTERPOLATION_KINDS = {
-        'Kp': 'zero',
-        'ap': 'zero',
-    }
-
-
-class OmniHr1MinParameters(SwarmDefaultParameters):
-    """ OMNI HR 1min parameters """
-    INTERPOLATION_KIND = "zero"
-    TIME_TOLERANCE = timedelta(0) # time selection tolerance
-    TIME_OVERLAP = timedelta(minutes=120) # time interpolation overlap
-    TIME_GAP_THRESHOLD = timedelta(seconds=61) # gap time threshold
-    TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=60)
-    VARIABLE_INTERPOLATION_KINDS = {
-        'IMF_BY_GSM': 'linear',
-        'IMF_BZ_GSM': 'linear',
-        'IMF_V': 'linear',
-        'IMF_Vx': 'linear',
-        'IMF_Vy': 'linear',
-        'IMF_Vz': 'linear',
-    }
-
-
-DEFAULT_PRODUCT_TYPE_PARAMETERS = SwarmDefaultParameters #pylint: disable=invalid-name
-PRODUCT_TYPE_PARAMETERS = {
-    "SW_MAGx_LR_1B": MagLRParameters,
-    "SW_AUX_IMF_2_": AuxImf2Parameters,
-    "OMNI_HR_1min": OmniHr1MinParameters,
-    "GFZ_KP": GfzKpParameters,
-}
-
-
 class ProductTimeSeries(BaseProductTimeSeries):
     """ Product time-series class. """
-
-    @staticmethod
-    def _get_variable_mapping(dataset_definition):
-        return {
-            variable: source
-            for variable, source in (
-                (variable, type_info.get('source'))
-                for variable, type_info in dataset_definition.items()
-            ) if source
-        }
-
-    @staticmethod
-    def _get_id(base_id, dataset_id, default_dataset_id):
-        if dataset_id == default_dataset_id:
-            return base_id
-        return f"{base_id}:{dataset_id}"
-
+    COLLECTION_INDEX_VARIABLE = "CollectionIndex"
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
             collection_id = self.extra["collection_id"]
             return f"{collection_id}: {msg}", kwargs
 
-    def __init__(self, collection, dataset_id=None, logger=None):
+    def __init__(self, source, logger=None):
 
-        if isinstance(collection, str):
-            collection = self._get_collection(collection)
-
-        dataset_id = collection.type.get_dataset_id(dataset_id)
-        default_dataset_id = collection.type.default_dataset_id
-
-        if dataset_id is None:
-            raise ValueError("Missing mandatory dataset identifier!")
-
-        if not collection.type.is_valid_dataset_id(dataset_id):
-            raise ValueError(f"Invalid dataset identifier {dataset_id!r}!")
-
-        params = PRODUCT_TYPE_PARAMETERS.get(
-            self._get_id(
-                collection.type.identifier,
-                collection.type.get_base_dataset_id(dataset_id),
-                default_dataset_id,
-            ),
-            DEFAULT_PRODUCT_TYPE_PARAMETERS,
-        )
+        params = source.params
 
         super().__init__(
+            source=source,
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
-                "collection_id": self._get_id(
-                    collection.identifier, dataset_id, default_dataset_id
-                ),
+                "collection_id": source.identifier,
             }),
             time_variable=params.TIME_VARIABLE,
             time_tolerance=params.TIME_TOLERANCE,
@@ -172,49 +63,41 @@ class ProductTimeSeries(BaseProductTimeSeries):
             interpolation_kinds=params.VARIABLE_INTERPOLATION_KINDS,
         )
 
-        self.collection = collection
-        self.dataset_id = dataset_id
-        self.default_dataset_id = default_dataset_id
-
-        self.translate_fw = self._get_variable_mapping(
-            self.collection.type.get_dataset_definition(self.dataset_id)
-        )
-
-    @staticmethod
-    def _get_collection(collection_name):
-        try:
-            return ProductCollection.objects.get(identifier=collection_name)
-        except ProductCollection.DoesNotExist:
-            raise RuntimeError(
-                f"Non-existent product collection {collection_name}!"
-            ) from None
+        self.source = source
 
     @property
     def metadata(self):
         """ Get collection metadata. """
-        collection = self.collection
-        return {
-            **collection.metadata,
-            **collection.spacecraft_dict,
-            "grade": collection.grade,
-        }
+        return self.source.metadata
 
     @property
     def collection_identifier(self):
         """ Get collection identifier. """
-        return self._get_id(
-            self.collection.identifier, self.dataset_id, self.default_dataset_id
-        )
+        return self.source.identifier
 
     @property
     def variables(self):
-        return list(
-            self.collection.type.get_dataset_definition(self.dataset_id)
-        )
+        variables = list(self.source.dataset_definition)
+        if len(self.source.collections) > 1:
+            variables.append(self.COLLECTION_INDEX_VARIABLE)
+        return variables
+
+    def subset_count(self, start, stop):
+        """ Count products overlapping the given time interval. """
+        return self.source.count_products(start, stop, self.time_tolerance)
 
     def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the given time array.
         """
+        def _format_time_range(start, stop):
+            return (
+                f"{format_datetime(cdf_rawtime_to_datetime(start, cdf_type))}/"
+                f"{format_datetime(cdf_rawtime_to_datetime(stop, cdf_type))}"
+            )
+
+        def _format_times_extent(times):
+            return _format_time_range(times.min(), times.max())
+
         times, cdf_type = self._convert_time(times, cdf_type)
 
         if not variables: # stop here if no variables are requested
@@ -233,19 +116,18 @@ class ProductTimeSeries(BaseProductTimeSeries):
             variables,
         )
 
-        self.logger.debug("requested time-span: %s", LazyString(lambda: (
-            f"{format_datetime(cdf_rawtime_to_datetime(start, cdf_type))}/"
-            f"{format_datetime(cdf_rawtime_to_datetime(stop, cdf_type))}"
-        )))
+        self.logger.debug(
+            "requested time-span: %s",
+            LazyString(_format_time_range, start, stop)
+        )
 
         dataset = Dataset()
         for item in dataset_iterator:
             if not item.is_empty:
-                _times = item[self.time_variable]
-                self.logger.debug("item time-span: %s", LazyString(lambda: (
-                    f"{format_datetime(cdf_rawtime_to_datetime(_times.min(), cdf_type))}/"
-                    f"{format_datetime(cdf_rawtime_to_datetime(_times.max(), cdf_type))}"
-                )))
+                self.logger.debug(
+                    "item time-span: %s",
+                    LazyString(_format_times_extent, item[self.time_variable])
+                )
             else:
                 self.logger.debug("item time-span is empty")
             dataset.append(item)
@@ -255,60 +137,41 @@ class ProductTimeSeries(BaseProductTimeSeries):
     def _subset(self, start, stop, variables):
         """ Get subset of the time series overlapping the given time range.
         """
+        def _format_time_range(start, stop):
+            return f"{format_datetime(start)}/{format_datetime(stop)}"
+
         start = naive_to_utc(start)
         stop = naive_to_utc(stop)
 
-        self.logger.debug("subset: %s", LazyString(
-            lambda: f"{format_datetime(start)}/{format_datetime(stop)}"
-        ))
+        self.logger.debug("subset: %s", LazyString(_format_time_range, start, stop))
         self.logger.debug("extracted variables: %s", pretty_list(variables))
 
         if not variables: # stop here if no variables are requested
             return
 
-        def _iter_products(start, end):
-            """ Iterate over products returned by the query. Resolve temporal
-            overlays of the products to prevent duplicate time coverage and
-            yield applicable products and their time subset to be extracted.
-            """
-            products = iter(self._subset_qs(start, end).order_by('begin_time'))
-
-            try:
-                product = next(products)
-            except StopIteration:
-                return
-
-            for next_product in products:
-                yield product.begin_time, next_product.begin_time, product
-                product = next_product
-
-            yield product.begin_time, end, product
-
         counter = 0
-        for data_start, data_stop, product in _iter_products(start, stop):
-            data_start = max(start, data_start)
-            data_stop = min(stop, data_stop)
-            source_dataset = product.get_dataset(self.dataset_id)
+        for item in self.source.iter_products(start, stop, self.time_tolerance):
+            product = item.data
+            data_start = max(start, item.start)
+            data_stop = min(stop, item.end)
+            source_dataset = product.get_dataset(self.source.dataset_id)
 
             if not source_dataset:
                 continue
 
             self.logger.debug("product: %s ", product.identifier)
-            self.logger.debug("subset time span: %s", LazyString(
-                lambda: (
-                    f"{format_datetime(data_start)}/"
-                    f"{format_datetime(data_stop)}"
-                )
-            ))
-
-            self.product_set.add(product.identifier) # record source product
+            self.logger.debug(
+                "subset time span: %s",
+                LazyString(_format_time_range, data_start, data_stop)
+            )
 
             time_subset = source_dataset.get('indexRange')
             if time_subset:
                 time_subset = slice(*time_subset[:2])
 
             with CDFDataset(
-                source_dataset['location'], translation=self.translate_fw,
+                source_dataset['location'],
+                translation=self.source.translate_fw,
                 time_type=self.TIMESTAMP_TYPE,
             ) as cdf_ds:
                 subset, nrv_shape = cdf_ds.get_temporal_subset(
@@ -321,10 +184,18 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 dataset = cdf_ds.extract_datset(
                     variables=variables,
                     subset=subset,
-                    nrv_shape=nrv_shape
+                    nrv_shape=nrv_shape,
+                    ignored_variables=(self.COLLECTION_INDEX_VARIABLE,),
                 )
 
             self.logger.debug("dataset length: %s ", dataset.length)
+
+            if len(self.source.collections) > 1:
+                self._add_collection_index(dataset, item.index)
+
+            # do not record empty data selection
+            if dataset.length:
+                self.product_set.add(product.identifier) # record source product
 
             dataset.source = product.identifier # record source product
 
@@ -337,16 +208,30 @@ class ProductTimeSeries(BaseProductTimeSeries):
             if dataset:
                 yield dataset
 
-    def _subset_qs(self, start, stop):
-        """ Subset Django query set. """
-        _start = start - self.time_tolerance
-        _stop = stop + self.time_tolerance
-        return Product.objects.prefetch_related('collection__type').filter(
-            collection=self.collection,
-            begin_time__lt=_stop,
-            end_time__gte=_start,
-            begin_time__gte=(_start - self.collection.max_product_duration),
+    def _add_collection_index(self, dataset, index):
+        """ Add collection index to the given dataset. """
+        dataset.set(
+            self.COLLECTION_INDEX_VARIABLE,
+            full(dataset.length, index, dtype="uint8"),
+            CDF_UINT1_TYPE,
+            self._collection_index_attrs,
         )
+
+    @cached_property
+    def _collection_index_attrs(self):
+        """ Get collection index CDF attributes. """
+        return {
+            "DESCRIPTION": (
+                "Source collection index: {}".format(
+                    ", ".join(
+                        f"{index} - {collection.identifier}"
+                        for index, collection
+                        in enumerate(self.source.collections)
+                    )
+                )
+            ),
+            "UNITS": "-",
+        }
 
     def _get_empty_dataset(self, variables):
         """ Get empty dataset. """
@@ -354,31 +239,30 @@ class ProductTimeSeries(BaseProductTimeSeries):
         self.logger.debug("empty dataset")
         self.logger.debug("extracted variables: %s", pretty_list(variables))
 
-        try:
-            # we need at least one product from the collection
-            # to initialize correctly the empty variables
-            product = Product.objects.filter(
-                collection=self.collection
-            ).order_by('begin_time')[0]
-        except IndexError:
+        # we need at least one product from the collection
+        # to initialize correctly the empty variables
+        product = self.source.get_sample_product()
+        if product is None:
             self.logger.error(
                 "Empty collection! The variables and their types cannot be "
                 "reliably determined!"
             )
             raise RuntimeError(
-                f"Empty product collection {self.collection.identifier}!"
-            ) from None
-        else:
-            location = product.get_location(self.collection.type.default_dataset_id)
-            # generate an empty dataset from the sample product
-            self.logger.debug("template product: %s", product.identifier)
-            self.logger.debug("reading file: %s", location)
-            with CDFDataset(
-                location, translation=self.translate_fw,
-                time_type=self.TIMESTAMP_TYPE,
-            ) as cdf_ds:
-                return cdf_ds.extract_datset(
-                    variables=variables,
-                    subset=slice(0, 0),
-                    nrv_shape=(0,),
-                )
+                f"Empty product collection {self.source.identifier}!"
+            )
+
+        location = product.get_location(self.source.dataset_id)
+        # generate an empty dataset from the sample product
+        self.logger.debug("template product: %s", product.identifier)
+        self.logger.debug("reading file: %s", location)
+        with CDFDataset(
+            location,
+            translation=self.source.translate_fw,
+            time_type=self.TIMESTAMP_TYPE,
+        ) as cdf_ds:
+            return cdf_ds.extract_datset(
+                variables=variables,
+                subset=slice(0, 0),
+                nrv_shape=(0,),
+                ignored_variables=(self.COLLECTION_INDEX_VARIABLE,),
+            )

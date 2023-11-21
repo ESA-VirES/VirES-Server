@@ -106,7 +106,7 @@ def find_products_by_location(data_file):
     """ Return query-set for products matched by the given data file location.
     """
     locations = ProductLocation.objects.filter(location=data_file)
-    return Product.objects.filter(id__in=locations.values('product_id'))
+    return Product.objects.filter(id__in=locations.values("product_id"))
 
 
 def _log_registered_products(command):
@@ -114,7 +114,7 @@ def _log_registered_products(command):
 
     @wraps(command)
     def wrapped_command(*args, **kawrags):
-        logger = kawrags.get('logger') or getLogger(__name__)
+        logger = kawrags.get("logger") or getLogger(__name__)
 
         result = command(*args, **kawrags)
 
@@ -139,7 +139,7 @@ def _postregisteration_cleanup(command):
 
     @wraps(command)
     def wrapped_command(*args, **kawrags):
-        logger = kawrags.get('logger') or getLogger(__name__)
+        logger = kawrags.get("logger") or getLogger(__name__)
 
         result = command(*args, **kawrags)
 
@@ -194,8 +194,8 @@ def import_product(record, update_existing=True, **kwargs):
     def _save_product(product, data):
         product.begin_time = data["begin_time"]
         product.end_time = data["end_time"]
-        product.datasets = data['datasets']
-        product.metadata = data['metadata']
+        product.datasets = data["datasets"]
+        product.metadata = data["metadata"]
         product.save()
         update_max_product_duration(
             product.collection, product.end_time - product.begin_time
@@ -272,9 +272,9 @@ def register_product(collection, data_file, metadata,
     Note that if the products has been neither inserted not updated then the
     existing already registered product has not been modified.
     """
-    product_id = metadata['identifier']
-    begin_time = metadata['begin_time']
-    end_time = metadata['end_time']
+    product_id = metadata["identifier"]
+    begin_time = metadata["begin_time"]
+    end_time = metadata["end_time"]
 
     with transaction.atomic():
         if resolve_time_overlaps:
@@ -404,8 +404,8 @@ def _update_existing_product(product, data_file, **metadata):
 
 def _set_product(product, data_file, **metadata):
     """ Update and save product. """
-    product.begin_time = metadata['begin_time']
-    product.end_time = metadata['end_time']
+    product.begin_time = metadata["begin_time"]
+    product.end_time = metadata["end_time"]
     product.datasets = _get_datasets(
         data_file, product.collection.type, metadata
     )
@@ -433,9 +433,10 @@ def _get_datasets_from_datasets_metadata(data_file, datasets):
     return {
         name: _sanitize({
             "location": data_file,
-            "indexRange": metadata.get('index_range'),
-            "beginTime": format_datetime(metadata.get('begin_time')),
-            "endTime": format_datetime(metadata.get('end_time')),
+            "indexRange": metadata.get("index_range"),
+            "beginTime": format_datetime(metadata.get("begin_time")),
+            "endTime": format_datetime(metadata.get("end_time")),
+            "geographicLocation": metadata.get("location"),
         }) for name, metadata in datasets.items()
     }
 
@@ -444,9 +445,9 @@ def _get_datasets_from_product_type(data_file, product_type):
     datasets = {
         name: {
             "location": data_file,
-        } for name in product_type.definition['datasets']
+        } for name in product_type.definition["datasets"]
     }
-    for name in product_type.definition.get('unsortedDatasets') or []:
+    for name in product_type.definition.get("unsortedDatasets") or []:
         (datasets.get(name) or {})["isSorted"] = False
     return datasets
 

@@ -99,6 +99,11 @@ class SwarmProductMetadataReader(CDFReader):
 class ObsProductMetadataReader(CDFReader):
 
     TIME_VARIABLE = "Timestamp"
+    LOCATION_VARIABLES = {
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "radius": "Radius",
+    }
     SITE_CODES_ATTR = "IAGA_CODES"
     INDEX_RANGES_ATTR = "INDEX_RANGES"
 
@@ -120,6 +125,12 @@ class ObsProductMetadataReader(CDFReader):
 
         return times, cdf_type
 
+    @classmethod
+    def read_values(cls, cdf, variable):
+        try:
+            return cdf.raw_var(variable)
+        except KeyError:
+            raise KeyError(f"{variable} variable not found!") from None
 
     @classmethod
     def read_obs_index_ranges(cls, cdf, codes_attr_name, ranges_attr_name):
@@ -134,12 +145,20 @@ class ObsProductMetadataReader(CDFReader):
             cdf, cls.SITE_CODES_ATTR, cls.INDEX_RANGES_ATTR,
         )
         times, cdf_type = cls.read_times(cdf, cls.TIME_VARIABLE)
+        locations = {
+            key: cls.read_values(cdf, variable)
+            for key, variable in cls.LOCATION_VARIABLES.items()
+        }
 
         datasets = {
             code: {
-                'index_range': (start, stop),
-                'begin_time': cls._cdf_rawtime_to_datetime(times[start], cdf_type),
-                'end_time': cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
+                "index_range": (start, stop),
+                "begin_time": cls._cdf_rawtime_to_datetime(times[start], cdf_type),
+                "end_time": cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
+                "location": {
+                    "crs": "ITRF",
+                    **{key: values[start] for key, values in locations.items()},
+                }
             }
             for code, (start, stop) in index_ranges.items()
 
@@ -165,6 +184,11 @@ class ObsProductMetadataReader(CDFReader):
 
 class VObsProductMetadataReader(ObsProductMetadataReader):
     TIME_VARIABLE_SV = "Timestamp_SV"
+    LOCATION_VARIABLES_SV = {
+        "latitude": "Latitude_SV",
+        "longitude": "Longitude_SV",
+        "radius": "Radius_SV",
+    }
     SITE_CODES_ATTR = "SITE_CODES"
     INDEX_RANGES_ATTR = "INDEX_RANGES"
     INDEX_RANGES_SV_ATTR = "INDEX_RANGES_SV"
@@ -179,22 +203,38 @@ class VObsProductMetadataReader(ObsProductMetadataReader):
             cdf, cls.SITE_CODES_ATTR, cls.INDEX_RANGES_SV_ATTR,
         )
         times, cdf_type = cls.read_times(cdf, cls.TIME_VARIABLE)
+        locations = {
+            key: cls.read_values(cdf, variable)
+            for key, variable in cls.LOCATION_VARIABLES.items()
+        }
         times_sv, _ = cls.read_times(cdf, cls.TIME_VARIABLE_SV)
+        locations_sv = {
+            key: cls.read_values(cdf, variable)
+            for key, variable in cls.LOCATION_VARIABLES_SV.items()
+        }
 
         datasets = {
             **{
                 code: {
-                    'index_range': (start, stop),
-                    'begin_time': cls._cdf_rawtime_to_datetime(times[start], cdf_type),
-                    'end_time': cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
+                    "index_range": (start, stop),
+                    "begin_time": cls._cdf_rawtime_to_datetime(times[start], cdf_type),
+                    "end_time": cls._cdf_rawtime_to_datetime(times[stop - 1], cdf_type),
+                    "location": {
+                        "crs": "ITRF",
+                        **{key: values[start] for key, values in locations.items()},
+                    }
                 }
                 for code, (start, stop) in index_ranges.items()
             },
             **{
-                f'{cls.SV_DATASET}:{code}': {
-                    'index_range': (start, stop),
-                    'begin_time': cls._cdf_rawtime_to_datetime(times_sv[start], cdf_type),
-                    'end_time': cls._cdf_rawtime_to_datetime(times_sv[stop - 1], cdf_type),
+                f"{cls.SV_DATASET}:{code}": {
+                    "index_range": (start, stop),
+                    "begin_time": cls._cdf_rawtime_to_datetime(times_sv[start], cdf_type),
+                    "end_time": cls._cdf_rawtime_to_datetime(times_sv[stop - 1], cdf_type),
+                    "location": {
+                        "crs": "ITRF",
+                        **{key: values[start] for key, values in locations_sv.items()},
+                    }
                 }
                 for code, (start, stop) in index_ranges_sv.items()
             },

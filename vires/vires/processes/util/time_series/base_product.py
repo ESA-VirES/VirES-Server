@@ -30,7 +30,7 @@ from logging import getLogger
 from vires.util import pretty_list, LazyString
 from vires.time_util import format_datetime
 from vires.cdf_util import (
-    cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime, CDF_EPOCH_TYPE,
+    cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime,
 )
 from vires.dataset import Dataset
 from .base import TimeSeries
@@ -49,27 +49,21 @@ class BaseProductTimeSeries(TimeSeries):
         self.segment_neighbourhood = kwargs.get("segment_neighbourhood")
         self.interpolation_kinds = kwargs.get("interpolation_kinds")
 
-    def _subset_qs(self, start, stop):
-        """ Subset Django query set. """
+    def subset_count(self, start, stop):
+        """ Count products overlaping the given time interval. """
         raise NotImplementedError
+
+    def subset(self, start, stop, variables=None):
+        """ Get subset of the time series overlapping the given time range.
+        """
+        variables = self.get_extracted_variables(variables)
+        self.logger.debug("requested variables: %s", pretty_list(variables))
+        return iter(self._subset(start, stop, variables))
 
     def _subset(self, start, stop, variables):
         """ Get subset of the time series overlapping the given time range.
         """
         raise NotImplementedError
-
-    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
-        """ Get subset of the time series overlapping the given time array.
-        """
-        raise NotImplementedError
-
-    def subset_count(self, start, stop):
-        """ Count matched number of products. """
-        return self._subset_qs(start, stop).count()
-
-    def subset(self, start, stop, variables=None):
-        variables = self.get_extracted_variables(variables)
-        return iter(self._subset(start, stop, variables))
 
     def subset_times(self, times, variables=None, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the given time array.
@@ -77,6 +71,11 @@ class BaseProductTimeSeries(TimeSeries):
         variables = self.get_extracted_variables(variables)
         self.logger.debug("requested variables: %s", pretty_list(variables))
         return self._subset_times(times, variables, cdf_type)
+
+    def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
+        """ Get subset of the time series overlapping the given time array.
+        """
+        raise NotImplementedError
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
                     cdf_type=TimeSeries.TIMESTAMP_TYPE, valid_only=False):

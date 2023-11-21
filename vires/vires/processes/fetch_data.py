@@ -63,8 +63,8 @@ from vires.processes.util import (
     extract_product_names, get_orbit_sources,
 )
 from vires.processes.util.time_series import (
-    TimeSeries, ProductTimeSeries, CustomDatasetTimeSeries,
-    IndexDst, IndexDDst, IndexF107,
+    SingleCollectionProductSource, TimeSeries, ProductTimeSeries,
+    CustomDatasetTimeSeries, IndexDst, IndexDDst, IndexF107,
 )
 from vires.processes.util.models import (
     QuasiDipoleCoordinates, MagneticLocalTime,
@@ -90,7 +90,8 @@ BASE_TIME_UNIT = timedelta(days=1)
 
 # set of the minimum required variables
 MANDATORY_VARIABLES = [
-    "Spacecraft", "Timestamp", "Latitude", "Longitude", "Radius"
+    ProductTimeSeries.COLLECTION_INDEX_VARIABLE,
+    "Spacecraft", "Timestamp", "Latitude", "Longitude", "Radius",
 ]
 
 # time converters
@@ -277,16 +278,20 @@ class FetchData(WPSProcess):
 
         if sources:
             index_kp = ProductTimeSeries(
-                ProductCollection.objects.get(
-                    identifier="GFZ_KP"
+                SingleCollectionProductSource(
+                    ProductCollection.objects.get(
+                        identifier="GFZ_KP"
+                    )
                 )
             )
             index_dst = IndexDst(cache_path(AUX_DB_DST))
             index_ddst = IndexDDst(cache_path(AUX_DB_DST))
             index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
             index_imf = ProductTimeSeries(
-                ProductCollection.objects.get(
-                    identifier="OMNI_HR_1min_avg20min_delay10min"
+                SingleCollectionProductSource(
+                    ProductCollection.objects.get(
+                        identifier="OMNI_HR_1min_avg20min_delay10min"
+                    )
                 )
             )
             model_bnec_intensity = BnecToF()
@@ -406,11 +411,11 @@ class FetchData(WPSProcess):
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    LazyString(lambda: format_filters(resolver.filters))
+                    LazyString(format_filters, resolver.filters)
                 )
                 self.logger.debug(
                     "%s: unresolved filters: %s", label,
-                    LazyString(lambda: format_filters(resolver.unresolved_filters))
+                    LazyString(format_filters, resolver.unresolved_filters)
                 )
 
             # collect the common output variables
