@@ -264,4 +264,5 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 variables=variables,
                 subset=slice(0, 0),
                 nrv_shape=(0,),
+                ignored_variables=(self.COLLECTION_INDEX_VARIABLE,),
             )
