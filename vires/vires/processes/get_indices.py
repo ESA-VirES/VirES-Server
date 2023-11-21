@@ -44,7 +44,9 @@ from vires.time_util import (
 from vires.cdf_util import cdf_rawtime_to_mjd2000
 from vires.models import ProductCollection
 from vires.processes.base import WPSProcess
-from vires.processes.util.time_series import ProductTimeSeries
+from vires.processes.util.time_series import (
+   ProductTimeSeries, SingleCollectionProductSource,
+)
 from vires.cache_util import cache_path
 from vires.data.vires_settings import AUX_DB_DST, CACHED_PRODUCT_FILE
 
@@ -86,8 +88,10 @@ class CollectionReader:
     @classmethod
     def _read_data(cls, start, end, fields):
         time_series = ProductTimeSeries(
-            ProductCollection.objects.get(
-                identifier=cls.COLLECTION_ID
+            SingleCollectionProductSource(
+                ProductCollection.objects.get(
+                    identifier=cls.COLLECTION_ID
+                )
             )
         )
 

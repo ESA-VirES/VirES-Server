@@ -137,11 +137,12 @@ class AttributeDict(dict):
 class LazyString:
     """ Lazy string conversion. """
 
-    def __init__(self, get_string):
+    def __init__(self, get_string, *args):
+        self.args = args
         self.get_string = get_string
 
     def __str__(self):
-        return self.get_string()
+        return self.get_string(*self.args)
 
 
 def pretty_list(items):

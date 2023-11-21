@@ -22,6 +22,8 @@
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#-------------------------------------------------------------------------------
+# pylint: disable=unused-argument,too-few-public-methods
 
 import csv
 from datetime import datetime
@@ -34,7 +36,9 @@ from vires.cache_util import cache_path
 from vires.time_util import naive_to_utc, format_datetime, parse_duration
 from vires.cdf_util import cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime
 from vires.processes.base import WPSProcess
-from vires.processes.util.time_series import ProductTimeSeries, QDOrbitDirection
+from vires.processes.util.time_series import (
+    SingleCollectionProductSource, ProductTimeSeries, QDOrbitDirection,
+)
 from vires.data.vires_settings import ORBIT_DIRECTION_MAG_FILE, DEFAULT_MISSION
 
 ALLOWED_PRODUCT_TYPES = ["SW_AEJxLPL_2F", "SW_AEJxLPS_2F"]
@@ -87,10 +91,12 @@ class RetrieveContinuousSegments(WPSProcess):
 
         try:
             time_series = ProductTimeSeries(
-                ProductCollection.objects
-                .select_related('type', 'spacecraft')
-                .filter(type__identifier__in=ALLOWED_PRODUCT_TYPES)
-                .get(identifier=collection_id)
+                SingleCollectionProductSource(
+                    ProductCollection.objects
+                    .select_related('type', 'spacecraft')
+                    .filter(type__identifier__in=ALLOWED_PRODUCT_TYPES)
+                    .get(identifier=collection_id)
+                )
             )
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
