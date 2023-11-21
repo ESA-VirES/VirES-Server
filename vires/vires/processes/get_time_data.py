@@ -36,6 +36,7 @@ from vires.models import ProductCollection
 from vires.access_util import get_vires_permissions
 from vires.time_util import naive_to_utc, format_datetime
 from vires.processes.base import WPSProcess
+from vires.processes.util.time_series import MultiCollectionProductSource
 
 
 class GetTimeDataProcess(WPSProcess):
@@ -80,13 +81,20 @@ class GetTimeDataProcess(WPSProcess):
         access_logger = self.get_access_logger(**kwargs)
 
         try:
-            collection = ProductCollection.select_permitted(permissions).get(
-                identifier=collection_id
-            )
+            collections = [
+                ProductCollection.select_permitted(permissions).get(identifier=id_)
+                for id_ in collection_id.split("+")
+            ]
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
-                "collection", "Invalid collection name '%s'!" % collection_id
-            )
+                "collection", f"Invalid collection name {collection_id!r}!"
+            ) from None
+
+        if begin_time:
+            begin_time = naive_to_utc(begin_time)
+
+        if end_time:
+            end_time = naive_to_utc(end_time)
 
         access_logger.info(
             "request: collection: %s, toi: (%s, %s)",
@@ -95,15 +103,7 @@ class GetTimeDataProcess(WPSProcess):
             format_datetime(naive_to_utc(end_time)) if end_time else "-",
         )
 
-        query = collection.products.order_by('begin_time')
-        if end_time:
-            query = query.filter(begin_time__lte=naive_to_utc(end_time))
-        if begin_time:
-            query = query.filter(
-                end_time__gte=naive_to_utc(begin_time),
-                begin_time__gte=(begin_time - collection.max_product_duration),
-            )
-        query = query.values_list("begin_time", "end_time", "identifier")
+        source = MultiCollectionProductSource(collections)
 
         output = CDTextBuffer()
         writer = csv.writer(output, quoting=csv.QUOTE_ALL)
@@ -111,7 +111,7 @@ class GetTimeDataProcess(WPSProcess):
 
         envelope = "(-90,-180,90,180)"
 
-        for start, end, id_ in query:
+        for _, start, end, id_ in source.iter_ids(begin_time, end_time):
             writer.writerow([
                 format_datetime(start), format_datetime(end), envelope, id_
             ])

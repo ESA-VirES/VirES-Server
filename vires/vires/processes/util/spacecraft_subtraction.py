@@ -26,7 +26,7 @@
 #-------------------------------------------------------------------------------
 
 from vires.models import ProductCollection
-from .time_series import ProductTimeSeries
+from .time_series import ProductTimeSeries, SingleCollectionProductSource
 
 
 def group_subtracted_variables(sources, residual_variables):
@@ -68,8 +68,10 @@ def group_subtracted_variables(sources, residual_variables):
             # find the slave data source
             try:
                 slave_source = ProductTimeSeries(
-                    ProductCollection.objects.get(
-                        identifier=slave_collection_id
+                    SingleCollectionProductSource(
+                        ProductCollection.objects.get(
+                            identifier=slave_collection_id
+                        )
                     )
                 )
             except ProductCollection.DoesNotExist:

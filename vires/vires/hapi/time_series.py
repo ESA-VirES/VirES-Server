@@ -29,7 +29,9 @@
 from vires.data.vires_settings import DEFAULT_MISSION
 from vires.processes.util import VariableResolver
 from vires.processes.util.models import generate_magnetic_model_sources
-from vires.processes.util.time_series import ProductTimeSeries
+from vires.processes.util.time_series import (
+    ProductTimeSeries, SingleCollectionProductSource,
+)
 from vires.cdf_util import CDF_TIME_TYPES, cdf_rawtime_to_datetime64
 from .data_type import parse_data_type, TIME_PRECISION
 from .magnetic_model import parse_model_list
@@ -42,8 +44,10 @@ class TimeSeries:
     def __init__(self, collection, dataset_id, options, logger=None):
 
         self.master = ProductTimeSeries(
-            collection=collection,
-            dataset_id=dataset_id,
+            source=SingleCollectionProductSource(
+                collection=collection,
+                dataset_id=dataset_id
+            ),
             logger=logger
         )
 

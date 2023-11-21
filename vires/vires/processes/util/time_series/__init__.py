@@ -26,6 +26,10 @@
 #-------------------------------------------------------------------------------
 
 from .base import TimeSeries
+from .product_source import (
+    SingleCollectionProductSource,
+    MultiCollectionProductSource,
+)
 from .product import ProductTimeSeries
 from .custom_data import CustomDatasetTimeSeries
 from .indices import IndexKp10, IndexDst, IndexDDst, IndexF107

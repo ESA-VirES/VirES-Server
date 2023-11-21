@@ -111,11 +111,14 @@ class CDFDataset:
         nrv_shape = index.shape
         return subset, nrv_shape
 
-    def extract_datset(self, variables, subset=Ellipsis, nrv_shape=None):
+    def extract_datset(self, variables, subset=Ellipsis, nrv_shape=None,
+                       ignored_variables=()):
         """ Extract dataset from a product. """
         subset1, subset2 = self._parse_subset(subset)
         dataset = Dataset()
         for variable in variables:
+            if variable in ignored_variables:
+                continue
             data, cdf_variable = self._extract_variable(
                 variable, subset1, subset2, nrv_shape
             )
