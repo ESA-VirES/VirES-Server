@@ -84,8 +84,8 @@ TIME_PRECISION = timedelta(microseconds=1)
 # Limit number of active jobs (ACCEPTED or STARTED) per user
 MAX_ACTIVE_JOBS = 2
 
-# Limit response size (equivalent to 50 daily SWARM LR products).
-MAX_SAMPLES_COUNT = 4320000
+# Limit response size (equivalent to 80 daily 1Hz products).
+MAX_SAMPLES_COUNT = 6912000
 
 # maximum allowed time selection period for 1 second sampled data
 # 35525 days is ~100 years >> mission life-time
