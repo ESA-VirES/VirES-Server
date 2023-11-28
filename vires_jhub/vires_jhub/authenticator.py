@@ -155,13 +155,11 @@ class ViresOAuthenticator(OAuthenticator):
             )
         })
 
-        # Kubespawner, unlike other spawners, uses Python string.format()
+        # KubeSpawner, unlike other spawners, uses Python string.format()
         # to expand environmental variables. This expansion breaks with JSON
-        # data passed as an environment variable and the curly brackets
+        # data passed in an environment variable and the curly brackets
         # need to be escaped.
-        self.log.info("Spawner class %s", type(spawner).__name__)
         if type(spawner).__name__ == "KubeSpawner":
-            self.log.info("Escaping VIRES_ACCESS_CONFIG ...")
             vires_access_config = (
                 vires_access_config.replace("{", "{{").replace("}", "}}")
             )
