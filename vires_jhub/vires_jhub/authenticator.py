@@ -143,7 +143,7 @@ class ViresOAuthenticator(OAuthenticator):
 
         permissions = set(auth_state["permissions"])
 
-        spawner.environment["VIRES_ACCESS_CONFIG"] = json.dumps({
+        vires_access_config = json.dumps({
             "instance_name": self.instance_name,
             "default_server": self.default_data_server,
             "servers": await self._retrieve_vires_tokens(
@@ -154,6 +154,19 @@ class ViresOAuthenticator(OAuthenticator):
                 auth_state["access_token"]
             )
         })
+
+        # Kubespawner, unlike other spawners, uses Python string.format()
+        # to expand environmental variables. This expansion breaks with JSON
+        # data passed as an environment variable and the curly brackets
+        # need to be escaped.
+        self.log.info("Spawner class %s", type(spawner).__name__)
+        if type(spawner).__name__ == "KubeSpawner":
+            self.log.info("Escaping VIRES_ACCESS_CONFIG ...")
+            vires_access_config = (
+                vires_access_config.replace("{", "{{").replace("}", "}}")
+            )
+
+        spawner.environment["VIRES_ACCESS_CONFIG"] = vires_access_config
 
     async def _retrieve_user_profile(self, http_client, access_token):
         request = HTTPRequest(
