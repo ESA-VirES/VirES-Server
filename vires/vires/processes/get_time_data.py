@@ -24,17 +24,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-few-public-methods,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals
 
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, CDTextBuffer, FormatText, RequestParameter,
+    AllowedRange,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
 from vires.access_util import get_vires_permissions
-from vires.time_util import naive_to_utc, format_datetime
+from vires.time_util import naive_to_utc, format_datetime, parse_duration
 from vires.processes.base import WPSProcess
 from vires.processes.util.time_series import MultiCollectionProductSource
 
@@ -66,6 +67,15 @@ class GetTimeDataProcess(WPSProcess):
             "end_time", datetime, optional=True,
             title="Optional end of the queried time interval."
         )),
+        ("duration_threshold", LiteralData(
+            "duration_threshold", timedelta, optional=True, default=None,
+            allowed_values=AllowedRange(timedelta(0), None, dtype=timedelta),
+            title="Minimum duration threshold for the selected products.",
+            abstract=(
+                "Products whose duration is below this threshold are rejected."
+                "The default threshold is below the product nominal sampling."
+            )
+        )),
     ]
 
     outputs = {
@@ -75,7 +85,8 @@ class GetTimeDataProcess(WPSProcess):
         )
     }
 
-    def execute(self, permissions, collection_id, begin_time, end_time, **kwargs):
+    def execute(self, permissions, collection_id, begin_time, end_time,
+                duration_threshold, **kwargs):
         """ The main execution function for the process.
         """
         access_logger = self.get_access_logger(**kwargs)
@@ -89,6 +100,15 @@ class GetTimeDataProcess(WPSProcess):
             raise InvalidInputValueError(
                 "collection", f"Invalid collection name {collection_id!r}!"
             ) from None
+
+        # per-collection duration threshold
+        duration_threshold = [
+            (
+                parse_duration(collection.metadata.get("nominalSampling", "PT0S"))
+                if duration_threshold is None else duration_threshold
+            )
+            for collection in collections
+        ]
 
         if begin_time:
             begin_time = naive_to_utc(begin_time)
@@ -111,9 +131,10 @@ class GetTimeDataProcess(WPSProcess):
 
         envelope = "(-90,-180,90,180)"
 
-        for _, start, end, id_ in source.iter_ids(begin_time, end_time):
-            writer.writerow([
-                format_datetime(start), format_datetime(end), envelope, id_
-            ])
+        for index, start, end, id_ in source.iter_ids(begin_time, end_time):
+            if end - start >= duration_threshold[index]:
+                writer.writerow([
+                    format_datetime(start), format_datetime(end), envelope, id_
+                ])
 
         return output

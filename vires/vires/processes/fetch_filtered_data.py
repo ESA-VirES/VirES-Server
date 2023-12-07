@@ -83,8 +83,8 @@ from vires.processes.util.models import (
 TIME_PRECISION = timedelta(microseconds=1)
 
 # TODO: Make the limits configurable.
-# Limit response size (equivalent to 5 daily SWARM LR products).
-MAX_SAMPLES_COUNT = 432000
+# Limit response size (equivalent to 8 daily 1Hz products).
+MAX_SAMPLES_COUNT = 691200
 
 # maximum allowed time selection period for 1 second sampled data
 MAX_TIME_SELECTION = timedelta(days=31)

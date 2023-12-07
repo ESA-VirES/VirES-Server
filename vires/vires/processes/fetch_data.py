@@ -77,8 +77,8 @@ from vires.processes.util.models import (
 )
 
 # TODO: Make the following parameters configurable.
-# Limit response size (equivalent to 1/2 daily SWARM MAG LR product).
-MAX_SAMPLES_COUNT_PER_COLLECTION = 43200
+# Limit per collection response size (equivalent to 8 daily 1Hz products).
+MAX_SAMPLES_COUNT_PER_COLLECTION = 691200
 
 # maximum allowed time selection period
 MAX_TIME_SELECTION = timedelta(days=31)

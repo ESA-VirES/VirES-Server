@@ -39,7 +39,7 @@ from .data_extraction import CDFDataset
 
 class ProductTimeSeries(BaseProductTimeSeries):
     """ Product time-series class. """
-    COLLECTION_INDEX_VARIABLE = "CollectionIndex"
+    COLLECTION_INDEX_VARIABLE = "DataSource"
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -222,7 +222,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
         """ Get collection index CDF attributes. """
         return {
             "DESCRIPTION": (
-                "Source collection index: {}".format(
+                "Index of the source data collection: {}".format(
                     ", ".join(
                         f"{index} - {collection.identifier}"
                         for index, collection
