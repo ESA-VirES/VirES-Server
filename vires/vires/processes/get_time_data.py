@@ -24,18 +24,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-few-public-methods,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals
 
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, CDTextBuffer, FormatText, RequestParameter,
+    AllowedRange,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
 from vires.access_util import get_vires_permissions
-from vires.time_util import naive_to_utc, format_datetime
+from vires.time_util import naive_to_utc, format_datetime, parse_duration
 from vires.processes.base import WPSProcess
+from vires.processes.util.time_series import MultiCollectionProductSource
 
 
 class GetTimeDataProcess(WPSProcess):
@@ -65,6 +67,15 @@ class GetTimeDataProcess(WPSProcess):
             "end_time", datetime, optional=True,
             title="Optional end of the queried time interval."
         )),
+        ("duration_threshold", LiteralData(
+            "duration_threshold", timedelta, optional=True, default=None,
+            allowed_values=AllowedRange(timedelta(0), None, dtype=timedelta),
+            title="Minimum duration threshold for the selected products.",
+            abstract=(
+                "Products whose duration is below this threshold are rejected."
+                "The default threshold is below the product nominal sampling."
+            )
+        )),
     ]
 
     outputs = {
@@ -74,19 +85,36 @@ class GetTimeDataProcess(WPSProcess):
         )
     }
 
-    def execute(self, permissions, collection_id, begin_time, end_time, **kwargs):
+    def execute(self, permissions, collection_id, begin_time, end_time,
+                duration_threshold, **kwargs):
         """ The main execution function for the process.
         """
         access_logger = self.get_access_logger(**kwargs)
 
         try:
-            collection = ProductCollection.select_permitted(permissions).get(
-                identifier=collection_id
-            )
+            collections = [
+                ProductCollection.select_permitted(permissions).get(identifier=id_)
+                for id_ in collection_id.split("+")
+            ]
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
-                "collection", "Invalid collection name '%s'!" % collection_id
+                "collection", f"Invalid collection name {collection_id!r}!"
+            ) from None
+
+        # per-collection duration threshold
+        duration_threshold = [
+            (
+                parse_duration(collection.metadata.get("nominalSampling", "PT0S"))
+                if duration_threshold is None else duration_threshold
             )
+            for collection in collections
+        ]
+
+        if begin_time:
+            begin_time = naive_to_utc(begin_time)
+
+        if end_time:
+            end_time = naive_to_utc(end_time)
 
         access_logger.info(
             "request: collection: %s, toi: (%s, %s)",
@@ -95,15 +123,7 @@ class GetTimeDataProcess(WPSProcess):
             format_datetime(naive_to_utc(end_time)) if end_time else "-",
         )
 
-        query = collection.products.order_by('begin_time')
-        if end_time:
-            query = query.filter(begin_time__lte=naive_to_utc(end_time))
-        if begin_time:
-            query = query.filter(
-                end_time__gte=naive_to_utc(begin_time),
-                begin_time__gte=(begin_time - collection.max_product_duration),
-            )
-        query = query.values_list("begin_time", "end_time", "identifier")
+        source = MultiCollectionProductSource(collections)
 
         output = CDTextBuffer()
         writer = csv.writer(output, quoting=csv.QUOTE_ALL)
@@ -111,9 +131,10 @@ class GetTimeDataProcess(WPSProcess):
 
         envelope = "(-90,-180,90,180)"
 
-        for start, end, id_ in query:
-            writer.writerow([
-                format_datetime(start), format_datetime(end), envelope, id_
-            ])
+        for index, start, end, id_ in source.iter_ids(begin_time, end_time):
+            if end - start >= duration_threshold[index]:
+                writer.writerow([
+                    format_datetime(start), format_datetime(end), envelope, id_
+                ])
 
         return output

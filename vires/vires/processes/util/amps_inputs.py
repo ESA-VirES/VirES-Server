@@ -30,7 +30,9 @@ from vires.dataset import Dataset
 from vires.models import ProductCollection
 from vires.cdf_util import mjd2000_to_cdf_rawtime
 from .models import SunPosition, SubSolarPoint, MagneticDipole, DipoleTiltAngle
-from .time_series import TimeSeries, ProductTimeSeries
+from .time_series import (
+    TimeSeries, ProductTimeSeries, SingleCollectionProductSource,
+)
 
 IMF_BY_VARIABLE = "IMF_BY_GSM"
 IMF_BZ_VARIABLE = "IMF_BZ_GSM"
@@ -40,8 +42,10 @@ IMF_V_VARIABLE = "IMF_V"
 def get_amps_inputs(mjd2000):
     """ Get AMPS model inputs for the given MJD2000 time. """
     index_imf = ProductTimeSeries(
-        ProductCollection.objects.get(
-            identifier="OMNI_HR_1min_avg20min_delay10min"
+        SingleCollectionProductSource(
+            ProductCollection.objects.get(
+                identifier="OMNI_HR_1min_avg20min_delay10min"
+            )
         )
     )
     model_sun = SunPosition()
