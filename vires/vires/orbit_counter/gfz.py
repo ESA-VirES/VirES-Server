@@ -39,7 +39,6 @@ def update_gfz_orbit_counter_file(src_file, dst_file):
         _update_gfz_orbit_counter_file(src_file, dst_file)
     else:
         with NamedTemporaryFile() as ftemp:
-
             copyfileobj(src_file, ftemp, 1024*1024)
             ftemp.flush()
             _update_gfz_orbit_counter_file(ftemp.name, dst_file)

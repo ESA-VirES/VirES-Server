@@ -31,9 +31,8 @@ from logging import getLogger, LoggerAdapter
 from collections import defaultdict
 from numpy import empty, full, nan
 from vires.cdf_util import cdf_rawtime_to_datetime
-from vires.time_util import naive_to_utc, format_datetime
+from vires.time_util import naive_to_utc, utc_to_naive, format_datetime
 from vires.util import include, exclude, pretty_list, LazyString
-from vires.models import Product
 from vires.dataset import Dataset
 from vires.management.api.cached_magnetic_model import (
     get_collection_model_cache_directory,
@@ -43,22 +42,11 @@ from vires.management.api.cached_magnetic_model import (
 )
 from .base import TimeSeries
 from .base_product import BaseProductTimeSeries
-from .product import DEFAULT_PRODUCT_TYPE_PARAMETERS
 from .data_extraction import CDFDataset
 
 
 class CachedModelExtraction(BaseProductTimeSeries):
     """ Cached model time-series class. """
-
-    @staticmethod
-    def _get_variable_mapping(dataset_definition):
-        return {
-            variable: source
-            for variable, source in (
-                (variable, type_info.get('source'))
-                for variable, type_info in dataset_definition.items()
-            ) if source
-        }
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -69,36 +57,38 @@ class CachedModelExtraction(BaseProductTimeSeries):
     def variables(self):
         return list(self.models)
 
-    def __init__(self, collection, source_models, logger=None, master_collection=None):
-        self.collection = collection
+    def __init__(self, source, source_models, logger=None, master_source=None):
+
+        is_master = (
+            master_source and master_source.identifier == source.identifier
+        )
+
         self.models = {
             f"__cached__B_NEC_{model.name}": model
             for model in source_models
         }
-        self.dataset_id = collection.type.default_dataset_id
-        self.translate_fw = self._get_variable_mapping(
-            self.collection.type.get_dataset_definition(self.dataset_id)
-        )
         self.translate_fw_models = {
             f"__cached__B_NEC_{model.name}": f"B_NEC_{model.name}"
             for model in source_models
         }
 
-        if master_collection == self.collection:
+        if is_master:
             # Force nearest neighbour interpolation when the cached collection
             # is the master collection, i.e., the cached locations are
             # the same as the interpolated ones.
             inderpolation_kind = "nearest"
+            is_master = True
         else:
             inderpolation_kind = (
-                (collection.metadata.get("cachedMagneticModels") or {})
+                (source.metadata.get("cachedMagneticModels") or {})
                 .get("interpolationKind", "nearest")
             )
-        params = DEFAULT_PRODUCT_TYPE_PARAMETERS
+
+        params = source.params
 
         super().__init__(
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
-                "collection_id": collection.identifier
+                "collection_id": source.identifier
             }),
             time_variable=params.TIME_VARIABLE,
             time_tolerance=params.TIME_TOLERANCE,
@@ -110,13 +100,28 @@ class CachedModelExtraction(BaseProductTimeSeries):
             },
         )
 
-        if master_collection == self.collection:
+        self.source = source
+
+        if is_master:
             self.logger.debug("using master collection")
         self.logger.debug("interpolation kind: %s", inderpolation_kind)
+
+    def subset_count(self, start, stop):
+        """ Count products overlapping the given time interval. """
+        return self.source.count_products(start, stop, self.time_tolerance)
 
     def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the given time array.
         """
+        def _format_time_range(start, stop):
+            return (
+                f"{format_datetime(cdf_rawtime_to_datetime(start, cdf_type))}/"
+                f"{format_datetime(cdf_rawtime_to_datetime(stop, cdf_type))}"
+            )
+
+        def _format_times_extent(times):
+            return _format_time_range(times.min(), times.max())
+
         times, cdf_type = self._convert_time(times, cdf_type)
 
         if not variables: # stop here if no variables are requested
@@ -135,19 +140,18 @@ class CachedModelExtraction(BaseProductTimeSeries):
             variables,
         )
 
-        self.logger.debug("requested time-span: %s", LazyString(lambda: (
-            f"{format_datetime(cdf_rawtime_to_datetime(start, cdf_type))}/"
-            f"{format_datetime(cdf_rawtime_to_datetime(stop, cdf_type))}"
-        )))
+        self.logger.debug(
+            "requested time-span: %s",
+            LazyString(_format_time_range, start, stop)
+        )
 
         dataset = Dataset()
         for item in dataset_iterator:
-            if item and item.length > 0:
-                _times = item[self.time_variable]
-                self.logger.debug("item time-span: %s", LazyString(lambda: (
-                    f"{format_datetime(cdf_rawtime_to_datetime(_times.min(), cdf_type))}/"
-                    f"{format_datetime(cdf_rawtime_to_datetime(_times.max(), cdf_type))}"
-                )))
+            if not item.is_empty:
+                self.logger.debug(
+                    "item time-span: %s",
+                    LazyString(_format_times_extent, item[self.time_variable])
+                )
             else:
                 self.logger.debug("item time-span is empty")
             dataset.append(item)
@@ -157,32 +161,38 @@ class CachedModelExtraction(BaseProductTimeSeries):
     def _subset(self, start, stop, variables):
         """ Get subset of the time series overlapping the given time range.
         """
-        self.logger.debug("subset: %s", LazyString(
-            lambda: f"{format_datetime(start)}/{format_datetime(stop)}"
-        ))
+        def _format_time_range(start, stop):
+            return f"{format_datetime(start)}/{format_datetime(stop)}"
+
+        start = naive_to_utc(start)
+        stop = naive_to_utc(stop)
+
+        self.logger.debug("subset: %s", LazyString(_format_time_range, start, stop))
         self.logger.debug("extracted variables: %s", pretty_list(variables))
 
         if not variables: # stop here if no variables are requested
             return
 
-        cache_directory = get_collection_model_cache_directory(
-            self.collection.identifier
-        )
+        cache_directory = [
+            get_collection_model_cache_directory(collection.identifier)
+            for collection in self.source.collections
+        ]
 
         counter = 0
-        for product in self._subset_qs(start, stop).order_by('begin_time'):
-            source_dataset = product.get_dataset(self.dataset_id)
+        products = self.source.iter_products(start, stop, self.time_tolerance)
+        for collection_index, data_start, data_stop, product in products:
+            data_start = max(start, data_start)
+            data_stop = min(stop, data_stop)
+            source_dataset = product.get_dataset(self.source.dataset_id)
 
             if not source_dataset:
                 continue
 
             self.logger.debug("product: %s ", product.identifier)
-            self.logger.debug("product time span: %s", LazyString(
-                lambda: (
-                    f"{format_datetime(product.begin_time,)}/"
-                    f"{format_datetime(product.end_time)}"
-                )
-            ))
+            self.logger.debug(
+                "subset time span: %s",
+                LazyString(_format_time_range, data_start, data_stop)
+            )
 
             self.product_set.add(product.identifier) # record source product
 
@@ -190,16 +200,16 @@ class CachedModelExtraction(BaseProductTimeSeries):
             if time_subset:
                 time_subset = slice(*time_subset[:2])
 
-            temporal_subset_options = dict(
-                start=start,
-                stop=stop,
-                time_variable=self.time_variable,
-                subset=time_subset,
-                is_sorted=source_dataset.get('isSorted', True),
-            )
+            temporal_subset_options = {
+                "start": data_start,
+                "stop": data_stop,
+                "time_variable": self.time_variable,
+                "subset": time_subset,
+                "is_sorted": source_dataset.get('isSorted', True),
+            }
 
             cache_file = get_product_model_cache_file(
-                cache_directory, product.identifier
+                cache_directory[collection_index], product.identifier
             )
             if exists(cache_file):
                 self.logger.debug("cache file exists")
@@ -231,7 +241,6 @@ class CachedModelExtraction(BaseProductTimeSeries):
             if dataset:
                 yield dataset
 
-
     def _extract_product_data(self, filename, variables, **temporal_subset_options):
         """ Fallback extraction of variables from the original product. """
 
@@ -239,7 +248,8 @@ class CachedModelExtraction(BaseProductTimeSeries):
         missing_model_variables = set(include(variables, self.models))
 
         with CDFDataset(
-            filename, translation=self.translate_fw,
+            filename,
+            translation=self.source.translate_fw,
             time_type=self.TIMESTAMP_TYPE,
         ) as cdf_ds:
             subset, nrv_shape = cdf_ds.get_temporal_subset(
@@ -334,8 +344,6 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
         return dataset, missing_model_variables
 
-
-
     def _get_empty_dataset(self, variables):
         """ Generate an empty dataset. """
         dataset = Dataset()
@@ -354,8 +362,9 @@ class CachedModelExtraction(BaseProductTimeSeries):
         fill_data = full((*dataset[self.time_variable].shape, 3), nan, dtype="float64")
         for variable in variables:
             _, cdf_type, attrs = (
-                self.models[variable]
-                ._output[self.translate_fw_models[variable]]
+                self.models[variable]._output[
+                    self.translate_fw_models[variable]
+                ]
             )
             dataset.set(variable, fill_data, cdf_type, attrs)
 
@@ -370,6 +379,8 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
     def _extract_cached_model_sources(self, start, end, variables, sources):
         """ Extract sources of the cached model values. """
+        start = utc_to_naive(start)
+        end = utc_to_naive(end)
         model_to_variable = {
             self.models[variable].name: variable
             for variable in variables
@@ -391,14 +402,3 @@ class CachedModelExtraction(BaseProductTimeSeries):
         for variable in variables:
             for source in sources[variable]:
                 self.product_set.add(source)
-
-    def _subset_qs(self, start, stop):
-        """ Subset Django query set. """
-        _start = naive_to_utc(start)
-        _stop = naive_to_utc(stop)
-        return Product.objects.prefetch_related('collection__type').filter(
-            collection=self.collection,
-            begin_time__lt=_stop,
-            end_time__gte=_start,
-            begin_time__gte=(_start - self.collection.max_product_duration),
-        )

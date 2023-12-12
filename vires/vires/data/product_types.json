@@ -1,5 +1,47 @@
 [
     {
+        "name": "GFZ_KP",
+        "description": "Kp and ap values produced by GFZ German Research Centre for Geosciences, Potsdam, Germany",
+        "resourceUrl": "https://kp.gfz-potsdam.de/app/format/Kp_ap.txt",
+        "citation": "https://doi.org/10.1029/2020SW002641",
+        "dataTerms": "CC BY 4.0",
+        "defaultDataset": "Kp_ap",
+        "datasets": {
+            "Kp_ap": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "UTC timestamp - start time of interval for which the Kp and ap values are given",
+                        "UNITS": "-"
+                    }
+                },
+                "Interval": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Duration of interval in seconds for which the Kp and ap values are given",
+                        "UNITS": "s"
+                    }
+                },
+                "Kp": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Planetary three-hour index Kp for the interval",
+                        "UNITS": "-"
+                    }
+                },
+                "ap": {
+                    "dataType": "int16",
+                    "attributes": {
+                        "DESCRIPTION": "Three-hourly equivalent planetary amplitude ap for the interval",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_MODx_SC_1B",
         "description": "Swarm S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products",

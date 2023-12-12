@@ -38,7 +38,7 @@ from vires.util import cached_property
 from vires.views.custom_data import sanitize_info
 from .base import TimeSeries
 from .base_product import BaseProductTimeSeries
-from .product import DEFAULT_PRODUCT_TYPE_PARAMETERS
+from .product_source import DEFAULT_PRODUCT_TYPE_PARAMETERS
 from .data_extraction import CDFDataset
 
 
@@ -83,9 +83,22 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
     def variables(self):
         return list(self._variables)
 
+    def subset_count(self, start, stop):
+        """ Count products overlaping the given time interval. """
+        raise len(self._subset_qs(start, stop))
+
     def _subset_times(self, times, variables, cdf_type=TimeSeries.TIMESTAMP_TYPE):
         """ Get subset of the time series overlapping the give array time array.
         """
+        def _format_time_range(start, stop):
+            return (
+                f"{format_datetime(cdf_rawtime_to_datetime(start, cdf_type))}/"
+                f"{format_datetime(cdf_rawtime_to_datetime(stop, cdf_type))}"
+            )
+
+        def _format_times_extent(times):
+            return _format_time_range(times.min(), times.max())
+
         times, cdf_type = self._convert_time(times, cdf_type)
 
         if not variables: # stop here if no variables are requested
@@ -104,19 +117,18 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
             variables,
         )
 
-        self.logger.debug("requested time-span: %s", LazyString(lambda: (
-            f"{format_datetime(cdf_rawtime_to_datetime(start, cdf_type))}/"
-            f"{format_datetime(cdf_rawtime_to_datetime(stop, cdf_type))}"
-        )))
+        self.logger.debug(
+            "requested time-span: %s",
+            LazyString(_format_time_range, start, stop)
+        )
 
         dataset = Dataset()
         for item in dataset_iterator:
-            if item and item.length > 0:
-                _times = item[self.time_variable]
-                self.logger.debug("item time-span: %s", LazyString(lambda: (
-                    f"{format_datetime(cdf_rawtime_to_datetime(_times.min(), cdf_type))}/"
-                    f"{format_datetime(cdf_rawtime_to_datetime(_times.max(), cdf_type))}"
-                )))
+            if not item.is_empty:
+                self.logger.debug(
+                    "item time-span: %s",
+                    LazyString(_format_times_extent, item[self.time_variable])
+                )
             else:
                 self.logger.debug("item time-span is empty")
             dataset.append(item)
@@ -124,9 +136,10 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
         return dataset
 
     def _subset(self, start, stop, variables):
-        self.logger.debug("subset: %s", LazyString(
-            lambda: f"{format_datetime(start)}/{format_datetime(stop)}"
-        ))
+        def _format_time_range(start, stop):
+            return f"{format_datetime(start)}/{format_datetime(stop)}"
+
+        self.logger.debug("subset: %s", LazyString(_format_time_range, start, stop))
         self.logger.debug("extracted variables: %s", pretty_list(variables))
 
         if not variables: # stop here if no variables are requested

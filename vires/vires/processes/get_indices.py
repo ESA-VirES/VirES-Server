@@ -5,7 +5,7 @@
 # Authors: Daniel Santillan <daniel.santillan@eox.at>
 #          Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2014 EOX IT Services GmbH
+# Copyright (C) 2014-2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,16 +35,20 @@ from numpy import vectorize, choose, empty, ravel, stack, concatenate
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, CDFileWrapper,
 )
-from vires.aux_kp import KpReader
 from vires.aux_dst import DstReader, DDstReader
 from vires.aux_f107 import F10_2_Reader
 from vires.time_util import (
     mjd2000_to_datetime, mjd2000_to_unix_epoch, naive_to_utc,
     format_datetime,
 )
+from vires.cdf_util import cdf_rawtime_to_mjd2000
+from vires.models import ProductCollection
 from vires.processes.base import WPSProcess
+from vires.processes.util.time_series import (
+   ProductTimeSeries, SingleCollectionProductSource,
+)
 from vires.cache_util import cache_path
-from vires.data.vires_settings import AUX_DB_KP, AUX_DB_DST, CACHED_PRODUCT_FILE
+from vires.data.vires_settings import AUX_DB_DST, CACHED_PRODUCT_FILE
 
 
 def amax(arr, axis):
@@ -59,10 +63,65 @@ def abs_amax(arr, axis):
     return choose(abs(arr_max) > abs(arr_min), (arr_min, arr_max))
 
 
+class CollectionReader:
+    """ Extraction of auxiliary indices from a regular times-series collection.
+    """
+
+    # source collection identifier
+    COLLECTION_ID = None
+
+    # extracted data fields
+    FIELDS = None
+
+    @classmethod
+    def subset(cls, start, end, fields):
+        """ Extract subset of the data matched by the given time-selection. """
+        time_field, data_field = fields
+        data = cls._read_data(start, end, fields)
+        return {
+            time_field: cdf_rawtime_to_mjd2000(
+                data[time_field], data.cdf_type[time_field],
+            ),
+            data_field: data[data_field],
+        }
+
+    @classmethod
+    def _read_data(cls, start, end, fields):
+        time_series = ProductTimeSeries(
+            SingleCollectionProductSource(
+                ProductCollection.objects.get(
+                    identifier=cls.COLLECTION_ID
+                )
+            )
+        )
+
+        data_chunks = time_series.subset(
+            start - 2 * time_series.segment_neighbourhood,
+            end + 2 * time_series.segment_neighbourhood,
+            variables=fields
+        )
+
+        try:
+            data = next(data_chunks)
+        except StopIteration:
+            raise RuntimeError("No data chunk received!") from None
+
+        for data_chunk in data_chunks:
+            data.append(data_chunk)
+
+        return data
+
+
+class KpReader(CollectionReader):
+    """ Kp index reader class """
+    FIELDS = ("Timestamp", "Kp")
+    COLLECTION_ID = "GFZ_KP"
+
+
 # Auxiliary data query function and file sources
 AUX_INDEX = {
     "kp": (
-        KpReader(cache_path(AUX_DB_KP)), ("time", "kp"), amax, "%.1f"
+        KpReader, KpReader.FIELDS, amax, "%.1f"
     ),
     "dst": (
         DstReader(cache_path(AUX_DB_DST)), ("time", "dst"), abs_amax, "%.6g"
@@ -143,9 +202,6 @@ class GetIndices(WPSProcess):
             time, data = self._reduce_data(time, data, lessen)
         time, time_format = self._convert_time(time, csv_time_format)
 
-        if index_id == 'kp':
-            data = self._kp10_to_kp(data)
-
         output_fobj = StringIO(newline="\r\n")
         self._write_csv(
             output_fobj, index_id, time, data, time_format, data_format
@@ -157,10 +213,6 @@ class GetIndices(WPSProcess):
         )
 
         return CDFileWrapper(output_fobj, **output)
-
-    @staticmethod
-    def _kp10_to_kp(kp10):
-        return 0.1 * kp10
 
     @staticmethod
     def _fix_ddst(time, ddst):

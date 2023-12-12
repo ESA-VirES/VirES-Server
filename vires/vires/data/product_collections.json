@@ -26,6 +26,36 @@
         "calculateOrbitDirection": true
     },
     {
+        "name": "SW_FAST_MODA_SC_1B",
+        "description": "Swarm A S/C fast track position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
+        "productType": "SW_MODx_SC_1B",
+        "spacecraft": "A",
+        "grade": "FAST",
+        "nominalSampling": "PT1S",
+        "calculateConjunctions": true,
+        "calculateOrbitDirection": true
+    },
+    {
+        "name": "SW_FAST_MODB_SC_1B",
+        "description": "Swarm B S/C fast track position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
+        "productType": "SW_MODx_SC_1B",
+        "spacecraft": "B",
+        "grade": "FAST",
+        "nominalSampling": "PT1S",
+        "calculateConjunctions": true,
+        "calculateOrbitDirection": true
+    },
+    {
+        "name": "SW_FAST_MODC_SC_1B",
+        "description": "Swarm C S/C fast track position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
+        "productType": "SW_MODx_SC_1B",
+        "spacecraft": "C",
+        "grade": "FAST",
+        "nominalSampling": "PT1S",
+        "calculateConjunctions": true,
+        "calculateOrbitDirection": true
+    },
+    {
         "name": "SW_OPER_MAGA_LR_1B",
         "description": "Swarm A vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
         "productType": "SW_MAGx_LR_1B",
@@ -80,6 +110,63 @@
         }
     },
     {
+        "name": "SW_FAST_MAGA_LR_1B",
+        "description": "Swarm A vector (VFM) and scalar (ASM) magnetic field fast track measurements interpolated at 1Hz rate.",
+        "productType": "SW_MAGx_LR_1B",
+        "spacecraft": "A",
+        "grade": "FAST",
+        "nominalSampling": "PT1S",
+        "subtractableCollections": {
+            "C": "SW_FAST_MAGC_LR_1B"
+        },
+        "cachedMagneticModels": {
+            "interpolationKind": "linear",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
+    },
+    {
+        "name": "SW_FAST_MAGB_LR_1B",
+        "description": "Swarm B vector (VFM) and scalar (ASM) magnetic field fast track measurements interpolated at 1Hz rate.",
+        "productType": "SW_MAGx_LR_1B",
+        "nominalSampling": "PT1S",
+        "spacecraft": "B",
+        "grade": "FAST",
+        "cachedMagneticModels": {
+            "interpolationKind": "linear",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
+    },
+    {
+        "name": "SW_FAST_MAGC_LR_1B",
+        "description": "Swarm C vector (VFM) and scalar (ASM) magnetic field fast track measurements interpolated at 1Hz rate.",
+        "productType": "SW_MAGx_LR_1B",
+        "nominalSampling": "PT1S",
+        "spacecraft": "C",
+        "grade": "FAST",
+        "subtractableCollections": {
+            "A": "SW_FAST_MAGA_LR_1B"
+        },
+        "cachedMagneticModels": {
+            "interpolationKind": "linear",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
+    },
+    {
         "name": "SW_OPER_MAGA_HR_1B",
         "description": "Swarm A vector (VFM) magnetic field measurements at 50Hz rate.",
         "productType": "SW_MAGx_HR_1B",
@@ -116,6 +203,45 @@
         }
     },
     {
+        "name": "SW_FAST_MAGA_HR_1B",
+        "description": "Swarm A vector (VFM) magnetic field fast track measurements at 50Hz rate.",
+        "productType": "SW_MAGx_HR_1B",
+        "nominalSampling": "PT0.02S",
+        "spacecraft": "A",
+        "grade": "FAST",
+        "subtractableCollections": {
+            "C": "SW_FAST_MAGC_HR_1B"
+        },
+        "cachedMagneticModels": {
+            "noCache": true
+        }
+    },
+    {
+        "name": "SW_FAST_MAGB_HR_1B",
+        "description": "Swarm B vector (VFM) magnetic field fast track measurements at 50Hz rate.",
+        "productType": "SW_MAGx_HR_1B",
+        "nominalSampling": "PT0.02S",
+        "spacecraft": "B",
+        "grade": "FAST",
+        "cachedMagneticModels": {
+            "noCache": true
+        }
+    },
+    {
+        "name": "SW_FAST_MAGC_HR_1B",
+        "description": "Swarm C vector (VFM) magnetic field fast track measurements at 50Hz rate.",
+        "productType": "SW_MAGx_HR_1B",
+        "nominalSampling": "PT0.02S",
+        "spacecraft": "C",
+        "grade": "FAST",
+        "subtractableCollections": {
+            "A": "SW_FAST_MAGA_HR_1B"
+        },
+        "cachedMagneticModels": {
+            "noCache": true
+        }
+    },
+    {
         "name": "SW_OPER_EFIA_LP_1B",
         "description": "Swarm A plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
@@ -135,6 +261,30 @@
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
         "spacecraft": "C"
+    },
+    {
+        "name": "SW_FAST_EFIA_LP_1B",
+        "description": "Swarm A plasma fast track data from the Langmuir Probe (LP) at 2Hz rate",
+        "productType": "SW_EFIx_LP_1B",
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "A",
+        "grade": "FAST"
+    },
+    {
+        "name": "SW_FAST_EFIB_LP_1B",
+        "description": "Swarm B plasma fast track data from the Langmuir Probe (LP) at 2Hz rate",
+        "productType": "SW_EFIx_LP_1B",
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "B",
+        "grade": "FAST"
+    },
+    {
+        "name": "SW_FAST_EFIC_LP_1B",
+        "description": "Swarm C plasma fast track data from the Langmuir Probe (LP) at 2Hz rate",
+        "productType": "SW_EFIx_LP_1B",
+        "nominalSampling": "PT0.5S",
+        "spacecraft": "C",
+        "grade": "FAST"
     },
     {
         "name": "SW_PREL_EFIAIDM_2_",
@@ -743,5 +893,11 @@
                 "'MLI_SHA_2C'"
             ]
         }
+    },
+    {
+        "name": "GFZ_KP",
+        "nominalSampling": "PT3H",
+        "productType": "GFZ_KP",
+        "requiredPermission": "__restricted__"
     }
 ]

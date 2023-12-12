@@ -55,8 +55,7 @@ from vires.cdf_util import (
 )
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
-    CACHED_PRODUCT_FILE, AUX_DB_KP, AUX_DB_DST, SPACECRAFTS, DEFAULT_MISSION,
-    ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
+    CACHED_PRODUCT_FILE, AUX_DB_DST, DEFAULT_MISSION,
 )
 from vires.filters import (
     format_filters, MinStepSampler, GroupingSampler, ExtraSampler,
@@ -65,18 +64,16 @@ from vires.processes.base import WPSProcess
 from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
-    extract_product_names, get_time_limit,
+    extract_product_names, get_time_limit, get_orbit_sources,
 )
 from vires.processes.util.time_series import (
-    TimeSeries, ProductTimeSeries,
-    IndexKp10, IndexDst, IndexDDst, IndexF107,
-    OrbitCounter, OrbitDirection, QDOrbitDirection,
+    SingleCollectionProductSource, TimeSeries, ProductTimeSeries,
+    IndexDst, IndexDDst, IndexF107,
 )
 from vires.processes.util.models import (
     QuasiDipoleCoordinates, MagneticLocalTime,
     SpacecraftLabel, SunPosition, SubSolarPoint,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
-    IndexKpFromKp10,
     Identity,
     BnecToF,
     Geodetic2GeocentricCoordinates,
@@ -86,14 +83,15 @@ from vires.processes.util.models import (
 TIME_PRECISION = timedelta(microseconds=1)
 
 # TODO: Make the limits configurable.
-# Limit response size (equivalent to 5 daily SWARM LR products).
-MAX_SAMPLES_COUNT = 432000
+# Limit response size (equivalent to 8 daily 1Hz products).
+MAX_SAMPLES_COUNT = 691200
 
 # maximum allowed time selection period for 1 second sampled data
 MAX_TIME_SELECTION = timedelta(days=31)
 
 # set of the minimum required variables
 MANDATORY_VARIABLES = [
+    ProductTimeSeries.COLLECTION_INDEX_VARIABLE,
     "Spacecraft", "Timestamp", "Latitude", "Longitude", "Radius"
 ]
 
@@ -261,34 +259,24 @@ class FetchFilteredData(WPSProcess):
         resolvers = {}
 
         if sources:
-            orbit_info = {
-                spacecraft: [
-                    OrbitCounter(
-                        ":".join(["OrbitCounter", spacecraft[0], spacecraft[1] or ""]),
-                        cache_path(ORBIT_COUNTER_FILE[spacecraft])
-                    ),
-                    OrbitDirection(
-                        ":".join(["OrbitDirection", spacecraft[0], spacecraft[1] or ""]),
-                        cache_path(ORBIT_DIRECTION_GEO_FILE[spacecraft])
-                    ),
-                    QDOrbitDirection(
-                        ":".join(["QDOrbitDirection", spacecraft[0], spacecraft[1] or ""]),
-                        cache_path(ORBIT_DIRECTION_MAG_FILE[spacecraft])
-                    ),
-                ]
-                for spacecraft in SPACECRAFTS
-            }
-            index_kp10 = IndexKp10(cache_path(AUX_DB_KP))
+            index_kp = ProductTimeSeries(
+                SingleCollectionProductSource(
+                    ProductCollection.objects.get(
+                        identifier="GFZ_KP"
+                    )
+                )
+            )
             index_dst = IndexDst(cache_path(AUX_DB_DST))
             index_ddst = IndexDDst(cache_path(AUX_DB_DST))
             index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
             index_imf = ProductTimeSeries(
-                ProductCollection.objects.get(
-                    identifier="OMNI_HR_1min_avg20min_delay10min"
+                SingleCollectionProductSource(
+                    ProductCollection.objects.get(
+                        identifier="OMNI_HR_1min_avg20min_delay10min"
+                    )
                 )
             )
             model_bnec_intensity = BnecToF()
-            model_kp = IndexKpFromKp10()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
@@ -338,21 +326,21 @@ class FetchFilteredData(WPSProcess):
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
-                for slave in (index_kp10, index_dst, index_ddst, index_f10, index_imf):
+                for slave in (index_kp, index_dst, index_ddst, index_f10, index_imf):
                     resolver.add_slave(slave)
 
                 # satellite specific slaves
-                spacecraft = (
-                    master.metadata.get("mission") or DEFAULT_MISSION,
-                    master.metadata.get("spacecraft")
-                )
-                #TODO: add mission label
-                resolver.add_model(SpacecraftLabel(spacecraft[1] or "-"))
+                mission = master.metadata.get("mission") or DEFAULT_MISSION
+                spacecraft = master.metadata.get("spacecraft")
+                grade = master.metadata.get("grade")
 
-                for item in orbit_info.get(spacecraft, []):
+                #TODO: add mission label
+                resolver.add_model(SpacecraftLabel(spacecraft or "-"))
+
+                for item in get_orbit_sources(mission, spacecraft, grade):
                     resolver.add_slave(item)
 
-                if spacecraft[0] == "Swarm" and spacecraft[1] in ("A", "B", "C"):
+                if mission == "Swarm" and spacecraft in ("A", "B", "C"):
                     # prepare spacecraft to spacecraft differences
                     subtracted_variables = get_subtracted_variables(unique(chain(
                         requested_variables, chain.from_iterable(
@@ -372,11 +360,12 @@ class FetchFilteredData(WPSProcess):
                 for model in chain(
                     (
                         model_gd2gc, model_bnec_intensity,
-                        model_kp, model_qdc, model_mlt, model_sun,
+                        model_qdc, model_mlt, model_sun,
                         model_subsol, model_dipole, model_tilt_angle,
                     ),
                     generate_magnetic_model_sources(
-                        *spacecraft, requested_models, source_models,
+                        mission, spacecraft, grade,
+                        requested_models, source_models,
                         no_cache=ignore_cached_models,
                         master=master,
                     ),
@@ -408,11 +397,11 @@ class FetchFilteredData(WPSProcess):
                 )
                 self.logger.debug(
                     "%s: applicable filters: %s", label,
-                    LazyString(lambda: format_filters(resolver.filters))
+                    LazyString(format_filters, resolver.filters)
                 )
                 self.logger.debug(
                     "%s: unresolved filters: %s", label,
-                    LazyString(lambda: format_filters(resolver.unresolved_filters))
+                    LazyString(format_filters, resolver.unresolved_filters)
                 )
 
             # collect the common output variables
@@ -594,7 +583,7 @@ class FetchFilteredData(WPSProcess):
                             dataset.cdf_attr.get(variable, {})
                         )
 
-                    if dataset.length > 0: # write the follow-on dataset
+                    if not dataset.is_empty: # write the follow-on dataset
                         for variable in available:
                             cdf[variable].extend(dataset[variable])
 

@@ -48,6 +48,24 @@ class SyncConjunctionsSubcommand(Subcommand):
                 "to re-build the conjunctions table."
             )
         )
+        parser.add_argument(
+            "-m", "--mission", dest="mission", action="append", help=(
+                "Optional filter on the mission type. "
+                "Multiple missions are allowed."
+            )
+        )
+        parser.add_argument(
+            "-s", "--spacecraft", dest="spacecraft", action="append", help=(
+                "Optional filter on the spacecraft identifier. "
+                "Multiple spacecrafts are allowed."
+            )
+        )
+        parser.add_argument(
+            "-g", "--grade", "--class", dest="grade", action="append", help=(
+                "Optional filter on the product grade (class). "
+                "Multiple values are allowed. "
+            )
+        )
 
     def handle(self, **kwargs):
         query = ProductCollection.objects.order_by('identifier')
@@ -56,6 +74,18 @@ class SyncConjunctionsSubcommand(Subcommand):
         collection_ids = kwargs['collection-identifier']
         if collection_ids:
             query = query.filter(identifier__in=collection_ids)
+
+        missions = set(kwargs["mission"] or [])
+        if missions:
+            query = query.filter(spacecraft__mission__in=missions)
+
+        spacecrafts = set(kwargs["spacecraft"] or [])
+        if spacecrafts:
+            query = query.filter(spacecraft__spacecraft__in=spacecrafts)
+
+        grades = set(kwargs["grade"] or [])
+        if grades:
+            query = query.filter(grade__in=grades)
 
         counter = Counter()
         self.log = True

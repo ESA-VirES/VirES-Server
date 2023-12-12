@@ -34,14 +34,15 @@ from numpy import (
     uint8, uint16, uint32, uint64, int8, int16, int32, int64,
 )
 from numpy.testing import assert_equal
-from vires.hapi.formats.binary_slow import (
-#from vires.hapi.formats.binary import (
+from vires.hapi.formats.binary import (
     arrays_to_hapi_binary, arrays_to_x_binary,
 )
 from vires.hapi.formats.common import (
     get_datetime64_string_size,
 )
-from .base import FormatTestMixIn, random_integer_array
+from .base import (
+    FormatTestMixIn, random_integer_array, random_nonnegative_integer_array,
+)
 
 def constant_item_size(size):
     """ Build function for a constant item size. """
@@ -64,6 +65,9 @@ HAPI_BINARY_ITEM_SIZE = {
     str_: lambda t: t.itemsize,
     bytes_: lambda t: t.itemsize,
     int32: constant_item_size(4),
+    int64: constant_item_size(4),
+    uint32: constant_item_size(4),
+    uint64: constant_item_size(4),
     float64: constant_item_size(8),
     datetime64: get_datetime64_string_size,
 }
@@ -150,6 +154,9 @@ class TestArraysToHapiBinary(BinaryFormatTestMixIn, TestCase):
         str_: lambda v: v.rstrip(b"\x00").decode('utf8'),
         bytes_: lambda v: v.rstrip(b"\x00"),
         int32: _binary_decoder("<l"),
+        int64: _binary_decoder("<l"),
+        uint32: _binary_decoder("<l"),
+        uint64: _binary_decoder("<l"),
         float64: _binary_decoder("<d"),
         datetime64: lambda v: v.rstrip(b"\x00").decode('ascii'),
     }
@@ -163,13 +170,13 @@ class TestArraysToHapiBinary(BinaryFormatTestMixIn, TestCase):
             arrays_to_hapi_binary(arrays)
 
     def test_int64_array_0d(self):
-        self._test_failed(random_integer_array((20,), 'int64'))
+        self._test(random_integer_array((20,), 'int32').astype('int64'))
 
     def test_uint32_array_0d(self):
-        self._test_failed(random_integer_array((20,), 'uint32'))
+        self._test(random_nonnegative_integer_array((20,), 'int32').astype('uint32'))
 
     def test_uint64_array_0d(self):
-        self._test_failed(random_integer_array((20,), 'uint64'))
+        self._test(random_nonnegative_integer_array((20,), 'int32').astype('uint64'))
 
 
 def _parse_binary(data, types, decoders, item_sizes, type_mapping):

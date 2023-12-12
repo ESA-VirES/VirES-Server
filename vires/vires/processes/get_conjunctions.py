@@ -24,11 +24,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=no-self-use,unused-argument,too-many-arguments,too-many-locals
+# pylint: disable=unused-argument,too-many-arguments,too-many-locals
 
 from io import StringIO, BytesIO
 from os import remove
 from os.path import join, exists
+from itertools import chain
 from uuid import uuid4
 from datetime import datetime
 import msgpack
@@ -51,16 +52,17 @@ from vires.data.vires_settings import ORBIT_CONJUNCTION_FILE, DEFAULT_MISSION
 from vires.conjunctions.reader import read_conjunctions
 
 
-_MISSION_SPACECRAFT_PAIRS = {
+_MISSION_SPACECRAFT_GRADE_KEYS = {
     item for pair in ORBIT_CONJUNCTION_FILE for item in pair
 }
 
-MISSIONS = sorted({mission for mission, _ in _MISSION_SPACECRAFT_PAIRS})
-SPACECRAFTS = sorted({spacecraft for _, spacecraft in _MISSION_SPACECRAFT_PAIRS})
+MISSIONS = sorted({mission for mission, _, _ in _MISSION_SPACECRAFT_GRADE_KEYS})
+SPACECRAFTS = sorted({spacecraft for _, spacecraft, _ in _MISSION_SPACECRAFT_GRADE_KEYS})
+GRADES = sorted({grade for _, _, grade in _MISSION_SPACECRAFT_GRADE_KEYS if grade})
 
 MISSION_SPACECRAFTS = {
     mission: sorted([
-        spacecraft for key, spacecraft in _MISSION_SPACECRAFT_PAIRS
+        spacecraft for key, spacecraft, _ in _MISSION_SPACECRAFT_GRADE_KEYS
         if key == mission and spacecraft
     ])
     for mission in MISSIONS
@@ -112,6 +114,11 @@ class GetConjunctions(WPSProcess):
                 " between the spacecrafts of the selected conjunctions."
             ),
         )),
+        ("grade", LiteralData(
+            "grade", str, optional=True,
+            abstract="Source product grade.",
+            allowed_values=GRADES,
+        )),
     ]
 
     outputs = [
@@ -152,11 +159,13 @@ class GetConjunctions(WPSProcess):
             raise InvalidInputValueError(parameter, error)
 
 
-    def execute(self, mission1, spacecraft1, mission2, spacecraft2,
+    def execute(self, mission1, spacecraft1, mission2, spacecraft2, grade,
                 begin_time, end_time, max_angular_separation, output,
                 source_products, **kwargs):
         """ Execute process. """
         access_logger = self.get_access_logger(**kwargs)
+
+        grade = grade or None
 
         spacecraft1 = spacecraft1 or None
         spacecraft2 = spacecraft2 or None
@@ -169,15 +178,17 @@ class GetConjunctions(WPSProcess):
                 "Primary and secondary spacecrafts must differ."
             ))
 
-        pair_selection = tuple(sorted([
-            (mission1, spacecraft1), (mission2, spacecraft2)
-        ]))
+        pair_selection = tuple(sorted(
+            [(mission1, spacecraft1, grade), (mission2, spacecraft2, grade)],
+            key=lambda v: (*v[:2], v[2] or '')
+        ))
 
         try:
             conjunctions_file = ORBIT_CONJUNCTION_FILE[pair_selection]
         except KeyError:
             raise InvalidInputValueError("spacecraft2", (
-                " No conjunction table available for the requested spacecrafts."
+                "No conjunction table available for the requested mission, "
+                "spacecraft and product grade selection."
             )) from None
 
         spacecraft_ids = [_format_spacecraft(*item) for item in pair_selection]
@@ -187,9 +198,9 @@ class GetConjunctions(WPSProcess):
             "request: toi: "
             f"{format_datetime(begin_time) or '-'}/"
             f"{format_datetime(end_time) or '-'}, "
-            "spacecrafts: "
-            f"{spacecraft_ids[0]}/{spacecraft_ids[1]} "
-            f"threshold: {max_angular_separation} "
+            f"spacecrafts: {spacecraft_ids[0]}/{spacecraft_ids[1]}, "
+            f"grade: {grade or 'OPER'}, "
+            f"threshold: {max_angular_separation}, "
             f"format: {output['mime_type']}"
         )
 
@@ -204,7 +215,8 @@ class GetConjunctions(WPSProcess):
         )
 
         basename = (
-            f"conjunctions_{spacecraft_ids[0]}_{spacecraft_ids[1]}_"
+            f"conjunctions_{grade or 'OPER'}"
+            f"{spacecraft_ids[0]}_{spacecraft_ids[1]}_"
             f"{begin_time:%Y%m%dT%H%M%S}_"
             f"{end_time:%Y%m%dT%H%M%S}_"
             f"{datetime.utcnow():%Y%m%dT%H%M%S}"
@@ -228,7 +240,7 @@ class GetConjunctions(WPSProcess):
         else:
             raise InvalidOutputDefError(
                 "output",
-                "Unexpected output format %r requested!" % output["mime_type"]
+                f"Unexpected output format {output['mime_type']} requested!"
             )
 
         return {
@@ -264,9 +276,9 @@ def _pack_cdf(basename, dataset, sources, spacecrafts,
         # add the global attributes
         cdf.attrs.update({
             "TITLE": basename,
-            "DATA_TIMESPAN": ("%s/%s" % (
-                format_datetime(begin_time), format_datetime(end_time),
-            )),#.replace("+00:00", "Z"),
+            "DATA_TIMESPAN": (
+                f"{format_datetime(begin_time)}/{format_datetime(end_time)}"
+            ),
             "SPACECRAFTS": spacecrafts,
             "MAX_ANGULAR_SEPARATION": max_angular_separation,
             "ORIGINAL_PRODUCT_NAMES": sources,
@@ -295,16 +307,17 @@ def _pack_msgpack(basename, dataset, sources, spacecrafts,
 
 def _pack_csv(basename, dataset, sources, **output):
     variables = ('Timestamp', 'AngularSeparation')
+    header_format = "%s,%s"
     format_ = "%sZ,%.3f"
 
     output_fobj = StringIO(newline="\r\n")
 
-    print("%s,%s" % variables, file=output_fobj)
+    print(header_format % variables, file=output_fobj)
     for record in zip(*[dataset[variable] for variable in variables]):
         print(format_ % record, file=output_fobj)
 
     return CDFileWrapper(output_fobj, filename=basename+".csv", **output)
 
 
-def _format_spacecraft(mission, spacecraft):
-    return "%s-%s" % (mission, spacecraft) if spacecraft else mission
+def _format_spacecraft(mission, spacecraft, grade=None):
+    return f"{mission}-{spacecraft}" if spacecraft else mission

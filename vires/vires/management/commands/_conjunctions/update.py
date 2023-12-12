@@ -27,11 +27,10 @@
 #pylint: disable=missing-docstring
 
 import sys
-#from traceback import print_exc
 from vires.util import unique
 from vires.management.api.conjunctions import (
     update_conjunctions_tables,
-    find_product_by_id,
+    find_products_by_id,
 )
 from .._common import Subcommand
 from .common import Counter
@@ -61,18 +60,21 @@ class UpdateConjunctionsSubcommand(Subcommand):
 
         for product_id in unique(product_ids):
 
-            product = find_product_by_id(product_id)
-            if product is None:
+            collection_counter = 0
+
+            for product in find_products_by_id(product_id):
+                collection_counter += 1
+
+                self.log = True
+                update_conjunctions_tables(
+                    product, logger=self, counter=counter
+                )
+                self.log = False
+
+            if collection_counter < 1:
                 self.error(
                     "Processing of %s failed! Product not found in any "
                     "applicable collection!", product_id,
                 )
                 counter.failed += 1
                 counter.total += 1
-                continue
-
-            self.log = True
-            update_conjunctions_tables(
-                product, logger=self, counter=counter
-            )
-            self.log = False

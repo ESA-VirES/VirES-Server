@@ -25,8 +25,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=no-self-use,unused-argument
-
 
 import csv
 from datetime import datetime
@@ -39,7 +37,9 @@ from vires.models import ProductCollection
 from vires.time_util import naive_to_utc, format_datetime
 from vires.cdf_util import cdf_rawtime_to_datetime
 from vires.processes.base import WPSProcess
-from vires.processes.util.time_series import ProductTimeSeries
+from vires.processes.util.time_series import (
+   ProductTimeSeries, SingleCollectionProductSource,
+)
 
 TIME_VARIABLE = "Timestamp"
 DATA_VARIABLE = "Bubble_Probability"
@@ -83,16 +83,18 @@ class RetrieveBubbleIndex(WPSProcess):
 
         try:
             time_series = ProductTimeSeries(
-                ProductCollection.objects
-                .select_related('type')
-                .filter(type__identifier="SW_IBIxTMS_2F")
-                .get(identifier=collection_id)
+                SingleCollectionProductSource(
+                    ProductCollection.objects
+                    .select_related('type')
+                    .filter(type__identifier="SW_IBIxTMS_2F")
+                    .get(identifier=collection_id)
+                )
             )
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
                 "collection_id",
-                "Invalid collection identifier %r!" % collection_id
-            )
+                f"Invalid collection identifier {collection_id!r}!"
+            ) from None
 
         access_logger.info(
             "request: collection: %s, toi: (%s, %s)",
@@ -104,7 +106,7 @@ class RetrieveBubbleIndex(WPSProcess):
         def _generate_pairs():
             variables = [TIME_VARIABLE, DATA_VARIABLE]
             for dataset in time_series.subset(begin_time, end_time, variables):
-                if dataset.length == 0:
+                if dataset.is_empty:
                     continue
                 cdf_type = dataset.cdf_type[TIME_VARIABLE]
                 time = dataset[TIME_VARIABLE]

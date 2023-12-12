@@ -34,6 +34,7 @@ from ..aux_common import render_filename
 
 def update_orbit_counter_file(src_file, dst_file):
     """ Update Swarm orbit counter text file. """
+
     def _write_orbit_counter_file(file_in, src_file, dst_file):
         with cdf_open(dst_file, "w") as cdf:
             orbit, time, phi_an, source = parse_orbit_counter_file(file_in)

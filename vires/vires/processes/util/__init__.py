@@ -39,3 +39,4 @@ from .magnetic_model_renderer import (
     get_extra_model_parameters, render_model, ALLOWED_VARIABLES,
 )
 from .time_limit import get_time_limit
+from .orbit_info import get_orbit_sources

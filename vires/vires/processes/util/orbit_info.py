@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Time Series - data sources
+# Mission specific orbit info setup.
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2023 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,14 +25,38 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from .base import TimeSeries
-from .product_source import (
-    SingleCollectionProductSource,
-    MultiCollectionProductSource,
+from collections import namedtuple
+from vires.cache_util import cache_path
+from vires.data.vires_settings import (
+    ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
 )
-from .product import ProductTimeSeries
-from .custom_data import CustomDatasetTimeSeries
-from .indices import IndexKp10, IndexDst, IndexDDst, IndexF107
-from .orbit_counter import OrbitCounter
-from .orbit_direction import OrbitDirection, QDOrbitDirection
-from .cached_model import CachedModelExtraction
+from .time_series import OrbitCounter, OrbitDirection, QDOrbitDirection
+
+
+OrbitSources = namedtuple(
+    "OrbitSources",
+    ["orbit_counter", "orbit_direction", "qd_orbit_direction"]
+)
+
+
+def get_orbit_sources(mission, spacecraft, grade):
+    """ Construct OrbitCounter, OrbitDirection and QDOrbitDirection time series
+    objects for the given mission, spacecraft and grade values.
+    """
+    try:
+        return OrbitSources(
+            OrbitCounter(
+                ":".join(["OrbitCounter", mission, spacecraft or ""]),
+                cache_path(ORBIT_COUNTER_FILE[(mission, spacecraft)])
+            ),
+            OrbitDirection(
+                ":".join(["OrbitDirection", mission, spacecraft or "", grade or ""]),
+                cache_path(ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft, grade)])
+            ),
+            QDOrbitDirection(
+                ":".join(["QDOrbitDirection", mission, spacecraft or "", grade or ""]),
+                cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)])
+            ),
+        )
+    except KeyError:
+        return ()

@@ -54,25 +54,25 @@ class GetObservatories(WPSProcess):
 
     inputs = WPSProcess.inputs + [
         ("collection_id", LiteralData(
-            'collection_id', str, optional=False,
+            "collection_id", str, optional=False,
             title="AUX_OBS or VOBS collection identifier",
             abstract="AUX_OBS or VOBS collection identifier",
         )),
         ("begin_time", LiteralData(
-            'begin_time', datetime, optional=True, title="Begin time",
+            "begin_time", datetime, optional=True, title="Begin time",
             abstract="Start of the selection time interval",
         )),
         ("end_time", LiteralData(
-            'end_time', datetime, optional=True, title="End time",
+            "end_time", datetime, optional=True, title="End time",
             abstract="End of the selection time interval",
         )),
     ]
 
     outputs = [
         ("output", ComplexData(
-            'output', title="Output data", formats=(
-                FormatText('text/csv'),
-                FormatJSON('application/json'),
+            "output", title="Output data", formats=(
+                FormatText("text/csv"),
+                FormatJSON("application/json"),
             )
         )),
     ]
@@ -81,12 +81,12 @@ class GetObservatories(WPSProcess):
         """ Execute process. """
         access_logger = self.get_access_logger(**kwargs)
 
-        base_collection_id, _, dataset_id = collection_id.partition(':')
+        base_collection_id, _, dataset_id = collection_id.partition(":")
 
         try:
             collection = (
                 ProductCollection.objects
-                .select_related('type')
+                .select_related("type")
                 .filter(type__identifier__in=ALLOWED_PRODUCT_TYPES)
                 .get(identifier=base_collection_id)
             )
@@ -102,7 +102,7 @@ class GetObservatories(WPSProcess):
                 "Invalid collection identifier %r!" % collection_id
             )
 
-        base_datasets = set(collection.type.definition['datasets'])
+        base_datasets = set(collection.type.definition["datasets"])
 
         access_logger.info(
             "request: collection: %s, toi: (%s, %s)",
@@ -111,7 +111,7 @@ class GetObservatories(WPSProcess):
             format_datetime(naive_to_utc(end_time)) if end_time else "-",
         )
 
-        query = collection.products.order_by('begin_time')
+        query = collection.products.order_by("begin_time")
         if end_time:
             query = query.filter(begin_time__lte=naive_to_utc(end_time))
         if begin_time:
@@ -122,14 +122,14 @@ class GetObservatories(WPSProcess):
 
         result = self._collect_observatories(query, dataset_id, base_datasets)
 
-        if output['mime_type'] == "text/csv":
+        if output["mime_type"] == "text/csv":
             return self._csv_output(result, output)
-        if output['mime_type'] == "application/json":
+        if output["mime_type"] == "application/json":
             return self._json_output(result, output)
 
         raise InvalidOutputDefError(
-            'output',
-            "Unexpected output format %r requested!" % output['mime_type']
+            "output",
+            "Unexpected output format %r requested!" % output["mime_type"]
         )
 
     @classmethod
@@ -148,36 +148,51 @@ class GetObservatories(WPSProcess):
                 if not match:
                     continue
                 code = match.groups()[0]
-                begin_time, end_time = record['beginTime'], record['endTime']
-                begin_time_min, end_time_max = (
-                    result.get(code) or (begin_time, end_time)
+                begin_time, end_time = record["beginTime"], record["endTime"]
+                location = record.get("geographicLocation") or None
+                begin_time_min, end_time_max, previous_location = (
+                    result.get(code) or (begin_time, end_time, location)
                 )
                 result[code] = (
                     min(begin_time_min, begin_time),
                     max(end_time_max, end_time),
+                    location or previous_location,
                 )
         return result
 
     @classmethod
     def _csv_output(cls, data, output):
         output_fobj = StringIO(newline="\r\n")
-        print("site,startTime,endTime", file=output_fobj)
+        print(
+            "site,startTime,endTime,Latitude,Longitude,Radius",
+            file=output_fobj
+        )
         for code in sorted(data):
-            begin_time, end_time = data[code]
-            print("%s,%s,%s" % (code, begin_time, end_time), file=output_fobj)
+            begin_time, end_time, location = data[code]
+            if not location or location.get("crs") != "ITRF":
+                location = {}
+            print("%s,%s,%s,%s,%s,%s" % (
+                code,
+                begin_time,
+                end_time,
+                location.get("longitude") or "",
+                location.get("latitude") or "",
+                location.get("radius") or "",
+            ), file=output_fobj)
         return CDFileWrapper(output_fobj, **output)
 
     @classmethod
     def _json_output(cls, data, output):
 
         def _get_obs_info(code):
-            begin_time, end_time = data[code]
+            begin_time, end_time, location = data[code]
             return {
-                'name': code,
-                'timeExtent': {
-                    'start': begin_time,
-                    'end': end_time,
+                "name": code,
+                "timeExtent": {
+                    "start": begin_time,
+                    "end": end_time,
                 },
+                **({"geographicLocation": location} if location else {}),
             }
 
         return CDObject([

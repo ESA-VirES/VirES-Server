@@ -24,6 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=too-many-arguments
 
 from logging import getLogger
 from collections import defaultdict
@@ -32,14 +33,14 @@ from .residual import MagneticModelResidual
 from .source_model import SourceMagneticModel
 from .mio_model import MagneticModelMioMultiplication
 from .cached_model  import CachedModelGapFill
-from ...time_series import CachedModelExtraction
+from ...time_series import CachedModelExtraction, MultiCollectionProductSource
 
 LOGGER = getLogger(__name__)
 
 
-def generate_magnetic_model_sources(mission, spacecraft, requested_models,
-                                    source_models, no_cache=False,
-                                    master=None):
+def generate_magnetic_model_sources(mission, spacecraft, grade,
+                                    requested_models, source_models,
+                                    no_cache=False, master=None):
     """ Generate resolver models and other sources from the input
     model specification.
 
@@ -55,22 +56,25 @@ def generate_magnetic_model_sources(mission, spacecraft, requested_models,
         master: optional master time-series
     """
     # ignore cache if explicitly requested by the master collection
-    master_collection = getattr(master, "collection", None)
-    if master_collection:
+    master_source = getattr(master, "source", None)
+    #raise Exception(f"{master} {master_source}")
+    if master_source:
         if (
-            (master_collection.metadata.get("cachedMagneticModels") or {})
+            (master_source.metadata.get("cachedMagneticModels") or {})
             .get("noCache", False)
         ):
             no_cache = True
 
-    available_cached_models = _get_available_cached_models(mission, spacecraft)
+    available_cached_models = _get_available_cached_models(
+        mission, spacecraft, grade
+    )
 
     # process source models required by the requested named composed models
     source_models = _handle_source_mio_models(source_models)
     if not no_cache:
         source_models = _handle_cached_models(
             source_models, available_cached_models,
-            master_collection=master_collection,
+            master_source=master_source,
         )
     yield from source_models
 
@@ -84,17 +88,19 @@ def generate_magnetic_model_sources(mission, spacecraft, requested_models,
             yield MagneticModelResidual(model.name, variable)
 
 
-def _get_available_cached_models(mission, spacecraft):
-    return {
-        model.name: model
+def _get_available_cached_models(mission, spacecraft, grade):
+    models = defaultdict(list)
+    for item in (grade or "").split("+"):
         for model in CachedMagneticModel.objects.filter(
             collection__spacecraft__mission=mission,
             collection__spacecraft__spacecraft=spacecraft,
-        )
-    }
+            collection__grade=(item or None),
+        ):
+            models[model.name].append(model)
+    return models
 
 
-def _handle_cached_models(models, available_cached_models, master_collection=None):
+def _handle_cached_models(models, available_cached_models, master_source=None):
     """ If possible, replace cached source models with the cache extraction
     time-series object.
     """
@@ -107,29 +113,33 @@ def _handle_cached_models(models, available_cached_models, master_collection=Non
 
     cached_models = defaultdict(list)
 
-    postproc_models = []
+    delayed_models = []
 
     # collect cached models, group them by collection and setup gap fillers
     for model in models:
         if isinstance(model, SourceMagneticModel):
             if model.name in available_cached_models: # cached source model
-                collection = available_cached_models[model.name].collection
-                cached_models[collection].append(model)
-                postproc_models.append(CachedModelGapFill(model))
+                collections = tuple(
+                    model.collection
+                    for model in available_cached_models[model.name]
+                )
+                cached_models[collections].append(model)
+                delayed_models.append(CachedModelGapFill(model))
             else: # non-cached source -> pass through
                 yield model
         else: # non-source models -> retain after cached models
-            postproc_models.append(model)
+            delayed_models.append(model)
 
     # get per-collection cached model objects
-    for collection, models_ in cached_models.items():
+    for collections, models_ in cached_models.items():
         yield CachedModelExtraction(
-            collection, models_,
-            master_collection=master_collection
+            MultiCollectionProductSource(collections),
+            models_,
+            master_source=master_source
         )
 
     # release retained postprocessing models
-    for model in postproc_models:
+    for model in delayed_models:
         yield model
 
 def _handle_source_mio_models(models):

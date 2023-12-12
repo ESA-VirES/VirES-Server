@@ -22,6 +22,8 @@
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#-------------------------------------------------------------------------------
+# pylint: disable=unused-argument,too-few-public-methods
 
 import csv
 from datetime import datetime
@@ -34,19 +36,21 @@ from vires.cache_util import cache_path
 from vires.time_util import naive_to_utc, format_datetime, parse_duration
 from vires.cdf_util import cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime
 from vires.processes.base import WPSProcess
-from vires.processes.util.time_series import ProductTimeSeries, QDOrbitDirection
+from vires.processes.util.time_series import (
+    SingleCollectionProductSource, ProductTimeSeries, QDOrbitDirection,
+)
 from vires.data.vires_settings import ORBIT_DIRECTION_MAG_FILE, DEFAULT_MISSION
 
-ALLOWED_COLLECTIONS = ["SW_AEJxLPL_2F", "SW_AEJxLPS_2F"]
+ALLOWED_PRODUCT_TYPES = ["SW_AEJxLPL_2F", "SW_AEJxLPS_2F"]
 TIME_VARIABLE = "Timestamp"
 
 
-def get_spacecraft_time_series(mission, spacecraft):
+def get_spacecraft_time_series(mission, spacecraft, grade):
     """ Get spacecraft specific time-series. """
     return [
         QDOrbitDirection(
-            ":".join(["QDOrbitDirection", mission, spacecraft]),
-            cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft)])
+            ":".join(["QDOrbitDirection", mission, spacecraft or "", grade or ""]),
+            cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)])
         ),
     ]
 
@@ -87,15 +91,16 @@ class RetrieveContinuousSegments(WPSProcess):
 
         try:
             time_series = ProductTimeSeries(
-                ProductCollection.objects
-                .select_related('type', 'spacecraft')
-                .filter(type__identifier__in=ALLOWED_COLLECTIONS)
-                .get(identifier=collection_id)
+                SingleCollectionProductSource(
+                    ProductCollection.objects
+                    .select_related('type', 'spacecraft')
+                    .filter(type__identifier__in=ALLOWED_PRODUCT_TYPES)
+                    .get(identifier=collection_id)
+                )
             )
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
-                "collection_id",
-                "Invalid collection identifier %r!" % collection_id
+                "collection_id", "Invalid collection identifier!"
             ) from None
 
         access_logger.info(
@@ -129,14 +134,14 @@ def _write_csv(output, records):
 
 
 def _generate_pairs(time_series, begin_time, end_time):
-    metadata = _Metadata(time_series.collection)
+    metadata = _CollectionMetadata(time_series.collection)
     secondary_time_series = get_spacecraft_time_series(
-        metadata.mission, metadata.spacecraft,
+        metadata.mission, metadata.spacecraft, metadata.grade
     )
     variables = [TIME_VARIABLE] + list(metadata.split_by)
 
     for dataset in time_series.subset(begin_time, end_time, variables):
-        if dataset.length == 0:
+        if dataset.is_empty:
             continue
 
         cdf_type = dataset.cdf_type[TIME_VARIABLE]
@@ -155,10 +160,13 @@ def _generate_pairs(time_series, begin_time, end_time):
             yield _output(start, end, dataset, cdf_type)
 
 
-class _Metadata():
+class _CollectionMetadata():
     def __init__(self, collection):
         metadata =collection.metadata
-        self.mission, self.spacecraft = collection.spacecraft_tuple
+        mission, spacecraft = collection.spacecraft_tuple
+        self.mission = mission or DEFAULT_MISSION
+        self.spacecraft = spacecraft
+        self.grade = collection.grade
         self.split_by = metadata.get('splitBy', {})
         self.time_threshold = parse_duration(
             metadata['nominalSampling']
