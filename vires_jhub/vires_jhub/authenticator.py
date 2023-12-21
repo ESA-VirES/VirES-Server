@@ -40,7 +40,7 @@ ACCESS_TOKEN_PATH = "/token/"
 USER_PROFILE_PATH = "/user/"
 VIRES_TOKEN_API_PATH = "/accounts/api/tokens/"
 VIRES_TOKEN_LIFESPAN = "PT15M"
-RE_VIRES_URL = re.compile('(/(ows)?)?$')
+RE_VIRES_URL = re.compile("(/(ows)?)?$")
 
 
 def _join_url(base, path):
@@ -125,12 +125,14 @@ class ViresOAuthenticator(OAuthenticator):
     )
     async def update_auth_model(self, auth_model):
         """ See OAuthenticator.update_auth_model(). """
+        auth_state = auth_model.get("auth_state") or {}
+        permissions = self._extract_permissions_from_auth_state(auth_state)
         # overwinding the default admin flag
-        permissions = self._extract_permissions_from_auth_state(
-            auth_model.get("auth_state") or {}
-        )
         auth_model["admin"] = self.admin_permission in permissions
-        self.log.info("auth_model = %s", auth_model)
+        # log the user information
+        auth_state = auth_model.get("auth_state") or {}
+        user_info = auth_state.get(self.user_auth_state_key) or {}
+        self.log.info("user_info = %s", user_info)
         return auth_model
 
     async def check_allowed(self, username, auth_model):
@@ -140,9 +142,8 @@ class ViresOAuthenticator(OAuthenticator):
         if auth_model is None:
             return True
 
-        permissions = self._extract_permissions_from_auth_state(
-            auth_model.get("auth_state") or {}
-        )
+        auth_state = auth_model.get("auth_state") or {}
+        permissions = self._extract_permissions_from_auth_state(auth_state)
         is_authorized = self.user_permission in permissions
 
         if not is_authorized:
@@ -243,8 +244,7 @@ class ViresOAuthenticator(OAuthenticator):
     def _extract_permissions_from_auth_state(self, auth_state):
         """ Extract permissions from the auth_state dictionary. """
         user_info = auth_state.get(self.user_auth_state_key) or {}
-        self.log.info("user_info = %s", user_info)
-        permissions = set(user_info['permissions'] or ())
+        permissions = set(user_info.get("permissions") or ())
         return permissions
 
     def _extract_access_token_from_auth_state(self, auth_state):
