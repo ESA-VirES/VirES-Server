@@ -62,11 +62,11 @@ class ViresOAuthenticator(OAuthenticator):
     client_secret_env = "VIRES_CLIENT_SECRET"
     login_handler = ViresLoginHandler
 
-    def normalize_username(self, username):
-        """ Override normalize_username to prevent username conversion
-        to low-case and username mapping.
-        """
-        return username
+    #def normalize_username(self, username):
+    #    """ Override normalize_username to prevent username conversion
+    #    to low-case and username mapping.
+    #    """
+    #    return username
 
     @property
     def token_url(self):
