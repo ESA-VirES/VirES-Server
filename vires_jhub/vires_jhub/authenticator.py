@@ -30,11 +30,16 @@ import os
 import re
 import ast
 import json
+import time
+import calendar
+from urllib.parse import urlencode
 from traitlets import Unicode, Dict
+from tornado.httpclient import HTTPClientError
 from tornado.auth import OAuth2Mixin
 from jupyterhub.auth import LocalAuthenticator
 from oauthenticator.oauth2 import OAuthLoginHandler, OAuthenticator
 
+EXPIRATION_BUFFER = 60 # seconds
 AUTHORIZE_PATH = "/authorize/"
 ACCESS_TOKEN_PATH = "/token/"
 USER_PROFILE_PATH = "/user/"
@@ -123,16 +128,81 @@ class ViresOAuthenticator(OAuthenticator):
         config=True,
         help="Url of the default  VirES data server."
     )
+
+    def build_token_refresh_request_params(self, refresh_token):
+        """
+        Builds the parameters that should be passed to the URL request
+        that refreshes the Access Token.
+        """
+        params = {
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+        }
+
+        # the client_id and client_secret should not be included in the access token request params
+        # when basic authentication is used
+        # ref: https://www.rfc-editor.org/rfc/rfc6749#section-2.3.1
+        if not self.basic_auth:
+            params.update({
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+            })
+
+        return params
+
+    async def refresh_access_token(self, refresh_token):
+        """ Refresh OAuht2 access token. """
+        self.log.info("Retrieving new access token ...")
+        headers = self.build_token_info_request_headers()
+        params = self.build_token_refresh_request_params(refresh_token)
+        timestamp = calendar.timegm(time.gmtime())
+        try:
+            token_info = await self.httpfetch(
+                self.token_url,
+                method="POST",
+                headers=headers,
+                body=urlencode(params).encode("utf-8"),
+                validate_cert=self.validate_server_cert,
+            )
+        except HTTPClientError as error:
+            self.log.error(
+                "Failed to refresh the OAuth Acess Token! ",
+                error.__class__.__name__, error
+            )
+            return None
+        token_info["requested_at"] = timestamp
+        return token_info
+
+    async def get_token_info(self, handler, params):
+        """ See OAuthenticator.get_token_info()
+
+        Intercepting the parent method to add timestamp of the token request
+        to be able to calculate expiration time.
+        """
+        timestamp = calendar.timegm(time.gmtime())
+        token_info = await super().get_token_info(handler, params)
+        token_info["requested_at"] = timestamp
+        return token_info
+
+    def build_auth_state_dict(self, token_info, user_info):
+        """ See OAuthenticator.build_auth_state_dict()
+
+        Intercepting the parent method to add the access token expiration time.
+        """
+        auth_state = super().build_auth_state_dict(token_info, user_info)
+        token_info = auth_state.get("token_response") or {}
+        expires_in = token_info.get("expires_in")
+        requested_at = token_info.get("requested_at")
+        if expires_in is not None and requested_at is not None:
+            auth_state["expires_at"] = expires_in + requested_at
+        return auth_state
+
     async def update_auth_model(self, auth_model):
         """ See OAuthenticator.update_auth_model(). """
         auth_state = auth_model.get("auth_state") or {}
         permissions = self._extract_permissions_from_auth_state(auth_state)
         # overwinding the default admin flag
         auth_model["admin"] = self.admin_permission in permissions
-        # log the user information
-        auth_state = auth_model.get("auth_state") or {}
-        user_info = auth_state.get(self.user_auth_state_key) or {}
-        self.log.info("user_info = %s", user_info)
         return auth_model
 
     async def check_allowed(self, username, auth_model):
@@ -182,6 +252,37 @@ class ViresOAuthenticator(OAuthenticator):
 
         spawner.environment["VIRES_ACCESS_CONFIG"] = vires_access_config
 
+    async def refresh_user(self, user, handler=None):
+        """ Refresh user data before spawning new server. """
+        auth_state = await user.get_auth_state()
+
+        if not auth_state:
+            return True
+
+        refresh_token = auth_state.get("refresh_token")
+        if not refresh_token:
+            # there is no refresh token and the access token cannot be updated
+            return True
+
+        timestamp = calendar.timegm(time.gmtime()) - EXPIRATION_BUFFER
+        expires_at = auth_state.get("expires_at")
+
+        if expires_at is not None and expires_at > timestamp:
+            # the access token exists and has not expired yet
+            return True
+
+        # get new access token
+        token_info = await self.refresh_access_token(refresh_token)
+
+        auth_state["token_response"].update(token_info)
+        auth_state.update({
+            "access_token": token_info["access_token"],
+            "refresh_token": token_info["refresh_token"],
+            "expires_at": token_info["expires_in"] + token_info["requested_at"],
+        })
+
+        return {"auth_state": auth_state}
+
     async def _retrieve_vires_access_config(self, auth_state):
         """ Retrieve access tokens for the configured VirES data servers. """
         access_token = self._extract_access_token_from_auth_state(auth_state)
@@ -225,16 +326,22 @@ class ViresOAuthenticator(OAuthenticator):
             "scopes": ["TokenMng"],
         })
 
-        data = await self.httpfetch(
-            url,
-            method="POST",
-            headers=headers,
-            body=body.encode("utf-8"),
-            validate_cert=self.validate_server_cert,
-        )
-
-        if not isinstance(data, dict):
-            raise TypeError("Not a dictionary!")
+        try:
+            data = await self.httpfetch(
+                url,
+                method="POST",
+                headers=headers,
+                body=body.encode("utf-8"),
+                validate_cert=self.validate_server_cert,
+            )
+            if not isinstance(data, dict):
+                raise TypeError("Not a dictionary!")
+        except (HTTPClientError, ValueError) as error:
+            self.log.error(
+                "Failed to retrieve VirES token from %s! %s: %s",
+                url, error.__class__.__name__, error
+            )
+            return None
 
         return {
             "token": data.get("token"),
@@ -248,9 +355,8 @@ class ViresOAuthenticator(OAuthenticator):
         return permissions
 
     def _extract_access_token_from_auth_state(self, auth_state):
-        """ Extract permissions from the auth_state dictionary. """
+        """ Extract access token from the auth_state dictionary. """
         return auth_state["access_token"]
-
 
 class LocalViresOAuthenticator(LocalAuthenticator, ViresOAuthenticator):
     """ Version of the authenticator working with local system users. """
