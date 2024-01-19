@@ -67,9 +67,9 @@ def parse_collections(input_id, source, permissions,
         # master (first collection) must be always of the same product type
         collections, dataset_id = datasets[0]
         if master_type is None:
-            master_type = (collections[0].type.identifier, dataset_id)
+            master_type = _get_type_tuple(collections[0], dataset_id)
         else:
-            if master_type != (collections[0].type.identifier, dataset_id):
+            if master_type != _get_type_tuple(collections[0], dataset_id):
                 raise InvalidInputValueError(
                     input_id,
                     "Master collection product type mismatch! "
@@ -80,18 +80,18 @@ def parse_collections(input_id, source, permissions,
         # slaves' order does not matter
 
         # collect slave product-types
-        slave_types = set()
+        used_types = {master_type}
 
         # for one label multiple datasets of the same product type are not allowed
         for collections, dataset_id in datasets[1:]:
-            slave_type = (collections[0].type.identifier, dataset_id)
-            if slave_type == master_type or slave_type in slave_types:
+            slave_type = _get_type_tuple(collections[0], dataset_id)
+            if slave_type in used_types:
                 raise InvalidInputValueError(
                     input_id,
                     "Multiple collections of the same type are not allowed! "
                     f"(label: {label})"
                 )
-            slave_types.add(slave_type)
+            used_types.add(slave_type)
 
     # convert collections to product time-series
     return {
@@ -104,6 +104,11 @@ def parse_collections(input_id, source, permissions,
             ]
         ) for label, datasets in result.items()
     }
+
+
+def _get_type_tuple(collection, dataset_id):
+    type_ = collection.type
+    return (type_.identifier, type_.get_base_dataset_id(dataset_id))
 
 
 def _parse_datasets(ids, custom_dataset, permissions,
