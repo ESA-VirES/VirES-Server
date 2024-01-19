@@ -130,9 +130,8 @@ class ViresOAuthenticator(OAuthenticator):
     )
 
     def build_token_refresh_request_params(self, refresh_token):
-        """
-        Builds the parameters that should be passed to the URL request
-        that refreshes the Access Token.
+        """ Builds the parameters that should be passed to the URL request
+        that refreshes the OAuth2 access token.
         """
         params = {
             "grant_type": "refresh_token",
@@ -198,7 +197,10 @@ class ViresOAuthenticator(OAuthenticator):
         return auth_state
 
     async def update_auth_model(self, auth_model):
-        """ See OAuthenticator.update_auth_model(). """
+        """ See OAuthenticator.update_auth_model().
+
+        Adding VirES specific attributes to the auth_model.
+        """
         auth_state = auth_model.get("auth_state") or {}
         permissions = self._extract_permissions_from_auth_state(auth_state)
         # overwinding the default admin flag
@@ -206,7 +208,10 @@ class ViresOAuthenticator(OAuthenticator):
         return auth_model
 
     async def check_allowed(self, username, auth_model):
-        """ See OAuthenticator.check_allowed() """
+        """ See OAuthenticator.check_allowed()
+
+        Perform VirES specific user authentication and authorization.
+        """
         # A workaround for JupyterHub < 5.0 described in
         # https://github.com/jupyterhub/oauthenticator/issues/621
         if auth_model is None:
@@ -228,7 +233,10 @@ class ViresOAuthenticator(OAuthenticator):
         return True
 
     async def pre_spawn_start(self, user, spawner):
-        """ Pass authentication details to spawner as environment variable. """
+        """ See Authenticator.pre_spawn_start()
+
+        Pass authentication details to spawner as environment variable.
+        """
         auth_state = await user.get_auth_state()
         if not auth_state:
             self.log.warning(
@@ -253,7 +261,10 @@ class ViresOAuthenticator(OAuthenticator):
         spawner.environment["VIRES_ACCESS_CONFIG"] = vires_access_config
 
     async def refresh_user(self, user, handler=None):
-        """ Refresh user data before spawning new server. """
+        """ See Authenticator.refresh_user()
+
+        Refresh expired access token before spawning new server.
+        """
         auth_state = await user.get_auth_state()
         if not auth_state:
             return True
