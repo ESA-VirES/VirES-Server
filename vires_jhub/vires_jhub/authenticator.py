@@ -255,7 +255,6 @@ class ViresOAuthenticator(OAuthenticator):
     async def refresh_user(self, user, handler=None):
         """ Refresh user data before spawning new server. """
         auth_state = await user.get_auth_state()
-
         if not auth_state:
             return True
 
@@ -264,24 +263,28 @@ class ViresOAuthenticator(OAuthenticator):
             # there is no refresh token and the access token cannot be updated
             return True
 
-        timestamp = calendar.timegm(time.gmtime()) - EXPIRATION_BUFFER
-        expires_at = auth_state.get("expires_at")
-
-        if expires_at is not None and expires_at > timestamp:
+        if self._is_access_token_valid(auth_state):
             # the access token exists and has not expired yet
             return True
 
         # get new access token
         token_info = await self.refresh_access_token(refresh_token)
+        if not token_info:
+            return True
 
+        return {
+            "auth_state": self._refresh_auth_state_dict(auth_state, token_info)
+        }
+
+    def _refresh_auth_state_dict(self, auth_state, token_info):
+        """  """
         auth_state["token_response"].update(token_info)
         auth_state.update({
             "access_token": token_info["access_token"],
             "refresh_token": token_info["refresh_token"],
             "expires_at": token_info["expires_in"] + token_info["requested_at"],
         })
-
-        return {"auth_state": auth_state}
+        return auth_state
 
     async def _retrieve_vires_access_config(self, auth_state):
         """ Retrieve access tokens for the configured VirES data servers. """
@@ -357,6 +360,14 @@ class ViresOAuthenticator(OAuthenticator):
     def _extract_access_token_from_auth_state(self, auth_state):
         """ Extract access token from the auth_state dictionary. """
         return auth_state["access_token"]
+
+    def _is_access_token_valid(self, auth_state):
+        """ Return True if access token is still valid and False
+        if it needs to be refreshed. """
+        timestamp = calendar.timegm(time.gmtime()) - EXPIRATION_BUFFER
+        expires_at = auth_state.get("expires_at")
+        return expires_at is not None and expires_at > timestamp
+
 
 class LocalViresOAuthenticator(LocalAuthenticator, ViresOAuthenticator):
     """ Version of the authenticator working with local system users. """
