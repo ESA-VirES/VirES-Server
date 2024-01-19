@@ -129,25 +129,60 @@ class ViresOAuthenticator(OAuthenticator):
         help="Url of the default  VirES data server."
     )
 
-    def build_token_refresh_request_params(self, refresh_token):
-        """ Builds the parameters that should be passed to the URL request
-        that refreshes the OAuth2 access token.
+    async def pre_spawn_start(self, user, spawner):
+        """ See Authenticator.pre_spawn_start()
+
+        Pass authentication details to spawner as environment variable.
         """
-        params = {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
+        auth_state = await user.get_auth_state()
+        if not auth_state:
+            self.log.warning(
+                "User state is not available. "
+                "VIRES_ACCESS_CONFIG will not be initialized."
+            )
+            return
+
+        vires_access_config = json.dumps(
+            await self._retrieve_vires_access_config(auth_state)
+        )
+
+        # KubeSpawner, unlike other spawners, uses Python string.format()
+        # to expand environmental variables. This expansion breaks with JSON
+        # data passed in an environment variable and the curly brackets
+        # need to be escaped.
+        if type(spawner).__name__ == "KubeSpawner":
+            vires_access_config = (
+                vires_access_config.replace("{", "{{").replace("}", "}}")
+            )
+
+        spawner.environment["VIRES_ACCESS_CONFIG"] = vires_access_config
+
+    async def refresh_user(self, user, handler=None):
+        """ See Authenticator.refresh_user()
+
+        Refresh expired access token before spawning new server.
+        """
+        auth_state = await user.get_auth_state()
+        if not auth_state:
+            return True
+
+        refresh_token = auth_state.get("refresh_token")
+        if not refresh_token:
+            # there is no refresh token and the access token cannot be updated
+            return True
+
+        if self._is_access_token_valid(auth_state):
+            # the access token exists and has not expired yet
+            return True
+
+        # get new access token
+        token_info = await self.refresh_access_token(refresh_token)
+        if not token_info:
+            return True
+
+        return {
+            "auth_state": self._refresh_auth_state_dict(auth_state, token_info)
         }
-
-        # the client_id and client_secret should not be included in the access token request params
-        # when basic authentication is used
-        # ref: https://www.rfc-editor.org/rfc/rfc6749#section-2.3.1
-        if not self.basic_auth:
-            params.update({
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
-            })
-
-        return params
 
     async def refresh_access_token(self, refresh_token):
         """ Refresh OAuht2 access token. """
@@ -171,6 +206,26 @@ class ViresOAuthenticator(OAuthenticator):
             return None
         token_info["requested_at"] = timestamp
         return token_info
+
+    def build_token_refresh_request_params(self, refresh_token):
+        """ Builds the parameters that should be passed to the URL request
+        that refreshes the OAuth2 access token.
+        """
+        params = {
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+        }
+
+        # the client_id and client_secret should not be included in the access token request params
+        # when basic authentication is used
+        # ref: https://www.rfc-editor.org/rfc/rfc6749#section-2.3.1
+        if not self.basic_auth:
+            params.update({
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+            })
+
+        return params
 
     async def get_token_info(self, handler, params):
         """ See OAuthenticator.get_token_info()
@@ -231,61 +286,6 @@ class ViresOAuthenticator(OAuthenticator):
         ))
 
         return True
-
-    async def pre_spawn_start(self, user, spawner):
-        """ See Authenticator.pre_spawn_start()
-
-        Pass authentication details to spawner as environment variable.
-        """
-        auth_state = await user.get_auth_state()
-        if not auth_state:
-            self.log.warning(
-                "User state is not available. "
-                "VIRES_ACCESS_CONFIG will not be initialized."
-            )
-            return
-
-        vires_access_config = json.dumps(
-            await self._retrieve_vires_access_config(auth_state)
-        )
-
-        # KubeSpawner, unlike other spawners, uses Python string.format()
-        # to expand environmental variables. This expansion breaks with JSON
-        # data passed in an environment variable and the curly brackets
-        # need to be escaped.
-        if type(spawner).__name__ == "KubeSpawner":
-            vires_access_config = (
-                vires_access_config.replace("{", "{{").replace("}", "}}")
-            )
-
-        spawner.environment["VIRES_ACCESS_CONFIG"] = vires_access_config
-
-    async def refresh_user(self, user, handler=None):
-        """ See Authenticator.refresh_user()
-
-        Refresh expired access token before spawning new server.
-        """
-        auth_state = await user.get_auth_state()
-        if not auth_state:
-            return True
-
-        refresh_token = auth_state.get("refresh_token")
-        if not refresh_token:
-            # there is no refresh token and the access token cannot be updated
-            return True
-
-        if self._is_access_token_valid(auth_state):
-            # the access token exists and has not expired yet
-            return True
-
-        # get new access token
-        token_info = await self.refresh_access_token(refresh_token)
-        if not token_info:
-            return True
-
-        return {
-            "auth_state": self._refresh_auth_state_dict(auth_state, token_info)
-        }
 
     def _refresh_auth_state_dict(self, auth_state, token_info):
         """  """
