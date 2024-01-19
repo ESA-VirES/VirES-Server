@@ -166,7 +166,7 @@ class ViresOAuthenticator(OAuthenticator):
             )
         except HTTPClientError as error:
             self.log.error(
-                "Failed to refresh the OAuth Acess Token! ",
+                "Failed to refresh the OAuth Acess Token! %s: %s",
                 error.__class__.__name__, error
             )
             return None
