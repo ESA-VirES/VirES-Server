@@ -164,7 +164,7 @@ class ViresOAuthenticator(OAuthenticator):
                 body=urlencode(params).encode("utf-8"),
                 validate_cert=self.validate_server_cert,
             )
-        except HTTPClientError as error:
+        except (HTTPClientError, ConnectionError) as error:
             self.log.error(
                 "Failed to refresh the OAuth Acess Token! %s: %s",
                 error.__class__.__name__, error
@@ -336,7 +336,7 @@ class ViresOAuthenticator(OAuthenticator):
             )
             if not isinstance(data, dict):
                 raise TypeError("Not a dictionary!")
-        except (HTTPClientError, ValueError) as error:
+        except (HTTPClientError, ConnectionError, ValueError) as error:
             self.log.error(
                 "Failed to retrieve VirES token from %s! %s: %s",
                 url, error.__class__.__name__, error
