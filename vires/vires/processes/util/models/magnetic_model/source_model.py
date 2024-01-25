@@ -205,7 +205,7 @@ class SourceMagneticModel(Model):
     def _extract_f107_instant(self, dataset):
         f107_instant, = self._source_variables["f107_instant"]
         return [
-            ("f107_instant", dataset[f107_instant]),
+            ("f107", dataset[f107_instant]),
         ]
 
     def _extract_subsolar_point(self, dataset):
