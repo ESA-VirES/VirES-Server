@@ -41,7 +41,7 @@ from eoxmagmod import (
 from eoxserver.services.ows.wps.parameters import CDFile
 from vires.config import SystemConfigReader
 from .png_output import data_to_png
-from .f107 import get_f107_value
+from .f107 import get_f107_avg81s_value, get_f107_daily_value
 from .amps_inputs import get_amps_inputs
 
 
@@ -201,7 +201,9 @@ def get_extra_model_parameters(mjd2000, requirements):
     """ Get additional model parameters. """
     parameters = {}
     if "f107" in requirements:
-        parameters.update(get_f107_value(mjd2000))
+        parameters.update(get_f107_avg81s_value(mjd2000))
+    if "f107_instant" in requirements:
+        parameters.update(get_f107_daily_value(mjd2000))
     if "amps" in requirements:
         parameters.update(get_amps_inputs(mjd2000))
     return parameters

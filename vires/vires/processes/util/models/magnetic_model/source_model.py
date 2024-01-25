@@ -43,7 +43,8 @@ class SourceMagneticModel(Model):
     SOURCE_VARIABLES = {
         "time": ["Timestamp"],
         "location": ["Latitude", "Longitude", "Radius"],
-        "f107": ["F10.7_avg81d"],
+        "f107": ["F107_avg81d"],
+        "f107_instant": ["F107"],
         "subsolar_point": ["SunDeclination", "SunLongitude"],
         "amps": ["IMF_BY_GSM", "IMF_BZ_GSM", "IMF_V", "DipoleTiltAngle"],
     }
@@ -98,6 +99,7 @@ class SourceMagneticModel(Model):
             "time": self._extract_time,
             "location": self._extract_location,
             "f107": self._extract_f107,
+            "f107_instant": self._extract_f107_instant,
             "subsolar_point": self._extract_subsolar_point,
             "amps": self._extract_amps_inputs,
         }
@@ -198,6 +200,12 @@ class SourceMagneticModel(Model):
         f107, = self._source_variables["f107"]
         return [
             ("f107", dataset[f107]),
+        ]
+
+    def _extract_f107_instant(self, dataset):
+        f107_instant, = self._source_variables["f107_instant"]
+        return [
+            ("f107_instant", dataset[f107_instant]),
         ]
 
     def _extract_subsolar_point(self, dataset):
