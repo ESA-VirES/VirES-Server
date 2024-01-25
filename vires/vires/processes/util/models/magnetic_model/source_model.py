@@ -43,7 +43,7 @@ class SourceMagneticModel(Model):
     SOURCE_VARIABLES = {
         "time": ["Timestamp"],
         "location": ["Latitude", "Longitude", "Radius"],
-        "f107": ["F107"],
+        "f107": ["F10.7_avg81d"],
         "subsolar_point": ["SunDeclination", "SunLongitude"],
         "amps": ["IMF_BY_GSM", "IMF_BZ_GSM", "IMF_V", "DipoleTiltAngle"],
     }

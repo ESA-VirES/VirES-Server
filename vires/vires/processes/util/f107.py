@@ -30,7 +30,7 @@ from vires.cache_util import cache_path
 from vires.data.vires_settings import CACHED_PRODUCT_FILE
 from .time_series import IndexF107
 
-F107_VARIABLE = "F107"
+F107_VARIABLE = "F107_avg81d"
 F107_PRODUCT_TYPE = "AUX_F10_2_"
 
 
