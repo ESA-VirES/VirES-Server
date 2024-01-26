@@ -51,7 +51,7 @@ def mjd2000_to_dt64ms(mjd2000):
 class AmpsMagneticFieldModel(GeomagneticModel):
     """ Abstract base class of the Earth magnetic field model. """
     user_parameters = ()
-    parameters = ("time", "location", "f107", "amps")
+    parameters = ("time", "location", "f107_instant", "amps")
     CHUNK_SIZE = 1200
     DEFAULT_EPOCH = 2015.0
     REFERENCE_HEIGHT = 110.0

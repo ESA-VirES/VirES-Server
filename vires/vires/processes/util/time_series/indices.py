@@ -116,8 +116,14 @@ class IndexF107(AuxiliaryDataTimeSeries):
     CDF_TYPE = {
         'Timestamp': TimeSeries.TIMESTAMP_TYPE,
         'F107': CDF_DOUBLE_TYPE,
+        'F107_avg81d': CDF_DOUBLE_TYPE,
+        'F107_avg81d_count': CDF_DOUBLE_TYPE,
     }
-    CDF_INTERP_TYPE = {'F107': CDF_DOUBLE_TYPE}
+    CDF_INTERP_TYPE = {
+        'F107': CDF_DOUBLE_TYPE,
+        'F107_avg81d': CDF_DOUBLE_TYPE,
+        'F107_avg81d_count': CDF_DOUBLE_TYPE,
+    }
     CDF_ATTR = {
         'Timestamp': {
             'DESCRIPTION': 'Time stamp',
@@ -127,10 +133,30 @@ class IndexF107(AuxiliaryDataTimeSeries):
             'DESCRIPTION': 'Assembled daily observed values of solar flux F10.7',
             'UNITS': '10e-22 W m^-2 Hz^-1',
         },
+        'F107_avg81d': {
+            'DESCRIPTION': (
+                '81-days moving average of the assembled daily observed values'
+                ' of solar flux F10.7'
+            ),
+            'UNITS': '10e-22 W m^-2 Hz^-1',
+        },
+        'F107_avg81d_count': {
+            'DESCRIPTION': (
+                '81-days moving average window sample count, excluding no-data'
+                ' values'
+            ),
+            'UNITS': '-',
+        },
+    }
+    VARIABLE_NAME_MAPPING = {
+        'MJD2000': 'Timestamp',
+        'F10.7': 'F107',
+        'F10.7_avg81d': 'F107_avg81d',
+        'F10.7_avg81d_count': 'F107_avg81d_count',
     }
 
     def __init__(self, filename, logger=None):
         AuxiliaryDataTimeSeries.__init__(
-            self, "F107", filename, F10_2_Reader,
-            {"MJD2000": 'Timestamp', "F10.7": 'F107'}, logger
+            self, "F107", filename, F10_2_Reader, self.VARIABLE_NAME_MAPPING,
+            logger
         )

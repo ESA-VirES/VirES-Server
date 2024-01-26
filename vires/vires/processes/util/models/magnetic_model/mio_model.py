@@ -37,7 +37,7 @@ class MagneticModelMioMultiplication(Model):
     """ Multiply the bare SH part of the MIO model by the F10.7-based
     multiplication factor.
     """
-    VARIABLE_F107 = "F107"
+    VARIABLE_F107 = "F107_avg81d"
     CDF_TYPE = CDF_DOUBLE_TYPE
     DESCRIPTION = {
         "F": (
