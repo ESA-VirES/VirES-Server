@@ -45,14 +45,6 @@ ALLOWED_PRODUCT_TYPES = ["SW_AEJxLPL_2F", "SW_AEJxLPS_2F"]
 TIME_VARIABLE = "Timestamp"
 
 
-def get_spacecraft_time_series(mission, spacecraft, grade):
-    """ Get spacecraft specific time-series. """
-    return [
-        QDOrbitDirection(
-            ":".join(["QDOrbitDirection", mission, spacecraft or "", grade or ""]),
-            cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)])
-        ),
-    ]
 
 
 class RetrieveContinuousSegments(WPSProcess):
@@ -134,11 +126,9 @@ def _write_csv(output, records):
 
 
 def _generate_pairs(time_series, begin_time, end_time):
-    metadata = _CollectionMetadata(time_series.collection)
-    secondary_time_series = get_spacecraft_time_series(
-        metadata.mission, metadata.spacecraft, metadata.grade
-    )
-    variables = [TIME_VARIABLE] + list(metadata.split_by)
+    params = _SegmentExtractionParameters(time_series.source.metadata)
+
+    variables = [TIME_VARIABLE, *params.thresholds]
 
     for dataset in time_series.subset(begin_time, end_time, variables):
         if dataset.is_empty:
@@ -146,31 +136,38 @@ def _generate_pairs(time_series, begin_time, end_time):
 
         cdf_type = dataset.cdf_type[TIME_VARIABLE]
         times = dataset[TIME_VARIABLE]
-        mask = _get_time_split_mask(times, metadata.time_threshold, cdf_type)
+        for item in params.secondary_time_series:
+            dataset.merge(item.interpolate(times, variables, {}, cdf_type))
 
-        for item in secondary_time_series:
-            dataset.merge(
-                item.interpolate(times, variables, {}, cdf_type)
-            )
-
-        for variable, threshold in metadata.split_by.items():
+        mask = _get_time_split_mask(times, params.time_threshold, cdf_type)
+        for variable, threshold in params.thresholds.items():
             mask |= _get_split_mask(dataset[variable], threshold)
 
         for start, end in _generate_time_intervals(times, mask.nonzero()[0]):
             yield _output(start, end, dataset, cdf_type)
 
 
-class _CollectionMetadata():
-    def __init__(self, collection):
-        metadata =collection.metadata
-        mission, spacecraft = collection.spacecraft_tuple
-        self.mission = mission or DEFAULT_MISSION
-        self.spacecraft = spacecraft
-        self.grade = collection.grade
-        self.split_by = metadata.get('splitBy', {})
-        self.time_threshold = parse_duration(
-            metadata['nominalSampling']
+class _SegmentExtractionParameters():
+    """ Class holding parameters of the interval extraction algorithm. """
+
+    def __init__(self, metadata):
+        self.time_threshold = parse_duration(metadata['nominalSampling'])
+        self.thresholds = metadata.get("splitBy", {})
+        self.secondary_time_series = self._get_spacecraft_time_series(
+            mission=(metadata.get("mission") or DEFAULT_MISSION),
+            spacecraft=metadata.get("spacecraft"),
+            grade=metadata.get("grade"),
         )
+
+    @staticmethod
+    def _get_spacecraft_time_series(mission, spacecraft, grade):
+        """ Get list of spacecraft specific time-series. """
+        return [
+            QDOrbitDirection(
+                ":".join(["QDOrbitDirection", mission, spacecraft or "", grade or ""]),
+                cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)])
+            ),
+        ]
 
 
 def _output(start_time, end_time, dataset, cdf_type):
