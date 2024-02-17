@@ -24,7 +24,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-few-public-methods
+# pylint: disable=missing-module-docstring
 
 from vires.cdf_util import (
     CDF_DOUBLE_TYPE, CDF_INT1_TYPE, CDF_INT4_TYPE,
@@ -32,10 +32,10 @@ from vires.cdf_util import (
 from vires.cdf_util import mjd2000_to_cdf_rawtime
 from vires.orbit_counter import OrbitCounterReader
 from .base import TimeSeries
-from .auxiliary_data import AuxiliaryDataTimeSeries
+from .auxiliary_data import BaseAuxiliaryDataTimeSeries
 
 
-class OrbitCounter(AuxiliaryDataTimeSeries):
+class OrbitCounter(BaseAuxiliaryDataTimeSeries):
     """ Orbit counter time-series class. """
     CDF_TYPE = {
         'AscendingNodeTime': TimeSeries.TIMESTAMP_TYPE,
@@ -83,11 +83,14 @@ class OrbitCounter(AuxiliaryDataTimeSeries):
     TIME_VARIABLE = "Timestamp"
 
     def __init__(self, name, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, name, filename, OrbitCounterReader, {
+        super().__init__(
+            name=name,
+            reader=OrbitCounterReader(filename),
+            varmap={
                 'orbit': 'OrbitNumber',
                 'MJD2000': 'AscendingNodeTime',
                 'phi_AN': 'AscendingNodeLongitude',
                 'Source': 'OrbitSource',
-            }, logger
+            },
+            logger=logger,
         )

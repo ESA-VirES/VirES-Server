@@ -24,14 +24,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=too-few-public-methods
+# pylint: disable=missing-module-docstring
 
 from vires.cdf_util import CDF_INT1_TYPE, CDF_EPOCH_TYPE, convert_cdf_raw_times
 from vires.orbit_direction import OrbitDirectionReader
-from .auxiliary_data import AuxiliaryDataTimeSeries
+from .auxiliary_data import BaseAuxiliaryDataTimeSeries
 
 
-class OrbitDirection(AuxiliaryDataTimeSeries):
+class OrbitDirection(BaseAuxiliaryDataTimeSeries):
     """ Orbit counter time-series class. """
     CDF_TYPE = {
         'OrbitDirection': CDF_INT1_TYPE, # uses 0 as NaN
@@ -70,15 +70,18 @@ class OrbitDirection(AuxiliaryDataTimeSeries):
         return convert_cdf_raw_times(times, CDF_EPOCH_TYPE, cdf_type)
 
     def __init__(self, name, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, name, filename, OrbitDirectionReader, {
+        super().__init__(
+            name=name,
+            reader=OrbitDirectionReader(filename),
+            varmap={
                 'OrbitDirection': 'OrbitDirection',
                 'BoundaryType': 'OrbitDirectionBoundaryType',
-            }, logger
+            },
+            logger=logger
         )
 
 
-class QDOrbitDirection(AuxiliaryDataTimeSeries):
+class QDOrbitDirection(BaseAuxiliaryDataTimeSeries):
     """ Orbit counter time-series class. """
     CDF_TYPE = {
         'QDOrbitDirection': CDF_INT1_TYPE, # uses 0 as NaN
@@ -116,9 +119,12 @@ class QDOrbitDirection(AuxiliaryDataTimeSeries):
         return convert_cdf_raw_times(times, CDF_EPOCH_TYPE, cdf_type)
 
     def __init__(self, name, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, name, filename, OrbitDirectionReader, {
+        super().__init__(
+            name=name,
+            reader=OrbitDirectionReader(filename),
+            varmap={
                 'OrbitDirection': 'QDOrbitDirection',
                 'BoundaryType': 'QDOrbitDirectionBoundaryType',
-            }, logger
+            },
+            logger=logger
         )
