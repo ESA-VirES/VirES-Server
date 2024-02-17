@@ -302,9 +302,8 @@ class OrbitDirectionTable():
 
         cdf_add_variable(cdf, "BoundaryType", self._data.flags, {
             "DESCRIPTION": (
-                "Boundary type (regular %s, block start %s, block end %s)" % (
-                    FLAG_MIDDLE, FLAG_START, FLAG_END
-                )
+                f"Boundary type (regular {FLAG_MIDDLE}, "
+                f"block start {FLAG_START}, block end {FLAG_END})"
             ),
             "UNITS": "-",
         })
@@ -313,8 +312,7 @@ class OrbitDirectionTable():
             "UNITS": "-",
             "DESCRIPTION": (
                 "Orbit direction after this point. "
-                "(ascending %s, descending %s, undefined %s)" % (
-                    FLAG_ASCENDING, FLAG_DESCENDING, FLAG_UNDEFINED
-                )
+                f"(ascending {FLAG_ASCENDING}, descending {FLAG_DESCENDING}, "
+                f"undefined {FLAG_UNDEFINED})"
             )
         })
