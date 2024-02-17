@@ -45,14 +45,8 @@ INPUT_MARGIN = 6 # number of samples needed from the surrounding products
 TRIM_MARGIN = 4 # number of samples needed to smoothly merge surrounding products
 
 
-class GeoOrbitDirectionTable(OrbitDirectionTable):
-    """ Geographic orbit direction lookup table class. """
-    DESCRIPTION = "Orbit directions boundaries in geographic coordinates."
-
-
-class QDOrbitDirectionTable(OrbitDirectionTable):
-    """ Quasi-dipole orbit direction lookup table class """
-    DESCRIPTION = "Orbit directions boundaries in quasi-dipole coordinates."
+GEO_OD_TABLE_DESCRIPTION = "Orbit directions boundaries in geographic coordinates."
+MAG_OD_TABLE_DESCRIPTION = "Orbit directions boundaries in quasi-dipole coordinates."
 
 
 class OrbitDirectionTables():
@@ -66,11 +60,13 @@ class OrbitDirectionTables():
         self.gap_threshold = timedelta_to_timedelta64ms(gap_threshold)
 
         self.logger = logger or getLogger(__name__)
-        self._geo_table = GeoOrbitDirectionTable(
-            geo_table_filename, reset, logger=self.logger
+        self._geo_table = OrbitDirectionTable(
+            geo_table_filename, reset, logger=self.logger,
+            description=GEO_OD_TABLE_DESCRIPTION,
         )
-        self._mag_table = QDOrbitDirectionTable(
-            mag_table_filename, reset, logger=self.logger
+        self._mag_table = OrbitDirectionTable(
+            mag_table_filename, reset, logger=self.logger,
+            description=MAG_OD_TABLE_DESCRIPTION,
         )
 
     def __contains__(self, product_id):

@@ -44,10 +44,12 @@ from .util import Products, OutputData
 
 
 class OrbitDirectionTable():
-    """ Base orbit direction lookup table class """
-    DESCRIPTION = None
+    """ Single file orbit direction lookup table class. """
+    DEFAULT_OD_TABLE_DESCRIPTION = "Orbit directions boundaries."
 
-    def __init__(self, filename, reset=False, logger=None):
+    def __init__(self, filename, reset=False, logger=None,
+                 description=None):
+        self.description = description or self.DEFAULT_OD_TABLE_DESCRIPTION
         self._filename = filename
         self._products = None
         self._product_set = None
@@ -282,7 +284,7 @@ class OrbitDirectionTable():
                 )
 
         cdf.attrs["TITLE"] = self._get_product_id(self._filename)
-        cdf.attrs["PRODUCT_DESCRIPTION"] = self.DESCRIPTION or ""
+        cdf.attrs["PRODUCT_DESCRIPTION"] = self.description
         cdf.attrs["SOURCES"] = self._products.names
         cdf.attrs.new("SOURCE_TIME_RANGES")
         _write_time_ranges(
