@@ -69,10 +69,10 @@ class OrbitDirection(BaseAuxiliaryDataTimeSeries):
     def _decode_time(times, cdf_type):
         return convert_cdf_raw_times(times, CDF_EPOCH_TYPE, cdf_type)
 
-    def __init__(self, name, filename, logger=None):
+    def __init__(self, name, *filenames, logger=None):
         super().__init__(
             name=name,
-            reader=OrbitDirectionReader(filename),
+            reader=OrbitDirectionReader(*filenames),
             varmap={
                 'OrbitDirection': 'OrbitDirection',
                 'BoundaryType': 'OrbitDirectionBoundaryType',
@@ -118,10 +118,10 @@ class QDOrbitDirection(BaseAuxiliaryDataTimeSeries):
     def _decode_time(times, cdf_type):
         return convert_cdf_raw_times(times, CDF_EPOCH_TYPE, cdf_type)
 
-    def __init__(self, name, filename, logger=None):
+    def __init__(self, name, *filenames, logger=None):
         super().__init__(
             name=name,
-            reader=OrbitDirectionReader(filename),
+            reader=OrbitDirectionReader(*filenames),
             varmap={
                 'OrbitDirection': 'QDOrbitDirection',
                 'BoundaryType': 'QDOrbitDirectionBoundaryType',
