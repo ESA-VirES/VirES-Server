@@ -40,8 +40,9 @@ class TimeSeries():
 
     TIMESTAMP_TYPE = CDF_EPOCH_TYPE
 
-    def __init__(self):
-        self.product_set = set() # stores all recorded source products
+    def __init__(self, product_set=None):
+        # product_set stores all recorded source products
+        self.product_set = set() if product_set is None else product_set
 
     @property
     def products(self):

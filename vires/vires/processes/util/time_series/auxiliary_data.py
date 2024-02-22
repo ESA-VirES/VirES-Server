@@ -62,7 +62,7 @@ class BaseAuxiliaryDataTimeSeries(TimeSeries):
         return mjd2000_to_cdf_rawtime(times, cdf_type)
 
     def __init__(self, name, reader, varmap, logger=None):
-        super().__init__()
+        super().__init__(product_set=reader.product_set)
         self._name = name
         self._reader = reader
         self._varmap = varmap
