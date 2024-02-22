@@ -30,7 +30,7 @@ from numpy import loadtxt, array, empty, nan
 from .cdf_util import cdf_open
 from .time_util import mjd2000_to_datetime
 from .aux_common import (
-    SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
+    SingleSourceMixIn, MJD2000TimeMixIn, CdfReader, render_filename,
 )
 
 HOURS_TO_DAYS = 1.0 / 24.0
@@ -78,14 +78,14 @@ def parse_dst(src_file):
     )
 
 
-class DstReader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
+class DstReader(SingleSourceMixIn, MJD2000TimeMixIn, CdfReader):
     """ Dst data reader class. """
     TIME_FIELD = "time"
     DATA_FIELDS = ("dst",)
     INTERPOLATION_KIND = "linear"
 
 
-class DDstReader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
+class DDstReader(SingleSourceMixIn, MJD2000TimeMixIn, CdfReader):
     """ dDst data reader class. """
     TIME_FIELD = "time"
     DATA_FIELDS = ("ddst",)

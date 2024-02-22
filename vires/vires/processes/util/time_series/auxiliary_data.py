@@ -38,8 +38,8 @@ from vires.dataset import Dataset
 from .base import TimeSeries
 
 
-class AuxiliaryDataTimeSeries(TimeSeries):
-    """ Auxiliary data time-series class. """
+class BaseAuxiliaryDataTimeSeries(TimeSeries):
+    """ Base auxiliary data time-series class. """
     CDF_TYPE = {}
     CDF_INTERP_TYPE = {}
     CDF_ATTR = {}
@@ -61,12 +61,10 @@ class AuxiliaryDataTimeSeries(TimeSeries):
         """ Convert the time format of the dataset to the raw CDF time. """
         return mjd2000_to_cdf_rawtime(times, cdf_type)
 
-    def __init__(self, name, filename, reader_factory, varmap,
-                 logger=None):
-        super().__init__()
+    def __init__(self, name, reader, varmap, logger=None):
+        super().__init__(product_set=reader.product_set)
         self._name = name
-        self._filename = filename
-        self._reader = reader_factory(filename, self.product_set)
+        self._reader = reader
         self._varmap = varmap
         self._revvarmap = dict((val, key) for key, val in varmap.items())
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {

@@ -53,10 +53,10 @@ INT_CONF_ORBIT_DIRECTION = {
 
 
 class TestOrbitDirection(TestCase):
-    FILE = TEST_ORBIT_DIRECTION_CDF
+    FILES = [TEST_ORBIT_DIRECTION_CDF]
 
     def _get_reference_data(self):
-        with cdf_open(self.FILE) as cdf:
+        with cdf_open(self.FILES[0]) as cdf:
             data = {
                 field: cdf.raw_var(field)[...]
                 for field in FIELDS_ALL
@@ -65,7 +65,7 @@ class TestOrbitDirection(TestCase):
 
     def _test_fetch(self, start, stop, slice_):
         reference_dataset = self._get_reference_data()
-        tested_dataset = OrbitDirectionReader(self.FILE).subset(start, stop)
+        tested_dataset = OrbitDirectionReader(*self.FILES).subset(start, stop)
         for field, reference in reference_dataset.items():
             data = tested_dataset[field]
             assert_equal(data, reference[slice_])
@@ -77,7 +77,7 @@ class TestOrbitDirection(TestCase):
             count,
         ))
         reference_dataset = self._get_reference_data()
-        tested_dataset = OrbitDirectionReader(self.FILE).interpolate(times)
+        tested_dataset = OrbitDirectionReader(*self.FILES).interpolate(times)
 
         for field, conf in INT_CONF_ORBIT_DIRECTION.items():
             data = tested_dataset[field]
@@ -191,6 +191,10 @@ class TestOrbitDirection(TestCase):
         self._test_interpolate(
             datetime(2017, 1, 1, 12), datetime(2017, 1, 2), 5
         )
+
+
+class TestOrbitDirectionMultiFile(TestOrbitDirection):
+    FILES = [TEST_ORBIT_DIRECTION_CDF, TEST_ORBIT_DIRECTION_CDF]
 
 
 if __name__ == "__main__":

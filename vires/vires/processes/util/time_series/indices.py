@@ -24,17 +24,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-#pylint: disable=too-many-arguments
+# pylint: disable=missing-module-docstring
 
 from vires.cdf_util import CDF_DOUBLE_TYPE, CDF_UINT2_TYPE
 from vires.aux_kp import KpReader
 from vires.aux_dst import DstReader, DDstReader
 from vires.aux_f107 import F10_2_Reader
 from .base import TimeSeries
-from .auxiliary_data import AuxiliaryDataTimeSeries
+from .auxiliary_data import BaseAuxiliaryDataTimeSeries
 
 
-class IndexKp10(AuxiliaryDataTimeSeries):
+class IndexKp10(BaseAuxiliaryDataTimeSeries):
     """ Kp10 index time-series source class. """
     CDF_TYPE = {
         'Timestamp': TimeSeries.TIMESTAMP_TYPE,
@@ -53,13 +53,15 @@ class IndexKp10(AuxiliaryDataTimeSeries):
     }
 
     def __init__(self, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, "Kp10", filename, KpReader,
-            {'time': 'Timestamp', 'kp': 'Kp10'}, logger
+        super().__init__(
+            name="Kp10",
+            reader=KpReader(filename),
+            varmap={'time': 'Timestamp', 'kp': 'Kp10'},
+            logger=logger,
         )
 
 
-class IndexDDst(AuxiliaryDataTimeSeries):
+class IndexDDst(BaseAuxiliaryDataTimeSeries):
     """ Dst index time-series source class. """
     CDF_TYPE = {
         'Timestamp': TimeSeries.TIMESTAMP_TYPE,
@@ -80,13 +82,15 @@ class IndexDDst(AuxiliaryDataTimeSeries):
     }
 
     def __init__(self, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, "dDst", filename, DDstReader,
-            {'time': 'Timestamp', 'ddst': 'dDst'}, logger
+        super().__init__(
+            name="dDst",
+            reader=DDstReader(filename),
+            varmap={'time': 'Timestamp', 'ddst': 'dDst'},
+            logger=logger,
         )
 
 
-class IndexDst(AuxiliaryDataTimeSeries):
+class IndexDst(BaseAuxiliaryDataTimeSeries):
     """ Dst index time-series source class. """
     CDF_TYPE = {
         'Timestamp': TimeSeries.TIMESTAMP_TYPE,
@@ -105,13 +109,15 @@ class IndexDst(AuxiliaryDataTimeSeries):
     }
 
     def __init__(self, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, "Dst", filename, DstReader,
-            {'time': 'Timestamp', 'dst': 'Dst'}, logger
+        super().__init__(
+            name="Dst",
+            reader=DstReader(filename),
+            varmap={'time': 'Timestamp', 'dst': 'Dst'},
+            logger=logger,
         )
 
 
-class IndexF107(AuxiliaryDataTimeSeries):
+class IndexF107(BaseAuxiliaryDataTimeSeries):
     """ F10.7 index (AUX_F10_2_) time-series source class. """
     CDF_TYPE = {
         'Timestamp': TimeSeries.TIMESTAMP_TYPE,
@@ -156,7 +162,9 @@ class IndexF107(AuxiliaryDataTimeSeries):
     }
 
     def __init__(self, filename, logger=None):
-        AuxiliaryDataTimeSeries.__init__(
-            self, "F107", filename, F10_2_Reader, self.VARIABLE_NAME_MAPPING,
-            logger
+        super().__init__(
+            name="F107",
+            reader=F10_2_Reader(filename),
+            varmap=self.VARIABLE_NAME_MAPPING,
+            logger=logger
         )

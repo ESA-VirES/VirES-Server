@@ -26,7 +26,6 @@
 #-------------------------------------------------------------------------------
 
 from logging import getLogger
-from collections import namedtuple
 from vires.cache_util import cache_path
 from vires.data.vires_settings import (
     ORBIT_COUNTER_FILE, ORBIT_DIRECTION_GEO_FILE, ORBIT_DIRECTION_MAG_FILE,
@@ -59,15 +58,17 @@ def _yield_orbit_number_source(mission, spacecraft):
         )
 
 
-def _yield_orbit_direction_sources(mission, spacecraft, grades):
-    od_tables_list = []
-    for grade in (grades or "").split("+"):
-        grade = grade or None
+def _yield_orbit_direction_sources(mission, spacecraft, composit_grade):
+
+    geo_table_paths = []
+    mag_table_paths = []
+    for grade in (composit_grade or "").split("+"):
         try:
-            od_tables_list.append(_ODTables(
-                grade or None,
-                cache_path(ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft, grade)]),
-                cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)]),
+            geo_table_paths.append(cache_path(
+                ORBIT_DIRECTION_GEO_FILE[(mission, spacecraft, grade or None)]
+            ))
+            mag_table_paths.append(cache_path(
+                ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade or None)]
             ))
         except KeyError:
             getLogger(__name__).warning(
@@ -75,20 +76,17 @@ def _yield_orbit_direction_sources(mission, spacecraft, grades):
                 mission, spacecraft or "<none>", grade or "<none>"
             )
 
-    # FIXME: implement proper orbit direction lookup for mixed grades
-    #        currently the first found grade is yielded
-    for od_tables in od_tables_list:
+    if geo_table_paths:
         yield OrbitDirection(
-            _format_label("OrbitDirection", mission, spacecraft, od_tables.grade),
-            od_tables.geo_table_path,
+            _format_label("OrbitDirection", mission, spacecraft, composit_grade),
+            *geo_table_paths,
         )
+
+    if mag_table_paths:
         yield QDOrbitDirection(
-            _format_label("QDOrbitDirection", mission, spacecraft, od_tables.grade),
-            od_tables.mag_table_path,
+            _format_label("QDOrbitDirection", mission, spacecraft, composit_grade),
+            *mag_table_paths,
         )
-
-
-_ODTables = namedtuple("_ODTables", ["grade", "geo_table_path", "mag_table_path"])
 
 
 def _format_label(label, *args):

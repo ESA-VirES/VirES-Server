@@ -27,10 +27,10 @@
 
 from os.path import exists
 from ..cdf_util import cdf_open
-from ..aux_common import SingleSourceMixIn, MJD2000TimeMixIn, BaseReader
+from ..aux_common import SingleSourceMixIn, MJD2000TimeMixIn, CdfReader
 
 
-class OrbitCounterReader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
+class OrbitCounterReader(SingleSourceMixIn, MJD2000TimeMixIn, CdfReader):
     """ Orbit counter data reader class. """
     TIME_FIELD = "MJD2000"
     DATA_FIELDS = ("orbit", "phi_AN", "Source")

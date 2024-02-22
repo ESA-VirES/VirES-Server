@@ -32,13 +32,13 @@ from numpy import loadtxt, array
 from .cdf_util import cdf_open
 from .time_util import mjd2000_to_datetime
 from .aux_common import (
-    SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
+    SingleSourceMixIn, MJD2000TimeMixIn, CdfReader, render_filename,
 )
 
 KP_FLAGS = {b"D": 0, b"Q": 1} # Definitive / Quick-look
 
 
-class KpReader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
+class KpReader(SingleSourceMixIn, MJD2000TimeMixIn, CdfReader):
     """ Kp data reader class. """
     TIME_FIELD = "time"
     DATA_FIELDS = ("kp",)
