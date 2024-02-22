@@ -31,8 +31,6 @@ from os.path import exists
 from datetime import datetime
 import ctypes
 from numpy import nan, full, searchsorted
-import scipy
-from scipy.interpolate import interp1d
 import spacepy
 from spacepy import pycdf
 from spacepy.pycdf import CDFError
@@ -137,95 +135,9 @@ def cdf_open(filename, mode="r", backward_compatible=True):
     return cdf
 
 
-def cdf_time_subset(cdf, start, stop, fields, margin=0, time_field='time'):
-    """ Extract subset of the listed `fields` from a CDF data file.
-    The extracted range of values match times which lie within the given
-    closed time interval. The time interval is defined by the MDJ2000 `start`
-    and `stop` values.
-    The `margin` parameter is used to extend the index range by N surrounding
-    elements. Negative margin is allowed.
-    """
-    if not fields:
-        return [] # skip the data extraction for an empty variable list
-
-    idx_start, idx_stop = array_slice(
-        cdf.raw_var(time_field)[:], start, stop, margin
-    )
-    return [
-        (field, cdf.raw_var(field)[idx_start:idx_stop]) for field in fields
-    ]
-
-
-def cdf_time_interp(cdf, time, fields, min_len=2, time_field='time',
-                    nodata=None, types=None, bounds=None, **interp1d_prm):
-    """ Read values of the listed fields from the CDF file and interpolate
-    them at the given time values (the `time` array of MDJ2000 values).
-    The data exceeding the time interval of the source data is filled with the
-    `nodata` dictionary. The function accepts additional keyword arguments which
-    are passed to the `scipy.interpolate.interp1d` interpolation (e.g., `kind`).
-    """
-    nodata = nodata or {}
-    types = types or {}
-
-    if not fields:
-        return [] # skip the data extraction for an empty variable list
-
-    # additional interpolation parameters
-    if scipy.__version__ >= '0.14':
-        interp1d_prm['assume_sorted'] = True
-    interp1d_prm['copy'] = False
-    interp1d_prm['bounds_error'] = False
-
-    cdf_time = cdf.raw_var(time_field)[:]
-
-    # if possible get subset of the time data
-    if time.size > 0 and cdf_time.shape[0] > min_len:
-        start, stop = bounds if bounds else (time.min(), time.max())
-        slice_obj = slice(*array_slice(cdf_time, start, stop, min_len//2))
-        cdf_time = cdf_time[slice_obj]
-    else:
-        slice_obj = Ellipsis
-
-    # check minimal length required by the chosen kind of interpolation
-    if time.size > 0 and cdf_time.shape[0] >= min_len:
-        return [
-            (field, data.astype(type_) if type_ else data)
-            for field, data, type_ in (
-                (
-                    field,
-                    interp1d(
-                        cdf_time, cdf[field][slice_obj],
-                        fill_value=nodata.get(field, nan), **interp1d_prm
-                    )(time),
-                    types.get(field)
-                ) for field in fields
-            )
-        ]
-    return [
-        (field, full(
-            time.shape, nodata.get(field, nan), types.get(field, 'float')
-        )) for field in fields
-    ]
-
-
-def array_slice(values, start, stop, margin=0):
-    """ Get sub-setting slice bounds. The sliced array must be sorted
-    in the ascending order.
-    """
-    size = values.shape[0]
-    idx_start, idx_stop = 0, size
-
-    if start > stop:
-        start, stop = stop, start
-
-    if idx_stop > 0:
-        idx_start = searchsorted(values, start, 'left')
-        idx_stop = searchsorted(values, stop, 'right')
-
-    if margin != 0:
-        if idx_start < size:
-            idx_start = min(size, max(0, idx_start - margin))
-        if idx_stop > 0:
-            idx_stop = min(size, max(0, idx_stop + margin))
-
-    return idx_start, idx_stop
+def get_cdf_data_reader(cdf):
+    """ Create CDF data reader. """
+    def read_cdf_data(variable, slice_=None):
+        """ Read data from a CDF file. """
+        return cdf.raw_var(variable)[slice_ or Ellipsis]
+    return read_cdf_data

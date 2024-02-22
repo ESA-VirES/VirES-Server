@@ -30,7 +30,7 @@ from numpy import loadtxt, zeros, isnan
 from .cdf_util import cdf_open
 from .time_util import mjd2000_to_datetime
 from .aux_common import (
-    SingleSourceMixIn, MJD2000TimeMixIn, BaseReader, render_filename,
+    SingleSourceMixIn, MJD2000TimeMixIn, CdfReader, render_filename,
 )
 
 # Time tolerance used to check sampling of the F10.7 values
@@ -44,7 +44,7 @@ LEFT_WINDOW_SIZE = 40 # days before the central date
 RIGHT_WINDOW_SIZE = 40 # days after the central date
 
 
-class F10_2_Reader(SingleSourceMixIn, MJD2000TimeMixIn, BaseReader):
+class F10_2_Reader(SingleSourceMixIn, MJD2000TimeMixIn, CdfReader):
     """ F10.7 data reader class. """
     TIME_FIELD = "MJD2000"
     DATA_FIELDS = ("F10.7", "F10.7_avg81d", "F10.7_avg81d_count")
