@@ -45,6 +45,7 @@ class SwarmProductMetadataReader(CDFReader):
         "Timestamp",
         "timestamp",
         "Epoch",
+        "time",
         "t",
     ]
 
