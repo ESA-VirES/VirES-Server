@@ -7,7 +7,7 @@
 {% block body %}
 
 {% load static %}
-<script src="{% static 'workspace/bower_components/jquery/jquery.min.js'%}"></script>
+<script src="{% static 'workspace/jquery/dist/jquery.min.js'%}"></script>
 
 {% if client_state or client_state_url %}
   <script type="text/javascript">
@@ -111,7 +111,7 @@
       });
       {% endif %}
       var CONFIG_URL = "{% static 'workspace/scripts/config.json'%}";
-      CESIUM_BASE_URL = "{% static 'workspace/bower_components/cesium/Build/Cesium/'%}";
+      CESIUM_BASE_URL = "{% static 'workspace/cesium/Build/Cesium/'%}";
       // you can register settings like this before require.js is loaded
       var require = {
           baseUrl : "{% static 'workspace/scripts/' %}"
@@ -141,7 +141,7 @@
         </div>
       </div>
     </div>
-    <script data-main="{% static 'workspace/scripts/init.js' %}" src="{% static 'workspace/bower_components/requirejs/require.js' %}"></script>
+    <script data-main="{% static 'workspace/scripts/init.js' %}" src="{% static 'workspace/requirejs/require.js' %}"></script>
 
   {% else %}
 
@@ -226,7 +226,7 @@
     {% load i18n %}
     {% load account socialaccount %}
 
-    <link href="{% static 'workspace/bower_components/bootstrap/dist/css/bootstrap.min.css'%}" rel="stylesheet">
+    <link href="{% static 'workspace/bootstrap/dist/css/bootstrap.min.css'%}" rel="stylesheet">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet">
     <link href="{% static 'css/landing_page.css' %}?v=20220211" rel="stylesheet">
     <link href="{% static 'css/form_styles.css' %}" rel="stylesheet">
@@ -645,7 +645,7 @@
 
     <!-- script references -->
 
-    <script src="{% static 'workspace/bower_components/bootstrap/dist/js/bootstrap.min.js'%}"></script>
+    <script src="{% static 'workspace/bootstrap/dist/js/bootstrap.min.js'%}"></script>
     <script src="{% static 'js/landing_page.js' %}"></script>
 
     <!-- End landing page -->
