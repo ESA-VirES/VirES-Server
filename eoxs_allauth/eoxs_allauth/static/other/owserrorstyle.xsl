@@ -9,8 +9,8 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:ows="http://www.opengis.n
   <HEAD>
     <title>VirES for Swarm</title>
     <link rel="stylesheet" type="text/css" href="/swarm_static/workspace/styles/main.css" />
-    <script type="text/javascript" src="/swarm_static/workspace/bower_components/jquery/jquery.min.js"/>
-    <script type="text/javascript" src="/swarm_static/workspace/bower_components/bootstrap/dist/js/bootstrap.min.js"/>
+    <script type="text/javascript" src="/swarm_static/workspace/jquery/dist/jquery.min.js"/>
+    <script type="text/javascript" src="/swarm_static/workspace/bootstrap/dist/js/bootstrap.min.js"/>
     <link href="/swarm_static/css/form_styles.css" rel="stylesheet" />
     <link href="/swarm_static/css/social_providers.css" rel="stylesheet"/>
     <style type="text/css">
