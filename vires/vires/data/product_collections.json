@@ -899,5 +899,11 @@
         "nominalSampling": "PT3H",
         "productType": "GFZ_KP",
         "requiredPermission": "__restricted__"
+    },
+    {
+        "name": "WDC_DST",
+        "nominalSampling": "PT1H",
+        "productType": "WDC_DST",
+        "requiredPermission": "__restricted__"
     }
 ]

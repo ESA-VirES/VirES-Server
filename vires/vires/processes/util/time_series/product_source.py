@@ -51,8 +51,8 @@ class Record(namedtuple("Record", ["index", "start", "end", "data"])):
 class SwarmDefaultParameters:
     """ Default SWARM product parameters. """
     TIME_VARIABLE = "Timestamp"
-    TIME_TOLERANCE = timedelta(microseconds=0) # time selection tolerance
-    TIME_OVERLAP = timedelta(seconds=60) # time interpolation overlap
+    TIME_TOLERANCE = timedelta(microseconds=0) # time selection buffer
+    TIME_OVERLAP = timedelta(seconds=60) # time interpolation buffer
     TIME_GAP_THRESHOLD = timedelta(seconds=30) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=0.5)
     VARIABLE_INTERPOLATION_KINDS = {}
@@ -69,8 +69,8 @@ class MagLRParameters(SwarmDefaultParameters):
 class AuxImf2Parameters(SwarmDefaultParameters):
     """ AUX_IMF_2_ parameters """
     INTERPOLATION_KIND = "zero"
-    TIME_TOLERANCE = timedelta(minutes=61) # time selection tolerance
-    TIME_OVERLAP = timedelta(hours=2) # time interpolation overlap
+    TIME_TOLERANCE = timedelta(minutes=61) # time selection buffer
+    TIME_OVERLAP = timedelta(hours=2) # time interpolation buffer
     TIME_GAP_THRESHOLD = timedelta(minutes=61) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=60)
     VARIABLE_INTERPOLATION_KINDS = {
@@ -84,8 +84,8 @@ class AuxImf2Parameters(SwarmDefaultParameters):
 class GfzKpParameters(SwarmDefaultParameters):
     """ GFZ_KP parameters """
     INTERPOLATION_KIND = "zero"
-    TIME_TOLERANCE = timedelta(minutes=181) # time selection tolerance
-    TIME_OVERLAP = timedelta(hours=6) # time interpolation overlap
+    TIME_TOLERANCE = timedelta(minutes=181) # time selection buffer
+    TIME_OVERLAP = timedelta(hours=6) # time interpolation buffer
     TIME_GAP_THRESHOLD = timedelta(minutes=181) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=180)
     VARIABLE_INTERPOLATION_KINDS = {
@@ -94,11 +94,24 @@ class GfzKpParameters(SwarmDefaultParameters):
     }
 
 
+class WdcDstParameters(SwarmDefaultParameters):
+    """ WDC_DST parameters """
+    INTERPOLATION_KIND = "zero"
+    TIME_TOLERANCE = timedelta(minutes=61) # time selection buffer
+    TIME_OVERLAP = timedelta(hours=2) # time interpolation buffer
+    TIME_GAP_THRESHOLD = timedelta(minutes=61) # gap time threshold
+    TIME_SEGMENT_NEIGHBOURHOOD = timedelta(minutes=60)
+    VARIABLE_INTERPOLATION_KINDS = {
+        "Dst": "linear",
+        "dDst": "zero",
+    }
+
+
 class OmniHr1MinParameters(SwarmDefaultParameters):
     """ OMNI HR 1min parameters """
     INTERPOLATION_KIND = "zero"
-    TIME_TOLERANCE = timedelta(0) # time selection tolerance
-    TIME_OVERLAP = timedelta(minutes=120) # time interpolation overlap
+    TIME_TOLERANCE = timedelta(0) # time selection buffer
+    TIME_OVERLAP = timedelta(minutes=120) # time interpolation buffer
     TIME_GAP_THRESHOLD = timedelta(seconds=61) # gap time threshold
     TIME_SEGMENT_NEIGHBOURHOOD = timedelta(seconds=60)
     VARIABLE_INTERPOLATION_KINDS = {
@@ -117,6 +130,7 @@ PRODUCT_TYPE_PARAMETERS = {
     "SW_AUX_IMF_2_": AuxImf2Parameters,
     "OMNI_HR_1min": OmniHr1MinParameters,
     "GFZ_KP": GfzKpParameters,
+    "WDC_DST": WdcDstParameters,
 }
 
 
