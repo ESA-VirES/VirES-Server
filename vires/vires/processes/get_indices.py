@@ -31,7 +31,7 @@
 
 from datetime import datetime
 from io import StringIO
-from numpy import vectorize, choose, ravel, stack, concatenate
+from numpy import vectorize, choose, ravel, stack, concatenate, isnan
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, FormatText, CDFileWrapper,
 )
@@ -55,7 +55,7 @@ class BaseReader:
     @classmethod
     def lessen(cls, array, axis):
         """ Data reduction, get largest value along the given axis. """
-        return cls._amax(array, axis)
+        return array.max(axis)
 
     @classmethod
     def reduce_data(cls, time, data, max_count=500):
@@ -72,18 +72,6 @@ class BaseReader:
         """ Read reduced-size data matched by the given time-selection. """
         time, data = cls.read_data(start, end)
         return cls.reduce_data(time, data, max_count=max_count)
-
-    @staticmethod
-    def _amax(array, axis):
-        """ Get largest value along the given axis. """
-        return array.max(axis)
-
-    @staticmethod
-    def _abs_amax(array, axis):
-        """ Get the elements with largest absolute values along the given axis. """
-        array_min = array.min(axis)
-        array_max = array.max(axis)
-        return choose(abs(array_max) > abs(array_min), (array_min, array_max))
 
     @classmethod
     def _reduce_data(cls, time, data, max_count):
@@ -119,6 +107,13 @@ class F107Reader(BaseReader):
     fields = ("MJD2000", "F10.7")
 
     @classmethod
+    def reduce_data(cls, time, data, max_count=500):
+        """ Reduce size of the data and remove NaN values. """
+        time, data = super().reduce_data(time, data, max_count=max_count)
+        mask = ~isnan(data)
+        return time[mask], data[mask]
+
+    @classmethod
     def read_data(cls, start, end):
         reader = cls._get_reader()
         data = reader.subset(start, end, fields=cls.fields)
@@ -127,6 +122,11 @@ class F107Reader(BaseReader):
     @classmethod
     def _get_reader(cls):
         return F10_2_Reader(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
+
+    @classmethod
+    def lessen(cls, array, axis):
+        """ Get the mean value along the given axis, ignoring NaN values. """
+        return array.nanmean(axis)
 
 
 class CollectionReader(BaseReader):
@@ -183,7 +183,10 @@ class DstReader(CollectionReader):
 
     @classmethod
     def lessen(cls, array, axis):
-        return cls._abs_amax(array, axis)
+        """ Get the elements with largest absolute values along the given axis. """
+        array_min = array.min(axis)
+        array_max = array.max(axis)
+        return choose(abs(array_max) > abs(array_min), (array_min, array_max))
 
 
 class DDstReader(CollectionReader):
