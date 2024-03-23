@@ -42,7 +42,7 @@ from eoxserver.services.ows.wps.parameters import (
 from eoxserver.services.ows.wps.exceptions import (
     InvalidInputValueError, InvalidOutputDefError, ServerBusy,
 )
-from vires.models import ProductCollection, Job, get_user
+from vires.models import Job, get_user
 from vires.util import unique, exclude, include, pretty_list, LazyString
 from vires.access_util import get_vires_permissions
 from vires.time_util import naive_to_utc, format_timedelta, format_datetime
@@ -52,9 +52,7 @@ from vires.cdf_util import (
     CDF_CHAR_TYPE, CDF_TIME_TYPES,
 )
 from vires.cache_util import cache_path
-from vires.data.vires_settings import (
-    CACHED_PRODUCT_FILE, AUX_DB_DST, DEFAULT_MISSION,
-)
+from vires.data.vires_settings import CACHED_PRODUCT_FILE, DEFAULT_MISSION
 from vires.filters import (
     format_filters, MinStepSampler, GroupingSampler, ExtraSampler,
 )
@@ -65,8 +63,9 @@ from vires.processes.util import (
     extract_product_names, get_time_limit, get_orbit_sources,
 )
 from vires.processes.util.time_series import (
-    SingleCollectionProductSource, TimeSeries, ProductTimeSeries,
-    IndexDst, IndexDDst, IndexF107,
+    get_product_time_series,
+    TimeSeries, ProductTimeSeries,
+    IndexF107,
 )
 from vires.processes.util.models import (
     QuasiDipoleCoordinates, MagneticLocalTime,
@@ -360,23 +359,10 @@ class FetchFilteredDataAsync(WPSProcess):
         resolvers = {}
 
         if sources:
-            index_kp = ProductTimeSeries(
-                SingleCollectionProductSource(
-                    ProductCollection.objects.get(
-                        identifier="GFZ_KP"
-                    )
-                )
-            )
-            index_dst = IndexDst(cache_path(AUX_DB_DST))
-            index_ddst = IndexDDst(cache_path(AUX_DB_DST))
+            index_kp = get_product_time_series("GFZ_KP")
+            index_dst = get_product_time_series("WDC_DST")
             index_f10 = IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"]))
-            index_imf = ProductTimeSeries(
-                SingleCollectionProductSource(
-                    ProductCollection.objects.get(
-                        identifier="OMNI_HR_1min_avg20min_delay10min"
-                    )
-                )
-            )
+            index_imf = get_product_time_series("OMNI_HR_1min_avg20min_delay10min")
             model_bnec_intensity = BnecToF()
             model_qdc = QuasiDipoleCoordinates()
             model_mlt = MagneticLocalTime()
@@ -427,7 +413,7 @@ class FetchFilteredDataAsync(WPSProcess):
                     resolver.add_filter(grouping_sampler)
 
                 # auxiliary slaves
-                for slave in (index_kp, index_dst, index_ddst, index_f10, index_imf):
+                for slave in (index_kp, index_dst, index_f10, index_imf):
                     resolver.add_slave(slave)
 
                 # satellite specific slaves

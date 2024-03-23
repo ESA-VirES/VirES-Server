@@ -42,6 +42,55 @@
         }
     },
     {
+        "name": "WDC_DST",
+        "description": "Dst index produced by World Data Center for Geomagnetism, Kyoto, Japan",
+        "resourceUrl": "https://wdc.kugi.kyoto-u.ac.jp/wdc/Sec3.html",
+        "citation": "https://doi.org/10.17593/14515-74000",
+        "dataTerms": "World Data System - Data Sharing Principles (https://worlddatasystem.org/about/data-sharing-principles/)",
+        "defaultDataset": "Dst",
+        "datasets": {
+            "Dst": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "UTC timestamp - middle of the interval for which the Dst values are given",
+                        "UNITS": "-"
+                    }
+                },
+                "Dst": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Hourly geomagnetic equatorial Dst index",
+                        "UNITS": "nT"
+                    }
+                },
+                "dDst": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Absolute rate of change of the hourly Dst index (calculated as an absolute value of the difference between two consecutive hourly Dst values)",
+                        "UNITS": "nT/h"
+                    }
+                },
+                "Dst_Version": {
+                    "dataType": "int16",
+                    "attributes": {
+                        "DESCRIPTION": "Version of the sample as a number of applied corrections",
+                        "UNITS": "-"
+                    }
+                },
+                "Dst_Flag": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Dst status flag: 0 - definitive value, 1 - provisional value, 2 - real-time value",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_MODx_SC_1B",
         "description": "Swarm S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products",

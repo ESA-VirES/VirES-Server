@@ -25,6 +25,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+from vires.models import ProductCollection
 from .base import TimeSeries
 from .product_source import (
     SingleCollectionProductSource,
@@ -36,3 +37,12 @@ from .indices import IndexKp10, IndexDst, IndexDDst, IndexF107
 from .orbit_counter import OrbitCounter
 from .orbit_direction import OrbitDirection, QDOrbitDirection
 from .cached_model import CachedModelExtraction
+
+
+def get_product_time_series(identifier):
+    """ Convenience function creating product time series for the given
+    product collection identifier.
+    """
+    return ProductTimeSeries(SingleCollectionProductSource(
+        ProductCollection.objects.get(identifier=identifier)
+    ))
