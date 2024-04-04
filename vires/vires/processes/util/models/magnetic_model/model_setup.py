@@ -132,6 +132,14 @@ def _handle_cached_models(models, available_cached_models, master_source=None):
 
     # get per-collection cached model objects
     for collections, models_ in cached_models.items():
+
+        # filter collections to match the master source
+        if master_source:
+            collections = tuple(
+                collection for collection in collections
+                if collection in master_source.collections
+            )
+
         yield CachedModelExtraction(
             MultiCollectionProductSource(collections),
             models_,
