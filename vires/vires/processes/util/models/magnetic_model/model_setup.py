@@ -135,10 +135,18 @@ def _handle_cached_models(models, available_cached_models, master_source=None):
 
         # filter collections to match the master source
         if master_source:
-            collections = tuple(
+            collections_subset = tuple(
                 collection for collection in collections
                 if collection in master_source.collections
             )
+            if collections_subset:
+                collections = collections_subset
+
+        # filter mixed types collections
+        collections = (collections[0], *(
+            collection for collection in collections[1:]
+            if collection.type == collections[0].type
+        ))
 
         yield CachedModelExtraction(
             MultiCollectionProductSource(collections),
