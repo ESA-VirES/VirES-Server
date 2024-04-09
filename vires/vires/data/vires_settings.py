@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -66,18 +66,21 @@ CACHED_PRODUCT_FILE = {
     "GF1_ORBCNT": "GF1_ORBCNT.cdf",
     "GF2_ORBCNT": "GF2_ORBCNT.cdf",
     "GO_ORBCNT": "GO_ORBCNT.cdf",
+    "CH_ORBCNT": "CH_ORBCNT.cdf",
     "CS2_ORBCNT": "CS2_ORBCNT.cdf",
     "GR1_ODBGEO": "GR1_ODBGEO.cdf",
     "GR2_ODBGEO": "GR2_ODBGEO.cdf",
     "GF1_ODBGEO": "GF1_ODBGEO.cdf",
     "GF2_ODBGEO": "GF2_ODBGEO.cdf",
     "GO_ODBGEO": "GO_ODBGEO.cdf",
+    "CH_ODBGEO": "CH_ODBGEO.cdf",
     "CS2_ODBGEO": "CS2_ODBGEO.cdf",
     "GR1_ODBMAG": "GR1_ODBMAG.cdf",
     "GR2_ODBMAG": "GR2_ODBMAG.cdf",
     "GF1_ODBMAG": "GF1_ODBMAG.cdf",
     "GF2_ODBMAG": "GF2_ODBMAG.cdf",
     "GO_ODBMAG": "GO_ODBMAG.cdf",
+    "CH_ODBMAG": "CH_ODBMAG.cdf",
     "CS2_ODBMAG": "CS2_ODBMAG.cdf",
     "CNJ_SWA_SWB": "CNJ_SWA_SWB.cdf",
     "CNJ_FAST_SWA_SWB": "CNJ_FAST_SWA_SWB.cdf",
@@ -93,7 +96,7 @@ SPACECRAFTS = [
     ("GRACE-FO", "2"),
     ("CryoSat-2", None),
     ("GOCE", None),
-
+    ("CHAMP", None),
 ]
 
 MISSION_TO_FILE_PREFIX = {
@@ -101,7 +104,8 @@ MISSION_TO_FILE_PREFIX = {
     "GRACE": "GR{spacecraft}_",
     "GRACE-FO": "GF{spacecraft}_",
     "CryoSat-2": "CS2_",
-    "GOCE": "GO_"
+    "GOCE": "GO_",
+    "CHAMP": "CH_",
 }
 
 ORBIT_COUNTER_FILE = {}

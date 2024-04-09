@@ -184,6 +184,15 @@ def get_cached_product_configuration():
             )
             cached_products.pop("GO_ODBGEO")
             cached_products.pop("GO_ODBMAG")
+        elif mission == "GOCE":
+            _configure_cached_product(
+                "CH_ORBCNT",
+                label="CHAMP orbit counter",
+                updater=simple_cached_product_updater(update_gfz_orbit_counter_file),
+                tmp_extension=".tmp.cdf"
+            )
+            cached_products.pop("CH_ODBGEO")
+            cached_products.pop("CH_ODBMAG")
 
     return cached_products
 
