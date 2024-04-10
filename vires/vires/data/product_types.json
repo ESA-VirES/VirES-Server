@@ -3824,11 +3824,11 @@
                         "UNITS": "-"
                     }
                 },
-                "KP_DST_FLAG": {
+                "MAGNETIC_ACTIVITY_FLAG": {
                     "dataType": "uint32",
                     "attributes": {
-                        "DESCRIPTION": "Kp and Dst flag (0 low magnetic activity, 1 high magnetic activity)",
-                        "UNITS": "-"
+                        "UNITS": "-",
+                        "DESCRIPTION": "Flag for filtered values using Hp30 and Dst indices (0: Geomagnetic quiet,1: Geomagnetic active: Hp30 > 2 or |Dst| > 30)"
                     }
                 },
                 "NaN_FLAG": {
