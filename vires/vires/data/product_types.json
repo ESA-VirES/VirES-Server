@@ -3560,6 +3560,115 @@
         }
     },
     {
+        "name": "GFx_MAG_ACAL_ML",
+        "description": "GRACE-FO platform magnetometer measurements (ML calibrated)",
+        "resourceUrl": "https://doi.org/10.5880/GFZ.2.3.2023.001",
+        "citation": "https://doi.org/10.5880/GFZ.2.3.2023.001",
+        "dataTerms": "CC BY 4.0",
+        "defaultDataset": "MDR_MAG_ACAL_ML",
+        "hapiOptions": {
+            "MDR_MAG_ACAL_ML": {
+                "magneticModels": [
+                    {
+                        "name": "Model",
+                        "description": "CHAOS magnetic model",
+                        "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
+                    }
+                ],
+                "magneticModelResiduals": ["B_NEC"]
+            }
+        },
+        "_order": 16,
+        "datasets": {
+            "MDR_MAG_ACAL_ML": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "QDLatitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "QDLongitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "B_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, FGM, aligned, vector-vector calibrated and corrected for satellite disturbances, FGM frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Fluxgate magnetometer, FGM, aligned, vector-vector calibrated and corrected for satellite disturbances, NEC frame",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_NEC_FGM": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "Quaternion, transformation: NEC ... FGM",
+                        "UNITS": "-"
+                    }
+                },
+                "B_FLAG": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flag for FGM (Bit field:0: MTQ1 positive saturated,1: MTQ1 negative saturated,2: MTQ2 positive saturated,3: MTQ2 negative saturated,4: MTQ3 positive saturated,5: MTQ3 negative saturated)",
+                        "UNITS": "-"
+                    }
+                },
+                "KP_DST_FLAG": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Flag for filtered values using KP and Dst indices (0: Geomagnetic quiet,1: Geomagnetic active: KP > 2 or |Dst| > 30)",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "GO_MAG_ACAL",
         "description": "GOCE platform magnetometer measurements.",
         "resourceUrl": "https://doi.org/10.1186/s40623-022-01691-6",

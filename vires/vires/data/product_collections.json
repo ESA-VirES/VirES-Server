@@ -844,6 +844,42 @@
         }
     },
     {
+        "name": "GF1_MAG_ACAL_CORR_ML",
+        "description": "GRACE-FO 1 platform magnetometer measurements (ML calibrated)",
+        "productType": "GFx_MAG_ACAL_ML",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": false,
+        "mission": "GRACE-FO",
+        "spacecraft": "1",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
+    },
+    {
+        "name": "GF2_MAG_ACAL_CORR_ML",
+        "description": "GRACE-FO 2 platform magnetometer measurements (ML calibrated)",
+        "productType": "GFx_MAG_ACAL_ML",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": false,
+        "mission": "GRACE-FO",
+        "spacecraft": "2",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
+    },
+    {
         "name": "GO_MAG_ACAL_CORR",
         "description": "GOCE platform magnetometer measurements",
         "productType": "GO_MAG_ACAL",
