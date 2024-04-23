@@ -44,12 +44,14 @@
     {
         "name": "CH_OPER_DNS_ACC_2_",
         "description": "CHAMP accelerometer-derived thermosphere density observations",
+        "mission": "CHAMP",
         "productType": "CH_DNSxACC_2_",
         "nominalSampling": "PT10S"
     },
     {
         "name": "CH_OPER_WND_ACC_2_",
         "description": "CHAMP thermosphere crosswind at satellite locations",
+        "mission": "CHAMP",
         "productType": "CH_WNDxACC_2_",
         "nominalSampling": "PT10S"
     },
