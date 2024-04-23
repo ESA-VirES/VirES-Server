@@ -941,5 +941,125 @@
         "nominalSampling": "PT1H",
         "productType": "WDC_DST",
         "requiredPermission": "swarm"
+    },
+    {
+        "name": "SW_OPER_DNSAPOD_2_",
+        "description": "Swarm A thermosphere density observations derived from precise orbit determination data only",
+        "productType": "SW_DNSxPOD_2_",
+        "spacecraft": "A",
+        "nominalSampling": "PT30S"
+    },
+    {
+        "name": "SW_OPER_DNSBPOD_2_",
+        "description": "Swarm B thermosphere density observations derived from precise orbit determination data only",
+        "productType": "SW_DNSxPOD_2_",
+        "spacecraft": "B",
+        "nominalSampling": "PT30S"
+    },
+    {
+        "name": "SW_OPER_DNSCPOD_2_",
+        "description": "Swarm C thermosphere density observations derived from precise orbit determination data only",
+        "productType": "SW_DNSxPOD_2_",
+        "spacecraft": "C",
+        "nominalSampling": "PT30S"
+    },
+    {
+        "name": "SW_OPER_DNSAACC_2_",
+        "description": "Swarm A thermosphere density observations derived from precise orbit determination data and accelerometer data",
+        "productType": "SW_DNSxACC_2_",
+        "spacecraft": "A",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "SW_OPER_DNSBACC_2_",
+        "description": "Swarm B thermosphere density observations derived from precise orbit determination data and accelerometer data",
+        "productType": "SW_DNSxACC_2_",
+        "spacecraft": "B",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "SW_OPER_DNSCACC_2_",
+        "description": "Swarm C thermosphere density observations derived from precise orbit determination data and accelerometer data",
+        "productType": "SW_DNSxACC_2_",
+        "spacecraft": "C",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "CH_OPER_DNS_ACC_2_",
+        "description": "CHAMP accelerometer-derived thermosphere density observations",
+        "mission": "CHAMP",
+        "productType": "CH_DNSxACC_2_",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "CH_OPER_WND_ACC_2_",
+        "description": "CHAMP thermosphere crosswind at satellite locations",
+        "mission": "CHAMP",
+        "productType": "CH_WNDxACC_2_",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GR_OPER_DNS1ACC_2_",
+        "description": "GRACE 1 accelerometer-derived thermosphere density observations",
+        "productType": "GR_DNSxACC_2_",
+        "mission": "GRACE",
+        "spacecraft": "1",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GR_OPER_DNS2ACC_2_",
+        "description": "GRACE 2 accelerometer-derived thermosphere density observations",
+        "productType": "GR_DNSxACC_2_",
+        "mission": "GRACE",
+        "spacecraft": "2",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GR_OPER_WND1ACC_2_",
+        "description": "GRACE 1 thermosphere crosswind at satellite locations",
+        "productType": "GR_WNDxACC_2_",
+        "mission": "GRACE",
+        "spacecraft": "1",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GR_OPER_WND2ACC_2_",
+        "description": "GRACE 2 thermosphere crosswind at satellite locations",
+        "productType": "GR_WNDxACC_2_",
+        "mission": "GRACE",
+        "spacecraft": "2",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GF_OPER_DNS1ACC_2_",
+        "description": "GRACE-FO 1 accelerometer-derived thermosphere density observations",
+        "productType": "GF_DNSxACC_2_",
+        "mission": "GRACE-FO",
+        "spacecraft": "1",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GF_OPER_DNS2ACC_2_",
+        "description": "GRACE-FO 2 accelerometer-derived thermosphere density observations",
+        "productType": "GF_DNSxACC_2_",
+        "mission": "GRACE-FO",
+        "spacecraft": "2",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GF_OPER_WND1ACC_2_",
+        "description": "GRACE-FO 1 thermosphere crosswind at satellite locations",
+        "productType": "GF_WNDxACC_2_",
+        "mission": "GRACE-FO",
+        "spacecraft": "1",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GF_OPER_WND2ACC_2_",
+        "description": "GRACE-FO 2 thermosphere crosswind at satellite locations",
+        "productType": "GF_WNDxACC_2_",
+        "mission": "GRACE-FO",
+        "spacecraft": "2",
+        "nominalSampling": "PT10S"
     }
 ]
