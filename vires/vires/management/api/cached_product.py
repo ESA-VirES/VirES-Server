@@ -184,7 +184,7 @@ def get_cached_product_configuration():
             )
             cached_products.pop("GO_ODBGEO")
             cached_products.pop("GO_ODBMAG")
-        elif mission == "GOCE":
+        elif mission == "CHAMP":
             _configure_cached_product(
                 "CH_ORBCNT",
                 label="CHAMP orbit counter",
