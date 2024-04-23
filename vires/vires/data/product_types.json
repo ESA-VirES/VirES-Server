@@ -4032,6 +4032,122 @@
         }
     },
     {
+        "name": "CH_ME_3_MAG",
+        "description": "CHAMP vector (FGM) magnetic field measurements.",
+        "resourceUrl": "https://dataservices.gfz-potsdam.de/panmetaworks/showshort.php?id=escidoc:4522907",
+        "citation": "https://doi.org/10.5880/GFZ.2.3.2019.004",
+        "dataTerms": "TBD",
+        "defaultDataset": "MDR_ME_3_MAG",
+        "hapiOptions": {
+            "MDR_ME_3_MAG": {
+                "magneticModels": [
+                    {
+                        "name": "Model",
+                        "description": "CHAOS magnetic model",
+                        "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
+                    }
+                ],
+                "magneticModelResiduals": ["F", "B_NEC"]
+            }
+        },
+        "_order": 14,
+        "datasets": {
+            "MDR_ME_3_MAG": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "time, UT (epoch)",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "geocentric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "geocentric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "geocentric radius",
+                        "UNITS": "m"
+                    }
+                },
+                "B_FGM": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "B-vector in FGM-1 sensor system",
+                        "UNITS": "nT"
+                    }
+                },
+                "F": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "scalar B-field in FGM-1 sensor system",
+                        "UNITS": "nT"
+                    }
+                },
+                "B_NEC": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "B-vector in NEC system",
+                        "UNITS": "nT"
+                    }
+                },
+                "q_ASC_CRF": {
+                    "dataType": "float64",
+                    "dimension": [4],
+                    "attributes": {
+                        "DESCRIPTION": "ASC quaternions for ICRF (International Celestial Reference System) -> CRF (Common Reference System) transformation",
+                        "UNITS": "-"
+                    }
+                },
+                "GEO_STAT": {
+                    "dataType": "int32",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "status information for positions; column 1 - number of gaps in interpolation interval; column 2 - flag for PDO used instead of RSO; column 3 - number of basePoints used for interpolation",
+                        "UNITS": "-"
+                    }
+                },
+                "FGM_FLAGS": {
+                    "dataType": "uint8",
+                    "dimension": [2],
+                    "attributes": {
+                        "DESCRIPTION": "FGM quality information (flags),### bits of byte 1 (8 7 6 5 4 3 2 1): # 1 - adc (first sample anormal = 1, ok = 0); # 3,2 sample frequency (00 = sample freq is 50 Hz,  01 = sample freq is 10 Hz,  10 = sample freq is  1 Hz,  11 = sample freq is illegal); # 4 - torquer overlap (ok = 0, not ok = 1); # 5 - OnBoardDataUnit (OBDU) (standard = 0, redundant = 1); # 6 - bad average distribution (ok = 0, bad = 1); # 7 - ovm frequency correction (no = 0, yes = 1); # 8 - ovm hk overlapped (yes = 0, no = 1); ### bits of byte 2 (8 7 6 5 4 3 2 1): # 1 - L3 ovm interpolated (no = 0, yes = 1); # 2 - L3 fgm interpolated (no = 0, yes = 1); # 3 - L3 delta interpolated (no = 0, yes = 1); # 4 - L3 value corrected for OVM (ok = 0, no = 1); # 5 - empty; # 6 - FGM Burst mode (compression on = 1, off = 0); # 7 - L2 ovm GPS error corrected (no = 0, corrected = 1); # 8 - L2 fgm GPS error corrected (no = 0, corrected = 1);",
+                        "UNITS": "-"
+                    }
+                },
+                "ASC_MODE": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "star camera mode (from left to right): 1st A1 Camera 1 Boom; 2nd A2 Camera 2 Boom; 3rd B1 Camera 1 Body; 4rd B2 Camera 2 Body",
+                        "UNITS": "-"
+                    }
+                },
+                "ASC_STAT": {
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "star camera quality information, ### 1st digit is flagging ASC source: 0 = no data available,  2 = single data boom, chu2cr static, 6 = single data boom + chu2cr dynamic, 7 = dual data boom; ### 2nd digit is filtered flag: 0 = no, 1 = yes; ### 3rd digit is flagging chu2cr transformation mode: 0 = static, 1 = dynamic, 2 = dual; ### 4th digit is flagging jump correction: 0 = no, 1 = chu1/3, 2 = chu2/4, 3 = chu1/3 and chu2/4; ### 5th digit is flagging interpolated gaps: 0 = no interpolation 1 = chu1/3, 2 = chu2/4, 3 = chu1/3 and chu2/4;",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "CS_MAG",
         "description": "Cryosat-2 Platform magnetometer measurements",
         "resourceUrl": "https://doi.org/10.1186/s40623-020-01171-9",

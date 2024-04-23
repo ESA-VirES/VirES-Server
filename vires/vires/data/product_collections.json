@@ -990,6 +990,23 @@
         }
     },
     {
+        "name": "CH_ME_3_MAG",
+        "description": "CHAMP vector (FGM) magnetic field measurements.",
+        "productType": "CH_ME_3_MAG",
+        "nominalSampling": "PT1S",
+        "calculateOrbitDirection": true,
+        "mission": "CHAMP",
+        "cachedMagneticModels": {
+            "interpolationKind": "nearest",
+            "models": [
+                "'CHAOS-Static'",
+                "'_MIO_SHA_2C-Primary'",
+                "'_MIO_SHA_2C-Secondary'",
+                "'MLI_SHA_2C'"
+            ]
+        }
+    },
+    {
         "name": "CS_OPER_MAG",
         "description": "Cryosat-2 Platform magnetometer measurements",
         "productType": "CS_MAG",
