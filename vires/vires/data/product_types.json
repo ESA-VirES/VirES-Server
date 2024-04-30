@@ -3627,7 +3627,7 @@
                         "UNITS": "deg"
                     }
                 },
-                "B_FGM": {
+                "B_MAG": {
                     "dataType": "float64",
                     "dimension": [3],
                     "attributes": {
