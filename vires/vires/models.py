@@ -188,6 +188,11 @@ class ProductType(Model):
         verbose_name = "Product Type"
         verbose_name_plural = "Product Types"
 
+    @property
+    def file_type(self):
+        """ Get product file type. """
+        return self.definition.get('fileType')
+
     def get_dataset_id(self, dataset_id=None):
         """ Get dataset identifier.  If the dataset_id parameter is set to None
         then the default dataset identifier is returned.
