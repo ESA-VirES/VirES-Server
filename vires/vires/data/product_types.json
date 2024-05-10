@@ -5,6 +5,7 @@
         "resourceUrl": "https://kp.gfz-potsdam.de/app/format/Kp_ap.txt",
         "citation": "https://doi.org/10.1029/2020SW002641",
         "dataTerms": "CC BY 4.0",
+        "fileType": "CDF-generic",
         "defaultDataset": "Kp_ap",
         "datasets": {
             "Kp_ap": {
@@ -47,6 +48,7 @@
         "resourceUrl": "https://wdc.kugi.kyoto-u.ac.jp/wdc/Sec3.html",
         "citation": "https://doi.org/10.17593/14515-74000",
         "dataTerms": "World Data System - Data Sharing Principles (https://worlddatasystem.org/about/data-sharing-principles/)",
+        "fileType": "CDF-generic",
         "defaultDataset": "Dst",
         "datasets": {
             "Dst": {
@@ -95,6 +97,7 @@
         "description": "Swarm S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MOD",
         "_order": 10,
         "datasets": {
@@ -137,6 +140,7 @@
         "description": "Swarm vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_LR",
         "hapiOptions": {
             "MDR_MAG_LR": {
@@ -331,6 +335,7 @@
         "description": "Swarm vector (VFM) magnetic field measurements at 50Hz rate.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Magnetic_Products",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_HR",
         "hapiOptions": {
             "MDR_MAG_HR": {
@@ -471,6 +476,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#EFIX_LP_1B_Product",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 20,
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_EFI_LP",
         "datasets": {
             "MDR_EFI_LP": {
@@ -597,6 +603,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/2860886/SLIDEM_Product_Definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 21,
+        "fileType": "CDF-generic",
         "defaultDataset": "EFI_IDM",
         "datasets": {
             "EFI_IDM": {
@@ -779,6 +786,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 22,
+        "fileType": "CDF-generic",
         "defaultDataset": "EFI_TIE",
         "datasets": {
             "EFI_TIE": {
@@ -890,6 +898,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 23,
+        "fileType": "CDF-generic",
         "defaultDataset": "EFI_TII_CT",
         "datasets": {
             "EFI_TII_CT": {
@@ -1123,6 +1132,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#IBIxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 25,
+        "fileType": "CDF-generic",
         "defaultDataset": "IBI_TMS",
         "datasets": {
             "IBI_TMS": {
@@ -1207,6 +1217,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EEFxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 24,
+        "fileType": "CDF-generic",
         "defaultDataset": "EEF_TMS",
         "datasets": {
             "EEF_TMS": {
@@ -1271,6 +1282,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#FACxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 26,
+        "fileType": "CDF-generic",
         "defaultDataset": "FAC_TMS",
         "datasets": {
             "FAC_TMS": {
@@ -1369,6 +1381,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#TECxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 26,
+        "fileType": "CDF-generic",
         "defaultDataset": "TEC_TMS",
         "datasets": {
             "TEC_TMS": {
@@ -1530,6 +1543,7 @@
         "citation": "https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/2018JA026063",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 30,
+        "fileType": "CDF-generic",
         "defaultDataset": "IPD_IRR",
         "datasets": {
             "IPD_IRR": {
@@ -1743,6 +1757,7 @@
     },
     {
         "name": "SW_AUX_IMF_2_",
+        "fileType": "CDF-generic",
         "defaultDataset": "AUX_IMF",
         "datasets": {
             "AUX_IMF": {
@@ -1796,6 +1811,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 40,
+        "fileType": "CDF-generic",
         "defaultDataset": "AEJ_LPL",
         "datasets": {
             "AEJ_LPL": {
@@ -1896,6 +1912,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 41,
+        "fileType": "CDF-generic",
         "defaultDataset": "AEJ_PBL",
         "datasets": {
             "AEJ_PBL": {
@@ -1974,6 +1991,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 42,
+        "fileType": "CDF-generic",
         "defaultDataset": "AEJ_LPS",
         "datasets": {
             "AEJ_LPS": {
@@ -2098,6 +2116,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 43,
+        "fileType": "CDF-generic",
         "defaultDataset": "AEJ_PBS",
         "datasets": {
             "AEJ_PBS": {
@@ -2213,6 +2232,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 44,
+        "fileType": "CDF-generic",
         "defaultDataset": "AOB_FAC",
         "datasets": {
             "AOB_FAC": {
@@ -2300,6 +2320,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 45,
+        "fileType": "CDF-generic",
         "defaultDataset": "MIT_minimum",
         "datasets": {
             "MIT_minimum": {
@@ -2567,6 +2588,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 46,
+        "fileType": "CDF-generic",
         "defaultDataset": "MIT_minimum",
         "datasets": {
             "MIT_minimum": {
@@ -2819,6 +2841,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 47,
+        "fileType": "CDF-generic",
         "defaultDataset": "SSFAC_boundary",
         "datasets": {
             "SSFAC_boundary": {
@@ -3031,6 +3054,7 @@
     },
     {
         "name": "OMNI_HR_1min",
+        "fileType": "CDF-generic",
         "defaultDataset": "OMNI_HR_1min",
         "datasets": {
             "OMNI_HR_1min": {
@@ -3097,6 +3121,7 @@
     },
     {
         "name": "SW_AUX_OBSx2_",
+        "fileType": "CDF-OBS",
         "defaultDataset": "__all__",
         "strictDatasetCheck": false,
         "unsortedDatasets": ["__all__"],
@@ -3159,6 +3184,7 @@
     },
     {
         "name": "SW_AUX_OBSH2_",
+        "fileType": "CDF-OBS",
         "defaultDataset": "__all__",
         "strictDatasetCheck": false,
         "unsortedDatasets": ["__all__"],
@@ -3228,6 +3254,7 @@
     },
     {
         "name": "SW_VOBS_xM_2_",
+        "fileType": "CDF-VOBS",
         "defaultDataset": "__all__",
         "strictDatasetCheck": false,
         "unsortedDatasets": ["__all__", "SecularVariation"],
@@ -3370,6 +3397,7 @@
         "description": "GRACE platform magnetometer measurements",
         "resourceUrl": "https://doi.org/10.1186/s40623-021-01373-9",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG",
         "hapiOptions": {
             "MDR_MAG": {
@@ -3471,6 +3499,7 @@
         "resourceUrl": "https://doi.org/10.1186/s40623-021-01364-w",
         "citation": "https://doi.org/10.5880/GFZ.2.3.2021.002",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_FGM_ACAL",
         "hapiOptions": {
             "MDR_FGM_ACAL": {
@@ -3614,6 +3643,7 @@
         "resourceUrl": "https://doi.org/10.5880/GFZ.2.3.2023.001",
         "citation": "https://doi.org/10.5880/GFZ.2.3.2023.001",
         "dataTerms": "CC BY 4.0",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_ACAL_ML",
         "hapiOptions": {
             "MDR_MAG_ACAL_ML": {
@@ -3723,6 +3753,7 @@
         "resourceUrl": "https://doi.org/10.1186/s40623-022-01691-6",
         "citation": "https://doi.org/10.5880/GFZ.2.3.2022.001",
         "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_ACAL",
         "hapiOptions": {
             "MDR_MAG_ACAL": {
@@ -3889,6 +3920,7 @@
         "resourceUrl": "https://doi.org/10.1186/s40623-022-01695-2",
         "citation": "https://doi.org/10.5880/GFZ.2.3.2022.002",
         "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_ACAL_ML",
         "hapiOptions": {
             "MDR_MAG_ACAL_ML": {
@@ -4004,6 +4036,7 @@
         "description": "Cryosat-2 Platform magnetometer measurements",
         "resourceUrl": "https://doi.org/10.1186/s40623-020-01171-9",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG",
         "hapiOptions": {
             "MDR_MAG": {
@@ -4144,6 +4177,7 @@
         "description": "Swarm thermosphere density observations derived from precise orbit determination data only",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_DNSxPOD_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "__default__",
         "_order": 104,
         "datasets": {
@@ -4218,6 +4252,7 @@
         "description": "Swarm thermosphere density observations derived from precise orbit determination data and accelerometer data",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_DNSxACC_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "__default__",
         "_order": 105,
         "datasets": {
@@ -4278,6 +4313,7 @@
         "description": "CHAMP accelerometer-derived thermosphere density observations",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/CH_DNS_ACC_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "__default__",
         "_order": 110,
         "datasets": {
@@ -4359,6 +4395,7 @@
         "description": "GRACE accelerometer-derived thermosphere density observations",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GR_DNSxACC_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "__default__",
         "_order": 110,
         "datasets": {
@@ -4440,6 +4477,7 @@
         "description": "GRACE-FO accelerometer-derived thermosphere density observations",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GF_DNSxACC_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "__default__",
         "_order": 110,
         "datasets": {
@@ -4521,6 +4559,7 @@
         "description": "CHAMP thermosphere crosswind at satellite locations",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/CH_WND_ACC_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "__default__",
         "_order": 120,
         "datasets": {
@@ -4596,6 +4635,7 @@
         "description": "GRACE thermosphere crosswind at satellite locations",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GR_WNDxACC_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "__default__",
         "_order": 120,
         "datasets": {
@@ -4671,6 +4711,7 @@
         "description": "GRACE-FO thermosphere crosswind at satellite locations",
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-TOLEOS-product-description.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "__default__",
         "_order": 120,
         "datasets": {
