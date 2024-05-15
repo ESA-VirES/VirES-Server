@@ -33,7 +33,7 @@ from eoxserver.services.ows.wps.parameters import (
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
 from vires.cache_util import cache_path
-from vires.time_util import naive_to_utc, format_datetime, parse_duration
+from vires.time_util import naive_to_utc, format_datetime
 from vires.cdf_util import cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime
 from vires.processes.base import WPSProcess
 from vires.processes.util.time_series import (
@@ -151,7 +151,7 @@ class _SegmentExtractionParameters():
     """ Class holding parameters of the interval extraction algorithm. """
 
     def __init__(self, metadata):
-        self.time_threshold = parse_duration(metadata['nominalSampling'])
+        self.time_threshold = metadata["nominalSampling"]
         self.thresholds = metadata.get("splitBy", {})
         self.secondary_time_series = self._get_spacecraft_time_series(
             mission=(metadata.get("mission") or DEFAULT_MISSION),
