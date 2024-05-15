@@ -40,6 +40,7 @@ from django.db.models import (
 )
 from django.contrib.postgres.fields import JSONField
 from django.contrib.auth.models import User
+from .time_util import parse_duration
 
 
 ID_VALIDATOR = RegexValidator(
@@ -245,6 +246,19 @@ class ProductCollection(Model):
 
     def __str__(self):
         return self.identifier
+
+    def get_nominal_sampling(self, dataset_id=None):
+        """ Get nominal sampling for the given dataset. """
+        # The optional nominal sampling can be stored as:
+        # - a single value applicable to all collection datasets
+        # - a dictionary of dataset specific values
+        nominal_sampling = self.metadata.get("nominalSampling")
+        if isinstance(nominal_sampling, dict):
+            dataset_id = self.type.get_dataset_id(dataset_id)
+            nominal_sampling = nominal_sampling.get(dataset_id)
+        if not nominal_sampling:
+            return None
+        return parse_duration(nominal_sampling)
 
     @property
     def spacecraft_tuple(self):

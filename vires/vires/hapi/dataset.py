@@ -30,7 +30,6 @@ import re
 from datetime import timedelta
 from django.db.models import Count, Min, Max
 from vires.models import ProductCollection
-from vires.time_util import parse_duration
 
 RE_DATASET = re.compile(
     r"^(?P<collection>[A-Za-z0-9_]{1,64})"
@@ -67,12 +66,15 @@ def parse_dataset(requested_dataset):
     except ProductCollection.DoesNotExist:
         raise ValueError("Invalid datasets identifier!") from None
 
-    options = collection.type.get_hapi_options(dataset_id)
-    dataset_definition = dict(collection.type.get_dataset_definition(dataset_id))
-    dataset_definition = _extend_dataset_definition(dataset_definition, options)
+    dataset_definition = collection.type.get_dataset_definition(dataset_id)
 
     if dataset_definition is None:
         raise ValueError("Invalid datasets identifier!")
+
+    options = collection.type.get_hapi_options(dataset_id)
+    dataset_definition = _extend_dataset_definition(
+        dict(dataset_definition), options
+    )
 
     return collection, dataset_id, dataset_definition, options
 
@@ -82,15 +84,15 @@ def get_public_collections():
     return (
         ProductCollection
         .select_public()
-        .annotate(product_count=Count('products'))
+        .annotate(product_count=Count("products"))
         .filter(product_count__gt=0) # non-empty collections only
-        .order_by('identifier')
+        .order_by("identifier")
     )
 
 
-def get_collection_time_info(collection):
+def get_dataset_time_info(collection, dataset_id):
     return {
-        "cadence": parse_duration(collection.metadata["nominalSampling"]),
+        "cadence": collection.get_nominal_sampling(dataset_id),
         **collection.products.aggregate(
             startDate=Min("begin_time"),
             stopDate=Max("end_time"),
@@ -104,8 +106,8 @@ def list_public_datasets():
     def _public_datasets():
         for collection in get_public_collections():
             type_def = collection.type.definition
-            default_dataset = type_def['defaultDataset']
-            for dataset in type_def['datasets']:
+            default_dataset = type_def.get("defaultDataset")
+            for dataset in type_def["datasets"]:
                 if dataset == default_dataset:
                     yield collection.identifier
                 else:

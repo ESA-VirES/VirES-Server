@@ -104,7 +104,7 @@ class GetTimeDataProcess(WPSProcess):
         # per-collection duration threshold
         duration_threshold = [
             (
-                parse_duration(collection.metadata.get("nominalSampling", "PT0S"))
+                (collection.get_nominal_sampling() or timedelta(0))
                 if duration_threshold is None else duration_threshold
             )
             for collection in collections

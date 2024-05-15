@@ -243,6 +243,7 @@ class SingleCollectionProductSource(ProductSource):
         return {
             **collection.metadata,
             **collection.spacecraft_dict,
+            "nominalSampling": collection.get_nominal_sampling(self.dataset_id),
             "grade": collection.grade,
         }
 
@@ -398,6 +399,7 @@ class MultiCollectionProductSource(ProductSource):
         return {
             **collection.metadata,
             **collection.spacecraft_dict,
+            "nominalSampling": collection.get_nominal_sampling(self.dataset_id),
             "subtractableCollections": subtractable_collections,
             "grade": grade,
         }
