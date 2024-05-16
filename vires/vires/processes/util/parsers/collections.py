@@ -29,8 +29,9 @@
 from itertools import chain
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
-from ..time_series.product_source import MultiCollectionProductSource
-from ..time_series import ProductTimeSeries, CustomDatasetTimeSeries
+from ..time_series import (
+    ProductTimeSeries, CustomDatasetTimeSeries, product_source_factory,
+)
 
 
 def parse_collections(input_id, source, permissions,
@@ -99,7 +100,7 @@ def parse_collections(input_id, source, permissions,
             [
                 CustomDatasetTimeSeries(user)
             ] if datasets == custom_dataset else [
-                ProductTimeSeries(MultiCollectionProductSource(*args))
+                ProductTimeSeries(product_source_factory(*args))
                 for args in datasets
             ]
         ) for label, datasets in result.items()
