@@ -33,7 +33,7 @@ from .residual import MagneticModelResidual
 from .source_model import SourceMagneticModel
 from .mio_model import MagneticModelMioMultiplication
 from .cached_model  import CachedModelGapFill
-from ...time_series import CachedModelExtraction, MultiCollectionProductSource
+from ...time_series import CachedModelExtraction, product_source_factory
 
 LOGGER = getLogger(__name__)
 
@@ -149,7 +149,7 @@ def _handle_cached_models(models, available_cached_models, master_source=None):
         ))
 
         yield CachedModelExtraction(
-            MultiCollectionProductSource(collections),
+            product_source_factory(collections),
             models_,
             master_source=master_source
         )

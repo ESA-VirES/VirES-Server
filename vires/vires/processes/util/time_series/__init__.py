@@ -28,6 +28,7 @@
 from vires.models import ProductCollection
 from .base import TimeSeries
 from .product_source import (
+    product_source_factory,
     SingleCollectionProductSource,
     MultiCollectionProductSource,
 )

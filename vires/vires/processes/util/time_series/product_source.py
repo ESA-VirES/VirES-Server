@@ -134,6 +134,13 @@ PRODUCT_TYPE_PARAMETERS = {
 }
 
 
+def product_source_factory(collections, dataset_id=None):
+    """ Product source factory function. """
+    if len(collections) == 1:
+        return SingleCollectionProductSource(collections[0], dataset_id)
+    return MultiCollectionProductSource(collections, dataset_id)
+
+
 class ProductSource:
     """ Base product source. """
     # cutting start of the product
@@ -403,11 +410,6 @@ class MultiCollectionProductSource(ProductSource):
             "subtractableCollections": subtractable_collections,
             "grade": grade,
         }
-
-    def __new__(cls, collections, dataset_id=None):
-        if len(collections) == 1:
-            return SingleCollectionProductSource(collections[0], dataset_id)
-        return super().__new__(cls)
 
     @cached_property
     def dataset_definition(self):
