@@ -386,6 +386,13 @@ class FetchFilteredDataAsync(WPSProcess):
             else:
                 sampler, grouping_sampler = None, None
 
+            add_spacecraft_label = False
+            for _, product_sources in sources.items():
+                master = product_sources[0]
+                mission = master.metadata.get("mission")
+                if mission:
+                    add_spacecraft_label = True
+
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.items():
                 resolvers[label] = resolver = VariableResolver()
@@ -421,8 +428,9 @@ class FetchFilteredDataAsync(WPSProcess):
                 spacecraft = master.metadata.get("spacecraft")
                 grade = master.metadata.get("grade")
 
-                #TODO: add mission label
-                resolver.add_model(SpacecraftLabel(spacecraft or "-"))
+                if add_spacecraft_label:
+                    #TODO: add mission label
+                    resolver.add_model(SpacecraftLabel(spacecraft or "-"))
 
                 for item in get_orbit_sources(mission, spacecraft, grade):
                     resolver.add_slave(item)
