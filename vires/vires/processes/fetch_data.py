@@ -48,7 +48,7 @@ from vires.cdf_util import (
     timedelta_to_cdf_rawtime, get_formatter, CDF_TIME_TYPES,
 )
 from vires.cache_util import cache_path
-from vires.data.vires_settings import CACHED_PRODUCT_FILE, DEFAULT_MISSION
+from vires.data.vires_settings import CACHED_PRODUCT_FILE
 from vires.filters import (
     format_filters, MinStepSampler, GroupingSampler, ExtraSampler,
     BoundingBoxFilter,
@@ -333,7 +333,7 @@ class FetchData(WPSProcess):
                     resolver.add_slave(slave)
 
                 # satellite specific slaves
-                mission = master.metadata.get("mission") or DEFAULT_MISSION
+                mission = master.metadata.get("mission")
                 spacecraft = master.metadata.get("spacecraft")
                 grade = master.metadata.get("grade")
 

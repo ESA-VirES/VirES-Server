@@ -39,7 +39,7 @@ from vires.processes.base import WPSProcess
 from vires.processes.util.time_series import (
     SingleCollectionProductSource, ProductTimeSeries, QDOrbitDirection,
 )
-from vires.data.vires_settings import ORBIT_DIRECTION_MAG_FILE, DEFAULT_MISSION
+from vires.data.vires_settings import ORBIT_DIRECTION_MAG_FILE
 
 ALLOWED_PRODUCT_TYPES = ["SW_AEJxLPL_2F", "SW_AEJxLPS_2F"]
 TIME_VARIABLE = "Timestamp"
@@ -154,7 +154,7 @@ class _SegmentExtractionParameters():
         self.time_threshold = metadata["nominalSampling"]
         self.thresholds = metadata.get("splitBy", {})
         self.secondary_time_series = self._get_spacecraft_time_series(
-            mission=(metadata.get("mission") or DEFAULT_MISSION),
+            mission=metadata.get("mission"),
             spacecraft=metadata.get("spacecraft"),
             grade=metadata.get("grade"),
         )
