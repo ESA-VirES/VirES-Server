@@ -50,7 +50,6 @@ class Record(namedtuple("Record", ["index", "start", "end", "data"])):
 
 class SwarmDefaultParameters:
     """ Default SWARM product parameters. """
-    TIME_VARIABLE = "Timestamp"
     TIME_TOLERANCE = timedelta(microseconds=0) # time selection buffer
     TIME_OVERLAP = timedelta(seconds=60) # time interpolation buffer
     TIME_GAP_THRESHOLD = timedelta(seconds=30) # gap time threshold
@@ -146,6 +145,44 @@ class ProductSource:
     # cutting start of the product
     time_precision = timedelta(microseconds=1000) # 1ms precision
 
+    def __init__(self, collections, product_type, dataset_id):
+
+        collection_id = "+".join(
+            collection.identifier for collection in collections
+        )
+
+        dataset_id = product_type.get_dataset_id(dataset_id)
+        default_dataset_id = product_type.default_dataset_id
+
+        if dataset_id is None:
+            raise ValueError("Missing mandatory dataset identifier!")
+
+        if not product_type.is_valid_dataset_id(dataset_id):
+            raise ValueError(f"Invalid dataset identifier {dataset_id!r}!")
+
+        self.collections = collections
+        self.type = product_type
+
+        self.collection_id = collection_id
+        self.type_id = product_type.identifier
+        self.dataset_id = dataset_id
+
+        self.identifier = self._get_id(
+            collection_id, dataset_id, default_dataset_id
+        )
+
+        self.params = PRODUCT_TYPE_PARAMETERS.get(
+            self._get_id(
+                product_type.identifier,
+                product_type.get_base_dataset_id(dataset_id),
+                default_dataset_id,
+            ),
+            DEFAULT_PRODUCT_TYPE_PARAMETERS,
+        )
+
+        # mapping from VirES to product variable names
+        self.translate_fw = self._get_variable_mapping(self.dataset_definition)
+
     @staticmethod
     def _get_id(base_id, dataset_id, default_dataset_id):
         if dataset_id == default_dataset_id:
@@ -198,13 +235,18 @@ class ProductSource:
         )
 
     @cached_property
-    def metadata(self):
-        """ Get collection metadata. """
-        raise NotImplementedError
+    def dataset_definition(self):
+        """ Get dictionary of available variables """
+        return self.type.get_dataset_definition(self.dataset_id)
 
     @cached_property
-    def dataset_definition(self):
-        """ Get list of available variables """
+    def time_variables(self):
+        """ Get dictionary of available variables """
+        return self.type.get_time_variables(self.dataset_id)
+
+    @cached_property
+    def metadata(self):
+        """ Get collection metadata. """
         raise NotImplementedError
 
     def count_products(self, start, end, time_tolerance=TD_ZERO):
@@ -231,14 +273,6 @@ class ProductSource:
         """ Get one sample product from a collection or None if empty """
         raise NotImplementedError
 
-    collections = None
-    identifier = None
-    collection_id = None
-    datased_id = None
-    type_id = None
-    params = None
-    translate_fw = None
-
 
 class SingleCollectionProductSource(ProductSource):
     """ Single collection product source class. """
@@ -254,53 +288,22 @@ class SingleCollectionProductSource(ProductSource):
             "grade": collection.grade,
         }
 
-    @cached_property
-    def dataset_definition(self):
-        """ Get dictionary of available variables """
-        return self.type.get_dataset_definition(self.dataset_id)
-
     def __init__(self, collection, dataset_id=None):
 
         if isinstance(collection, str):
             collection = self._get_collection(collection)
 
-        dataset_id = collection.type.get_dataset_id(dataset_id)
-        default_dataset_id = collection.type.default_dataset_id
-
-        if dataset_id is None:
-            raise ValueError("Missing mandatory dataset identifier!")
-
-        if not collection.type.is_valid_dataset_id(dataset_id):
-            raise ValueError(f"Invalid dataset identifier {dataset_id!r}!")
-
-        self.collections = (collection,)
-        self.type = collection.type
-
-        self.identifier = self._get_id(
-            collection.identifier, dataset_id, default_dataset_id
+        super().__init__(
+            collections=(collection,),
+            product_type=collection.type,
+            dataset_id=dataset_id,
         )
-        self.collection_id = collection.identifier
-        self.dataset_id = dataset_id
-        self.type_id = collection.type.identifier
-
-        self.params = PRODUCT_TYPE_PARAMETERS.get(
-            self._get_id(
-                collection.type.identifier,
-                collection.type.get_base_dataset_id(dataset_id),
-                default_dataset_id,
-            ),
-            DEFAULT_PRODUCT_TYPE_PARAMETERS,
-        )
-
-        # mapping from VirES to product variable names
-        self.translate_fw = self._get_variable_mapping(self.dataset_definition)
 
     def count_products(self, start, end, time_tolerance=TD_ZERO):
         """ Count products overlapping the given time interval.
         """
         collection, = self.collections
         return self._time_subset_qs(collection, start, end, time_tolerance).count()
-
 
     def iter_products(self, start, end, time_tolerance=TD_ZERO):
         """ Iterate over products overlapping the given time interval.
@@ -411,11 +414,6 @@ class MultiCollectionProductSource(ProductSource):
             "grade": grade,
         }
 
-    @cached_property
-    def dataset_definition(self):
-        """ Get dictionary of available variables """
-        return self.type.get_dataset_definition(self.dataset_id)
-
     def __init__(self, collections, dataset_id=None):
 
         # check number of the passed collections
@@ -443,39 +441,11 @@ class MultiCollectionProductSource(ProductSource):
             if collection.type != type_:
                 raise ValueError("Combined collections must be all of the same type!")
 
-        dataset_id = type_.get_dataset_id(dataset_id)
-        default_dataset_id = type_.default_dataset_id
-
-        if dataset_id is None:
-            raise ValueError("Missing mandatory dataset identifier!")
-
-        if not type_.is_valid_dataset_id(dataset_id):
-            raise ValueError(f"Invalid dataset identifier {dataset_id!r}!")
-
-        self.collections = collections
-        self.type = type_
-
-        self.collection_id = "+".join(
-            collection.identifier for collection in collections
+        super().__init__(
+            collections=collections,
+            product_type=type_,
+            dataset_id=dataset_id,
         )
-        self.dataset_id = dataset_id
-        self.type_id = type_.identifier
-
-        self.identifier = self._get_id(
-            self.collection_id, dataset_id, default_dataset_id
-        )
-
-        self.params = PRODUCT_TYPE_PARAMETERS.get(
-            self._get_id(
-                type_.identifier,
-                type_.get_base_dataset_id(dataset_id),
-                default_dataset_id,
-            ),
-            DEFAULT_PRODUCT_TYPE_PARAMETERS,
-        )
-
-        # mapping from VirES to product variable names
-        self.translate_fw = self._get_variable_mapping(self.dataset_definition)
 
     def count_products(self, start, end, time_tolerance=TD_ZERO):
         """ Count products overlapping the given time interval.

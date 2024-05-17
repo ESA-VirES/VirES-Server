@@ -224,6 +224,23 @@ class ProductType(Model):
         datasets = self.definition['datasets']
         return datasets.get(self.get_base_dataset_id(dataset_id))
 
+    def get_time_variables(self, dataset_id):
+        """ Extract time-variable names from the dataset definition.
+        The method returns a tuple of either one (record is an instant) or two
+        variables (records is an interval with start and end times).
+        If no time-variable found, None is returned.
+        """
+        dataset_variables = self.get_dataset_definition(dataset_id)
+        if dataset_variables is None:
+            raise ValueError("Invalid dataset identifier!")
+        for variable, options in dataset_variables.items():
+            if options.get("primaryTimestamp", False):
+                second_variable = options.get("intervalEnd") or None
+                if second_variable:
+                    return (variable, second_variable)
+                return (variable,)
+        return None
+
     def get_hapi_options(self, dataset_id):
         """ Get dataset definition matched by the given identifier. """
         options = self.definition.get('hapiOptions') or {}
