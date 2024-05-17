@@ -1145,7 +1145,7 @@
         "nominalSampling": "PT10S"
     },
     {
-        "name": "MM_CON_SPH_2_",
+        "name": "MM_OPER_CON_EPH_2_",
         "productType": "MM_CON_SPH_2_",
         "nominalSampling": {
             "crossover": "PT20M",
