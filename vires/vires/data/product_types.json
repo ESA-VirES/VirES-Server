@@ -4781,5 +4781,202 @@
                 }
             }
         }
+    },
+    {
+        "name": "MM_CON_SPH_2_",
+        "description": "Swarm, CHAMP, GOCE, GRACE, and GRACE-FO conjunctions.",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/MM_CON_EPH_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-CON_EPH_2_",
+        "_order": 121,
+        "datasets": {
+            "crossover": {
+                "time_1": {
+                    "primaryTimestamp": true,
+                    "intervalEnd": "time_2",
+                    "source": "crossover_time_1",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Crossover time of the first satellite (UTC)",
+                        "UNITS": "-"
+                    }
+                },
+                "time_2": {
+                    "intervalStart": "time_1",
+                    "source": "crossover_time_2",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Crossover time of the second satellite (UTC)",
+                        "UNITS": "-"
+                    }
+                },
+                "time_difference": {
+                    "source": "crossover_time_difference",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Time between the first and second satellite passing over the same location",
+                        "UNITS": "s"
+                    }
+                },
+                "satellite_1": {
+                    "source": "crossover_satellite_1",
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "ID of the first satellite (symbols: SWx - Swarm, CH - CHAMP,  GO - GOCE, GRx - GRACE, GFx - GRACE-FO)",
+                        "UNITS": "-"
+                    }
+                },
+                "satellite_2": {
+                    "source": "crossover_satellite_2",
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "ID of the second satellite (symbols: SWx - Swarm, CH - CHAMP,  GO - GOCE, GRx - GRACE, GFx - GRACE-FO)",
+                        "UNITS": "-"
+                    }
+                },
+                "altitude_1": {
+                    "source": "crossover_altitude_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Altitude of the first satellite at crossover (GRS80)",
+                        "UNITS": "m"
+                    }
+                },
+                "altitude_2": {
+                    "source": "crossover_altitude_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Altitude of the second satellite at crossover (GRS80)",
+                        "UNITS": "m"
+                    }
+                },
+                "latitude": {
+                    "source": "crossover_latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geodetic latitude of crossover",
+                        "UNITS": "deg"
+                    }
+                },
+                "longitude": {
+                    "source": "crossover_longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Longitude of crossover",
+                        "UNITS": "deg"
+                    }
+                },
+                "magnetic_latitude": {
+                    "source": "crossover_magnetic_latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic latitude of crossover",
+                        "UNITS": "deg"
+                    }
+                },
+                "magnetic_longitude": {
+                    "source": "crossover_magnetic_longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic longitude of crossover",
+                        "UNITS": "deg"
+                    }
+                },
+                "local_solar_time_2": {
+                    "source": "crossover_local_solar_time_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time of the first satellite at crossover",
+                        "UNITS": "h"
+                    }
+                },
+                "local_solar_time_1": {
+                    "source": "crossover_local_solar_time_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time of the second satellites at crossover",
+                        "UNITS": "h"
+                    }
+                }
+            },
+            "plane_alignment": {
+                "time": {
+                    "primaryTimestamp": true,
+                    "source": "plane_alignment_time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of orbital plane alignment (UTC)",
+                        "UNITS": "-"
+                    }
+                },
+                "satellite_1": {
+                    "source": "plane_alignment_satellite_1",
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "ID of the first satellite (symbols: SWx - Swarm, CH - CHAMP,  GO - GOCE, GRx - GRACE, GFx - GRACE-FO)",
+                        "UNITS": "-"
+                    }
+                },
+                "satellite_2": {
+                    "source": "plane_alignment_satellite_2",
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "ID of the second satellite (symbols: SWx - Swarm, CH - CHAMP,  GO - GOCE, GRx - GRACE, GFx - GRACE-FO)",
+                        "UNITS": "-"
+                    }
+                },
+                "altitude_1": {
+                    "source": "plane_alignment_altitude_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Altitude of the first satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "altitude_2": {
+                    "source": "plane_alignment_altitude_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Altitude of the second satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "ltan_1": {
+                    "source": "plane_alignment_ltan_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LTAN of the first satellite",
+                        "UNITS": "h"
+                    }
+                },
+                "ltan_2": {
+                    "source": "plane_alignment_ltan_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LTAN of the second satellite",
+                        "UNITS": "h"
+                    }
+                },
+                "ltan_rate_1": {
+                    "source": "plane_alignment_ltan_rate_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LTAN drift rate of the first satellite",
+                        "UNITS": "h/d"
+                    }
+                },
+                "ltan_rate_2": {
+                    "source": "plane_alignment_ltan_rate_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LTAN drift rate of the second satellite",
+                        "UNITS": "h/d"
+                    }
+                }
+            }
+        }
     }
 ]

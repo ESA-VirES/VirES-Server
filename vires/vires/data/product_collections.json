@@ -1143,5 +1143,13 @@
         "mission": "GRACE-FO",
         "spacecraft": "2",
         "nominalSampling": "PT10S"
+    },
+    {
+        "name": "MM_CON_SPH_2_",
+        "productType": "MM_CON_SPH_2_",
+        "nominalSampling": {
+            "crossover": "PT20M",
+            "plane_alignment": "P1D"
+        }
     }
 ]
