@@ -27,7 +27,7 @@
 
 from datetime import timedelta
 
-DEFAULT_MISSION = "Swarm"
+SWARM_MISSION = "Swarm"
 
 AUX_DB_DST = "aux_dst.cdf"
 AUX_DB_KP = "aux_kp.cdf"
