@@ -35,9 +35,9 @@ from eoxserver.services.ows.wps.parameters import (
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
 from vires.access_util import get_vires_permissions
-from vires.time_util import naive_to_utc, format_datetime, parse_duration
+from vires.time_util import naive_to_utc, format_datetime
 from vires.processes.base import WPSProcess
-from vires.processes.util.time_series import MultiCollectionProductSource
+from vires.processes.util.time_series import product_source_factory
 
 
 class GetTimeDataProcess(WPSProcess):
@@ -104,7 +104,7 @@ class GetTimeDataProcess(WPSProcess):
         # per-collection duration threshold
         duration_threshold = [
             (
-                parse_duration(collection.metadata.get("nominalSampling", "PT0S"))
+                (collection.get_nominal_sampling() or timedelta(0))
                 if duration_threshold is None else duration_threshold
             )
             for collection in collections
@@ -123,7 +123,7 @@ class GetTimeDataProcess(WPSProcess):
             format_datetime(naive_to_utc(end_time)) if end_time else "-",
         )
 
-        source = MultiCollectionProductSource(collections)
+        source = product_source_factory(collections)
 
         output = CDTextBuffer()
         writer = csv.writer(output, quoting=csv.QUOTE_ALL)

@@ -29,8 +29,9 @@
 from itertools import chain
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
-from ..time_series.product_source import MultiCollectionProductSource
-from ..time_series import ProductTimeSeries, CustomDatasetTimeSeries
+from ..time_series import (
+    ProductTimeSeries, CustomDatasetTimeSeries, product_source_factory,
+)
 
 
 def parse_collections(input_id, source, permissions,
@@ -99,7 +100,7 @@ def parse_collections(input_id, source, permissions,
             [
                 CustomDatasetTimeSeries(user)
             ] if datasets == custom_dataset else [
-                ProductTimeSeries(MultiCollectionProductSource(*args))
+                ProductTimeSeries(product_source_factory(*args))
                 for args in datasets
             ]
         ) for label, datasets in result.items()
@@ -172,7 +173,11 @@ def _parse_datasets(ids, custom_dataset, permissions,
 
         dataset_id = collection0.type.get_dataset_id(dataset_id)
         if dataset_id is None:
-            raise ValueError("Missing mandatory dataset identifier!")
+            raise ValueError(
+                "Missing mandatory dataset identifier!"
+                f" Collection {collection0.identifier} requires a dataset"
+                f" identifier (<collection_id>:<dataset_id>) to be specified."
+            )
 
         if not collection0.type.is_valid_dataset_id(dataset_id):
             raise ValueError(f"Invalid dataset identifier '{dataset_id}'!")

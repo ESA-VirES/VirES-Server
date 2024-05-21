@@ -35,7 +35,7 @@ from vires.orbit_counter import get_orbit_timerange
 from vires.processes.base import WPSProcess
 from vires.cache_util import cache_path
 from vires.time_util import format_datetime, naive_to_utc
-from vires.data.vires_settings import ORBIT_COUNTER_FILE, DEFAULT_MISSION
+from vires.data.vires_settings import ORBIT_COUNTER_FILE, SWARM_MISSION
 
 MISSIONS = sorted(set(mission for mission, _ in ORBIT_COUNTER_FILE))
 SPACECRAFTS = sorted(set(
@@ -61,7 +61,7 @@ class GetOrbitTimeRange(WPSProcess):
 
     inputs = WPSProcess.inputs + [
         ("mission", LiteralData(
-            'mission', str, optional=True, default=DEFAULT_MISSION,
+            'mission', str, optional=True, default=SWARM_MISSION,
             abstract="Mission identifier",
             allowed_values=MISSIONS,
         )),

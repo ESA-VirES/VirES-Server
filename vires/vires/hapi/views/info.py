@@ -30,7 +30,7 @@
 # pylint: disable=missing-docstring,unused-argument,too-few-public-methods
 
 from django.db.models import Min, Max
-from vires.time_util import format_datetime, parse_duration, format_duration
+from vires.time_util import format_datetime, format_duration
 from vires.views.decorators import allow_methods, reject_content
 from ..dataset import MAX_TIME_SELECTION, get_time_limit, parse_dataset
 from ..formats.common import get_datetime64_string_size
@@ -95,11 +95,11 @@ def get_info_response(collection, dataset_id, dataset_def, options):
         yield "startDate", format_datetime(metadata["startDate"])
         yield "stopDate", format_datetime(metadata["stopDate"])
 
-        nominal_sampling = metadata.get("nominalSampling")
+        nominal_sampling = collection.get_nominal_sampling(dataset_id)
         if nominal_sampling:
-            yield "cadence", nominal_sampling
+            yield "cadence", format_duration(nominal_sampling)
             yield "x_maxTimeSelection", format_duration(
-                get_time_limit(MAX_TIME_SELECTION, parse_duration(nominal_sampling))
+                get_time_limit(MAX_TIME_SELECTION, nominal_sampling)
             )
 
         yield "modificationDate", metadata.get("lastUpdate")

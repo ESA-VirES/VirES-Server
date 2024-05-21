@@ -48,7 +48,7 @@ from vires.cdf_util import (
     timedelta_to_cdf_rawtime, get_formatter, CDF_TIME_TYPES,
 )
 from vires.cache_util import cache_path
-from vires.data.vires_settings import CACHED_PRODUCT_FILE, DEFAULT_MISSION
+from vires.data.vires_settings import CACHED_PRODUCT_FILE
 from vires.filters import (
     format_filters, MinStepSampler, GroupingSampler, ExtraSampler,
     BoundingBoxFilter,
@@ -303,6 +303,13 @@ class FetchData(WPSProcess):
             if bbox:
                 filters.append(BoundingBoxFilter("Latitude", "Longitude", bbox))
 
+            add_spacecraft_label = False
+            for _, product_sources in sources.items():
+                master = product_sources[0]
+                mission = master.metadata.get("mission")
+                if mission:
+                    add_spacecraft_label = True
+
             # resolving variable dependencies for each label separately
             for label, product_sources in sources.items():
                 resolvers[label] = resolver = VariableResolver()
@@ -333,12 +340,13 @@ class FetchData(WPSProcess):
                     resolver.add_slave(slave)
 
                 # satellite specific slaves
-                mission = master.metadata.get("mission") or DEFAULT_MISSION
+                mission = master.metadata.get("mission")
                 spacecraft = master.metadata.get("spacecraft")
                 grade = master.metadata.get("grade")
 
-                #TODO: add mission label
-                resolver.add_model(SpacecraftLabel(spacecraft or "-"))
+                if add_spacecraft_label:
+                    #TODO: add mission label
+                    resolver.add_model(SpacecraftLabel(spacecraft or "-"))
 
                 for item in get_orbit_sources(mission, spacecraft, grade):
                     resolver.add_slave(item)

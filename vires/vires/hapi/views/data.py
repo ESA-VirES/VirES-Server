@@ -32,7 +32,7 @@
 #from logging import getLogger
 from vires.views.decorators import allow_methods, reject_content
 from vires.time_util import format_datetime
-from ..dataset import MAX_TIME_SELECTION, get_time_limit, get_collection_time_info
+from ..dataset import MAX_TIME_SELECTION, get_time_limit, get_dataset_time_info
 from ..time_series import TimeSeries
 from .common import (
     parse_datetime, HapiError, get_access_logger,
@@ -62,7 +62,8 @@ def data(request):
     )
 
     start, stop = _parse_time_selection(
-        collection, request.GET.get('start'), request.GET.get('stop')
+        collection, dataset_id,
+        request.GET.get('start'), request.GET.get('stop')
     )
 
     format_ = _parse_format(request.GET.get('format'))
@@ -91,7 +92,7 @@ def data(request):
     )
 
 
-def _parse_time_selection(collection, start, stop):
+def _parse_time_selection(collection, dataset_id, start, stop):
 
     try:
         start = parse_datetime(start)
@@ -106,7 +107,7 @@ def _parse_time_selection(collection, start, stop):
     if start >= stop:
         raise HapiError(hapi_status=1404)
 
-    time_info = get_collection_time_info(collection)
+    time_info = get_dataset_time_info(collection, dataset_id)
 
     data_start, data_stop = time_info["startDate"], time_info["stopDate"]
     no_data = data_start is None and data_stop is None
