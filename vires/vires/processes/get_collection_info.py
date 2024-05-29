@@ -138,6 +138,14 @@ class GetCollectionInfo(WPSProcess):
         return "<any>" if id_ is None else ("<none>" if not id_ else id_)
 
     @staticmethod
+    def _format_nominal_sampling(data):
+        if not data:
+            return ""
+        if isinstance(data, dict):
+            return " ".join(f"{dataset}:{value}" for dataset, value in data.items())
+        return str(data)
+
+    @staticmethod
     def _parse_ids(ids):
         if ids is None:
             return None
@@ -167,6 +175,7 @@ class GetCollectionInfo(WPSProcess):
             product_count=Count('products'),
             begin_time=Min('products__begin_time'),
             end_time=Max('products__end_time'),
+            last_update=Max('products__updated'),
         ).order_by('identifier')
 
         if collection_ids is not None:
@@ -190,16 +199,19 @@ class GetCollectionInfo(WPSProcess):
     def _csv_output(cls, collections, output):
         output_fobj = StringIO(newline="\r\n")
         print(
-            "collectionId,productType,productCount,startTime,endTime",
+            "collectionId,productType,productCount,startTime,endTime,"
+            "lastUpdate,nominalSampling",
             file=output_fobj
         )
         for collection in collections:
-            print("%s,%s,%d,%s,%s" % (
+            print("%s,%s,%d,%s,%s,%s,%s" % (
                 collection['identifier'],
                 collection['type__identifier'],
                 collection['product_count'],
                 format_datetime(collection['begin_time']) or "",
                 format_datetime(collection['end_time']) or "",
+                format_datetime(collection['last_update']) or "",
+                cls._format_nominal_sampling(collection['metadata'].get('nominalSampling')),
             ), file=output_fobj)
         return CDFileWrapper(output_fobj, **output)
 
@@ -227,6 +239,13 @@ class GetCollectionInfo(WPSProcess):
             for key in extra_keys:
                 if collection[key]:
                     extra_metadata[key_mapping.get(key, key)] = collection[key]
+
+            nominal_sampling = collection['metadata'].get('nominalSampling')
+            if nominal_sampling:
+                extra_metadata['nominalSampling'] = nominal_sampling
+
+            if collection['product_count'] > 0:
+                extra_metadata['lastUpdate'] = format_datetime(collection['last_update'])
 
             return {
                 'name': collection['identifier'],

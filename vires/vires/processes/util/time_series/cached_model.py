@@ -90,7 +90,9 @@ class CachedModelExtraction(BaseProductTimeSeries):
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
                 "collection_id": source.identifier
             }),
-            time_variable=params.TIME_VARIABLE,
+            # NOTE: The time selection uses only the first time variable.
+            #       Interval search is not implemented.
+            time_variable=source.time_variables[0],
             time_tolerance=params.TIME_TOLERANCE,
             time_overlap=params.TIME_OVERLAP,
             time_gap_threshold=params.TIME_GAP_THRESHOLD,
