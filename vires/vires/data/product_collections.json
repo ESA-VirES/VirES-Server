@@ -914,9 +914,9 @@
         }
     },
     {
-        "name": "CH_ME_3_MAG",
+        "name": "CH_ME_MAG_LR_3",
         "description": "CHAMP vector (FGM) magnetic field measurements.",
-        "productType": "CH_ME_3_MAG",
+        "productType": "CH_ME_MAG_LR_3",
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "CHAMP",
