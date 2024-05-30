@@ -158,7 +158,7 @@ def get_spacecraft(mission, spacecraft, events):
         spacecraft.save()
         return spacecraft
 
-    if not spacecraft:
+    if not mission:
         return None
 
     try:
