@@ -186,7 +186,9 @@ class VariableResolver:
         """
         if not self._sources:
             raise RuntimeError("No master is set!")
-        _, unresolved_variables = self._add_consumer([slave.required_variable], slave)
+        _, unresolved_variables = self._add_consumer(
+            slave.required_variables, slave
+        )
         if not unresolved_variables:
             offered_variables = self._add_producer(slave.variables, slave)
             if offered_variables:

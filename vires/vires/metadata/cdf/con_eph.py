@@ -26,9 +26,11 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-module-docstring
 
+from math import ceil
 from collections import namedtuple
 from itertools import chain
 from .base import CDFMetadataReader
+from ...time_cdf import cdf_rawtime_delta_in_seconds
 
 
 class ConEphCdfMetadataReader(CDFMetadataReader):
@@ -52,6 +54,19 @@ class ConEphCdfMetadataReader(CDFMetadataReader):
             "format": cls.TYPE,
             "begin_time": time_range.start,
             "end_time": time_range.end,
+            "max_record_duration": cls.read_max_record_duration(cdf)
+        }
+
+    @classmethod
+    def read_max_record_duration(cls, cdf):
+        """ Read maximum record duration of the crossover interval records. """
+        max_record_duration = cdf_rawtime_delta_in_seconds(
+            cdf.raw_var(cls.CROSSOVER_TIME_2_VARIABLE)[...],
+            cdf.raw_var(cls.CROSSOVER_TIME_1_VARIABLE)[...],
+            cdf.raw_var(cls.CROSSOVER_TIME_1_VARIABLE).type(),
+        ).max()
+        return {
+            "crossover": f"PT{int(ceil(max_record_duration))}S",
         }
 
     @classmethod

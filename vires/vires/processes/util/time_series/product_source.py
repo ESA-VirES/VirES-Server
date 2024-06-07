@@ -359,9 +359,14 @@ class SingleCollectionProductSource(ProductSource):
         except IndexError:
             return None
 
-    @staticmethod
-    def _select_products(sources):
+    def _select_products(self, sources):
+        if len(self.time_variables) > 1:
+            # interval records products can overlap in time
+            return sources
+        return self._select_clipped_products(sources)
 
+    @staticmethod
+    def _select_clipped_products(sources):
         last_record = next(sources, None)
         if not last_record:
             return
@@ -447,6 +452,7 @@ class MultiCollectionProductSource(ProductSource):
             dataset_id=dataset_id,
         )
 
+
     def count_products(self, start, end, time_tolerance=TD_ZERO):
         """ Count products overlapping the given time interval.
         """
@@ -522,82 +528,100 @@ class MultiCollectionProductSource(ProductSource):
                 pass
         return None
 
-    @staticmethod
-    def _select_products(product_sources):
+    def _select_products(self, product_sources):
+        if len(self.time_variables) > 1:
+            # interval records products can overlap in time
+            return _OverlappingProductSelector(product_sources)
+        # instant records products are trimmed to prevent overlaps
+        return _ClippingProductSelector(product_sources)
 
-        class _ProductIterator:
-            """ Iterator holding head product. """
 
-            def __bool__(self):
-                return self.head is not None
+class _ProductIterator:
+    """ Iterator holding head product. """
 
-            def __init__(self, sequence):
-                self.head = None
-                self.iterator = iter(sequence)
-                self.pull_next()
+    def __bool__(self):
+        return self.head is not None
 
-            def pull_next(self):
-                """ Pull next product from the iterator and set it as head. """
-                self.head = next(self.iterator, None)
+    def __init__(self, sequence):
+        self.head = None
+        self.iterator = iter(sequence)
+        self.pull_next()
 
-        class _ProductSelector:
-            """ Helper class holding the product iterators, selecting and
-            clipping the applicable products.
-            """
+    def pull_next(self):
+        """ Pull next product from the iterator and set it as head. """
+        self.head = next(self.iterator, None)
 
-            def __bool__(self):
-                return self.head is not None
 
-            def __init__(self, sequences):
-                self.head = None
-                self.product_iterators = [
-                    (index, _ProductIterator(sequence))
-                    for index, sequence in enumerate(sequences)
-                ]
-                self.remove_empty()
-                self.pull_next()
+class _ProductSelector:
+    """ Base product selector. """
 
-            def pull_next(self):
-                """ Pull next product from the iterators and set it as head. """
-                head_iterator, head = None, None
+    def __bool__(self):
+        return self.head is not None
 
-                for index, product_iterator in self.product_iterators:
-                    if not head or product_iterator.head.start < head.start:
-                        head_iterator = product_iterator
-                        head = Record(index, *product_iterator.head)
+    def __init__(self, sequences):
+        self.head = None
+        self.product_iterators = [
+            (index, _ProductIterator(sequence))
+            for index, sequence in enumerate(sequences)
+        ]
+        self.remove_empty()
+        self.pull_next()
 
-                if not head:
-                    self.head = None
-                    return
+    def pull_next(self):
+        """ Pull next product from the iterators and set it as head. """
+        head_iterator, head = None, None
 
-                self.head = head
-                head_iterator.pull_next()
-                self.remove_empty()
+        for index, product_iterator in self.product_iterators:
+            if not head or product_iterator.head.start < head.start:
+                head_iterator = product_iterator
+                head = Record(index, *product_iterator.head)
 
-            def remove_empty(self):
-                """ Remove empty iterators. """
-                self.product_iterators = [
-                    (index, iterator)
-                    for index, iterator in self.product_iterators if iterator
-                ]
+        if not head:
+            self.head = None
+            return
 
-            def __iter__(self):
-                if not self:
-                    return
-                last_record = self.head
-                self.pull_next()
-                while self:
-                    record = self.head
-                    if last_record.end <= record.start: # no time overlap
-                        yield last_record
-                        last_record = record
-                    elif record.index <= last_record.index: # clip the last product
-                        yield last_record.set_end(record.start)
-                        last_record = record
-                    elif last_record.end < record.end: # clip the new product
-                        yield last_record
-                        last_record = record.set_start(last_record.end)
-                    self.pull_next()
+        self.head = head
+        head_iterator.pull_next()
+        self.remove_empty()
+
+    def remove_empty(self):
+        """ Remove empty iterators. """
+        self.product_iterators = [
+            (index, iterator)
+            for index, iterator in self.product_iterators if iterator
+        ]
+
+
+class _ClippingProductSelector(_ProductSelector):
+    """ Helper class holding the product iterators, selecting and
+    clipping the applicable products.
+    """
+
+    def __iter__(self):
+        if not self:
+            return
+        last_record = self.head
+        self.pull_next()
+        while self:
+            record = self.head
+            if last_record.end <= record.start: # no time overlap
                 yield last_record
+                last_record = record
+            elif record.index <= last_record.index: # clip the last product
+                yield last_record.set_end(record.start)
+                last_record = record
+            elif last_record.end < record.end: # clip the new product
+                yield last_record
+                last_record = record.set_start(last_record.end)
+            self.pull_next()
+        yield last_record
 
-        return _ProductSelector(product_sources)
+
+class _OverlappingProductSelector:
+    """ Helper class holding the product iterators ordering the overlapped
+    products.
+    """
+    def __iter__(self):
+        while self:
+            yield self.head
+            self.pull_next()

@@ -55,10 +55,10 @@ class TimeSeries():
         raise NotImplementedError
 
     @property
-    def required_variable(self):
-        """ Get the input dataset variable required by the slave time-series.
+    def required_variables(self):
+        """ Get the input dataset variables required by the slave time-series.
         """
-        return "Timestamp"
+        return ["Timestamp"]
 
     def get_extracted_variables(self, variables):
         """ Expand/filter input variables into applicable variables. """

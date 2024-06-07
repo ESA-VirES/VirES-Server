@@ -28,7 +28,7 @@
 
 from vires.cdf_util import CDF_INT1_TYPE, CDF_EPOCH_TYPE, convert_cdf_raw_times
 from vires.orbit_direction import OrbitDirectionReader
-from .auxiliary_data import BaseAuxiliaryDataTimeSeries
+from .base_auxiliary_data import BaseAuxiliaryDataTimeSeries
 
 
 class OrbitDirection(BaseAuxiliaryDataTimeSeries):

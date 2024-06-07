@@ -405,11 +405,25 @@ def _set_product(product, data_file, **metadata):
     product.datasets = _get_datasets(
         data_file, product.collection.type, metadata
     )
+    product.metadata = _exlude_dict_keys(metadata, excluded_keys=[
+        "begin_time",
+        "end_time",
+        "datasets",
+    ])
     product.save()
     update_max_product_duration(
         product.collection, product.end_time - product.begin_time
     )
     return product
+
+
+def _exlude_dict_keys(data, excluded_keys):
+    excluded_keys = set(excluded_keys)
+    return {
+        key: value
+        for key, value in data.items()
+        if key not in excluded_keys
+    }
 
 
 def _get_datasets(data_file, product_type, metadata):

@@ -86,12 +86,15 @@ class CachedModelExtraction(BaseProductTimeSeries):
 
         params = source.params
 
+        if len(source.time_variables) > 1:
+            raise RuntimeError(
+                "Cached model does not support time interval search."
+            )
+
         super().__init__(
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
                 "collection_id": source.identifier
             }),
-            # NOTE: The time selection uses only the first time variable.
-            #       Interval search is not implemented.
             time_variable=source.time_variables[0],
             time_tolerance=params.TIME_TOLERANCE,
             time_overlap=params.TIME_OVERLAP,
@@ -206,6 +209,8 @@ class CachedModelExtraction(BaseProductTimeSeries):
                 "start": data_start,
                 "stop": data_stop,
                 "time_variable": self.time_variable,
+                "second_time_variable": None,
+                "max_record_duration": None,
                 "subset": time_subset,
                 "is_sorted": source_dataset.get('isSorted', True),
             }
