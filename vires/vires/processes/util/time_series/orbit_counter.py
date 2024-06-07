@@ -32,7 +32,7 @@ from vires.cdf_util import (
 from vires.cdf_util import mjd2000_to_cdf_rawtime
 from vires.orbit_counter import OrbitCounterReader
 from .base import TimeSeries
-from .auxiliary_data import BaseAuxiliaryDataTimeSeries
+from .base_auxiliary_data import BaseAuxiliaryDataTimeSeries
 
 
 class OrbitCounter(BaseAuxiliaryDataTimeSeries):

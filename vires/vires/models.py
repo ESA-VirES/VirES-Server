@@ -351,6 +351,14 @@ class Product(Model):
     def get_index_range(self, dataset_id):
         return self.get_dataset(dataset_id).get('indexRange') or [0, None]
 
+    def get_max_record_duration(self, dataset_id):
+        """ Extract dataset specific maximum duration of the interval records.
+        """
+        max_duration = (
+            self.metadata.get("max_record_duration") or {}
+        ).get(dataset_id)
+        return parse_duration(max_duration) if max_duration else None
+
 
 class ProductLocation(Model):
     # View DB table not managed by Django. See the migrations for more details.

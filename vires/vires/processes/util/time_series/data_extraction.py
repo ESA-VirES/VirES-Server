@@ -67,6 +67,31 @@ class CDFDataset:
             self.cdf = None
 
     def get_temporal_subset(self, time_variable, start, stop, subset=None,
+                            is_sorted=False, second_time_variable=None,
+                            max_record_duration=None):
+        """ Extract temporal subset and NVR shape. """
+
+        common_options = {
+            "start": start,
+            "stop": stop,
+            "subset": subset,
+            "is_sorted": is_sorted,
+        }
+
+        if second_time_variable is None:
+            return self._get_temporal_subset(
+                time_variable=time_variable,
+                **common_options,
+            )
+
+        return self._get_temporal_interval_subset(
+            start_time_variable=time_variable,
+            end_time_variable=second_time_variable,
+            max_record_duration=max_record_duration,
+            **common_options,
+        )
+
+    def _get_temporal_subset(self, time_variable, start, stop, subset=None,
                             is_sorted=False):
         """ Extract temporal subset and NVR shape. """
 
@@ -77,15 +102,15 @@ class CDFDataset:
         if times.size == 0:
             return slice(0, 0), (0,)
 
-        time_bounds = [
-            datetime_to_cdf_rawtime(start, time_type),
-            datetime_to_cdf_rawtime(stop, time_type),
-        ]
-
         extract_subset = (
             self._extract_subset_sorted if is_sorted else
             self._extract_subset_unsorted
         )
+
+        time_bounds = [
+            datetime_to_cdf_rawtime(start, time_type),
+            datetime_to_cdf_rawtime(stop, time_type),
+        ]
 
         if subset is None:
             # selecting from all times
@@ -95,6 +120,63 @@ class CDFDataset:
         index = arange(times.size)[subset]
         subset, nrv_shape = extract_subset(times[index], time_bounds)
         return index[subset], nrv_shape
+
+    def _get_temporal_interval_subset(self, start_time_variable,
+                                     end_time_variable, max_record_duration,
+                                     start, stop, subset=None, is_sorted=False):
+        """ Extract temporal subset and NVR shape for time-interval records. """
+
+        def _get_times_and_type(time_variable):
+            times, cdf_variable = self._extract_variable(time_variable)
+            return self._convert_time(times, cdf_variable.type())
+
+        start_times, start_time_type = _get_times_and_type(start_time_variable)
+        end_times, end_time_type = _get_times_and_type(end_time_variable)
+
+        if start_times.shape != end_times.shape:
+            raise ValueError(
+                f"{start_time_variable} and {end_time_variable} values "
+                "must be of the same shape!"
+            )
+
+        if max_record_duration is None:
+            raise ValueError("Missing mandatory max. record")
+
+        # empty dataset
+        if start_times.size == 0:
+            return slice(0, 0), (0,)
+
+        # time bounds
+        min_start_time = (
+            start_times.min() if max_record_duration is None else
+            datetime_to_cdf_rawtime(start - max_record_duration, start_time_type)
+        )
+        max_start_time = datetime_to_cdf_rawtime(stop, start_time_type)
+        min_end_time = datetime_to_cdf_rawtime(start, end_time_type)
+
+        # initial raw subset extracted from start time
+
+        extract_subset = (
+            self._extract_subset_sorted if is_sorted else
+            self._extract_subset_unsorted
+        )
+
+        if subset is None:
+            # selecting from all times
+            subset, _ = extract_subset(start_times, [min_start_time, max_start_time])
+        else:
+            # selecting from a time subset
+            index = arange(start_times.size)[subset]
+            subset, _ = extract_subset(start_times[index], [min_start_time, max_start_time])
+            subset = index[subset]
+
+        # refined subset extracted from end time
+
+        index = arange(end_times.size)[subset]
+        subset = index[end_times[index] >= min_end_time]
+        nrv_shape = subset.shape
+
+        return subset, nrv_shape
 
     @staticmethod
     def _extract_subset_sorted(times, time_bounds):
@@ -108,7 +190,7 @@ class CDFDataset:
         index = times.argsort(kind="stable")
         index_low, index_high = searchsorted(times[index], time_bounds, 'left')
         subset = index[index_low:index_high]
-        nrv_shape = index.shape
+        nrv_shape = subset.shape
         return subset, nrv_shape
 
     def extract_datset(self, variables, subset=Ellipsis, nrv_shape=None,
