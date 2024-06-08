@@ -4037,6 +4037,7 @@
         "resourceUrl": "https://dataservices.gfz-potsdam.de/panmetaworks/showshort.php?id=escidoc:4522907",
         "citation": "https://doi.org/10.5880/GFZ.2.3.2019.004",
         "dataTerms": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_ME_3_MAG",
         "hapiOptions": {
             "MDR_ME_3_MAG": {
