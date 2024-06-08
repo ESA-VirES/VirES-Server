@@ -5,6 +5,7 @@
         "resourceUrl": "https://kp.gfz-potsdam.de/app/format/Kp_ap.txt",
         "citation": "https://doi.org/10.1029/2020SW002641",
         "dataTerms": "CC BY 4.0",
+        "fileType": "CDF-generic",
         "defaultDataset": "Kp_ap",
         "datasets": {
             "Kp_ap": {
@@ -47,6 +48,7 @@
         "resourceUrl": "https://wdc.kugi.kyoto-u.ac.jp/wdc/Sec3.html",
         "citation": "https://doi.org/10.17593/14515-74000",
         "dataTerms": "World Data System - Data Sharing Principles (https://worlddatasystem.org/about/data-sharing-principles/)",
+        "fileType": "CDF-generic",
         "defaultDataset": "Dst",
         "datasets": {
             "Dst": {
@@ -95,6 +97,7 @@
         "description": "Swarm S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MOD",
         "_order": 10,
         "datasets": {
@@ -137,6 +140,7 @@
         "description": "Swarm vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_LR",
         "hapiOptions": {
             "MDR_MAG_LR": {
@@ -331,6 +335,7 @@
         "description": "Swarm vector (VFM) magnetic field measurements at 50Hz rate.",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Magnetic_Products",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_HR",
         "hapiOptions": {
             "MDR_MAG_HR": {
@@ -471,6 +476,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#EFIX_LP_1B_Product",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 20,
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_EFI_LP",
         "datasets": {
             "MDR_EFI_LP": {
@@ -597,6 +603,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/2860886/SLIDEM_Product_Definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 21,
+        "fileType": "CDF-generic",
         "defaultDataset": "EFI_IDM",
         "datasets": {
             "EFI_IDM": {
@@ -779,6 +786,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 22,
+        "fileType": "CDF-generic",
         "defaultDataset": "EFI_TIE",
         "datasets": {
             "EFI_TIE": {
@@ -890,6 +898,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 23,
+        "fileType": "CDF-generic",
         "defaultDataset": "EFI_TII_CT",
         "datasets": {
             "EFI_TII_CT": {
@@ -1123,6 +1132,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#IBIxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 25,
+        "fileType": "CDF-generic",
         "defaultDataset": "IBI_TMS",
         "datasets": {
             "IBI_TMS": {
@@ -1207,6 +1217,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EEFxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 24,
+        "fileType": "CDF-generic",
         "defaultDataset": "EEF_TMS",
         "datasets": {
             "EEF_TMS": {
@@ -1271,6 +1282,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#FACxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 26,
+        "fileType": "CDF-generic",
         "defaultDataset": "FAC_TMS",
         "datasets": {
             "FAC_TMS": {
@@ -1369,6 +1381,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#TECxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 26,
+        "fileType": "CDF-generic",
         "defaultDataset": "TEC_TMS",
         "datasets": {
             "TEC_TMS": {
@@ -1530,6 +1543,7 @@
         "citation": "https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/2018JA026063",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 30,
+        "fileType": "CDF-generic",
         "defaultDataset": "IPD_IRR",
         "datasets": {
             "IPD_IRR": {
@@ -1743,6 +1757,7 @@
     },
     {
         "name": "SW_AUX_IMF_2_",
+        "fileType": "CDF-generic",
         "defaultDataset": "AUX_IMF",
         "datasets": {
             "AUX_IMF": {
@@ -1796,6 +1811,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 40,
+        "fileType": "CDF-generic",
         "defaultDataset": "AEJ_LPL",
         "datasets": {
             "AEJ_LPL": {
@@ -1896,6 +1912,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 41,
+        "fileType": "CDF-generic",
         "defaultDataset": "AEJ_PBL",
         "datasets": {
             "AEJ_PBL": {
@@ -1974,6 +1991,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 42,
+        "fileType": "CDF-generic",
         "defaultDataset": "AEJ_LPS",
         "datasets": {
             "AEJ_LPS": {
@@ -2098,6 +2116,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 43,
+        "fileType": "CDF-generic",
         "defaultDataset": "AEJ_PBS",
         "datasets": {
             "AEJ_PBS": {
@@ -2213,6 +2232,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 44,
+        "fileType": "CDF-generic",
         "defaultDataset": "AOB_FAC",
         "datasets": {
             "AOB_FAC": {
@@ -2300,6 +2320,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 45,
+        "fileType": "CDF-generic",
         "defaultDataset": "MIT_minimum",
         "datasets": {
             "MIT_minimum": {
@@ -2567,6 +2588,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 46,
+        "fileType": "CDF-generic",
         "defaultDataset": "MIT_minimum",
         "datasets": {
             "MIT_minimum": {
@@ -2819,6 +2841,7 @@
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 47,
+        "fileType": "CDF-generic",
         "defaultDataset": "SSFAC_boundary",
         "datasets": {
             "SSFAC_boundary": {
@@ -3031,6 +3054,7 @@
     },
     {
         "name": "OMNI_HR_1min",
+        "fileType": "CDF-generic",
         "defaultDataset": "OMNI_HR_1min",
         "datasets": {
             "OMNI_HR_1min": {
@@ -3097,6 +3121,7 @@
     },
     {
         "name": "SW_AUX_OBSx2_",
+        "fileType": "CDF-OBS",
         "defaultDataset": "__all__",
         "strictDatasetCheck": false,
         "unsortedDatasets": ["__all__"],
@@ -3159,6 +3184,7 @@
     },
     {
         "name": "SW_AUX_OBSH2_",
+        "fileType": "CDF-OBS",
         "defaultDataset": "__all__",
         "strictDatasetCheck": false,
         "unsortedDatasets": ["__all__"],
@@ -3228,6 +3254,7 @@
     },
     {
         "name": "SW_VOBS_xM_2_",
+        "fileType": "CDF-VOBS",
         "defaultDataset": "__all__",
         "strictDatasetCheck": false,
         "unsortedDatasets": ["__all__", "SecularVariation"],
@@ -3370,6 +3397,7 @@
         "description": "GRACE platform magnetometer measurements",
         "resourceUrl": "https://doi.org/10.1186/s40623-021-01373-9",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG",
         "hapiOptions": {
             "MDR_MAG": {
@@ -3471,6 +3499,7 @@
         "resourceUrl": "https://doi.org/10.1186/s40623-021-01364-w",
         "citation": "https://doi.org/10.5880/GFZ.2.3.2021.002",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_FGM_ACAL",
         "hapiOptions": {
             "MDR_FGM_ACAL": {
@@ -3614,6 +3643,7 @@
         "resourceUrl": "https://doi.org/10.5880/GFZ.2.3.2023.001",
         "citation": "https://doi.org/10.5880/GFZ.2.3.2023.001",
         "dataTerms": "CC BY 4.0",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_ACAL_ML",
         "hapiOptions": {
             "MDR_MAG_ACAL_ML": {
@@ -3723,6 +3753,7 @@
         "resourceUrl": "https://doi.org/10.1186/s40623-022-01691-6",
         "citation": "https://doi.org/10.5880/GFZ.2.3.2022.001",
         "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_ACAL",
         "hapiOptions": {
             "MDR_MAG_ACAL": {
@@ -3889,6 +3920,7 @@
         "resourceUrl": "https://doi.org/10.1186/s40623-022-01695-2",
         "citation": "https://doi.org/10.5880/GFZ.2.3.2022.002",
         "dataTerms": "The data is published under the Creative Commons Attribution 4.0 International (CC BY 4.0) licence.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_ACAL_ML",
         "hapiOptions": {
             "MDR_MAG_ACAL_ML": {
@@ -4004,6 +4036,7 @@
         "description": "Cryosat-2 Platform magnetometer measurements",
         "resourceUrl": "https://doi.org/10.1186/s40623-020-01171-9",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG",
         "hapiOptions": {
             "MDR_MAG": {
@@ -4134,6 +4167,813 @@
                     "attributes": {
                         "DESCRIPTION": "experimental error indicator of attitude given in Quaternion q_NEC_CRF. Bad attitude if > approx 40",
                         "UNITS": "mdeg"
+                    }
+                }
+            }
+        }
+     },
+     {
+        "name": "SW_DNSxPOD_2_",
+        "description": "Swarm thermosphere density observations derived from precise orbit determination data only",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_DNSxPOD_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
+        "defaultDataset": "__default__",
+        "_order": 104,
+        "datasets": {
+            "__default__": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "source": "time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "altitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 latitude",
+                        "UNITS": "m"
+                    }
+                },
+                "local_solar_time": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time",
+                        "UNITS": "h"
+                    }
+                },
+                "density": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mass density",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "density_orbitmean": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit average of mass density",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "validity_flag": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_DNSxACC_2_",
+        "description": "Swarm thermosphere density observations derived from precise orbit determination data and accelerometer data",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_DNSxACC_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
+        "defaultDataset": "__default__",
+        "_order": 105,
+        "datasets": {
+            "__default__": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "source": "time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "altitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 latitude",
+                        "UNITS": "m"
+                    }
+                },
+                "local_solar_time": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time",
+                        "UNITS": "h"
+                    }
+                },
+                "density": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mass density",
+                        "UNITS": "kg/m3"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "CH_DNSxACC_2_",
+        "description": "CHAMP accelerometer-derived thermosphere density observations",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/CH_DNS_ACC_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
+        "defaultDataset": "__default__",
+        "_order": 110,
+        "datasets": {
+            "__default__": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "source": "time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "altitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 latitude",
+                        "UNITS": "m"
+                    }
+                },
+                "local_solar_time": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time",
+                        "UNITS": "h"
+                    }
+                },
+                "density": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mass density",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "density_orbitmean": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit average of mass density",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "validity_flag": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                },
+                "validity_flag_orbitmean": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GR_DNSxACC_2_",
+        "description": "GRACE accelerometer-derived thermosphere density observations",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GR_DNSxACC_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
+        "defaultDataset": "__default__",
+        "_order": 110,
+        "datasets": {
+            "__default__": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "source": "time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "altitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 latitude",
+                        "UNITS": "m"
+                    }
+                },
+                "local_solar_time": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time",
+                        "UNITS": "h"
+                    }
+                },
+                "density": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mass density",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "density_orbitmean": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit average of mass density",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "validity_flag": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                },
+                "validity_flag_orbitmean": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GF_DNSxACC_2_",
+        "description": "GRACE-FO accelerometer-derived thermosphere density observations",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GF_DNSxACC_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
+        "defaultDataset": "__default__",
+        "_order": 110,
+        "datasets": {
+            "__default__": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "source": "time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "altitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 latitude",
+                        "UNITS": "m"
+                    }
+                },
+                "local_solar_time": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time",
+                        "UNITS": "h"
+                    }
+                },
+                "density": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mass density",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "density_orbitmean": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit average of mass density",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "validity_flag": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                },
+                "validity_flag_orbitmean": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "CH_WNDxACC_2_",
+        "description": "CHAMP thermosphere crosswind at satellite locations",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/CH_WND_ACC_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
+        "defaultDataset": "__default__",
+        "_order": 120,
+        "datasets": {
+            "__default__": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "source": "time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "altitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 latitude",
+                        "UNITS": "m"
+                    }
+                },
+                "local_solar_time": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time",
+                        "UNITS": "h"
+                    }
+                },
+                "crosswind": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Crosswind magnitude",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "crosswind_direction": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Direction of crosswind in local North-East-Down frame (unit vector)",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "validity_flag": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GR_WNDxACC_2_",
+        "description": "GRACE thermosphere crosswind at satellite locations",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GR_WNDxACC_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
+        "defaultDataset": "__default__",
+        "_order": 120,
+        "datasets": {
+            "__default__": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "source": "time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "altitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 latitude",
+                        "UNITS": "m"
+                    }
+                },
+                "local_solar_time": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time",
+                        "UNITS": "h"
+                    }
+                },
+                "crosswind": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Crosswind magnitude",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "crosswind_direction": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Direction of crosswind in local North-East-Down frame (unit vector)",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "validity_flag": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GF_WNDxACC_2_",
+        "description": "GRACE-FO thermosphere crosswind at satellite locations",
+        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-TOLEOS-product-description.pdf",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
+        "defaultDataset": "__default__",
+        "_order": 120,
+        "datasets": {
+            "__default__": {
+                "Timestamp": {
+                    "primaryTimestamp": true,
+                    "source": "time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "altitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GRS80 latitude",
+                        "UNITS": "m"
+                    }
+                },
+                "local_solar_time": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time",
+                        "UNITS": "h"
+                    }
+                },
+                "crosswind": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Crosswind magnitude",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "crosswind_direction": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Direction of crosswind in local North-East-Down frame (unit vector)",
+                        "UNITS": "kg/m3"
+                    }
+                },
+                "validity_flag": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "MM_CON_SPH_2_",
+        "description": "Swarm, CHAMP, GOCE, GRACE, and GRACE-FO conjunctions.",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/MM_CON_EPH_2_",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-CON_EPH_2_",
+        "_order": 121,
+        "datasets": {
+            "crossover": {
+                "time_1": {
+                    "primaryTimestamp": true,
+                    "intervalEnd": "time_2",
+                    "source": "crossover_time_1",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Crossover time of the first satellite (UTC)",
+                        "UNITS": "-"
+                    }
+                },
+                "time_2": {
+                    "intervalStart": "time_1",
+                    "source": "crossover_time_2",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Crossover time of the second satellite (UTC)",
+                        "UNITS": "-"
+                    }
+                },
+                "time_difference": {
+                    "source": "crossover_time_difference",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Time between the first and second satellite passing over the same location",
+                        "UNITS": "s"
+                    }
+                },
+                "satellite_1": {
+                    "source": "crossover_satellite_1",
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "ID of the first satellite (symbols: SWx - Swarm, CH - CHAMP,  GO - GOCE, GRx - GRACE, GFx - GRACE-FO)",
+                        "UNITS": "-"
+                    }
+                },
+                "satellite_2": {
+                    "source": "crossover_satellite_2",
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "ID of the second satellite (symbols: SWx - Swarm, CH - CHAMP,  GO - GOCE, GRx - GRACE, GFx - GRACE-FO)",
+                        "UNITS": "-"
+                    }
+                },
+                "altitude_1": {
+                    "source": "crossover_altitude_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Altitude of the first satellite at crossover (GRS80)",
+                        "UNITS": "m"
+                    }
+                },
+                "altitude_2": {
+                    "source": "crossover_altitude_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Altitude of the second satellite at crossover (GRS80)",
+                        "UNITS": "m"
+                    }
+                },
+                "latitude": {
+                    "source": "crossover_latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Geodetic latitude of crossover",
+                        "UNITS": "deg"
+                    }
+                },
+                "longitude": {
+                    "source": "crossover_longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Longitude of crossover",
+                        "UNITS": "deg"
+                    }
+                },
+                "magnetic_latitude": {
+                    "source": "crossover_magnetic_latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic latitude of crossover",
+                        "UNITS": "deg"
+                    }
+                },
+                "magnetic_longitude": {
+                    "source": "crossover_magnetic_longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic longitude of crossover",
+                        "UNITS": "deg"
+                    }
+                },
+                "local_solar_time_2": {
+                    "source": "crossover_local_solar_time_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time of the first satellite at crossover",
+                        "UNITS": "h"
+                    }
+                },
+                "local_solar_time_1": {
+                    "source": "crossover_local_solar_time_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Local solar time of the second satellites at crossover",
+                        "UNITS": "h"
+                    }
+                }
+            },
+            "plane_alignment": {
+                "time": {
+                    "primaryTimestamp": true,
+                    "source": "plane_alignment_time",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of orbital plane alignment (UTC)",
+                        "UNITS": "-"
+                    }
+                },
+                "satellite_1": {
+                    "source": "plane_alignment_satellite_1",
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "ID of the first satellite (symbols: SWx - Swarm, CH - CHAMP,  GO - GOCE, GRx - GRACE, GFx - GRACE-FO)",
+                        "UNITS": "-"
+                    }
+                },
+                "satellite_2": {
+                    "source": "plane_alignment_satellite_2",
+                    "dataType": "char3",
+                    "attributes": {
+                        "DESCRIPTION": "ID of the second satellite (symbols: SWx - Swarm, CH - CHAMP,  GO - GOCE, GRx - GRACE, GFx - GRACE-FO)",
+                        "UNITS": "-"
+                    }
+                },
+                "altitude_1": {
+                    "source": "plane_alignment_altitude_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Altitude of the first satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "altitude_2": {
+                    "source": "plane_alignment_altitude_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Altitude of the second satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "ltan_1": {
+                    "source": "plane_alignment_ltan_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LTAN of the first satellite",
+                        "UNITS": "h"
+                    }
+                },
+                "ltan_2": {
+                    "source": "plane_alignment_ltan_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LTAN of the second satellite",
+                        "UNITS": "h"
+                    }
+                },
+                "ltan_rate_1": {
+                    "source": "plane_alignment_ltan_rate_1",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LTAN drift rate of the first satellite",
+                        "UNITS": "h/d"
+                    }
+                },
+                "ltan_rate_2": {
+                    "source": "plane_alignment_ltan_rate_2",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "LTAN drift rate of the second satellite",
+                        "UNITS": "h/d"
                     }
                 }
             }

@@ -3,6 +3,7 @@
         "name": "SW_OPER_MODA_SC_1B",
         "description": "Swarm A S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "productType": "SW_MODx_SC_1B",
+        "mission": "Swarm",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
         "calculateConjunctions": true,
@@ -12,6 +13,7 @@
         "name": "SW_OPER_MODB_SC_1B",
         "description": "Swarm B S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "productType": "SW_MODx_SC_1B",
+        "mission": "Swarm",
         "spacecraft": "B",
         "nominalSampling": "PT1S",
         "calculateConjunctions": true,
@@ -21,6 +23,7 @@
         "name": "SW_OPER_MODC_SC_1B",
         "description": "Swarm C S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "productType": "SW_MODx_SC_1B",
+        "mission": "Swarm",
         "spacecraft": "C",
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true
@@ -29,6 +32,7 @@
         "name": "SW_FAST_MODA_SC_1B",
         "description": "Swarm A S/C fast track position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "productType": "SW_MODx_SC_1B",
+        "mission": "Swarm",
         "spacecraft": "A",
         "grade": "FAST",
         "nominalSampling": "PT1S",
@@ -39,6 +43,7 @@
         "name": "SW_FAST_MODB_SC_1B",
         "description": "Swarm B S/C fast track position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "productType": "SW_MODx_SC_1B",
+        "mission": "Swarm",
         "spacecraft": "B",
         "grade": "FAST",
         "nominalSampling": "PT1S",
@@ -49,6 +54,7 @@
         "name": "SW_FAST_MODC_SC_1B",
         "description": "Swarm C S/C fast track position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
         "productType": "SW_MODx_SC_1B",
+        "mission": "Swarm",
         "spacecraft": "C",
         "grade": "FAST",
         "nominalSampling": "PT1S",
@@ -59,6 +65,7 @@
         "name": "SW_OPER_MAGA_LR_1B",
         "description": "Swarm A vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
         "productType": "SW_MAGx_LR_1B",
+        "mission": "Swarm",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
         "subtractableCollections": {
@@ -79,6 +86,7 @@
         "description": "Swarm B vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "B",
         "cachedMagneticModels": {
             "interpolationKind": "linear",
@@ -95,6 +103,7 @@
         "description": "Swarm C vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "C",
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_LR_1B"
@@ -113,6 +122,7 @@
         "name": "SW_FAST_MAGA_LR_1B",
         "description": "Swarm A vector (VFM) and scalar (ASM) magnetic field fast track measurements interpolated at 1Hz rate.",
         "productType": "SW_MAGx_LR_1B",
+        "mission": "Swarm",
         "spacecraft": "A",
         "grade": "FAST",
         "nominalSampling": "PT1S",
@@ -134,6 +144,7 @@
         "description": "Swarm B vector (VFM) and scalar (ASM) magnetic field fast track measurements interpolated at 1Hz rate.",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "B",
         "grade": "FAST",
         "cachedMagneticModels": {
@@ -151,6 +162,7 @@
         "description": "Swarm C vector (VFM) and scalar (ASM) magnetic field fast track measurements interpolated at 1Hz rate.",
         "productType": "SW_MAGx_LR_1B",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "C",
         "grade": "FAST",
         "subtractableCollections": {
@@ -171,6 +183,7 @@
         "description": "Swarm A vector (VFM) magnetic field measurements at 50Hz rate.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
+        "mission": "Swarm",
         "spacecraft": "A",
         "subtractableCollections": {
             "C": "SW_OPER_MAGC_HR_1B"
@@ -184,6 +197,7 @@
         "description": "Swarm B vector (VFM) magnetic field measurements at 50Hz rate.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
+        "mission": "Swarm",
         "spacecraft": "B",
         "cachedMagneticModels": {
             "noCache": true
@@ -194,6 +208,7 @@
         "description": "Swarm C vector (VFM) magnetic field measurements at 50Hz rate.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
+        "mission": "Swarm",
         "spacecraft": "C",
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_HR_1B"
@@ -207,6 +222,7 @@
         "description": "Swarm A vector (VFM) magnetic field fast track measurements at 50Hz rate.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
+        "mission": "Swarm",
         "spacecraft": "A",
         "grade": "FAST",
         "subtractableCollections": {
@@ -221,6 +237,7 @@
         "description": "Swarm B vector (VFM) magnetic field fast track measurements at 50Hz rate.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
+        "mission": "Swarm",
         "spacecraft": "B",
         "grade": "FAST",
         "cachedMagneticModels": {
@@ -232,6 +249,7 @@
         "description": "Swarm C vector (VFM) magnetic field fast track measurements at 50Hz rate.",
         "productType": "SW_MAGx_HR_1B",
         "nominalSampling": "PT0.02S",
+        "mission": "Swarm",
         "spacecraft": "C",
         "grade": "FAST",
         "subtractableCollections": {
@@ -246,6 +264,7 @@
         "description": "Swarm A plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -253,6 +272,7 @@
         "description": "Swarm B plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -260,6 +280,7 @@
         "description": "Swarm C plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -267,6 +288,7 @@
         "description": "Swarm A plasma fast track data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "A",
         "grade": "FAST"
     },
@@ -275,6 +297,7 @@
         "description": "Swarm B plasma fast track data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "B",
         "grade": "FAST"
     },
@@ -283,6 +306,7 @@
         "description": "Swarm C plasma fast track data from the Langmuir Probe (LP) at 2Hz rate",
         "productType": "SW_EFIx_LP_1B",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "C",
         "grade": "FAST"
     },
@@ -291,6 +315,7 @@
         "description": "Swarm A LP ion drift, density and effective mass data",
         "productType": "SW_EFIxIDM_2_",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -298,6 +323,7 @@
         "description": "Swarm B LP ion drift, density and effective mass data",
         "productType": "SW_EFIxIDM_2_",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -305,6 +331,7 @@
         "description": "Swarm C LP ion drift, density and effective mass data",
         "productType": "SW_EFIxIDM_2_",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -312,6 +339,7 @@
         "description": "Swarm A Thermal Ion Imager (TII) ion temperatures estimate",
         "productType": "SW_EFIxTIE_2_",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -319,6 +347,7 @@
         "description": "Swarm B Thermal Ion Imager (TII) ion temperatures estimate",
         "productType": "SW_EFIxTIE_2_",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -326,6 +355,7 @@
         "description": "Swarm C Thermal Ion Imager (TII) ion temperatures estimate",
         "productType": "SW_EFIxTIE_2_",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -333,6 +363,7 @@
         "description": "Swarm A Thermal Ion Imager (TII) cross track flow at 2Hz",
         "productType": "SW_EFIx_TCTyy",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -340,6 +371,7 @@
         "description": "Swarm B Thermal Ion Imager (TII) cross track flow at 2Hz",
         "productType": "SW_EFIx_TCTyy",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -347,6 +379,7 @@
         "description": "Swarm C Thermal Ion Imager (TII) cross track flow at 2Hz",
         "productType": "SW_EFIx_TCTyy",
         "nominalSampling": "PT0.5S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -354,6 +387,7 @@
         "description": "Swarm A Thermal Ion Imager (TII) cross track flow at 16Hz",
         "productType": "SW_EFIx_TCTyy",
         "nominalSampling": "PT0.0625S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -361,6 +395,7 @@
         "description": "Swarm B Thermal Ion Imager (TII) cross track flow at 16Hz",
         "productType": "SW_EFIx_TCTyy",
         "nominalSampling": "PT0.0625S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -368,6 +403,7 @@
         "description": "Swarm C Thermal Ion Imager (TII) cross track flow at 16Hz",
         "productType": "SW_EFIx_TCTyy",
         "nominalSampling": "PT0.0625S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -375,6 +411,7 @@
         "description": "Swarm A ionospheric bubble index",
         "productType": "SW_IBIxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -382,6 +419,7 @@
         "description": "Swarm B ionospheric bubble index",
         "productType": "SW_IBIxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -389,6 +427,7 @@
         "description": "Swarm C ionospheric bubble index",
         "productType": "SW_IBIxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -396,6 +435,7 @@
         "description": "Swarm A ionospheric total electron content",
         "productType": "SW_TECxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "A",
         "groupSamples": true
     },
@@ -404,6 +444,7 @@
         "description": "Swarm B ionospheric total electron content",
         "productType": "SW_TECxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "B",
         "groupSamples": true
     },
@@ -412,6 +453,7 @@
         "description": "Swarm C ionospheric total electron content",
         "productType": "SW_TECxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "C",
         "groupSamples": true
     },
@@ -420,6 +462,7 @@
         "description": "Swarm A field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -427,6 +470,7 @@
         "description": "Swarm B field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -434,6 +478,7 @@
         "description": "Swarm C field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -441,6 +486,7 @@
         "description": "Swarm field-aligned and radial current densities using the dual-satellite method",
         "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#FAC_TMS_2F",
         "productType": "SW_FACxTMS_2F",
+        "mission": "Swarm",
         "nominalSampling": "PT1S"
     },
     {
@@ -448,6 +494,7 @@
         "description": "Swarm A dayside equatorial electric field",
         "productType": "SW_EEFxTMS_2F",
         "nominalSampling": "PT5616S",
+        "mission": "Swarm",
         "spacecraft": "A",
         "extraSampled": true
     },
@@ -456,6 +503,7 @@
         "description": "Swarm B dayside equatorial electric field",
         "productType": "SW_EEFxTMS_2F",
         "nominalSampling": "PT5616S",
+        "mission": "Swarm",
         "spacecraft": "B",
         "extraSampled": true
     },
@@ -464,6 +512,7 @@
         "description": "Swarm C dayside equatorial electric field",
         "productType": "SW_EEFxTMS_2F",
         "nominalSampling": "PT5616S",
+        "mission": "Swarm",
         "spacecraft": "C",
         "extraSampled": true
     },
@@ -472,6 +521,7 @@
         "description": "Swarm A characteristics of the plasma density and plasma irregularities",
         "productType": "SW_IPDxIRR_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -479,6 +529,7 @@
         "description": "Swarm B characteristics of the plasma density and plasma irregularities",
         "productType": "SW_IPDxIRR_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -486,12 +537,14 @@
         "description": "Swarm C characteristics of the plasma density and plasma irregularities",
         "productType": "SW_IPDxIRR_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
         "name": "SW_OPER_AEJALPL_2F",
         "description": "Swarm A ionospheric sheet current densities determined by the Line Current (LC) method",
         "productType": "SW_AEJxLPL_2F",
+        "mission": "Swarm",
         "spacecraft": "A",
         "nominalSampling": "PT16S",
         "splitBy": {"QDOrbitDirection": 0}
@@ -500,6 +553,7 @@
         "name": "SW_OPER_AEJBLPL_2F",
         "description": "Swarm B ionospheric sheet current densities determined by the Line Current (LC) method",
         "productType": "SW_AEJxLPL_2F",
+        "mission": "Swarm",
         "spacecraft": "B",
         "nominalSampling": "PT16S",
         "splitBy": {"QDOrbitDirection": 0}
@@ -508,6 +562,7 @@
         "name": "SW_OPER_AEJCLPL_2F",
         "description": "Swarm C ionospheric sheet current densities determined by the Line Current (LC) method",
         "productType": "SW_AEJxLPL_2F",
+        "mission": "Swarm",
         "spacecraft": "C",
         "nominalSampling": "PT16S",
         "splitBy": {"QDOrbitDirection": 0}
@@ -517,6 +572,7 @@
         "description": "Swarm A ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
         "productType": "SW_AEJxPBL_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -524,6 +580,7 @@
         "description": "Swarm B ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
         "productType": "SW_AEJxPBL_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -531,12 +588,14 @@
         "description": "Swarm C ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
         "productType": "SW_AEJxPBL_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
         "name": "SW_OPER_AEJALPS_2F",
         "description": "Swarm A ionospheric sheet current densities determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxLPS_2F",
+        "mission": "Swarm",
         "spacecraft": "A",
         "nominalSampling": "PT1S",
         "splitBy": {"QDOrbitDirection": 0}
@@ -545,6 +604,7 @@
         "name": "SW_OPER_AEJBLPS_2F",
         "description": "Swarm B ionospheric sheet current densities determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxLPS_2F",
+        "mission": "Swarm",
         "spacecraft": "B",
         "nominalSampling": "PT1S",
         "splitBy": {"QDOrbitDirection": 0}
@@ -553,6 +613,7 @@
         "name": "SW_OPER_AEJCLPS_2F",
         "description": "Swarm C ionospheric sheet current densities determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxLPS_2F",
+        "mission": "Swarm",
         "spacecraft": "C",
         "nominalSampling": "PT1S",
         "splitBy": {"QDOrbitDirection": 0}
@@ -562,6 +623,7 @@
         "description": "Swarm A ionospheric auroral electrojet peaks and boundaries determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxPBS_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -569,6 +631,7 @@
         "description": "Swarm B ionospheric auroral electrojet peaks and boundaries determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxPBS_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -576,6 +639,7 @@
         "description": "Swarm C ionospheric auroral electrojet peaks and boundaries determined by the Spherical Elementary Current Systems (SECS) method",
         "productType": "SW_AEJxPBS_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -583,6 +647,7 @@
         "description": "Swarm A aurora oval boundaries determined from the Field Aligned Current (FAC) data",
         "productType": "SW_AOBxFAC_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -590,6 +655,7 @@
         "description": "Swarm B aurora oval boundaries determined from the Field Aligned Current (FAC) data",
         "productType": "SW_AOBxFAC_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -597,6 +663,7 @@
         "description": "Swarm C aurora oval boundaries determined from the Field Aligned Current (FAC) data",
         "productType": "SW_AOBxFAC_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -604,6 +671,7 @@
         "description": "Swarm A mid-latitude ionospheric trough boundaries and minima from from Langmuir Probe (LP) data",
         "productType": "SW_MITx_LP_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -611,6 +679,7 @@
         "description": "Swarm B mid-latitude ionospheric trough boundaries and minima from from Langmuir Probe (LP) data",
         "productType": "SW_MITx_LP_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -618,6 +687,7 @@
         "description": "Swarm C mid-latitude ionospheric trough boundaries and minima from from Langmuir Probe (LP) data",
         "productType": "SW_MITx_LP_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -625,6 +695,7 @@
         "description": "Swarm A mid-latitude ionospheric trough boundaries and minima from from Total Electron Content (TEC) data",
         "productType": "SW_MITxTEC_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -632,6 +703,7 @@
         "description": "Swarm B mid-latitude ionospheric trough boundaries and minima from from Total Electron Content (TEC) data",
         "productType": "SW_MITxTEC_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -639,6 +711,7 @@
         "description": "Swarm C mid-latitude ionospheric trough boundaries and minima from from Total Electron Content (TEC) data",
         "productType": "SW_MITxTEC_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -646,6 +719,7 @@
         "description": "Swarm A equatorward boundary of Small-Scale Field Aligned Currents (SSFAC) and the associated midnight Plasma-Pause (PP) index",
         "productType": "SW_PPIxFAC_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "A"
     },
     {
@@ -653,6 +727,7 @@
         "description": "Swarm B equatorward boundary of Small-Scale Field Aligned Currents (SSFAC) and the associated midnight Plasma-Pause (PP) index",
         "productType": "SW_PPIxFAC_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "B"
     },
     {
@@ -660,6 +735,7 @@
         "description": "Swarm C equatorward boundary of Small-Scale Field Aligned Currents (SSFAC) and the associated midnight Plasma-Pause (PP) index",
         "productType": "SW_PPIxFAC_2F",
         "nominalSampling": "PT1404S",
+        "mission": "Swarm",
         "spacecraft": "C"
     },
     {
@@ -941,5 +1017,139 @@
         "nominalSampling": "PT1H",
         "productType": "WDC_DST",
         "requiredPermission": "swarm"
+    },
+    {
+        "name": "SW_OPER_DNSAPOD_2_",
+        "description": "Swarm A thermosphere density observations derived from precise orbit determination data only",
+        "productType": "SW_DNSxPOD_2_",
+        "mission": "Swarm",
+        "spacecraft": "A",
+        "nominalSampling": "PT30S"
+    },
+    {
+        "name": "SW_OPER_DNSBPOD_2_",
+        "description": "Swarm B thermosphere density observations derived from precise orbit determination data only",
+        "productType": "SW_DNSxPOD_2_",
+        "mission": "Swarm",
+        "spacecraft": "B",
+        "nominalSampling": "PT30S"
+    },
+    {
+        "name": "SW_OPER_DNSCPOD_2_",
+        "description": "Swarm C thermosphere density observations derived from precise orbit determination data only",
+        "productType": "SW_DNSxPOD_2_",
+        "mission": "Swarm",
+        "spacecraft": "C",
+        "nominalSampling": "PT30S"
+    },
+    {
+        "name": "SW_OPER_DNSAACC_2_",
+        "description": "Swarm A thermosphere density observations derived from precise orbit determination data and accelerometer data",
+        "productType": "SW_DNSxACC_2_",
+        "mission": "Swarm",
+        "spacecraft": "A",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "SW_OPER_DNSBACC_2_",
+        "description": "Swarm B thermosphere density observations derived from precise orbit determination data and accelerometer data",
+        "productType": "SW_DNSxACC_2_",
+        "mission": "Swarm",
+        "spacecraft": "B",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "SW_OPER_DNSCACC_2_",
+        "description": "Swarm C thermosphere density observations derived from precise orbit determination data and accelerometer data",
+        "productType": "SW_DNSxACC_2_",
+        "mission": "Swarm",
+        "spacecraft": "C",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "CH_OPER_DNS_ACC_2_",
+        "description": "CHAMP accelerometer-derived thermosphere density observations",
+        "mission": "CHAMP",
+        "productType": "CH_DNSxACC_2_",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "CH_OPER_WND_ACC_2_",
+        "description": "CHAMP thermosphere crosswind at satellite locations",
+        "mission": "CHAMP",
+        "productType": "CH_WNDxACC_2_",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GR_OPER_DNS1ACC_2_",
+        "description": "GRACE 1 accelerometer-derived thermosphere density observations",
+        "productType": "GR_DNSxACC_2_",
+        "mission": "GRACE",
+        "spacecraft": "1",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GR_OPER_DNS2ACC_2_",
+        "description": "GRACE 2 accelerometer-derived thermosphere density observations",
+        "productType": "GR_DNSxACC_2_",
+        "mission": "GRACE",
+        "spacecraft": "2",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GR_OPER_WND1ACC_2_",
+        "description": "GRACE 1 thermosphere crosswind at satellite locations",
+        "productType": "GR_WNDxACC_2_",
+        "mission": "GRACE",
+        "spacecraft": "1",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GR_OPER_WND2ACC_2_",
+        "description": "GRACE 2 thermosphere crosswind at satellite locations",
+        "productType": "GR_WNDxACC_2_",
+        "mission": "GRACE",
+        "spacecraft": "2",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GF_OPER_DNS1ACC_2_",
+        "description": "GRACE-FO 1 accelerometer-derived thermosphere density observations",
+        "productType": "GF_DNSxACC_2_",
+        "mission": "GRACE-FO",
+        "spacecraft": "1",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GF_OPER_DNS2ACC_2_",
+        "description": "GRACE-FO 2 accelerometer-derived thermosphere density observations",
+        "productType": "GF_DNSxACC_2_",
+        "mission": "GRACE-FO",
+        "spacecraft": "2",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GF_OPER_WND1ACC_2_",
+        "description": "GRACE-FO 1 thermosphere crosswind at satellite locations",
+        "productType": "GF_WNDxACC_2_",
+        "mission": "GRACE-FO",
+        "spacecraft": "1",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "GF_OPER_WND2ACC_2_",
+        "description": "GRACE-FO 2 thermosphere crosswind at satellite locations",
+        "productType": "GF_WNDxACC_2_",
+        "mission": "GRACE-FO",
+        "spacecraft": "2",
+        "nominalSampling": "PT10S"
+    },
+    {
+        "name": "MM_OPER_CON_EPH_2_",
+        "productType": "MM_CON_SPH_2_",
+        "nominalSampling": {
+            "crossover": "PT20M",
+            "plane_alignment": "P1D"
+        }
     }
 ]

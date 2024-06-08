@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  Time Series - data sources
+# Products metadata extraction - base CDF metadata reader
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2023-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,26 +24,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
+# pylint: disable=missing-docstring
 
-from vires.models import ProductCollection
-from .base import TimeSeries
-from .product_source import (
-    product_source_factory,
-    SingleCollectionProductSource,
-    MultiCollectionProductSource,
-)
-from .product import ProductTimeSeries
-from .custom_data import CustomDatasetTimeSeries
-from .indices import IndexKp10, IndexDst, IndexDDst, IndexF107
-from .orbit_counter import OrbitCounter
-from .orbit_direction import OrbitDirection, QDOrbitDirection
-from .cached_model import CachedModelExtraction
+from vires.time_util import naive_to_utc
+from vires.cdf_util import cdf_open, cdf_rawtime_to_datetime
+from ..base import MetadataReader
 
 
-def get_product_time_series(identifier):
-    """ Convenience function creating product time series for the given
-    product collection identifier.
-    """
-    return ProductTimeSeries(SingleCollectionProductSource(
-        ProductCollection.objects.get(identifier=identifier)
-    ))
+class CDFMetadataReader(MetadataReader):
+    """ Base CDF metadata reader. """
+
+    @classmethod
+    def read(cls, location, **options):
+        with cdf_open(location) as cdf:
+            return cls.read_cdf_metadata(cdf, **options)
+
+    @classmethod
+    def read_cdf_metadata(cls, cdf, **options):
+        raise NotImplementedError
+
+    @staticmethod
+    def _cdf_rawtime_to_datetime(time, cdf_type):
+        return naive_to_utc(cdf_rawtime_to_datetime(time, cdf_type))

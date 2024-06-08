@@ -32,7 +32,6 @@ import json
 from traceback import print_exc
 from django.db import transaction
 from vires.data import PRODUCT_COLLECTIONS
-from vires.data.vires_settings import DEFAULT_MISSION
 from vires.models import (
     ProductCollection, ProductType, Spacecraft, CachedMagneticModel,
 )
@@ -159,11 +158,8 @@ def get_spacecraft(mission, spacecraft, events):
         spacecraft.save()
         return spacecraft
 
-    if not spacecraft and not mission:
+    if not mission:
         return None
-
-    if spacecraft and not mission:
-        mission = DEFAULT_MISSION
 
     try:
         spacecraft = Spacecraft.objects.get(mission=mission, spacecraft=spacecraft)

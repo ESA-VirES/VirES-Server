@@ -26,7 +26,6 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods
 
-from vires.data.vires_settings import DEFAULT_MISSION
 from vires.processes.util import VariableResolver
 from vires.processes.util.models import generate_magnetic_model_sources
 from vires.processes.util.time_series import (
@@ -52,7 +51,7 @@ class TimeSeries:
         )
 
         spacecraft = (
-            collection.spacecraft_dict.get("mission") or DEFAULT_MISSION,
+            collection.spacecraft_dict.get("mission"),
             collection.spacecraft_dict.get("spacecraft"),
             collection.grade,
         )

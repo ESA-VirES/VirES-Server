@@ -34,11 +34,7 @@ from vires.util import AttributeDict
 from vires.exceptions import DataIntegrityError
 from vires.time_util import format_datetime
 from vires.models import Product, ProductLocation
-from vires.swarm import (
-    SwarmProductMetadataReader,
-    ObsProductMetadataReader,
-    VObsProductMetadataReader,
-)
+from vires.metadata import METADATA_READERS
 from vires.cdf_util import cdf_open
 from .product_collection import get_product_collection
 from .orbit_direction import (
@@ -60,12 +56,6 @@ from .cached_magnetic_model import (
 
 LOG_FORMAT = "product %s/%s %s"
 
-DEFAULT_METADATA_READER = SwarmProductMetadataReader
-METADATA_READER = {
-    "SW_AUX_OBSx2_": ObsProductMetadataReader,
-    "SW_AUX_OBSH2_": ObsProductMetadataReader,
-    "SW_VOBS_xM_2_": VObsProductMetadataReader,
-}
 
 def get_product_id(data_file):
     """ Get the product identifier. """
@@ -86,11 +76,17 @@ def update_max_product_duration(collection, duration):
 
 def read_product_metadata(data_file, product_type):
     """ Read metadata from product. """
-    metadata_reader = (
-        METADATA_READER.get(product_type.identifier) or DEFAULT_METADATA_READER
-    )
-    with cdf_open(data_file) as cdf:
-        return metadata_reader.read(cdf)
+
+    try:
+        metadata_reader = METADATA_READERS[product_type.file_type]
+    except KeyError:
+        raise KeyError(
+            f"Unsupported product file type {product_type.file_type}!"
+        ) from None
+
+    options = metadata_reader.extract_options(product_type)
+
+    return metadata_reader.read(data_file, **options)
 
 
 def get_product(collection_id, product_id):
@@ -409,11 +405,25 @@ def _set_product(product, data_file, **metadata):
     product.datasets = _get_datasets(
         data_file, product.collection.type, metadata
     )
+    product.metadata = _exlude_dict_keys(metadata, excluded_keys=[
+        "begin_time",
+        "end_time",
+        "datasets",
+    ])
     product.save()
     update_max_product_duration(
         product.collection, product.end_time - product.begin_time
     )
     return product
+
+
+def _exlude_dict_keys(data, excluded_keys):
+    excluded_keys = set(excluded_keys)
+    return {
+        key: value
+        for key, value in data.items()
+        if key not in excluded_keys
+    }
 
 
 def _get_datasets(data_file, product_type, metadata):

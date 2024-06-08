@@ -31,7 +31,7 @@ from vires.aux_kp import KpReader
 from vires.aux_dst import DstReader, DDstReader
 from vires.aux_f107 import F10_2_Reader
 from .base import TimeSeries
-from .auxiliary_data import BaseAuxiliaryDataTimeSeries
+from .base_auxiliary_data import BaseAuxiliaryDataTimeSeries
 
 
 class IndexKp10(BaseAuxiliaryDataTimeSeries):

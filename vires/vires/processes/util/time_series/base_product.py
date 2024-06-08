@@ -39,10 +39,18 @@ from .base import TimeSeries
 class BaseProductTimeSeries(TimeSeries):
     """ Base product time-series """
 
+    @property
+    def required_variables(self):
+        if self.time_interval_search:
+            return [self.time_variable, self.second_time_variable]
+        return [self.time_variable]
+
     def __init__(self, logger=None, **kwargs):
         super().__init__()
         self.logger = logger or getLogger(__name__)
         self.time_variable = kwargs.get("time_variable")
+        self.second_time_variable = kwargs.get("second_time_variable")
+        self.time_interval_search = self.second_time_variable is not None
         self.time_tolerance = kwargs.get("time_tolerance")
         self.time_overlap = kwargs.get("time_overlap")
         self.time_gap_threshold = kwargs.get("time_gap_threshold")
@@ -79,6 +87,11 @@ class BaseProductTimeSeries(TimeSeries):
 
     def interpolate(self, times, variables=None, interp1d_kinds=None,
                     cdf_type=TimeSeries.TIMESTAMP_TYPE, valid_only=False):
+
+        if self.time_interval_search:
+            raise RuntimeError(
+                "Interpolation is not possible for time interval records."
+            )
 
         variables = self.get_extracted_variables(variables)
         self.logger.debug("requested variables: %s", pretty_list(variables))

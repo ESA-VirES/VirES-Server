@@ -55,7 +55,11 @@ class ProductTimeSeries(BaseProductTimeSeries):
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
                 "collection_id": source.identifier,
             }),
-            time_variable=params.TIME_VARIABLE,
+            time_variable=source.time_variables[0],
+            second_time_variable=(
+                source.time_variables[1]
+                if len(source.time_variables) > 1 else None
+            ),
             time_tolerance=params.TIME_TOLERANCE,
             time_overlap=params.TIME_OVERLAP,
             time_gap_threshold=params.TIME_GAP_THRESHOLD,
@@ -159,6 +163,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
             if not source_dataset:
                 continue
 
+
             self.logger.debug("product: %s ", product.identifier)
             self.logger.debug(
                 "subset time span: %s",
@@ -176,6 +181,10 @@ class ProductTimeSeries(BaseProductTimeSeries):
             ) as cdf_ds:
                 subset, nrv_shape = cdf_ds.get_temporal_subset(
                     time_variable=self.time_variable,
+                    second_time_variable=self.second_time_variable,
+                    max_record_duration=product.get_max_record_duration(
+                        self.source.dataset_id
+                    ),
                     start=data_start,
                     stop=data_stop,
                     subset=time_subset,

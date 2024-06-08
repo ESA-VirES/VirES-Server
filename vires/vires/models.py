@@ -40,6 +40,7 @@ from django.db.models import (
 )
 from django.contrib.postgres.fields import JSONField
 from django.contrib.auth.models import User
+from .time_util import parse_duration
 
 
 ID_VALIDATOR = RegexValidator(
@@ -188,6 +189,11 @@ class ProductType(Model):
         verbose_name = "Product Type"
         verbose_name_plural = "Product Types"
 
+    @property
+    def file_type(self):
+        """ Get product file type. """
+        return self.definition.get('fileType')
+
     def get_dataset_id(self, dataset_id=None):
         """ Get dataset identifier.  If the dataset_id parameter is set to None
         then the default dataset identifier is returned.
@@ -218,6 +224,23 @@ class ProductType(Model):
         datasets = self.definition['datasets']
         return datasets.get(self.get_base_dataset_id(dataset_id))
 
+    def get_time_variables(self, dataset_id):
+        """ Extract time-variable names from the dataset definition.
+        The method returns a tuple of either one (record is an instant) or two
+        variables (records is an interval with start and end times).
+        If no time-variable found, None is returned.
+        """
+        dataset_variables = self.get_dataset_definition(dataset_id)
+        if dataset_variables is None:
+            raise ValueError("Invalid dataset identifier!")
+        for variable, options in dataset_variables.items():
+            if options.get("primaryTimestamp", False):
+                second_variable = options.get("intervalEnd") or None
+                if second_variable:
+                    return (variable, second_variable)
+                return (variable,)
+        return None
+
     def get_hapi_options(self, dataset_id):
         """ Get dataset definition matched by the given identifier. """
         options = self.definition.get('hapiOptions') or {}
@@ -240,6 +263,19 @@ class ProductCollection(Model):
 
     def __str__(self):
         return self.identifier
+
+    def get_nominal_sampling(self, dataset_id=None):
+        """ Get nominal sampling for the given dataset. """
+        # The optional nominal sampling can be stored as:
+        # - a single value applicable to all collection datasets
+        # - a dictionary of dataset specific values
+        nominal_sampling = self.metadata.get("nominalSampling")
+        if isinstance(nominal_sampling, dict):
+            dataset_id = self.type.get_dataset_id(dataset_id)
+            nominal_sampling = nominal_sampling.get(dataset_id)
+        if not nominal_sampling:
+            return None
+        return parse_duration(nominal_sampling)
 
     @property
     def spacecraft_tuple(self):
@@ -314,6 +350,14 @@ class Product(Model):
 
     def get_index_range(self, dataset_id):
         return self.get_dataset(dataset_id).get('indexRange') or [0, None]
+
+    def get_max_record_duration(self, dataset_id):
+        """ Extract dataset specific maximum duration of the interval records.
+        """
+        max_duration = (
+            self.metadata.get("max_record_duration") or {}
+        ).get(dataset_id)
+        return parse_duration(max_duration) if max_duration else None
 
 
 class ProductLocation(Model):

@@ -48,7 +48,7 @@ from vires.time_util import (
 )
 from vires.cache_util import cache_path
 from vires.processes.base import WPSProcess
-from vires.data.vires_settings import ORBIT_CONJUNCTION_FILE, DEFAULT_MISSION
+from vires.data.vires_settings import ORBIT_CONJUNCTION_FILE, SWARM_MISSION
 from vires.conjunctions.reader import read_conjunctions
 
 
@@ -78,7 +78,7 @@ class GetConjunctions(WPSProcess):
 
     inputs = WPSProcess.inputs + [
         ("mission1", LiteralData(
-            "mission1", str, optional=True, default=DEFAULT_MISSION,
+            "mission1", str, optional=True, default=SWARM_MISSION,
             abstract="Primary mission identifier",
             allowed_values=MISSIONS,
         )),
@@ -88,7 +88,7 @@ class GetConjunctions(WPSProcess):
             allowed_values=SPACECRAFTS,
         )),
         ("mission2", LiteralData(
-            "mission2", str, optional=True, default=DEFAULT_MISSION,
+            "mission2", str, optional=True, default=SWARM_MISSION,
             abstract="Secondary mission identifier",
             allowed_values=MISSIONS,
         )),
