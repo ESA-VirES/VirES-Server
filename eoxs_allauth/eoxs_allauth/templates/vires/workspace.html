@@ -286,8 +286,8 @@
       </div>
 
         <p class="lead current-version text-center">
-          <strong>Version 3.13.1</strong> (<a href="/changelog">Changelog</a>)<br>
-          <em>January 2024</em>
+          <strong>Version 3.14.0</strong> (<a href="/changelog">Changelog</a>)<br>
+          <em>July 2024</em>
         </p>
 
         <p class="lead text-center">
@@ -469,6 +469,11 @@
               Swarm spacecrafts' positions (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_MODx_SC_1B">MODx_SC_1B</a>)
               accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
             </li>
+            <li style="list-style-type: circle;">
+              Thermospheric density (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_DNSxACC_2_">SW_DNSxACC_2_</a>
+              and <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_DNSxPOD_2_">SW_DNSxPOD_2_</a>)
+              accessible via the <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html#collections">Python client</a>.
+            </li>
           </ul>
 
           <p>
@@ -493,7 +498,30 @@
               <a href="https://www.space.dtu.dk/english/research/projects/project-descriptions/geomagnetic-virtual-observatories" target="_blank">GVO project</a>.
             </li>
             <li style="list-style-type: circle;">
-              Calibrated platform magnetometer measurements from the CryoSat-2 (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/CS_MAG">CS_MAG</a>), GOCE (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GO_MAG_ACAL_CORR">GO_MAG_ACAL_CORR</a>), GRACE (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GRACE_x_MAG">GRACE_x_MAG</a>) and GRACE-FO (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GFx_FGM_ACAL_CORR">GFx_FGM_ACAL_CORR</a>) missions.
+              Calibrated platform magnetometer measurements from the
+              CHAMP (<a target="_blank" href="https://doi.org/10.5880/GFZ.2.3.2019.004">CH_ME_MAG_LR_3</a>),
+              CryoSat-2 (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/CS_MAG">CS_MAG</a>),
+              GOCE (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GO_MAG_ACAL_CORR">GO_MAG_ACAL_CORR</a>
+              and <a target="_blank" href="https://doi.org/10.1186/s40623-022-01695-2">GO_MAG_ACAL_CORR_ML</a>),
+              GRACE (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GRACE_x_MAG">GRACE_x_MAG</a>)
+              and GRACE-FO (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GFx_FGM_ACAL_CORR">GFx_FGM_ACAL_CORR</a>
+              and <a target="_blank" href="https://doi.org/10.5880/GFZ.2.3.2023.001">GFx_MAG_ACAL_CORR_ML</a>)
+              missions.
+            </li>
+            <li style="list-style-type: circle;">
+              Thermospheric density and crosswind products from the
+              CHAMP (<a href="https://swarmhandbook.earth.esa.int/catalogue/CH_DNS_ACC_2_" target="_blank">CH_DNS_ACC_2_</a>
+              and <a href="https://swarmhandbook.earth.esa.int/catalogue/CH_WND_ACC_2_" target="_blank">CH_WND_ACC_2_</a>), 
+              GRACE (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GR_DNSxACC_2_">GR_DNSxACC_2_</a>
+              and <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GR_WNDxACC_2_">GR_WNDxACC_2_</a>),
+              and GRACE-FO (<a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GF_DNSxACC_2_">GF_DNSxACC_2_</a>
+              and <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/GF_WNDxACC_2_">GF_WNDxACC_2_</a>)
+              missions.
+            </li>
+            <li style="list-style-type: circle;">
+              Multi-mission crossover and plane alignment conjunctions
+              of the Swarm, CHAMP, GOCE, GRACE, and GRACE-FO spacecrafts
+              (<a href="https://swarmhandbook.earth.esa.int/catalogue/MM_CON_EPH_2_" target="_blank">MM_CON_EPH_2_</a>).
             </li>
           </ul>
           <p>
@@ -569,7 +597,12 @@
           </ul>
 
           <p>
-            The data accessible on VirES consists of the newest versions available and any new data will appear within 4 hours after being published.
+            The data accessible on VirES consists of the newest versions available
+            and any new consolidated products (OPER) will appear in VirES
+            within 4 hours after being published.  New FAST products will appear
+            in VirES within 15 minutes after publishing.
+            The data updates may get delayed when a large bulk of re-processed
+            products is published.
           </p>
 
         </div><!--/col-->
