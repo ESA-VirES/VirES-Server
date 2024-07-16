@@ -490,6 +490,30 @@
         "nominalSampling": "PT1S"
     },
     {
+        "name": "SW_FAST_FACATMS_2F",
+        "description": "Swarm A fast track field-aligned and radial current densities using the single satellite measurements",
+        "productType": "SW_FACxTMS_2F",
+        "nominalSampling": "PT1S",
+        "spacecraft": "A",
+        "grade": "FAST"
+    },
+    {
+        "name": "SW_FAST_FACBTMS_2F",
+        "description": "Swarm B fast track field-aligned and radial current densities using the single satellite measurements",
+        "productType": "SW_FACxTMS_2F",
+        "nominalSampling": "PT1S",
+        "spacecraft": "B",
+        "grade": "FAST"
+    },
+    {
+        "name": "SW_FAST_FACCTMS_2F",
+        "description": "Swarm C fast track field-aligned and radial current densities using the single satellite measurements",
+        "productType": "SW_FACxTMS_2F",
+        "nominalSampling": "PT1S",
+        "spacecraft": "C",
+        "grade": "FAST"
+    },
+    {
         "name": "SW_OPER_EEFATMS_2F",
         "description": "Swarm A dayside equatorial electric field",
         "productType": "SW_EEFxTMS_2F",
