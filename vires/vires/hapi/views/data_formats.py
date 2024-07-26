@@ -91,19 +91,20 @@ class HapiDataResponse():
         raise NotImplementedError
 
     # streamed response
-    def __new__(cls, datasets, header=None, **kwargs):
-        #return cls._get_http_response(datasets, header, **kwargs)
-        return cls._get_streaming_http_response(datasets, header, **kwargs)
+    def __new__(cls, request, datasets, header=None, **kwargs):
+        #return cls._get_http_response(request, datasets, header, **kwargs)
+        return cls._get_streaming_http_response(request, datasets, header, **kwargs)
 
     @classmethod
-    def _get_http_response(cls, datasets, header=None, logger=None, **kwargs):
+    def _get_http_response(cls, request, datasets, header=None, logger=None, **kwargs):
+        del request
         return HttpResponse(
             cls._generate_response(cls._collect_stats(datasets, logger), header),
             **cls.response_opts
         )
 
     @classmethod
-    def _get_streaming_http_response(cls, datasets, header=None, logger=None, **kwargs):
+    def _get_streaming_http_response(cls, request, datasets, header=None, logger=None, **kwargs):
 
         def _handle_errors(chunks):
             try:
@@ -113,7 +114,8 @@ class HapiDataResponse():
                 raise
             except:
                 getLogger(LOGGER_NAME).error(
-                    "An error occurred while streaming HAPI data response!",
+                    "An error occurred while streaming HAPI data response! %s",
+                    request.get_full_path_info(),
                     exc_info=True
                 )
                 raise
