@@ -5042,7 +5042,7 @@
         }
     },
     {
-        "name": "MM_CON_SPH_2_",
+        "name": "MM_CON_EPH_2_",
         "description": "Swarm, CHAMP, GOCE, GRACE, and GRACE-FO conjunctions.",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/MM_CON_EPH_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
