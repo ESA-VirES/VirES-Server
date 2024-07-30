@@ -56,6 +56,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 "collection_id": source.identifier,
             }),
             time_variable=source.time_variables[0],
+            essential_variables=source.essential_variables,
             second_time_variable=(
                 source.time_variables[1]
                 if len(source.time_variables) > 1 else None

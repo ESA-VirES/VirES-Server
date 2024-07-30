@@ -10,6 +10,7 @@
         "datasets": {
             "Kp_ap": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -53,6 +54,7 @@
         "datasets": {
             "Dst": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -103,6 +105,7 @@
         "datasets": {
             "MOD": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -112,6 +115,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -119,6 +123,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -126,6 +131,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -158,6 +164,7 @@
         "datasets": {
             "MDR_MAG_LR": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -167,6 +174,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -174,6 +182,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -181,6 +190,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -347,6 +357,7 @@
         "datasets": {
             "MDR_MAG_HR": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -356,6 +367,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF \u2013 Latitude",
@@ -363,6 +375,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF \u2013 Longitude",
@@ -370,6 +383,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF \u2013 Radius",
@@ -481,6 +495,7 @@
         "datasets": {
             "MDR_EFI_LP": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -490,6 +505,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF \u2013 Latitude",
@@ -497,6 +513,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF \u2013 Longitude",
@@ -504,6 +521,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF \u2013 Radius",
@@ -608,6 +626,7 @@
         "datasets": {
             "EFI_IDM": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -791,6 +810,7 @@
         "datasets": {
             "EFI_TIE": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -903,6 +923,7 @@
         "datasets": {
             "EFI_TII_CT": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -912,6 +933,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float32",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF – Latitude",
@@ -919,6 +941,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float32",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF – Longitude",
@@ -926,6 +949,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float32",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF – Radius",
@@ -1137,6 +1161,7 @@
         "datasets": {
             "IBI_TMS": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1146,6 +1171,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic latitude",
@@ -1153,6 +1179,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic longitude",
@@ -1160,6 +1187,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic radius",
@@ -1222,6 +1250,7 @@
         "datasets": {
             "EEF_TMS": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1231,6 +1260,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic longitude of satellite crossing of the magnetic equator",
@@ -1238,6 +1268,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic latitude of satellite crossing of the magnetic equator",
@@ -1287,6 +1318,7 @@
         "datasets": {
             "FAC_TMS": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1296,6 +1328,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF, Latitude",
@@ -1303,6 +1336,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF, Longitude",
@@ -1310,6 +1344,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF, Radius",
@@ -1386,6 +1421,7 @@
         "datasets": {
             "TEC_TMS": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1395,6 +1431,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic latitude",
@@ -1402,6 +1439,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic longitude",
@@ -1409,6 +1447,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic radius",
@@ -1548,6 +1587,7 @@
         "datasets": {
             "IPD_IRR": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1557,6 +1597,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude.",
@@ -1564,6 +1605,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude.",
@@ -1571,6 +1613,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius.",
@@ -1762,6 +1805,7 @@
         "datasets": {
             "AUX_IMF": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "Epoch",
                     "dataType": "timestamp",
@@ -1816,6 +1860,7 @@
         "datasets": {
             "AEJ_LPL": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "t",
                     "dataType": "timestamp",
@@ -1826,6 +1871,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Geocentric latitude",
@@ -1833,6 +1879,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Geocentric longitude",
@@ -1880,6 +1927,7 @@
             },
             "Quality": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "t_qual",
                     "dataType": "timestamp",
@@ -1917,6 +1965,7 @@
         "datasets": {
             "AEJ_PBL": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -1926,6 +1975,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric latitude in ITRF",
@@ -1933,6 +1983,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric longitude in ITRF",
@@ -1996,6 +2047,7 @@
         "datasets": {
             "AEJ_LPS": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "t",
                     "dataType": "timestamp",
@@ -2006,6 +2058,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Geocentric latitude",
@@ -2013,6 +2066,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Geocentric longitude",
@@ -2084,6 +2138,7 @@
             },
             "Quality": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "t_qual",
                     "dataType": "timestamp",
@@ -2121,6 +2176,7 @@
         "datasets": {
             "AEJ_PBS": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -2130,6 +2186,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric latitude in ITRF",
@@ -2137,6 +2194,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric longitude in ITRF",
@@ -2189,6 +2247,7 @@
             },
             "GroundMagneticDisturbance": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "Timestamp_B",
                     "dataType": "timestamp",
@@ -2199,6 +2258,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "source": "Latitude_B",
                     "dataType": "float64",
                     "attributes": {
@@ -2207,6 +2267,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "source": "Longitude_B",
                     "dataType": "float64",
                     "attributes": {
@@ -2237,6 +2298,7 @@
         "datasets": {
             "AOB_FAC": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "t",
                     "dataType": "timestamp",
@@ -2247,6 +2309,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Geocentric latitude",
@@ -2254,6 +2317,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Geocentric longitude",
@@ -2261,6 +2325,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Geocentric radius (from the Earth center)",
@@ -2325,6 +2390,7 @@
         "datasets": {
             "MIT_minimum": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -2342,6 +2408,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric latitude in ITRF",
@@ -2349,6 +2416,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric longitude in ITRF",
@@ -2356,6 +2424,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric radius in ITRF",
@@ -2465,6 +2534,7 @@
             },
             "ID": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "Timestamp_ID",
                     "dataType": "timestamp",
@@ -2484,6 +2554,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "source": "Latitude_ID",
                     "dataType": "float64",
                     "attributes": {
@@ -2492,6 +2563,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "source": "Longitude_ID",
                     "dataType": "float64",
                     "attributes": {
@@ -2500,6 +2572,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "source": "Radius_ID",
                     "dataType": "float64",
                     "attributes": {
@@ -2593,6 +2666,7 @@
         "datasets": {
             "MIT_minimum": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -2610,6 +2684,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric latitude in ITRF",
@@ -2617,6 +2692,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric longitude in ITRF",
@@ -2624,6 +2700,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric radius in ITRF",
@@ -2726,6 +2803,7 @@
             },
             "ID": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "Timestamp_ID",
                     "dataType": "timestamp",
@@ -2745,6 +2823,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "source": "Latitude_ID",
                     "dataType": "float64",
                     "attributes": {
@@ -2753,6 +2832,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "source": "Longitude_ID",
                     "dataType": "float64",
                     "attributes": {
@@ -2761,6 +2841,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "source": "Radius_ID",
                     "dataType": "float64",
                     "attributes": {
@@ -2846,6 +2927,7 @@
         "datasets": {
             "SSFAC_boundary": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -2863,6 +2945,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric latitude in ITRF",
@@ -2870,6 +2953,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric longitude in ITRF",
@@ -2877,6 +2961,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocentric radius in ITRF",
@@ -2951,6 +3036,7 @@
             },
             "ID": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "Timestamp_ID",
                     "dataType": "timestamp",
@@ -2970,6 +3056,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "source": "Latitude_ID",
                     "dataType": "float64",
                     "attributes": {
@@ -2978,6 +3065,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "source": "Longitude_ID",
                     "dataType": "float64",
                     "attributes": {
@@ -2986,6 +3074,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "source": "Radius_ID",
                     "dataType": "float64",
                     "attributes": {
@@ -3059,6 +3148,7 @@
         "datasets": {
             "OMNI_HR_1min": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "Epoch",
                     "dataType": "timestamp",
@@ -3128,6 +3218,7 @@
         "datasets": {
             "__all__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -3144,6 +3235,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -3151,6 +3243,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -3158,6 +3251,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -3191,6 +3285,7 @@
         "datasets": {
             "__all__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -3214,6 +3309,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -3221,6 +3317,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -3228,6 +3325,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -3261,6 +3359,7 @@
         "datasets": {
             "__all__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -3277,6 +3376,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocetric latitude",
@@ -3284,6 +3384,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geocetric longitude",
@@ -3291,6 +3392,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Radius",
@@ -3332,6 +3434,7 @@
             },
             "SecularVariation": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "Timestamp_SV",
                     "dataType": "timestamp",
@@ -3350,6 +3453,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "source": "Latitude_SV",
                     "dataType": "float64",
                     "attributes": {
@@ -3358,6 +3462,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "source": "Longitude_SV",
                     "dataType": "float64",
                     "attributes": {
@@ -3366,6 +3471,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "source": "Radius_SV",
                     "dataType": "float64",
                     "attributes": {
@@ -3415,6 +3521,7 @@
         "datasets": {
             "MDR_MAG": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -3424,6 +3531,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -3431,6 +3539,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -3438,6 +3547,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -3517,6 +3627,7 @@
         "datasets": {
             "MDR_FGM_ACAL": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -3526,6 +3637,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -3533,6 +3645,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -3540,6 +3653,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -3661,6 +3775,7 @@
         "datasets": {
             "MDR_MAG_ACAL_ML": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -3670,6 +3785,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -3677,6 +3793,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -3684,6 +3801,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -3771,6 +3889,7 @@
         "datasets": {
             "MDR_MAG_ACAL": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -3780,6 +3899,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -3787,6 +3907,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -3794,6 +3915,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -3938,6 +4060,7 @@
         "datasets": {
             "MDR_MAG_ACAL_ML": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -3947,6 +4070,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -3954,6 +4078,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -3961,6 +4086,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -4055,6 +4181,7 @@
         "datasets": {
             "MDR_ME_3_MAG": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -4064,6 +4191,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -4071,6 +4199,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -4078,6 +4207,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -4171,6 +4301,7 @@
         "datasets": {
             "MDR_MAG": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "dataType": "timestamp",
                     "dataSubtype": "CDF_EPOCH",
@@ -4180,6 +4311,7 @@
                     }
                 },
                 "Latitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Latitude",
@@ -4187,6 +4319,7 @@
                     }
                 },
                 "Longitude": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Longitude",
@@ -4194,6 +4327,7 @@
                     }
                 },
                 "Radius": {
+                    "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Position in ITRF - Radius",
@@ -4300,6 +4434,7 @@
         "datasets": {
             "__default__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "time",
                     "dataType": "timestamp",
@@ -4375,6 +4510,7 @@
         "datasets": {
             "__default__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "time",
                     "dataType": "timestamp",
@@ -4436,6 +4572,7 @@
         "datasets": {
             "__default__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "time",
                     "dataType": "timestamp",
@@ -4518,6 +4655,7 @@
         "datasets": {
             "__default__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "time",
                     "dataType": "timestamp",
@@ -4600,6 +4738,7 @@
         "datasets": {
             "__default__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "time",
                     "dataType": "timestamp",
@@ -4682,6 +4821,7 @@
         "datasets": {
             "__default__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "time",
                     "dataType": "timestamp",
@@ -4758,6 +4898,7 @@
         "datasets": {
             "__default__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "time",
                     "dataType": "timestamp",
@@ -4834,6 +4975,7 @@
         "datasets": {
             "__default__": {
                 "Timestamp": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "time",
                     "dataType": "timestamp",
@@ -4909,6 +5051,7 @@
         "datasets": {
             "crossover": {
                 "time_1": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "intervalEnd": "time_2",
                     "source": "crossover_time_1",
@@ -4920,6 +5063,7 @@
                     }
                 },
                 "time_2": {
+                    "essentialVariable": true,
                     "intervalStart": "time_1",
                     "source": "crossover_time_2",
                     "dataType": "timestamp",
@@ -4938,6 +5082,7 @@
                     }
                 },
                 "satellite_1": {
+                    "essentialVariable": true,
                     "source": "crossover_satellite_1",
                     "dataType": "char3",
                     "attributes": {
@@ -4946,6 +5091,7 @@
                     }
                 },
                 "satellite_2": {
+                    "essentialVariable": true,
                     "source": "crossover_satellite_2",
                     "dataType": "char3",
                     "attributes": {
@@ -4970,6 +5116,7 @@
                     }
                 },
                 "latitude": {
+                    "essentialVariable": true,
                     "source": "crossover_latitude",
                     "dataType": "float64",
                     "attributes": {
@@ -4978,6 +5125,7 @@
                     }
                 },
                 "longitude": {
+                    "essentialVariable": true,
                     "source": "crossover_longitude",
                     "dataType": "float64",
                     "attributes": {
@@ -5020,6 +5168,7 @@
             },
             "plane_alignment": {
                 "time": {
+                    "essentialVariable": true,
                     "primaryTimestamp": true,
                     "source": "plane_alignment_time",
                     "dataType": "timestamp",
@@ -5030,6 +5179,7 @@
                     }
                 },
                 "satellite_1": {
+                    "essentialVariable": true,
                     "source": "plane_alignment_satellite_1",
                     "dataType": "char3",
                     "attributes": {
@@ -5038,6 +5188,7 @@
                     }
                 },
                 "satellite_2": {
+                    "essentialVariable": true,
                     "source": "plane_alignment_satellite_2",
                     "dataType": "char3",
                     "attributes": {

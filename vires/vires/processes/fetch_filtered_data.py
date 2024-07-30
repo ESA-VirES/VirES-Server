@@ -371,6 +371,7 @@ class FetchFilteredData(WPSProcess):
 
                 # add output variables
                 resolver.add_output_variables(MANDATORY_VARIABLES)
+                resolver.add_output_variables(master.essential_variables)
                 resolver.add_output_variables(requested_variables)
 
                 # reduce dependencies

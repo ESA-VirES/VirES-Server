@@ -241,8 +241,13 @@ class ProductSource:
 
     @cached_property
     def time_variables(self):
-        """ Get dictionary of available variables """
+        """ Get a tuple of time variables. """
         return self.type.get_time_variables(self.dataset_id)
+
+    @cached_property
+    def essential_variables(self):
+        """ Get list of essential variables. """
+        return self.type.get_essential_variables(self.dataset_id)
 
     @cached_property
     def metadata(self):
