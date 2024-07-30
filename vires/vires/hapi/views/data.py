@@ -83,6 +83,7 @@ def data(request):
     )
 
     return get_data_formatter(format_)(
+        request=request,
         datasets=source.subset(start, stop, dataset_def),
         header=(
             get_info_response(collection, dataset_id, dataset_def, options)

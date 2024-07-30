@@ -55,6 +55,13 @@ class TimeSeries():
         raise NotImplementedError
 
     @property
+    def essential_variables(self):
+        """ Variables to always included in the response, although, not
+        technically required by a slave time series or model.
+        """
+        return ["Timestamp"]
+
+    @property
     def required_variables(self):
         """ Get the input dataset variables required by the slave time-series.
         """

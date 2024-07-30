@@ -386,6 +386,7 @@ class FetchData(WPSProcess):
 
                 # add output variables
                 resolver.add_output_variables(MANDATORY_VARIABLES)
+                resolver.add_output_variables(master.essential_variables)
                 resolver.add_output_variables(requested_variables)
 
                 # reduce dependencies
@@ -464,11 +465,13 @@ class FetchData(WPSProcess):
                         )
 
                     # subordinate interpolated datasets
-                    times = dataset[resolver.master.time_variable]
-                    cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
                         dataset.merge(
-                            slave.interpolate(times, variables, {}, cdf_type)
+                            slave.interpolate(
+                                variables=variables,
+                                times=dataset[resolver.master.time_variable],
+                                cdf_type=dataset.cdf_type[resolver.master.time_variable],
+                            )
                         )
 
                     # models

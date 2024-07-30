@@ -45,11 +45,16 @@ class BaseProductTimeSeries(TimeSeries):
             return [self.time_variable, self.second_time_variable]
         return [self.time_variable]
 
+    @property
+    def essential_variables(self):
+        return list(self._essential_variables)
+
     def __init__(self, logger=None, **kwargs):
         super().__init__()
         self.logger = logger or getLogger(__name__)
         self.time_variable = kwargs.get("time_variable")
         self.second_time_variable = kwargs.get("second_time_variable")
+        self._essential_variables = kwargs.get("essential_variables") or []
         self.time_interval_search = self.second_time_variable is not None
         self.time_tolerance = kwargs.get("time_tolerance")
         self.time_overlap = kwargs.get("time_overlap")

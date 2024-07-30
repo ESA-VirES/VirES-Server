@@ -241,6 +241,17 @@ class ProductType(Model):
                 return (variable,)
         return None
 
+    def get_essential_variables(self, dataset_id):
+        """ Extract list of names of variables labelled as essential. """
+        dataset_variables = self.get_dataset_definition(dataset_id)
+        if dataset_variables is None:
+            raise ValueError("Invalid dataset identifier!")
+        variables = []
+        for variable, options in dataset_variables.items():
+            if options.get("essentialVariable", False):
+                variables.append(variable)
+        return variables
+
     def get_hapi_options(self, dataset_id):
         """ Get dataset definition matched by the given identifier. """
         options = self.definition.get('hapiOptions') or {}
