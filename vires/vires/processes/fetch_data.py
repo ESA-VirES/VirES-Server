@@ -464,11 +464,13 @@ class FetchData(WPSProcess):
                         )
 
                     # subordinate interpolated datasets
-                    times = dataset[resolver.master.time_variable]
-                    cdf_type = dataset.cdf_type[resolver.master.time_variable]
                     for slave in resolver.slaves:
                         dataset.merge(
-                            slave.interpolate(times, variables, {}, cdf_type)
+                            slave.interpolate(
+                                variables=variables,
+                                times=dataset[resolver.master.time_variable],
+                                cdf_type=dataset.cdf_type[resolver.master.time_variable],
+                            )
                         )
 
                     # models
