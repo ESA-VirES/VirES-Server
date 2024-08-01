@@ -3620,7 +3620,8 @@
                         "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
                     }
                 ],
-                "magneticModelResiduals": ["B_NEC"]
+                "calculateMagneticFieldIntensity": true,
+                "magneticModelResiduals": ["F", "B_NEC"]
             }
         },
         "_order": 16,
@@ -3768,7 +3769,8 @@
                         "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
                     }
                 ],
-                "magneticModelResiduals": ["B_NEC"]
+                "calculateMagneticFieldIntensity": true,
+                "magneticModelResiduals": ["F", "B_NEC"]
             }
         },
         "_order": 16,
@@ -3882,7 +3884,8 @@
                         "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
                     }
                 ],
-                "magneticModelResiduals": ["B_NEC"]
+                "calculateMagneticFieldIntensity": true,
+                "magneticModelResiduals": ["F", "B_NEC"]
             }
         },
         "_order": 17,
@@ -4053,7 +4056,8 @@
                         "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
                     }
                 ],
-                "magneticModelResiduals": ["B_NEC"]
+                "calculateMagneticFieldIntensity": true,
+                "magneticModelResiduals": ["F", "B_NEC"]
             }
         },
         "_order": 18,
