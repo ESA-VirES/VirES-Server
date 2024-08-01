@@ -120,8 +120,24 @@ def _extend_dataset_definition(dataset_definition, options):
     order = len(dataset_definition)
 
     # resolve magnetic models and residuals
+    calculate_field_intensity = options.get("calculateMagneticFieldIntensity", False)
     magnetic_models = options.get("magneticModels") or []
     residuals = options.get("magneticModelResiduals") or []
+
+    if (
+        calculate_field_intensity and
+        "B_NEC" in dataset_definition and
+        "F" not in dataset_definition
+    ):
+        order += 1
+        dataset_definition["F"] = {
+            "_order": order,
+            "dataType": "float64",
+            "attributes": {
+                "UNITS": "nT",
+                "DESCRIPTION": "Magnetic field intensity calculated from B_NEC",
+            }
+        }
 
     for model in magnetic_models:
         name = model["name"]

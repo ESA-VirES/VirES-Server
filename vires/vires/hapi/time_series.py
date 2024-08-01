@@ -27,7 +27,7 @@
 # pylint: disable=too-few-public-methods
 
 from vires.processes.util import VariableResolver
-from vires.processes.util.models import generate_magnetic_model_sources
+from vires.processes.util.models import generate_magnetic_model_sources, BnecToF
 from vires.processes.util.time_series import (
     ProductTimeSeries, SingleCollectionProductSource,
 )
@@ -61,10 +61,13 @@ class TimeSeries:
             options.get("magneticModels") or []
         )
 
-        self.models = list(generate_magnetic_model_sources(
-            *spacecraft, requested_models, source_models,
-            no_cache=False, master=self.master,
-        ))
+        self.models = [
+            BnecToF(),
+            *generate_magnetic_model_sources(
+                *spacecraft, requested_models, source_models,
+                no_cache=False, master=self.master,
+            ),
+        ]
 
     def subset(self, start, stop, parameters):
         """ Iterate chunks of the extracted data. """
