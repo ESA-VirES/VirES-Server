@@ -39,8 +39,18 @@ __all__ = ['get_colormap', 'list_colormaps']
 BUILT_IN_COLORMAPS = set(colormaps())
 COLORMAP_NAME_MAP = {name.lower(): name for name in colormaps()}
 
+# FIXME: These colormaps are already provided by the recent matplotlib versions
+#        and should be removed from VirES server ...
+EXCLUDED_COLORMAPS = set([
+    "magma", "inferno", "plasma", "viridis", "coolwarm", "rainbow",
+    "twilight", "twilight_shifted",
+])
+
+
 def _register_colormaps(items):
     for name, cmap in items:
+        if name in EXCLUDED_COLORMAPS:
+            continue
         if name not in BUILT_IN_COLORMAPS:
             COLORMAP_NAME_MAP[name.lower()] = name
             colormaps.register(name=name, cmap=cmap, force=True)
