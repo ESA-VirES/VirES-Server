@@ -40,12 +40,12 @@ FIELDS_ALL = (FIELD_TIME,) + OrbitDirectionReader.DATA_FIELDS
 
 INT_CONF_ORBIT_DIRECTION = {
     "OrbitDirection": {
-        'kind': 'zero',
+        'kind': 'previous',
         'dtype': 'int8',
         'nodata': 0,
     },
     "BoundaryType": {
-        'kind': 'zero',
+        'kind': 'previous',
         'dtype': 'int8',
         'nodata': -1,
     },

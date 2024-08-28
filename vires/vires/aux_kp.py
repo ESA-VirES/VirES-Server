@@ -42,7 +42,7 @@ class KpReader(SingleSourceMixIn, MJD2000TimeMixIn, CdfReader):
     """ Kp data reader class. """
     TIME_FIELD = "time"
     DATA_FIELDS = ("kp",)
-    INTERPOLATION_KIND = "zero"
+    INTERPOLATION_KIND = "previous"
 
 
 def update_kp(src_file, dst_file):

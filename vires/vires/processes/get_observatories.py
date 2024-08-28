@@ -175,8 +175,8 @@ class GetObservatories(WPSProcess):
                 code,
                 begin_time,
                 end_time,
-                location.get("longitude") or "",
                 location.get("latitude") or "",
+                location.get("longitude") or "",
                 location.get("radius") or "",
             ), file=output_fobj)
         return CDFileWrapper(output_fobj, **output)

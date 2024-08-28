@@ -25,26 +25,40 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
+
+import warnings
 from os.path import join
 from glob import glob
-from matplotlib.pyplot import colormaps
-from matplotlib.cm import get_cmap, register_cmap
-from matplotlib import cm as matplotlib_colormaps
-import vires.contrib.colormaps as contrib_colormaps
+from matplotlib import colormaps
+from vires.contrib.colormaps import colormaps as contrib_colormaps
 from .loader import load_colormap
 
 __all__ = ['get_colormap', 'list_colormaps']
 
 
+BUILT_IN_COLORMAPS = set(colormaps())
 COLORMAP_NAME_MAP = {name.lower(): name for name in colormaps()}
 
-def _register_cmaps(items):
-    for name, cmap in items:
-        COLORMAP_NAME_MAP[name.lower()] = name
-        register_cmap(name=name, cmap=cmap)
+# FIXME: These colormaps are already provided by the recent matplotlib versions
+#        and should be removed from VirES server ...
+EXCLUDED_COLORMAPS = set([
+    "magma", "inferno", "plasma", "viridis", "coolwarm", "rainbow",
+    "twilight", "twilight_shifted",
+])
 
-_register_cmaps(contrib_colormaps.cmaps.items())
-_register_cmaps(
+
+def _register_colormaps(items):
+    for name, cmap in items:
+        if name in EXCLUDED_COLORMAPS:
+            continue
+        if name not in BUILT_IN_COLORMAPS:
+            COLORMAP_NAME_MAP[name.lower()] = name
+            colormaps.register(name=name, cmap=cmap, force=True)
+        else:
+            warnings.warn(f"Attempt to override matplotlib built-in colormap '{name}'!")
+
+_register_colormaps(contrib_colormaps.items())
+_register_colormaps(
     load_colormap(filename) for filename in glob(join(__path__[0], "*.cm"))
 )
 
@@ -57,6 +71,6 @@ def list_colormaps():
 def get_colormap(name):
     """ Get colormap. """
     try:
-        return get_cmap(COLORMAP_NAME_MAP.get(name.lower(), name))
-    except ValueError:
-        raise ValueError("Invalid colormap %s!" % name) from None
+        return colormaps[COLORMAP_NAME_MAP.get(name.lower(), name)]
+    except KeyError:
+        raise ValueError(f"Invalid colormap {name}!") from None

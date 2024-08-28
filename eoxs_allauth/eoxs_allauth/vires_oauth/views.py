@@ -43,26 +43,20 @@ from allauth.socialaccount.providers.oauth2.views import (
     OAuth2Adapter, OAuth2CallbackView, OAuth2LoginView,
 )
 from allauth.socialaccount.providers.base.constants import AuthProcess
-from .provider import ViresProvider
+from .settings import PROVIDER_ID, PUBLIC_SERVER_URL, DIRECT_SERVER_URL
 
 
 class ViresOAuth2Adapter(OAuth2Adapter):
-    provider_id = ViresProvider.id
-    settings = app_settings.PROVIDERS.get(provider_id, {})
+    provider_id = PROVIDER_ID
+    settings = app_settings.PROVIDERS.get(PROVIDER_ID, {})
 
-    # URL used for browser-to-server connections
-    public_server_url = settings['SERVER_URL'].rstrip('/')
-
-    # URL used for server-to-server connection (must be absolute URI)
-    direct_server_url = settings.get('DIRECT_SERVER_URL', public_server_url).rstrip('/')
-
-    access_token_url = '{0}/token/'.format(direct_server_url)
-    authorize_url = '{0}/authorize/'.format(public_server_url)
-    profile_url = '{0}/user/'.format(direct_server_url)
+    access_token_url = f"{DIRECT_SERVER_URL}/token/"
+    authorize_url = f"{PUBLIC_SERVER_URL}/authorize/"
+    profile_url = f"{DIRECT_SERVER_URL}/user/"
 
     @classmethod
     def read_profile(cls, token):
-        headers = {'Authorization': 'Bearer %s' % token}
+        headers = {"Authorization": f"Bearer {token}"}
         return requests.get(cls.profile_url, headers=headers)
 
     def complete_login(self, request, app, token, **kwargs):

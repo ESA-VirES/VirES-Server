@@ -32,7 +32,7 @@ from logging import getLogger
 from django.dispatch import receiver
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from allauth.exceptions import ImmediateHttpResponse
+from allauth.core.exceptions import ImmediateHttpResponse
 from allauth.socialaccount import providers
 from allauth.account.signals import (
     user_logged_in, user_signed_up, password_set, password_changed,
@@ -175,7 +175,7 @@ def _extract_login_info(social_account):
 
 
 def _extract_user_info(social_account):
-    social_provider = providers.registry.by_id(social_account.provider)
+    social_provider = social_account.get_provider()
     data = social_provider.extract_common_fields(social_account.extra_data)
 
     first_name = data.pop('first_name', None)

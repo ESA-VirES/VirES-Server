@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  VirES OAuth2 provider - "social account" provider class
+#  VirES OAuth2 provider - common settings
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,50 +25,15 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from allauth.socialaccount.providers.base import ProviderAccount
-from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
-from .settings import PROVIDER_ID, PROVIDER_NAME
-from .views import ViresOAuth2Adapter
+from allauth.socialaccount import app_settings
 
+PROVIDER_ID = "vires"
+PROVIDER_NAME = "VirES"
 
-class ViresAccount(ProviderAccount):
+PROVIDER_SETTINGS = app_settings.PROVIDERS.get(PROVIDER_ID, {})
 
-    def get_profile_url(self):
-        return self.account.extra_data.get("html_url")
+# URL used for front-channel connections
+PUBLIC_SERVER_URL = PROVIDER_SETTINGS["SERVER_URL"].rstrip("/")
 
-    def get_avatar_url(self):
-        return self.account.extra_data.get("avatar_url")
-
-    def to_str(self):
-        for key in ["name", "login"]:
-            value = self.account.extra_data.get(key) or None
-            if value:
-                return value
-        return super().to_str()
-
-
-class ViresProvider(OAuth2Provider):
-    id = PROVIDER_ID
-    name = PROVIDER_NAME
-    account_class = ViresAccount
-    oauth2_adapter_class = ViresOAuth2Adapter
-
-    @staticmethod
-    def get_default_scope():
-        return ["read_id"]
-
-    @staticmethod
-    def extract_uid(data):
-        return data["username"]
-
-    @staticmethod
-    def extract_common_fields(data):
-        return {
-            "username": data["username"],
-            "first_name": data.get("first_name"),
-            "last_name": data.get("last_name"),
-            "email": data.get("email"),
-        }
-
-
-provider_classes = [ViresProvider]
+# URL used for back-channel connection (must be absolute URI, defaults to PUBLIC_SERVER_URL)
+DIRECT_SERVER_URL = PROVIDER_SETTINGS.get("DIRECT_SERVER_URL", PUBLIC_SERVER_URL).rstrip("/")
