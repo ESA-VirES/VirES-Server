@@ -354,8 +354,10 @@ class CachedModelExtraction(BaseProductTimeSeries):
     def _get_empty_dataset(self, variables):
         """ Generate an empty dataset. """
         dataset = Dataset()
-        times = self._convert_time(empty((0,), dtype="float64"), None)
-        dataset.set(self.time_variable, times, self.TIMESTAMP_TYPE, {})
+        times, cdf_type = self._convert_time(
+            empty((0,), dtype="float64"), None, self.TIMESTAMP_TYPE
+        )
+        dataset.set(self.time_variable, times, cdf_type, {})
         self._fill_missing_model_variables(
             dataset, set(include(variables, self.models))
         )
