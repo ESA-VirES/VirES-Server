@@ -37,7 +37,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from oauth2_provider.settings import oauth2_settings
 from .altcha import (
-    AltchaError, is_altcha_enabled, verify_solved_altcha_challange,
+    AltchaError, is_altcha_enabled, verify_solved_altcha_challenge,
 )
 
 
@@ -57,7 +57,7 @@ def altcha_verify(view_func):
                 return False
 
             try:
-                return verify_solved_altcha_challange(payload)
+                return verify_solved_altcha_challenge(payload)
             except AltchaError:
                 return False
 

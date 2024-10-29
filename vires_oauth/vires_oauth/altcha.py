@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 #
-#  Altcha challange integration
+#  Altcha challenge integration
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
@@ -62,14 +62,14 @@ def is_altcha_enabled():
     return altcha_settings.get("ENABLED") or False
 
 
-def create_altcha_challange(**options):
+def create_altcha_challenge(**options):
     """ Create Altcha challenge. """
-    return _create_altcha_challange(
+    return _create_altcha_challenge(
         **_get_altcha_challenge_options(**options)
     )
 
 
-def verify_solved_altcha_challange(payload):
+def verify_solved_altcha_challenge(payload):
     """ Verify solved alpha challenge. """
 
     if not _check_challenge(payload["challenge"]):
@@ -87,7 +87,7 @@ def verify_solved_altcha_challange(payload):
     return is_correct
 
 
-def solve_altcha_challange(payload, max_number=None, step=DEFAULT_STEP):
+def solve_altcha_challenge(payload, max_number=None, step=DEFAULT_STEP):
 
     if "maxnumber" in payload:
         max_number = payload["maxnumber"]
@@ -127,11 +127,11 @@ def solve_altcha_challange(payload, max_number=None, step=DEFAULT_STEP):
     return solution
 
 
-def test_altcha_challange(**options):
-    """ Run simple test of the Altcha challange workflow. """
-    challange = create_altcha_challange(**options)
-    solution = solve_altcha_challange(challange)
-    if not verify_solved_altcha_challange(solution):
+def test_altcha_challenge(**options):
+    """ Run simple test of the Altcha challenge workflow. """
+    challenge = create_altcha_challenge(**options)
+    solution = solve_altcha_challenge(challenge)
+    if not verify_solved_altcha_challenge(solution):
         raise AssertionError("Failed to verify the solved challenge!")
 
 
@@ -164,7 +164,7 @@ def _get_altcha_challenge_options(**options):
     }
 
 
-def _create_altcha_challange(include_maxnumber=False, **options):
+def _create_altcha_challenge(include_maxnumber=False, **options):
     challenge = altcha.create_challenge(altcha.ChallengeOptions(**options))
 
     _save_challenge(challenge=challenge.challenge, expires=options["expires"])

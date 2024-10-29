@@ -29,11 +29,11 @@
 import json
 from django.template import Library
 from django.utils.safestring import mark_safe
-from ..altcha import create_altcha_challange
+from ..altcha import create_altcha_challenge
 
 register = Library()
 
 @register.simple_tag
 def altcha_challenge():
     """ Django template tag producing a new Altcha challenge (JSON payload) """
-    return mark_safe(json.dumps(create_altcha_challange()))
+    return mark_safe(json.dumps(create_altcha_challenge()))
