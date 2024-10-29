@@ -29,11 +29,47 @@
 from functools import wraps
 from logging import NOTSET
 from urllib.parse import quote
+import json
+import base64
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from oauth2_provider.settings import oauth2_settings
+from .altcha import (
+    AltchaError, is_altcha_enabled, verify_solved_altcha_challange,
+)
+
+
+def altcha_verify(view_func):
+    """ Verify solved Altcha challenge. """
+
+    def _parse_altcha_payload(raw_payload):
+        return json.loads(base64.b64decode(raw_payload).decode("UTF-8"))
+
+    def _verify_altcha(request):
+
+        if request.method == "POST" and is_altcha_enabled():
+
+            try:
+                payload = _parse_altcha_payload(request.POST["altcha"])
+            except:
+                return False
+
+            try:
+                return verify_solved_altcha_challange(payload)
+            except AltchaError:
+                return False
+
+        return True
+
+    @wraps(view_func)
+    def _wrapper_(request, *args, **kwargs):
+        if _verify_altcha(request):
+            return view_func(request, *args, **kwargs)
+        return HttpResponse('Not authorized!', content_type="text/plain", status=403)
+
+    return _wrapper_
 
 
 def oauth2_protected(*required_scopes):
