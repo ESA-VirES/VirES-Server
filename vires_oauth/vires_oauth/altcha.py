@@ -43,9 +43,11 @@
 #                            See ALTCHA documentation.
 #
 
-import datetime
+from datetime import timedelta
 from django.conf import settings
 import altcha
+from .time_utils import now
+from .models import Challenge
 
 DEFAULT_STEP = 1000000
 
@@ -55,6 +57,7 @@ class AltchaError(ValueError):
 
 
 def is_altcha_enabled():
+    """ Return true if the Altcha challenge is enabled. """
     altcha_settings = _get_altcha_settings()
     return altcha_settings.get("ENABLED") or False
 
@@ -68,9 +71,15 @@ def create_altcha_challange(**options):
 
 def verify_solved_altcha_challange(payload):
     """ Verify solved alpha challenge. """
+
+    if not _check_challenge(payload["challenge"]):
+        return False
+
     is_correct, error = altcha.verify_solution(
         payload, hmac_key=_get_hmac_key(), check_expires=True
     )
+
+    _burn_challenge(payload["challenge"])
 
     if error:
         raise AltchaError(error)
@@ -126,11 +135,6 @@ def test_altcha_challange(**options):
         raise AssertionError("Failed to verify the solved challenge!")
 
 
-def _now():
-    """ Get current date-time. """
-    return datetime.datetime.now(datetime.timezone.utc)
-
-
 def _get_altcha_settings():
     return getattr(settings, "ALTCHA", None) or {}
 
@@ -153,7 +157,7 @@ def _get_altcha_challenge_options(**options):
         "hmac_key": _get_hmac_key(),
         "include_maxnumber": altcha_settings.get("INCLUDE_MAXNUMBER") or False,
         "expires": (
-            _now() + datetime.timedelta(seconds=expiration_period)
+            now() + timedelta(seconds=expiration_period)
             if expiration_period >= 0 else None
         ),
         **options,
@@ -162,6 +166,8 @@ def _get_altcha_challenge_options(**options):
 
 def _create_altcha_challange(include_maxnumber=False, **options):
     challenge = altcha.create_challenge(altcha.ChallengeOptions(**options))
+
+    _save_challenge(challenge=challenge.challenge, expires=options["expires"])
 
     payload = {
         "algorithm": challenge.algorithm,
@@ -174,3 +180,26 @@ def _create_altcha_challange(include_maxnumber=False, **options):
         payload["maxnumber"] = challenge.maxnumber
 
     return payload
+
+
+def _save_challenge(challenge, expires=None):
+    """ Save challenge to DB. """
+    Challenge(challenge=challenge, expires=expires).save()
+
+
+def _check_challenge(challenge):
+    """ Check if challenge is valid. """
+    try:
+        return Challenge.objects.get(challenge=challenge).is_valid
+    except Challenge.DoesNotExist:
+        return False
+
+
+def _burn_challenge(challenge):
+    """ Label the challenge as used. """
+    try:
+        obj = Challenge.objects.get(challenge=challenge)
+        obj.used = True
+        obj.save()
+    except Challenge.DoesNotExist:
+        pass

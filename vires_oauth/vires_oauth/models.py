@@ -28,11 +28,25 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+import datetime
 from django.db.models import (
     CASCADE, Model, ManyToManyField, OneToOneField, CharField, Subquery,
+    BooleanField, DateTimeField,
 )
 from django.contrib.auth.models import User, Group
 from django_countries.fields import CountryField
+from .time_utils import now
+
+
+class Challenge(Model):
+    challenge = CharField(max_length=128, null=False, blank=False, unique=True)
+    used = BooleanField(default=False, null=False, blank=False)
+    expires = DateTimeField(null=True, blank=True)
+    created = DateTimeField(auto_now_add=True)
+
+    @property
+    def is_valid(self):
+        return not self.used and (self.expires is None or self.expires > now())
 
 
 class Permission(Model):
