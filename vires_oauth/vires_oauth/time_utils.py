@@ -42,6 +42,10 @@ RE_ISO_8601_DURATION = re.compile(
 )
 
 
+def now():
+    return datetime.now(utc)
+
+
 def naive_to_utc(dt_obj):
     """ Convert naive `datetime.datetime` to UTC time-zone aware one. """
     if dt_obj.tzinfo is None:

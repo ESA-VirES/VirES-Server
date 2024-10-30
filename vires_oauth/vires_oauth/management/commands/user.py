@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2020 EOX IT Services GmbH
+# Copyright (C) 2020-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@ from ._user.deactivate import DeactivateUserSubcommand
 from ._user.import_ import ImportUserSubcommand
 from ._user.set_group import SetUserGroupSubcommand
 from ._user.unset_group import UnsetUserGroupSubcommand
+from ._user.revoke_tokens import RevokeTokensSubcommand
 
 
 class Command(Supercommand):
@@ -51,5 +52,6 @@ class Command(Supercommand):
             DeactivateUserSubcommand,
             SetUserGroupSubcommand,
             UnsetUserGroupSubcommand,
+            RevokeTokensSubcommand,
         ]
     }

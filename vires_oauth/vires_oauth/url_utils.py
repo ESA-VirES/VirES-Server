@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  User management API
+#  URL utilities
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2021-2024 EOX IT Services GmbH
+# Copyright (C) 2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,44 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from .import_ import save_user
-from .export import serialize_user
-from .tokens import revoke_tokens, remove_tokens
+from django.urls.resolvers import URLResolver, URLPattern
+
+
+def decorate_views(decorator, items):
+    """ Decorate views from URL patterns. """
+    for item in items:
+        item.callback = decorator(item.callback)
+
+
+def name_filter(*names):
+    """ Name filter predicate. """
+    names = set(names)
+    def _name_filter(item):
+        return item.name in names
+    return _name_filter
+
+
+def filter_urls(items, predicate):
+    """ Filter URL patterns by the given predicate. """
+    for item in items:
+        if predicate(item):
+            yield item
+
+
+def iter_ulr_patterns(item):
+    """ Recursively iterate URL resolvers. """
+
+    def _iterate(items):
+        for item in items:
+            yield from iter_ulr_patterns(item)
+
+    if isinstance(item, URLPattern):
+        yield item
+
+    elif isinstance(item, URLResolver):
+        yield from _iterate(item.url_patterns)
+
+    elif isinstance(item, list):
+        yield from _iterate(item)
+    else:
+        raise TypeError(f"Unexpected input type! {type(item)}")

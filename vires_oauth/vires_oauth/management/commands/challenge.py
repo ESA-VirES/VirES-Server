@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  User management API
+# Altcha challenge managment CLI
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2021-2024 EOX IT Services GmbH
+# Copyright (C) 2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-few-public-methods
 
-from .import_ import save_user
-from .export import serialize_user
-from .tokens import revoke_tokens, remove_tokens
+from logging import getLogger
+from ._common import Supercommand
+from ._challenge.clear import ClearChallengeSubcommand
+from ._challenge.stats import GetChallengeStatsSubcommand
+
+
+class Command(Supercommand):
+
+    help = "Altcha challenge management command."
+
+    commands = {
+        command.name: command(getLogger("%s.%s" % (__name__, command.name)))
+        for command in [
+            GetChallengeStatsSubcommand,
+            ClearChallengeSubcommand,
+        ]
+    }

@@ -1,6 +1,12 @@
 {% extends "account/base.html" %}
 {% load i18n %}
+{% load vires_altcha %}
+{% load static %}
 {% block head_title %}{% trans "Signup" %}{% endblock %}
+{% block additional_headers %}
+{{ block.super }}
+{% if altcha_is_enabled %}<script async defer src="{% static 'js/altcha.min.js' %}" type="module"></script>{% endif %}
+{% endblock %}
 {% block content %}
 {% load static %}
   <h2>{% trans "Sign up" %}</h2>
@@ -46,6 +52,7 @@
               and <a style="display:inline;" href="/privacy_notice" target="_blank">VirES Privacy Notice</a>. *
           </label>
       </div>
+      {% if altcha_is_enabled %}<altcha-widget challengejson='{% altcha_challenge %}' floating hidelogo hidefooter ></altcha-widget>{% endif %}
       <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
           <button id="formsubmit" type="submit" class="btn btn-primary" disabled="true">{% trans "Sign up" %} &raquo;</button>
       </div>

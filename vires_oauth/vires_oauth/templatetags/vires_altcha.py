@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-#  User management API
+# Custom Django filters and template tags
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2021-2024 EOX IT Services GmbH
+# Copyright (C) 2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,14 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
-from .import_ import save_user
-from .export import serialize_user
-from .tokens import revoke_tokens, remove_tokens
+import json
+from django.template import Library
+from django.utils.safestring import mark_safe
+from ..altcha import create_altcha_challenge
+
+register = Library()
+
+@register.simple_tag
+def altcha_challenge():
+    """ Django template tag producing a new Altcha challenge (JSON payload) """
+    return mark_safe(json.dumps(create_altcha_challenge()))

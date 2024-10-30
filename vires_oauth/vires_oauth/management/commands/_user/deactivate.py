@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 # pylint: disable=missing-docstring, too-few-public-methods
 
 from django.contrib.auth.models import User
+from vires_oauth.management.api.user import revoke_tokens
 from .common import UserSelectionSubcommandProtected
 
 
@@ -42,5 +43,6 @@ class DeactivateUserSubcommand(UserSelectionSubcommandProtected):
                 user.is_active = False
                 user.save()
                 self.info("user %s deactivated", user.username, log=True)
+                revoke_tokens(user, self)
             else:
                 self.info("user %s is already inactive", user.username)

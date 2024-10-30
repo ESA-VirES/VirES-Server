@@ -26,11 +26,14 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+import json
 from django.conf import settings
+from .altcha import is_altcha_enabled
 
 def vires_oauth(request):
     permissions = getattr(request.user, 'oauth_user_permissions', ())
     return {
+        "altcha_is_enabled": is_altcha_enabled(),
         "vires_apps": [
             app for app in getattr(settings, "VIRES_APPS", []) if (
                 app.get('required_permission') is None
