@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django context processors
+# Altcha challenge management - clear expired and used tokens
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,20 +24,39 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-few-public-methods
 
-import json
-from django.conf import settings
-from .altcha import is_altcha_enabled
+from django.db.models import Q
+from vires_oauth.models import Challenge
+from vires_oauth.time_utils import now
+from .._common import Subcommand, time_spec
 
-def vires_oauth(request):
-    permissions = getattr(request.user, 'oauth_user_permissions', ())
-    return {
-        "altcha_is_enabled": is_altcha_enabled(),
-        "vires_apps": [
-            app for app in getattr(settings, "VIRES_APPS", []) if (
-                app.get('required_permission') is None
-                or app['required_permission'] in permissions
+
+class ClearChallengeSubcommand(Subcommand):
+    name = "clear"
+    help = "Clear stored challenges."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--remove-older-than", type=time_spec, required=False,
+            help="Remove challenges older than the given date."
+        )
+
+    def handle(self, **kwargs):
+        challenges = self.select_challenges(Challenge.objects.all(), **kwargs)
+        challenges.delete()
+
+    def select_challenges(self, query, **kwargs):
+
+        complex_query = (
+            Q(used=True) |
+            Q(expires__isnull=False, expires__lte=now())
+        )
+
+        if kwargs["remove_older_than"]:
+            complex_query = (
+                complex_query |
+                Q(created__lte=kwargs["remove_older_than"])
             )
-        ],
-    }
+
+        return query.filter(complex_query)

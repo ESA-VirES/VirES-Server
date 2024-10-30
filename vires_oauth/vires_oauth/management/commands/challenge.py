@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django context processors
+# Altcha challenge managment CLI
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,20 +24,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-few-public-methods
 
-import json
-from django.conf import settings
-from .altcha import is_altcha_enabled
+from logging import getLogger
+from ._common import Supercommand
+from ._challenge.clear import ClearChallengeSubcommand
+from ._challenge.stats import GetChallengeStatsSubcommand
 
-def vires_oauth(request):
-    permissions = getattr(request.user, 'oauth_user_permissions', ())
-    return {
-        "altcha_is_enabled": is_altcha_enabled(),
-        "vires_apps": [
-            app for app in getattr(settings, "VIRES_APPS", []) if (
-                app.get('required_permission') is None
-                or app['required_permission'] in permissions
-            )
-        ],
+
+class Command(Supercommand):
+
+    help = "Altcha challenge management command."
+
+    commands = {
+        command.name: command(getLogger("%s.%s" % (__name__, command.name)))
+        for command in [
+            GetChallengeStatsSubcommand,
+            ClearChallengeSubcommand,
+        ]
     }
