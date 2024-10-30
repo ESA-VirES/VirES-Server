@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django context processors
+# Altcha challenge management - get statistics
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,20 +24,38 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring, too-few-public-methods
 
-import json
-from django.conf import settings
-from .altcha import is_altcha_enabled
+from django.db.models import Q
+from vires_oauth.models import Challenge
+from vires_oauth.time_utils import now
+from .._common import Subcommand, time_spec
 
-def vires_oauth(request):
-    permissions = getattr(request.user, 'oauth_user_permissions', ())
-    return {
-        "altcha_is_enabled": is_altcha_enabled(),
-        "vires_apps": [
-            app for app in getattr(settings, "VIRES_APPS", []) if (
-                app.get('required_permission') is None
-                or app['required_permission'] in permissions
-            )
-        ],
-    }
+
+class GetChallengeStatsSubcommand(Subcommand):
+    name = "stats"
+    help = "Get challenges statistics."
+
+    def handle(self, **kwargs):
+        del kwargs
+
+        now_ = now()
+
+        total = 0
+        valid = 0
+        expired = 0
+        used = 0
+
+        for item in Challenge.objects.all():
+            total += 1
+            if item.used:
+                used += 1
+            elif item.expires is not None and item.expires <= now_:
+                expired += 1
+            else:
+                valid += 1
+
+        print(f"Valid:    {valid}")
+        print(f"Used:     {used}")
+        print(f"Expired:  {expired}")
+        print(f"Total:    {total}")

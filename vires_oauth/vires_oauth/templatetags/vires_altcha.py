@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
 #
-# Custom Django context processors
+# Custom Django filters and template tags
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,17 +27,13 @@
 # pylint: disable=missing-docstring
 
 import json
-from django.conf import settings
-from .altcha import is_altcha_enabled
+from django.template import Library
+from django.utils.safestring import mark_safe
+from ..altcha import create_altcha_challenge
 
-def vires_oauth(request):
-    permissions = getattr(request.user, 'oauth_user_permissions', ())
-    return {
-        "altcha_is_enabled": is_altcha_enabled(),
-        "vires_apps": [
-            app for app in getattr(settings, "VIRES_APPS", []) if (
-                app.get('required_permission') is None
-                or app['required_permission'] in permissions
-            )
-        ],
-    }
+register = Library()
+
+@register.simple_tag
+def altcha_challenge():
+    """ Django template tag producing a new Altcha challenge (JSON payload) """
+    return mark_safe(json.dumps(create_altcha_challenge()))
