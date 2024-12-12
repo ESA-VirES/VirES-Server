@@ -30,12 +30,25 @@
 from numpy import asarray, prod, empty, broadcast_to, stack, datetime64
 from eoxmagmod import (
     convert, vrotate, GEODETIC_ABOVE_WGS84, GEOCENTRIC_SPHERICAL,
-    mjd2000_to_decimal_year,
+    mjd2000_to_decimal_year, decimal_year_to_mjd2000,
 )
+from eoxmagmod.data import IGRF_LATEST
+from eoxmagmod.magnetic_model.parser_shc import parse_shc_header
 from eoxmagmod.magnetic_model.model import GeomagneticModel
 from pyamps import get_B_space
 
 DT64_2000 = datetime64('2000-01-01', 'ms')
+
+
+def _read_igrf_model_validity():
+    """ Read validity of the actual IGRF model. """
+    with open(IGRF_LATEST, encoding="utf-8") as file:
+        shc_header = parse_shc_header(file)
+    return (
+        float(decimal_year_to_mjd2000(shc_header["validity_start"])),
+        float(decimal_year_to_mjd2000(shc_header["validity_end"]))
+    )
+
 
 def mjd2000_to_dt64ms(mjd2000):
     """ Convert MJD2000 to numpy.datetime64 with millisecond precision. """
@@ -56,7 +69,8 @@ class AmpsMagneticFieldModel(GeomagneticModel):
     DEFAULT_EPOCH = 2015.0
     REFERENCE_HEIGHT = 110.0
 
-    validity = (-36524.0, 9132.0) # (1900.0, 2025.0) IGRF13
+    # AMPS model validity is constrained by validity of the IGRF model
+    validity = _read_igrf_model_validity()
 
     def __init__(self, filename):
         self.filename = filename
