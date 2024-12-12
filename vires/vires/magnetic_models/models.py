@@ -49,7 +49,6 @@ from eoxmagmod import (
 from eoxmagmod.time_util import decimal_year_to_mjd2000
 from eoxmagmod.magnetic_model.parser_shc import parse_shc_header
 from ..amps import AmpsMagneticFieldModel
-from ..util import cached_property
 from .files import (
     ModelFileWithLiteralSource,
     CachedModelFileWithSourceFile,
@@ -111,7 +110,7 @@ def _shc_validity_reader(file_, to_mjd2000):
     if hasattr(file_, 'read'):
         header = parse_shc_header(file_)
     else:
-        with open(file_) as file_in:
+        with open(file_, encoding="utf-8") as file_in:
             header = parse_shc_header(file_in)
     return (
         to_mjd2000(header["validity_start"]), to_mjd2000(header["validity_end"])

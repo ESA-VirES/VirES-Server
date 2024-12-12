@@ -58,7 +58,7 @@ def mjd2000_to_dt64ms(mjd2000):
             + DT64_2000
         )
     except ValueError as error:
-        raise ValueError("%s %r" % (error, mjd2000))
+        raise ValueError(f"{error} {mjd2000!r}") from None
 
 
 class AmpsMagneticFieldModel(GeomagneticModel):
