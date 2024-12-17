@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,7 @@ from .file_format import (
 
 
 def seed_collection(collection, model_names=None, product_filter=None,
-                    force_reseed=False, logger=None):
+                    force_reseed=False, logger=None, executor=None):
     """ Seed cached models for the given collection. """
     logger = logger or getLogger(__name__)
     models = select_models(collection, model_names)
@@ -70,12 +70,48 @@ def seed_collection(collection, model_names=None, product_filter=None,
     cache_dir = get_collection_model_cache_directory(collection.identifier)
     init_directory(cache_dir, logger)
 
-    for product in select_products(collection, product_filter):
-        cache_file = get_product_model_cache_file(cache_dir, product.identifier)
-        _seed_product(
-            product, cache_file, models, options=cache_options,
-            force_reseed=force_reseed, logger=logger
-        )
+    def _list_cache_files():
+        for product in select_products(collection, product_filter):
+            cache_file = get_product_model_cache_file(cache_dir, product.identifier)
+            yield product, cache_file
+
+    def _process_results(items):
+        for _ in items:
+            pass
+
+    def _seed_cache(records):
+        for product, cache_file in records:
+            yield _seed_product(
+                product, cache_file, models, options=cache_options,
+                force_reseed=force_reseed, logger=logger
+            )
+
+    def _seed_cache_with_executor(executor, cache_files):
+
+        def _submit_job(submit, record):
+            product, cache_file = record
+            return submit(
+                _seed_product,
+                product, cache_file, models, options=cache_options,
+                force_reseed=force_reseed, logger=logger
+            )
+
+        def _handle_result(future, record):
+            del record
+            try:
+                return future.result()
+            except Exception as error:
+                logger.exception("Failed to read cache file description! filename=%s", cache_file)
+                return None
+
+        return executor(cache_files, _submit_job, _handle_result)
+
+    cache_files = _list_cache_files()
+    results = (
+        _seed_cache_with_executor(executor, cache_files)
+        if executor else _seed_cache(cache_files)
+    )
+    return _process_results(results)
 
 
 def seed_product(product, model_names=None, force_reseed=False, logger=None):
