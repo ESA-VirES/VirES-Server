@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 
 from logging import getLogger
+from collections import namedtuple
 from vires.cdf_util import cdf_open
 from vires.time_util import mjd2000_to_datetime
 from .common import (
@@ -57,8 +58,22 @@ from .file_format import (
 )
 
 
+ProductInfo = namedtuple("ProductInfo", [
+    "filename", "id", "collection_id", "begin_time", "end_time",
+])
+
+def _get_product_info(product):
+    return ProductInfo(
+        product.get_location(product.collection.type.default_dataset_id),
+        product.identifier,
+        product.collection.identifier,
+        product.begin_time,
+        product.end_time,
+    )
+
+
 def seed_collection(collection, model_names=None, product_filter=None,
-                    force_reseed=False, logger=None):
+                    force_reseed=False, logger=None, executor=None):
     """ Seed cached models for the given collection. """
     logger = logger or getLogger(__name__)
     models = select_models(collection, model_names)
@@ -70,12 +85,47 @@ def seed_collection(collection, model_names=None, product_filter=None,
     cache_dir = get_collection_model_cache_directory(collection.identifier)
     init_directory(cache_dir, logger)
 
-    for product in select_products(collection, product_filter):
-        cache_file = get_product_model_cache_file(cache_dir, product.identifier)
-        _seed_product(
-            product, cache_file, models, options=cache_options,
-            force_reseed=force_reseed, logger=logger
-        )
+    def _list_cache_files():
+        for product in select_products(collection, product_filter):
+            cache_file = get_product_model_cache_file(cache_dir, product.identifier)
+            yield product, cache_file
+
+    def _process_results(items):
+        for _ in items:
+            pass
+
+    def _seed_cache(records):
+        for product, cache_file in records:
+            yield _seed_product(
+                _get_product_info(product), cache_file, models,
+                options=cache_options, force_reseed=force_reseed, logger=logger
+            )
+
+    def _seed_cache_with_executor(executor, cache_files):
+
+        def _submit_job(submit, record):
+            product, cache_file = record
+            return submit(
+                _seed_product, _get_product_info(product), cache_file, models,
+                options=cache_options, force_reseed=force_reseed, logger=logger
+            )
+
+        def _handle_result(future, record):
+            try:
+                return future.result()
+            except Exception:
+                _, cache_file = record
+                logger.exception("Failed to seed model cache file! filename=%s", cache_file)
+                return None
+
+        return executor(cache_files, _submit_job, _handle_result)
+
+    cache_files = _list_cache_files()
+    results = (
+        _seed_cache_with_executor(executor, cache_files)
+        if executor else _seed_cache(cache_files)
+    )
+    _process_results(results)
 
 
 def seed_product(product, model_names=None, force_reseed=False, logger=None):
@@ -92,12 +142,12 @@ def seed_product(product, model_names=None, force_reseed=False, logger=None):
 
     cache_file = get_product_model_cache_file(cache_dir, product.identifier)
     _seed_product(
-        product, cache_file, models, options=cache_options,
-        force_reseed=force_reseed, logger=logger,
+        _get_product_info(product), cache_file, models,
+        options=cache_options, force_reseed=force_reseed, logger=logger,
     )
 
 
-def _seed_product(product, cache_file, models, options, force_reseed, logger):
+def _seed_product(product_info, cache_file, models, options, force_reseed, logger):
     """ Seed magnetic model cache for one product. """
 
     tmp_cache_file = get_temp_cache_file(cache_file)
@@ -116,7 +166,7 @@ def _seed_product(product, cache_file, models, options, force_reseed, logger):
     def _is_obsolete(model):
         return (
             cache_description[model.name] !=
-            _extract_model_sources(model, product)
+            _extract_model_sources(model, product_info)
         )
 
     seeded_models = models if force_reseed else [
@@ -129,11 +179,11 @@ def _seed_product(product, cache_file, models, options, force_reseed, logger):
 
     try:
         if create_new_cache_file:
-            init_cache_file(cache_file, product, logger)
+            init_cache_file(cache_file, product_info, logger)
 
         copy_file(cache_file, tmp_cache_file)
 
-        _seed_models(product, tmp_cache_file, seeded_models, options, logger)
+        _seed_models(product_info, tmp_cache_file, seeded_models, options, logger)
 
         rename_file(tmp_cache_file, cache_file)
 
@@ -141,17 +191,13 @@ def _seed_product(product, cache_file, models, options, force_reseed, logger):
         remove_file(tmp_cache_file)
 
 
-def _seed_models(product, cache_file, models, options, logger):
-
-    product_file = product.get_location(
-        product.collection.type.default_dataset_id
-    )
+def _seed_models(product_info, cache_file, models, options, logger):
 
     with cdf_open(cache_file, "w") as cdf:
 
         save_options(cdf, options)
 
-        copy_missing_variables(cdf, product_file)
+        copy_missing_variables(cdf, product_info.filename)
 
         data = read_times_and_locations_data(cdf)
 
@@ -159,9 +205,7 @@ def _seed_models(product, cache_file, models, options, logger):
             _seed_model(cdf, model, data, options)
             logger.info(
                 "Seeded magnetic model cache for %s/%s/%s",
-                product.collection.identifier,
-                product.identifier,
-                model.name,
+                product_info.collection_id, product_info.id, model.name,
             )
 
 
@@ -203,11 +247,11 @@ def _update_attributes(cdf, model_name, model, data):
     append_log_record(cdf, f"seeding {model_name} from {formatted_sources}")
 
 
-def _extract_model_sources(db_model, product):
+def _extract_model_sources(db_model, product_info):
     return set(
         extract_model_sources_datetime(
             parse_source_model(db_model.expression),
-            product.begin_time,
-            product.end_time,
+            product_info.begin_time,
+            product_info.end_time,
         )
     )
