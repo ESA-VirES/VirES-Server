@@ -97,11 +97,11 @@ def seed_collection(collection, model_names=None, product_filter=None,
             )
 
         def _handle_result(future, record):
-            del record
             try:
                 return future.result()
-            except Exception as error:
-                logger.exception("Failed to read cache file description! filename=%s", cache_file)
+            except Exception:
+                _, cache_file = record
+                logger.exception("Failed to seed model cache file! filename=%s", cache_file)
                 return None
 
         return executor(cache_files, _submit_job, _handle_result)
@@ -111,7 +111,7 @@ def seed_collection(collection, model_names=None, product_filter=None,
         _seed_cache_with_executor(executor, cache_files)
         if executor else _seed_cache(cache_files)
     )
-    return _process_results(results)
+    _process_results(results)
 
 
 def seed_product(product, model_names=None, force_reseed=False, logger=None):

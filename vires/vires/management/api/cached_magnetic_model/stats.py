@@ -150,7 +150,7 @@ def collect_collection_cache_stats(collection, model_names=None, logger=None,
             product, cache_file = record
             try:
                 return product, *future.result()
-            except Exception as error:
+            except Exception:
                 logger.exception("Failed to read cache file description! filename=%s", cache_file)
                 return product, None, True
 
