@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@
 
 from django.core.management.base import CommandError
 from vires.models import CachedMagneticModel, ProductCollection
+from vires.util_multiprocessing import N_CPU, MultiProcessStreamExecutor
 from ...api.cached_magnetic_model import (
    get_model_cache_read_only_flag,
    flush_collection_loose_files,
@@ -57,6 +58,16 @@ class FlushCachedMagneticModelsSubcommand(CachedMagneticModelsProtectedSubcomman
             "-r", "--remove-empty", dest="remove_empty", action="store_true",
             default=False, help="Remove empty cache files.",
         )
+        parser.add_argument(
+            "-n", "--number-of-worker-processes",
+            type=int,
+            dest="n_proc",
+            default=N_CPU,
+            help=(
+                "Number of worker processes. Defaults to the actual number of "
+                f"CPU cores ({N_CPU})."
+            ),
+        )
 
     def handle(self, **kwargs):
 
@@ -80,6 +91,12 @@ class FlushCachedMagneticModelsSubcommand(CachedMagneticModelsProtectedSubcomman
 
         product_filter = ProductFilter.create_product_filter(**kwargs)
 
+        n_workers = max(1, kwargs["n_proc"])
+
+        executor = (
+            MultiProcessStreamExecutor(n_workers) if n_workers > 1 else None
+        )
+
         for collection in collections:
             flush_collection_loose_files(
                 collection=collection,
@@ -95,4 +112,5 @@ class FlushCachedMagneticModelsSubcommand(CachedMagneticModelsProtectedSubcomman
                     not kwargs["name"] and kwargs["select_all"]
                 ),
                 logger=self.logger,
+                executor=executor,
             )

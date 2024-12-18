@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 # pylint: disable=missing-docstring
 
 from vires.models import CachedMagneticModel, ProductCollection
+from vires.util_multiprocessing import N_CPU, MultiProcessStreamExecutor
 from ...api.cached_magnetic_model import collect_collection_cache_stats
 from .common import CachedMagneticModelsSubcommand
 
@@ -39,6 +40,16 @@ class StatsCachedMagneticModelsSubcommand(CachedMagneticModelsSubcommand):
 
     def add_arguments(self, parser):
         self._add_collection_selection_arguments(parser)
+        parser.add_argument(
+            "-n", "--number-of-worker-processes",
+            type=int,
+            dest="n_proc",
+            default=N_CPU,
+            help=(
+                "Number of worker processes. Defaults to the actual number of "
+                f"CPU cores ({N_CPU})."
+            ),
+        )
 
     def handle(self, **kwargs):
         models = self.select_collections(
@@ -54,6 +65,12 @@ class StatsCachedMagneticModelsSubcommand(CachedMagneticModelsSubcommand):
 
         model_names = set(models.values_list("name", flat=True))
 
+        n_workers = max(1, kwargs["n_proc"])
+
+        executor = (
+            MultiProcessStreamExecutor(n_workers) if n_workers > 1 else None
+        )
+
         for collection in collections:
             self.print_collection_stats(
                 collection,
@@ -61,6 +78,7 @@ class StatsCachedMagneticModelsSubcommand(CachedMagneticModelsSubcommand):
                     collection=collection,
                     model_names=model_names,
                     logger=self.logger,
+                    executor=executor,
                 )
             )
 
