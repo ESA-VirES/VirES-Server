@@ -64,7 +64,7 @@ class CustomDatasetTimeSeries(BaseProductTimeSeries):
             logger=self._LoggerAdapter(logger or getLogger(__name__), {
                 "username": user.username if user else "<anonymous-user>"
             }),
-            time_variable=params.TIME_VARIABLE,
+            time_variable=self.TIME_VARIABLE,
             time_tolerance=params.TIME_TOLERANCE,
             time_overlap=params.TIME_OVERLAP,
             time_gap_threshold=params.TIME_GAP_THRESHOLD,
