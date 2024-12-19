@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -113,14 +113,18 @@ class CachedMagneticModelsProtectedSubcommand(CachedMagneticModelsSubcommand):
             "-a", "--all", dest="select_all", action="store_true", default=False,
             help="Select all models."
         )
+        parser.add_argument(
+            "--none", dest="select_none", action="store_true", default=False,
+            help="Select all models."
+        )
 
     def _select_models_by_name(self, query, **kwargs):
         names = set(kwargs["name"])
         if names or not kwargs["select_all"]:
             query = query.filter(name__in=names)
-            if not names:
+            if not names and not kwargs["select_none"]:
                 self.warning(
-                    "No model identifier selected and no will be taken. "
+                    "No model identifier selected and none will be taken. "
                     "Use the --all option to select all models."
                 )
         return query

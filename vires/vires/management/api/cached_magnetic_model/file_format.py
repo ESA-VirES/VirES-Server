@@ -86,12 +86,12 @@ def read_model_cache_description(cache_file, logger):
     return None, True
 
 
-def init_cache_file(cache_file, product, logger):
+def init_cache_file(cache_file, product_info, logger):
     """ Initialize new cache file. """
     logger.info("Creating cache file %s", cache_file)
     with cdf_open(cache_file, "w", backward_compatible=False) as cdf:
-        cdf.attrs["TITLE"] = product.identifier
-        cdf.attrs["COLLECTION"] = product.collection.identifier
+        cdf.attrs["TITLE"] = product_info.id
+        cdf.attrs["COLLECTION"] = product_info.collection_id
         cdf.attrs.new("MODEL_SOURCES")
         cdf.attrs.new("SOURCE_TIME_RANGES")
         cdf.attrs["CHANGELOG"] = f"{cdf.attrs['CREATED']} file created"

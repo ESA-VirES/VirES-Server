@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2024 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ from .common import (
     list_cache_files,
     get_temp_cache_file,
 )
-from .seed import _extract_model_sources
+from .seed import _extract_model_sources, _get_product_info
 from .file_format import (
     remove_cache_file,
     read_model_cache_description,
@@ -76,7 +76,7 @@ def flush_collection_loose_files(collection, logger=None):
 
 def flush_collection(collection, model_names=None, product_filter=None,
                      force_flush=False, remove_empty_files=False,
-                     flush_nonlisted_models=False, logger=None):
+                     flush_nonlisted_models=False, logger=None, executor=None):
     """ Flush cached models for the given collection. """
     logger = logger or getLogger(__name__)
     models = select_models(collection, model_names)
@@ -85,20 +85,56 @@ def flush_collection(collection, model_names=None, product_filter=None,
     cache_dir = get_collection_model_cache_directory(collection.identifier)
     init_directory(cache_dir, logger)
 
-    for product in select_products(collection, product_filter):
-        cache_file = get_product_model_cache_file(cache_dir, product.identifier)
+    def _list_cache_files():
+        for product in select_products(collection, product_filter):
+            cache_file = get_product_model_cache_file(cache_dir, product.identifier)
+            yield product, cache_file
 
-        _flush_product(
-            product, cache_file, models,
-            options=cache_options,
-            force_flush=force_flush,
-            flush_nonlisted_models=flush_nonlisted_models,
-            remove_empty_file=remove_empty_files,
-            logger=logger
-        )
+    def _process_results(items):
+        for _ in items:
+            pass
+
+    def _flush_cache(records):
+        for product, cache_file in records:
+            yield _flush_product(
+                _get_product_info(product), cache_file, models,
+                options=cache_options,
+                force_flush=force_flush,
+                flush_nonlisted_models=flush_nonlisted_models,
+                remove_empty_file=remove_empty_files,
+                logger=logger
+            )
+
+    def _flush_cache_with_executor(executor, cache_files):
+
+        def _submit_job(submit, record):
+            product, cache_file = record
+            return submit(
+                _flush_product, _get_product_info(product), cache_file, models,
+                options=cache_options, force_flush=force_flush,
+                flush_nonlisted_models=flush_nonlisted_models,
+                remove_empty_file=remove_empty_files, logger=logger
+            )
+
+        def _handle_result(future, record):
+            try:
+                return future.result()
+            except Exception:
+                _, cache_file = record
+                logger.exception("Failed to flush model cache file! filename=%s", cache_file)
+                return None
+
+        return executor(cache_files, _submit_job, _handle_result)
+
+    cache_files = _list_cache_files()
+    results = (
+        _flush_cache_with_executor(executor, cache_files)
+        if executor else _flush_cache(cache_files)
+    )
+    _process_results(results)
 
 
-def _flush_product(product, cache_file, models, options, force_flush,
+def _flush_product(product_info, cache_file, models, options, force_flush,
                   remove_empty_file, flush_nonlisted_models, logger):
     """ Flush magnetic model cache for one product. """
     del options
@@ -112,7 +148,7 @@ def _flush_product(product, cache_file, models, options, force_flush,
         return
 
     flushed_model_names, retained_model_names = _get_listed_and_retained_models(
-        product, cache_description, models, force_flush, flush_nonlisted_models
+        product_info, cache_description, models, force_flush, flush_nonlisted_models
     )
 
     if remove_empty_file and not retained_model_names:
@@ -125,7 +161,7 @@ def _flush_product(product, cache_file, models, options, force_flush,
     try:
         copy_file(cache_file, tmp_cache_file)
 
-        _flush_models(product, tmp_cache_file, flushed_model_names, logger)
+        _flush_models(product_info, tmp_cache_file, flushed_model_names, logger)
 
         rename_file(tmp_cache_file, cache_file)
 
@@ -133,14 +169,14 @@ def _flush_product(product, cache_file, models, options, force_flush,
         remove_file(tmp_cache_file)
 
 
-def _flush_models(product, cache_file, model_names, logger):
+def _flush_models(product_info, cache_file, model_names, logger):
     with cdf_open(cache_file, "w") as cdf:
         for model_name in model_names:
             _flush_model(cdf, model_name)
             logger.info(
                 "Flushed magnetic model cache for %s/%s/%s",
-                product.collection.identifier,
-                product.identifier,
+                product_info.collection_id,
+                product_info.id,
                 model_name,
             )
 
@@ -161,7 +197,7 @@ def _update_attributes(cdf, model_name):
     append_log_record(cdf, f"flushing {model_name}")
 
 
-def _get_listed_and_retained_models(product, cache_description, models,
+def _get_listed_and_retained_models(product_info, cache_description, models,
                                     force_flush, flush_nonlisted_models):
     def _is_seeded(model):
         return model.name in cache_description
@@ -169,7 +205,7 @@ def _get_listed_and_retained_models(product, cache_description, models,
     def _is_obsolete(model):
         return (
             cache_description[model.name] !=
-            _extract_model_sources(model, product)
+            _extract_model_sources(model, product_info)
         )
 
     if force_flush:
