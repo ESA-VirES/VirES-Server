@@ -33,7 +33,7 @@ RE_SUBTRACTED_VARIABLE = re.compile(r'(.+)_(?:res|diff)([ABC])([ABC])')
 
 def parse_variables(input_id, variables_strings):
     """ Variable parsers.  """
-    variables_strings = str(variables_strings.strip())
+    variables_strings = (variables_strings or '').strip()
     return [
         var.strip() for var in variables_strings.split(',')
     ] if variables_strings else []
