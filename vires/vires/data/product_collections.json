@@ -494,6 +494,7 @@
         "description": "Swarm A fast track field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "A",
         "grade": "FAST"
     },
@@ -502,6 +503,7 @@
         "description": "Swarm B fast track field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "B",
         "grade": "FAST"
     },
@@ -510,6 +512,7 @@
         "description": "Swarm C fast track field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
         "nominalSampling": "PT1S",
+        "mission": "Swarm",
         "spacecraft": "C",
         "grade": "FAST"
     },
