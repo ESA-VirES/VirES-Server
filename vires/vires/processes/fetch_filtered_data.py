@@ -62,6 +62,7 @@ from vires.processes.util import (
     parse_collections, parse_model_list, parse_variables, parse_filters,
     VariableResolver, group_subtracted_variables, get_subtracted_variables,
     extract_product_names, get_time_limit, get_orbit_sources,
+    build_response_basename,
 )
 from vires.processes.util.time_series import (
     get_product_time_series,
@@ -490,13 +491,19 @@ class FetchFilteredData(WPSProcess):
 
         # get configurations
         temp_basename = join(workspace_dir, "vires_" + uuid4().hex)
-        result_basename = "%s_%s_%s_Filtered" % (
-            "_".join(
-                s.collection_identifier.replace(":", "-")
-                for l in sources.values() for s in l
+        result_basename = build_response_basename(
+            template=(
+                "{collection_ids}_{start_time:%Y%m%dT%H%M%S}_"
+                "{end_time:%Y%m%dT%H%M%S}_Filtered"
             ),
-            begin_time.strftime("%Y%m%dT%H%M%S"),
-            (end_time - TIME_PRECISION).strftime("%Y%m%dT%H%M%S"),
+            collection_ids=[
+                s.collection_identifier for l in sources.values() for s in l
+            ],
+            start_time=begin_time,
+            end_time=(end_time - TIME_PRECISION),
+            max_size=225,
+            prefix_size=2,
+            suffix_size=40,
         )
 
         if output["mime_type"] == "text/csv":
