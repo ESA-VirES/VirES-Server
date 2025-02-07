@@ -27,9 +27,12 @@
 
 import csv
 from os import PathLike
+from operator import itemgetter
 from numpy import array, datetime64
 from .exceptions import InvalidFileFormat
 
+
+DEF_TYPE_PARSERS = [int, float] # further extended below
 
 TYPE_TO_STR = {
     str: 'string',
@@ -39,12 +42,16 @@ TYPE_TO_STR = {
 }
 
 
-def read_csv_data(path):
+def read_csv_data(path, fields=None, type_parsers=None):
     """ Read data from a VirES compatible CSV file and get a dictionary
     of arrays.
     """
     def _read_csv_data(file_):
-        return records_to_list(parse_record_values(read_csv_file(file_)))
+        records = read_csv_file(file_)
+        if fields is not None:
+            records = extract_fields(records, fields)
+        records = parse_record_values(records, type_parsers=type_parsers)
+        return records_to_list(records)
 
     try:
         if isinstance(path, (str, PathLike)):
@@ -81,7 +88,7 @@ def read_csv_file(file_):
         yield record
 
 
-def parse_record_values(records):
+def parse_record_values(records, type_parsers=None):
     """ Parse the raw string records values. """
     try:
         header = next(records)
@@ -92,14 +99,14 @@ def parse_record_values(records):
     parsers = [None] * len(header)
     for record in records:
         temp = [
-            parse_value(value, parser)
+            parse_value(value, parser, type_parsers)
             for parser, value in zip(parsers, record)
         ]
         parsers = [parser for _, parser in temp]
         yield [value for value, _ in temp]
 
 
-def parse_value(value, type_parser=None):
+def parse_value(value, type_parser=None, type_parsers=None):
     """ Parse single value and return the used parser. """
     if type_parser:
         try:
@@ -107,7 +114,7 @@ def parse_value(value, type_parser=None):
         except (ValueError, TypeError):
             pass
 
-    for type_parser_ in TYPE_PARSERS:
+    for type_parser_ in (type_parsers or DEF_TYPE_PARSERS):
         try:
             return type_parser_(value), type_parser_
         except (ValueError, TypeError):
@@ -146,6 +153,27 @@ def records_to_list(records):
     return dict(zip(header, data))
 
 
+def extract_fields(records, fields):
+    """ Extract subset of the original fields containing only the requested
+    fields.
+    """
+    try:
+        header = next(records)
+    except StopIteration:
+        return
+
+    field_to_index = {key: idx for idx, key in enumerate(header)}
+
+    getter = itemgetter(*[
+        field_to_index[key] for key in fields if key in field_to_index
+    ])
+
+    yield getter(header)
+
+    for record in records:
+        yield getter(record)
+
+
 def replace_str_with_nodata(values, nodata):
     """ Replace strings with the given no-data value. """
     return [nodata if isinstance(value, str) else value for value in values]
@@ -158,6 +186,8 @@ def parse_datetime(value):
     if value:
         return datetime64(value[:-1] if value[-1:] == "Z" else value, 'ms')
     raise ValueError("Not a datetime string")
+
+DEF_TYPE_PARSERS.append(parse_datetime)
 
 
 def parse_csv_array(value, start="{", end="}", delimiter=";"):
@@ -197,5 +227,4 @@ def parse_csv_array(value, start="{", end="}", delimiter=";"):
     _, data = _parse_array(value[1:])
     return data
 
-
-TYPE_PARSERS = [int, float, parse_csv_array, parse_datetime]
+DEF_TYPE_PARSERS.append(parse_csv_array)
