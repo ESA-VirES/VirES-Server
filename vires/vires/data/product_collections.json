@@ -458,6 +458,36 @@
         "groupSamples": true
     },
     {
+        "name": "SW_FAST_TECATMS_2F",
+        "description": "Swarm A fast track ionospheric total electron content",
+        "productType": "SW_TECxTMS_2F",
+        "nominalSampling": "PT1S",
+        "mission": "Swarm",
+        "spacecraft": "A",
+        "grade": "FAST",
+        "groupSamples": true
+    },
+    {
+        "name": "SW_FAST_TECBTMS_2F",
+        "description": "Swarm B fast track ionospheric total electron content",
+        "productType": "SW_TECxTMS_2F",
+        "nominalSampling": "PT1S",
+        "mission": "Swarm",
+        "spacecraft": "B",
+        "grade": "FAST",
+        "groupSamples": true
+    },
+    {
+        "name": "SW_FAST_TECCTMS_2F",
+        "description": "Swarm C fast track ionospheric total electron content",
+        "productType": "SW_TECxTMS_2F",
+        "nominalSampling": "PT1S",
+        "mission": "Swarm",
+        "spacecraft": "C",
+        "grade": "FAST",
+        "groupSamples": true
+    },
+    {
         "name": "SW_OPER_FACATMS_2F",
         "description": "Swarm A field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
