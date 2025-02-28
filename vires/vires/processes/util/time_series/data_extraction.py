@@ -140,7 +140,7 @@ class CDFDataset:
             )
 
         if max_record_duration is None:
-            raise ValueError("Missing mandatory max. record")
+            raise ValueError("Missing mandatory maximum record duration.")
 
         # empty dataset
         if start_times.size == 0:
