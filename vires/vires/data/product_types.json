@@ -3142,6 +3142,1644 @@
         }
     },
     {
+        "name": "SW_ULFxMAG_2F",
+        "description": "Swarm Ultra Low Frequency (ULF) wave characterisation from low resolution vector magnetometer data",
+        "resourceUrl": "https://earth.esa.int/eogateway/activities/swarm-ulf-ionosphere",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 40,
+        "fileType": "CDF-with-timespan-attribute",
+        "defaultDataset": "__main__",
+        "datasets": {
+            "__main__": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-",
+                        "FORMAT": " "
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric radius",
+                        "UNITS": "m",
+                        "FORMAT": "F8.0"
+                    }
+                },
+                "Latitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude_QD": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "UT": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Universal Time",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic local time",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "SZA": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Frequency_dominant": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Dominant frequency",
+                        "UNITS": "mhz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Halfwidth": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Spectral width of the peak",
+                        "UNITS": "mhz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Power": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Peak power",
+                        "UNITS": "log(nT^2)",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Prominence": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Peak prominence",
+                        "UNITS": "-",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Pc2_act": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rms of the fluctuations in the Pc2 band",
+                        "UNITS": "pT",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Pc3_act": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rms of the fluctuations in the Pc3 band",
+                        "UNITS": "pT",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Pc4_act": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rms of the fluctuations in the Pc4 band",
+                        "UNITS": "pT",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Pi2_act": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rms of the fluctuations in the Pi2 band",
+                        "UNITS": "pT",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Flag_Pc2": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flag indicating the presence of Pc2 waves",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Flag_Pc3": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flag indicating the presence of Pc3 waves",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Flag_Pc4": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flag indicating the presence of Pc4 waves",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Flag_Pi2": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flag indicating the presence of Pi2 waves",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Flag_EPB": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flag indicating significant EPB activity",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Flag_FAC": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flag indicating intense FAC activity",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                }
+            },
+            "event": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "source": "Timestamp_e",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation ffor ID event points, UTC",
+                        "UNITS": "-",
+                        "FORMAT": " "
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "source": "Latitude_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude for ID event points",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "source": "Longitude_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude for ID event points",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "source": "Radius_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric radius for ID event points",
+                        "UNITS": "m",
+                        "FORMAT": "F8.0"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole latitude for ID event points",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Quasi-dipole longitude for ID event points",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic Local Time for ID event points",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle for ID event points",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ID": {
+                    "source": "ID_e",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Event identifier",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "ORB": {
+                    "source": "ORB_e",
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit number for ID event points",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "DIR": {
+                    "source": "DIR_e",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Flight direction for ID event points",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Frequency": {
+                    "source": "Frequency_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous frequency for ID event points",
+                        "UNITS": "mHz",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Halfwidth": {
+                    "source": "Halfwidth_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous spectral peak half width for ID event points",
+                        "UNITS": "mHz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Power": {
+                    "source": "Power_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous  power for ID event points",
+                        "UNITS": "log(nT^2)",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Prominence": {
+                    "source": "Prominence_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous prominence for ID event points",
+                        "UNITS": "-",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "EPB": {
+                    "source": "EPB_e",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous plasma bubble indicator for ID event points",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "FAC": {
+                    "source": "FAC_e",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous rms FAC intensity for ID event points",
+                        "UNITS": "uA/m^2",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Flag_B": {
+                    "source": "Flag_B_e",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous Flag B from MAGx_LR L1b product",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Quality": {
+                    "source": "Quality_e",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous Quality for ID event points",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                }
+            },
+            "event_mean": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "source": "Timestamp_m",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean time of observation, UTC",
+                        "UNITS": "-",
+                        "FORMAT": " "
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "source": "Latitude_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean position in ITRF - Geocentric latitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "source": "Longitude_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean position in ITRF - Geocentric longitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "source": "Radius_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean position in ITRF - Geocentric radius",
+                        "UNITS": "m",
+                        "FORMAT": "F8.0"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean quasi-dipole latitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean quasi-dipole longitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean magnetic local time",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean solar zenith angle",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ID": {
+                    "source": "ID_m",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Event identifier for event mean properties",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "ORB": {
+                    "source": "ORB_m",
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit number for event mean properties",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "DIR": {
+                    "source": "DIR_m",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Flight direction for event mean properties",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Duration": {
+                    "source": "Duration_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event duration",
+                        "UNITS": "s",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Frequency": {
+                    "source": "Frequency_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean ULF frequency",
+                        "UNITS": "mHz",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Freq_std": {
+                    "source": "Freq_std_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Standard deviation of the spectral peak",
+                        "UNITS": "mHz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Halfwidth": {
+                    "source": "Halfwidth_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean spectral peak half width",
+                        "UNITS": "mHz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Power": {
+                    "source": "Power_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean power",
+                        "UNITS": "log(nT^2)",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Prominence": {
+                    "source": "Prominence_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event mean prominence",
+                        "UNITS": "-",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "EPB": {
+                    "source": "EPB_m",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Event peak plasma bubble indicator",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "FAC": {
+                    "source": "FAC_m",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Event peak rms FAC intensity",
+                        "UNITS": "uA/m^2",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Flag_B": {
+                    "source": "Flag_B_m",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Event maximum Flag B from MAGx_LR L1b product",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Quality": {
+                    "source": "Quality_m",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Overall event quality",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_PC1xMAG_2F",
+        "description": "Swarm Pc1 wave characterisation from high resolution vector magnetometer data",
+        "resourceUrl": "https://earth.esa.int/eogateway/activities/swarm-ulf-ionosphere",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 41,
+        "fileType": "CDF-with-timespan-attribute",
+        "datasets": {
+            "Bp_event": {
+                "ID": {
+                    "essentialVariable": true,
+                    "source": "ID_Bp",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Bp component event identifier",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "source": "Timestamp_Bp",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation for the Bp component ID event, UTC",
+                        "UNITS": "-",
+                        "FORMAT": " "
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "source": "Latitude_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "source": "Longitude_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "source": "Radius_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric radius (from the Earth centre) for the Bp component ID event",
+                        "UNITS": "m",
+                        "FORMAT": "F8.0"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "QD latitude for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "QD longitude for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic Local Time for the Bp component ID event",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ORB": {
+                    "source": "ORB_Bp",
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit number for the Bp component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "DIR": {
+                    "source": "DIR_Bp",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Flight direction for the Bp component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Frequency": {
+                    "source": "Frequency_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous frequency for the Bp component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Halfwidth": {
+                    "source": "Halfwidth_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous spectral peak half width for the Bp component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Power": {
+                    "source": "Power_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous  power for the Bp component ID event",
+                        "UNITS": "nT^2/Hz",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Prominence": {
+                    "source": "Prominence_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous prominence for the Bp component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Quality_B": {
+                    "source": "Quality_B_Bp",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous MAGxHR quality for the Bp component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Quality_p": {
+                    "source": "Quality_p_Bp",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous peak quality for the Bp component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Quality_n": {
+                    "source": "Quality_n_Bp",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous noise quality for the Bp component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                }
+            },
+            "Bp_event_mean": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "source": "Timestamp_m_Bp",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Mean time of observation for the Bp component ID event, UTC",
+                        "UNITS": "-",
+                        "FORMAT": " "
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "source": "Latitude_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean position in ITRF - Geocentric latitude for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "source": "Longitude_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean position in ITRF - Geocentric longitude for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "source": "Radius_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean position in ITRF - Geocentric radius (from the Earth centre) for the Bp component ID event",
+                        "UNITS": "m",
+                        "FORMAT": "F8.0"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean QD latitude for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean QD longitude for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean Magnetic Local Time for the Bp component ID event",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean Solar zenith angle for the Bp component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ID": {
+                    "source": "ID_m_Bp",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Bp component event identifier for event mean properties",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "ORB": {
+                    "source": "ORB_m_Bp",
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit number for the Bp component ID event (mean properties)",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "DIR": {
+                    "source": "DIR_m_Bp",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Flight direction for the Bp component ID event (mean properties)",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Duration": {
+                    "source": "Duration_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Duration of the Bp component ID event",
+                        "UNITS": "min",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Frequency": {
+                    "source": "Frequency_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean frequency for the Bp component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Freq_std": {
+                    "source": "Freq_std_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Standard deviation of the spectral peak frequencies for the Bp component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Halfwidth": {
+                    "source": "Halfwidth_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean spectral peak half width for the Bp component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Power": {
+                    "source": "Power_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean power for the Bp component ID event",
+                        "UNITS": "nT^2/Hz",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Prominence": {
+                    "source": "Prominence_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean prominence for the Bp component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ROFC": {
+                    "source": "ROFC_m_Bp",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rate of frequency change for the Bp component ID event",
+                        "UNITS": "Hz/s",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Quality": {
+                    "source": "Quality_m_Bp",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Overall quality for the Bp component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                }
+            },
+            "Br_event": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "source": "Timestamp_Br",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation for the Br component ID event, UTC",
+                        "UNITS": "-",
+                        "FORMAT": " "
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "source": "Latitude_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "source": "Longitude_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "source": "Radius_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric radius (from the Earth centre) for the Br component ID event",
+                        "UNITS": "m",
+                        "FORMAT": "F8.0"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "QD latitude for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "QD longitude for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic Local Time for the Br component ID event",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ID": {
+                    "source": "ID_Br",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Br component event identifier",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "ORB": {
+                    "source": "ORB_Br",
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit number for the Br component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "DIR": {
+                    "source": "DIR_Br",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Flight direction for the Br component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Frequency": {
+                    "source": "Frequency_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous frequency for the Br component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Halfwidth": {
+                    "source": "Halfwidth_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous spectral peak half width for the Br component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Power": {
+                    "source": "Power_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous  power for the Br component ID event",
+                        "UNITS": "nT^2/Hz",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Prominence": {
+                    "source": "Prominence_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous prominence for the Br component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Quality_B": {
+                    "source": "Quality_B_Br",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous MAGxHR quality for the Br component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Quality_p": {
+                    "source": "Quality_p_Br",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous peak quality for the Br component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Quality_n": {
+                    "source": "Quality_n_Br",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous noise quality for the Br component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                }
+            },
+            "Br_event_mean": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "source": "Timestamp_m_Br",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Mean time of observation for the Br component ID event, UTC",
+                        "UNITS": "-",
+                        "FORMAT": " "
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "source": "Latitude_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean position in ITRF - Geocentric latitude for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "source": "Longitude_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean position in ITRF - Geocentric longitude for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "source": "Radius_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean position in ITRF - Geocentric radius (from the Earth centre) for the Br component ID event",
+                        "UNITS": "m",
+                        "FORMAT": "F8.0"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean QD latitude for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean QD longitude for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean Magnetic Local Time for the Br component ID event",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean Solar zenith angle for the Br component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ID": {
+                    "source": "ID_m_Br",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Br component event identifier for event mean properties",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "ORB": {
+                    "source": "ORB_m_Br",
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit number for the Br component ID event (mean properties)",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "DIR": {
+                    "source": "DIR_m_Br",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Flight direction for the Br component ID event (mean properties)",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Duration": {
+                    "source": "Duration_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Duration of the Br component ID event",
+                        "UNITS": "min",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Frequency": {
+                    "source": "Frequency_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean frequency for the Br component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Freq_std": {
+                    "source": "Freq_std_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Standard deviation of the spectral peak frequencies for the Br component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Halfwidth": {
+                    "source": "Halfwidth_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean spectral peak half width for the Br component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Power": {
+                    "source": "Power_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean power for the Br component ID event",
+                        "UNITS": "nT^2/Hz",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Prominence": {
+                    "source": "Prominence_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean prominence for the Br component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ROFC": {
+                    "source": "ROFC_m_Br",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rate of frequency change for the Br component ID event",
+                        "UNITS": "Hz/s",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Quality": {
+                    "source": "Quality_m_Br",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Overall quality for the Br component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                }
+            },
+            "Ba_event": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "source": "Timestamp_Ba",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation for the Ba component ID event, UTC",
+                        "UNITS": "-",
+                        "FORMAT": " "
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "source": "Latitude_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "source": "Longitude_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "source": "Radius_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric radius (from the Earth centre) for the Ba component ID event",
+                        "UNITS": "m",
+                        "FORMAT": "F8.0"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "QD latitude for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "QD longitude for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Magnetic Local Time for the Ba component ID event",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Solar zenith angle for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ID": {
+                    "source": "ID_Ba",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Ba component event identifier",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "ORB": {
+                    "source": "ORB_Ba",
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit number for the Ba component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "DIR": {
+                    "source": "DIR_Ba",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Flight direction for the Ba component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Frequency": {
+                    "source": "Frequency_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous frequency for the Ba component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Halfwidth": {
+                    "source": "Halfwidth_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous spectral peak half width for the Ba component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Power": {
+                    "source": "Power_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous  power for the Ba component ID event",
+                        "UNITS": "nT^2/Hz",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Prominence": {
+                    "source": "Prominence_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous prominence for the Ba component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Quality_B": {
+                    "source": "Quality_B_Ba",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous MAGxHR quality for the Ba component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Quality_p": {
+                    "source": "Quality_p_Ba",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous peak quality for the Ba component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Quality_n": {
+                    "source": "Quality_n_Ba",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Instantaneous noise quality for the Ba component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                }
+            },
+            "Ba_event_mean": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "source": "Timestamp_m_Ba",
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Mean time of observation for the Ba component ID event, UTC",
+                        "UNITS": "-",
+                        "FORMAT": " "
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "source": "Latitude_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean position in ITRF - Geocentric latitude for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "source": "Longitude_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean position in ITRF - Geocentric longitude for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "source": "Radius_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean position in ITRF - Geocentric radius (from the Earth centre) for the Ba component ID event",
+                        "UNITS": "m",
+                        "FORMAT": "F8.0"
+                    }
+                },
+                "Latitude_QD": {
+                    "source": "Latitude_QD_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean QD latitude for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "Longitude_QD": {
+                    "source": "Longitude_QD_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean QD longitude for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "MLT_QD": {
+                    "source": "MLT_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean Magnetic Local Time for the Ba component ID event",
+                        "UNITS": "hr",
+                        "FORMAT": "F6.2"
+                    }
+                },
+                "SZA": {
+                    "source": "SZA_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean Solar zenith angle for the Ba component ID event",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ID": {
+                    "source": "ID_m_Ba",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Ba component event identifier for event mean properties",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "ORB": {
+                    "source": "ORB_m_Ba",
+                    "dataType": "uint32",
+                    "attributes": {
+                        "DESCRIPTION": "Orbit number for the Ba component ID event (mean properties)",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "DIR": {
+                    "source": "DIR_m_Ba",
+                    "dataType": "int8",
+                    "attributes": {
+                        "DESCRIPTION": "Flight direction for the Ba component ID event (mean properties)",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                },
+                "Duration": {
+                    "source": "Duration_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Duration of the Ba component ID event",
+                        "UNITS": "min",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Frequency": {
+                    "source": "Frequency_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean frequency for the Ba component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F7.0"
+                    }
+                },
+                "Freq_std": {
+                    "source": "Freq_std_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Standard deviation of the spectral peak frequencies for the Ba component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Halfwidth": {
+                    "source": "Halfwidth_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean spectral peak half width for the Ba component ID event",
+                        "UNITS": "Hz",
+                        "FORMAT": "F6.1"
+                    }
+                },
+                "Power": {
+                    "source": "Power_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean power for the Ba component ID event",
+                        "UNITS": "nT^2/Hz",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Prominence": {
+                    "source": "Prominence_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean prominence for the Ba component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "ROFC": {
+                    "source": "ROFC_m_Ba",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Rate of frequency change for the Ba component ID event",
+                        "UNITS": "Hz/s",
+                        "FORMAT": "F7.2"
+                    }
+                },
+                "Quality": {
+                    "source": "Quality_m_Ba",
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Overall quality for the Ba component ID event",
+                        "UNITS": "-",
+                        "FORMAT": "D1"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "OMNI_HR_1min",
         "fileType": "CDF-generic",
         "defaultDataset": "OMNI_HR_1min",

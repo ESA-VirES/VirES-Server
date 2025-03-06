@@ -805,6 +805,54 @@
         "extraSampled": true
     },
     {
+        "name": "SW_OPER_ULFAMAG_2F",
+        "description": "Swarm A Ultra Low Frequency (ULF) wave characterisation from low resolution vector magnetometer data",
+        "productType": "SW_ULFxMAG_2F",
+        "nominalSampling": "PT60S",
+        "mission": "Swarm",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_ULFBMAG_2F",
+        "description": "Swarm B Ultra Low Frequency (ULF) wave characterisation from low resolution vector magnetometer data",
+        "productType": "SW_ULFxMAG_2F",
+        "nominalSampling": "PT60S",
+        "mission": "Swarm",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_ULFCMAG_2F",
+        "description": "Swarm C Ultra Low Frequency (ULF) wave characterisation from low resolution vector magnetometer data",
+        "productType": "SW_ULFxMAG_2F",
+        "nominalSampling": "PT60S",
+        "mission": "Swarm",
+        "spacecraft": "C"
+    },
+    {
+        "name": "SW_OPER_PC1AMAG_2F",
+        "description": "Swarm A Pc1 wave characterisation from high resolution vector magnetometer data",
+        "productType": "SW_PC1xMAG_2F",
+        "nominalSampling": "PT15S",
+        "mission": "Swarm",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_PC1BMAG_2F",
+        "description": "Swarm B Pc1 wave characterisation from high resolution vector magnetometer data",
+        "productType": "SW_PC1xMAG_2F",
+        "nominalSampling": "PT15S",
+        "mission": "Swarm",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_PC1CMAG_2F",
+        "description": "Swarm C Pc1 wave characterisation from high resolution vector magnetometer data",
+        "productType": "SW_PC1xMAG_2F",
+        "nominalSampling": "PT15S",
+        "mission": "Swarm",
+        "spacecraft": "C"
+    },
+    {
         "name": "SW_OPER_AUX_IMF_2_",
         "productType": "SW_AUX_IMF_2_",
         "nominalSampling": "PT3600S",
