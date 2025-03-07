@@ -28,6 +28,7 @@
 
 from .base import MetadataReader
 from .cdf.generic import GenericCdfMetadataReader
+from .cdf.time_span import TimeSpanCdfMetadataReader
 from .cdf.obs import ObsCdfMetadataReader
 from .cdf.vobs import VobsCdfMetadataReader
 from .cdf.con_eph import ConEphCdfMetadataReader
@@ -39,6 +40,7 @@ METADATA_READERS = {
         reader.TYPE: reader
         for reader in [
             GenericCdfMetadataReader,
+            TimeSpanCdfMetadataReader,
             ObsCdfMetadataReader,
             VobsCdfMetadataReader,
             ConEphCdfMetadataReader,
