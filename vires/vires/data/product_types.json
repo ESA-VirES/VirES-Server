@@ -97,7 +97,7 @@
     {
         "name": "SW_MODx_SC_1B",
         "description": "Swarm S/C position from the preliminary Medium Accuracy Orbit Determination (MOD). The original SP3c records have been converted to UTC and ITRF spherical coordinates.",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Ephemeris_Products",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_MODx_SC_1B",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "fileType": "CDF-generic",
         "defaultDataset": "MOD",
@@ -144,7 +144,7 @@
     {
         "name": "SW_MAGx_LR_1B",
         "description": "Swarm vector (VFM) and scalar (ASM) magnetic field measurements interpolated at 1Hz rate.",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#MAGX_LR_1B_Product",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_MAGx_LR_1B",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_LR",
@@ -343,7 +343,7 @@
     {
         "name": "SW_MAGx_HR_1B",
         "description": "Swarm vector (VFM) magnetic field measurements at 50Hz rate.",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#Magnetic_Products",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_MAGx_HR_1B",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "fileType": "CDF-generic",
         "defaultDataset": "MDR_MAG_HR",
@@ -487,7 +487,7 @@
     {
         "name": "SW_EFIx_LP_1B",
         "description": "Swarm plasma data from the Langmuir Probe (LP) at 2Hz rate",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-1b-product-definitions#EFIX_LP_1B_Product",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EFIx_LP_1B",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 20,
         "fileType": "CDF-generic",
@@ -618,7 +618,7 @@
     {
         "name": "SW_EFIxIDM_2_",
         "description": "Swarm LP ion drift, density and effective mass data",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/2860886/SLIDEM_Product_Definition.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EFIxIDM_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 21,
         "fileType": "CDF-generic",
@@ -802,7 +802,7 @@
     {
         "name": "SW_EFIxTIE_2_",
         "description": "Swarm Thermal Ion Imager (TII) ion temperatures estimate",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EFIxTIE_2_",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EFIxTIE_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 22,
         "fileType": "CDF-generic",
@@ -1153,7 +1153,7 @@
     {
         "name": "SW_IBIxTMS_2F",
         "description": "Swarm ionospheric bubble index",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#IBIxTMS_2F",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_IBIxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 25,
         "fileType": "CDF-generic",
@@ -1242,7 +1242,7 @@
     {
         "name": "SW_EEFxTMS_2F",
         "description": "Swarm dayside equatorial electric field",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#EEFxTMS_2F",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EEFxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 24,
         "fileType": "CDF-generic",
@@ -1310,7 +1310,7 @@
     {
         "name": "SW_FACxTMS_2F",
         "description": "Swarm field-aligned and radial current densities",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#FACxTMS_2F",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_FACxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 26,
         "fileType": "CDF-generic",
@@ -1413,7 +1413,7 @@
     {
         "name": "SW_TECxTMS_2F",
         "description": "Swarm ionospheric total electron content",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#TECxTMS_2F",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_TECxTMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 26,
         "fileType": "CDF-generic",
@@ -1578,7 +1578,7 @@
     {
         "name": "SW_IPDxIRR_2F",
         "description": "Swarm characteristics of the plasma density and plasma irregularities",
-        "resourceUrl": "https://earth.esa.int/eogateway/missions/swarm/product-data-handbook/level-2-product-definitions#IPDxIRR_2F",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_IPDxIRR_2F",
         "citation": "https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/2018JA026063",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 30,
@@ -1852,7 +1852,7 @@
     {
         "name": "SW_AEJxLPL_2F",
         "description": "Swarm ionospheric sheet current densities determined by the Line Current (LC) method",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_AEJxLPL_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 40,
         "fileType": "CDF-generic",
@@ -1957,7 +1957,7 @@
     {
         "name": "SW_AEJxPBL_2F",
         "description": "Swarm ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_AEJxPBL_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 41,
         "fileType": "CDF-generic",
@@ -2039,7 +2039,7 @@
     {
         "name": "SW_AEJxLPS_2F",
         "description": "Swarm ionospheric sheet current densities determined by the Spherical Elementary Current Systems (SECS) method",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_AEJxLPS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 42,
         "fileType": "CDF-generic",
@@ -2168,7 +2168,7 @@
     {
         "name": "SW_AEJxPBS_2F",
         "description": "Swarm ionospheric auroral electrojet peaks and boundaries determined by the Spherical Elementary Current Systems (SECS) method",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_AEJxPBS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 43,
         "fileType": "CDF-generic",
@@ -2290,7 +2290,7 @@
     {
         "name": "SW_AOBxFAC_2F",
         "description": "Swarm aurora oval boundaries determined from the Field Aligned Current (FAC) data",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-AEBS-product-definition.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_AOBxFAC_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 44,
         "fileType": "CDF-generic",
@@ -2382,7 +2382,7 @@
     {
         "name": "SW_MITx_LP_2F",
         "description": "Swarm mid-latitude ionospheric trough boundaries and minima from from Langmuir Probe (LP) data",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_MITx_LP_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 45,
         "fileType": "CDF-generic",
@@ -2658,7 +2658,7 @@
     {
         "name": "SW_MITxTEC_2F",
         "description": "Swarm mid-latitude ionospheric trough boundaries and minima from from Total Electron Content (TEC) data",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_MITxTEC_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 46,
         "fileType": "CDF-generic",
@@ -2919,7 +2919,7 @@
     {
         "name": "SW_PPIxFAC_2F",
         "description": "Swarm equatorward boundary of Small-Scale Field Aligned Currents (SSFAC) and the associated midnight Plasma-Pause (PP) index",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-PRISM-Product-Definition.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_PPIxFAC_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 47,
         "fileType": "CDF-generic",
@@ -4971,7 +4971,7 @@
     {
         "name": "GF_WNDxACC_2_",
         "description": "GRACE-FO thermosphere crosswind at satellite locations",
-        "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/Swarm-TOLEOS-product-description.pdf",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GF_WNDxACC_2_",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "fileType": "CDF-generic",
         "defaultDataset": "__default__",
