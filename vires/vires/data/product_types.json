@@ -1576,6 +1576,402 @@
         }
     },
     {
+        "name": "SW_NIX_TMS_2F",
+        "description": "Swarm electron density gradient ionosphere index (NEGIX)",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_NIX_TMS_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 28,
+        "fileType": "CDF-generic",
+        "defaultDataset": "NIX_TMS",
+        "datasets": {
+            "NIX_TMS": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Timestamp",
+                        "UNITS": "datetime (UTC)"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Position of the NEGIX vector in ITRF - longitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.4"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Position of the NEGIX vector in ITRF - latitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.4"
+                    }
+                },
+                "Distance": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Averaged distance from all dipoles used for the estimation of NEGIX",
+                        "UNITS": "m",
+                        "FORMAT": "F7.1"
+                    }
+                },
+                "Azimuth": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Averaged azimuth from all dipoles used for the estimation of NEGIX",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.4"
+                    }
+                },
+                "Negix_X": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Mean value of NEGIX for the West-East component",
+                        "UNITS": "electron cm$^{-3}$ m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Negix_X_Sigma": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Standard deviation value of NEGIX for the West-East component",
+                        "UNITS": "electron cm$^{-3}$ m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Negix_X_P95": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "95-percentile value of NEGIX for the West-East component",
+                        "UNITS": "electron cm$^{-3}$ m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Negix_Y": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Mean value of NEGIX for the South-North component",
+                        "UNITS": "electron cm$^{-3}$ m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Negix_Y_Sigma": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Standard deviation value of NEGIX for the South-North component",
+                        "UNITS": "electron cm$^{-3}$ m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Negix_Y_P95": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "95-percentile value of NEGIX for the South-North component",
+                        "UNITS": "electron cm$^{-3}$ m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Negix_Total": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Total vector value of NEGIX, derived from the mean West-East and South-North components",
+                        "UNITS": "electron cm$^{-3}$ m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Negix_Sigma": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Vector value of the standard deviation of NEGIX, derived from the standard deviation values of West-East and South-North components",
+                        "UNITS": "electron cm$^{-3}$ m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Negix_P95": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Vector value of the 95-percentile of NEGIX, derived from the 95-percentile values of West-East and South-North components",
+                        "UNITS": "electron cm$^{-3}$ m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "N_Measurements": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Number of elements for a data record from which NEGIX is determined",
+                        "UNITS": "-",
+                        "FORMAT": "I4"
+                    }
+                },
+                "Flag_Negix": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Flags characterizing the dispersion of gradient values that are used to compute the total vector ",
+                        "UNITS": "-",
+                        "FORMAT": "I1"
+                    }
+                },
+                "Orbit_Label": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Flag defining whether the magnitude belongs to an ascending (1) or descending (-1) orbit of the Swarm satellites",
+                        "UNITS": "-",
+                        "FORMAT": "I1"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_TIX_TMS_2F",
+        "description": "Swarm total electron content (TEC) gradient ionosphere index (TEGIX)",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_TIX_TMS_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 28,
+        "fileType": "CDF-generic",
+        "defaultDataset": "TIX_TMS",
+        "datasets": {
+            "TIX_TMS": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Timestamp",
+                        "UNITS": "datetime (UTC)"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "source": "Longitude_IPPs",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Position of the TEGIX vector in ITRF - longitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.4"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "source": "Latitude_IPPs",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Position of the TEGIX vector in ITRF - latitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.4"
+                    }
+                },
+                "Longitude_Swarm": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Averaged position of Swarm satellites in ITRF - longitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.4"
+                    }
+                },
+                "Latitude_Swarm": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Averaged position of Swarm satellites in ITRF - latitude",
+                        "UNITS": "deg",
+                        "FORMAT": "F6.4"
+                    }
+                },
+                "Distance": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Averaged distance from all dipoles used for the estimation of TEGIX",
+                        "UNITS": "m",
+                        "FORMAT": "F7.1"
+                    }
+                },
+                "Azimuth": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Averaged azimuth from all dipoles used for the estimation of TEGIX",
+                        "UNITS": "deg",
+                        "FORMAT": "F7.4"
+                    }
+                },
+                "Tegix_X": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Mean value of TEGIX for the West-East component",
+                        "UNITS": "milli-TECU m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Tegix_X_Sigma": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Standard deviation value of TEGIX for the West-East component",
+                        "UNITS": "milli-TECU m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Tegix_X_P95": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "95-percentile value of TEGIX for the West-East component",
+                        "UNITS": "milli-TECU m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Tegix_Y": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Mean value of TEGIX for the South-North component",
+                        "UNITS": "milli-TECU m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Tegix_Y_Sigma": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Standard deviation value of TEGIX for the South-North component",
+                        "UNITS": "milli-TECU m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Tegix_Y_P95": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "95-percentile value of TEGIX for the South-North component",
+                        "UNITS": "milli-TECU m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Tegix_Total": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Total vector value of TEGIX, derived from the mean West-East and South-North components",
+                        "UNITS": "milli-TECU m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Tegix_Sigma": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Vector value of the standard deviation of TEGIX, derived from the standard deviation values of West-East and South-North components",
+                        "UNITS": "milli-TECU m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "Tegix_P95": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Vector value of the 95-percentile of TEGIX, derived from the 95-percentile values of West-East and South-North components",
+                        "UNITS": "milli-TECU m$^{-1}$",
+                        "FORMAT": "F5.4"
+                    }
+                },
+                "N_Measurements": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Number of elements for a data record from which TEGIX is determined",
+                        "UNITS": "-",
+                        "FORMAT": "I4"
+                    }
+                },
+                "Flag_Tegix": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Flags characterizing the dispersion of gradient values that are used to compute the total vector ",
+                        "UNITS": "-",
+                        "FORMAT": "I1"
+                    }
+                },
+                "Orbit_Label": {
+                    "dataType": "int8",
+                    "attributes": {
+                        "DEPEND_0": "Timestamp",
+                        "VAR_TYPE": "data",
+                        "DESCRIPTION": "Flag defining whether the magnitude belongs to an ascending (1) or descending (-1) orbit of the Swarm satellites",
+                        "UNITS": "-",
+                        "FORMAT": "I1"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_IPDxIRR_2F",
         "description": "Swarm characteristics of the plasma density and plasma irregularities",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_IPDxIRR_2F",
