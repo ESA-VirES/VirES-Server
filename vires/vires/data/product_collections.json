@@ -580,6 +580,22 @@
         "extraSampled": true
     },
     {
+        "name": "SW_OPER_NIX_TMS_2F",
+        "description": "Swarm electron density gradient ionosphere index (NEGIX)",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_NIX_TMS_2F",
+        "productType": "SW_NIX_TMS_2F",
+        "mission": "Swarm",
+        "nominalSampling": "PT8S"
+    },
+    {
+        "name": "SW_OPER_TIX_TMS_2F",
+        "description": "Swarm total electron content (TEC) gradient ionosphere index (TEGIX)",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_TIX_TMS_2F",
+        "productType": "SW_TIX_TMS_2F",
+        "mission": "Swarm",
+        "nominalSampling": "PT8S"
+    },
+    {
         "name": "SW_OPER_IPDAIRR_2F",
         "description": "Swarm A characteristics of the plasma density and plasma irregularities",
         "productType": "SW_IPDxIRR_2F",
