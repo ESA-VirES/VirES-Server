@@ -1451,24 +1451,20 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic radius",
-                        "UNITS": "km"
+                        "UNITS": "m"
                     }
                 },
                 "GPS_Position": {
                     "dataType": "float64",
-                    "dimension": [
-                        3
-                    ],
+                    "dimension": [3],
                     "attributes": {
                         "DESCRIPTION": "X-,Y-,Z-coordinates (WGS84) of the GPS satellite",
-                        "UNITS": "km"
+                        "UNITS": "m"
                     }
                 },
                 "LEO_Position": {
                     "dataType": "float64",
-                    "dimension": [
-                        3
-                    ],
+                    "dimension": [3],
                     "attributes": {
                         "DESCRIPTION": "X-,Y-,Z-coordinates (WGS84) of the LEO satellite",
                         "UNITS": "m"
@@ -1576,11 +1572,660 @@
         }
     },
     {
+        "name": "CH_TECxTMS_2F",
+        "description": "CHAMP ionospheric total electron content",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/CH_TEC_TMS_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 27,
+        "fileType": "CDF-generic",
+        "defaultDataset": "TEC_TMS",
+        "datasets": {
+            "TEC_TMS": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "GPS_Position": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "X-,Y-,Z-coordinates of the GPS satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "LEO_Position": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "X-,Y-,Z-coordinates of the LEO satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "PRN": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Pseudorandom noise (PRN) code of GPS satellite",
+                        "UNITS": "-"
+                    }
+                },
+                "L1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS L1C (LA in RINEX v.2.10) carrier phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "L2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS L2W (L2 in RINEX v.2.10) carrier phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "P1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS C1W (P1 in RINEX v.2.10) code phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "P2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS C2W (P2 in RINEX v.2.10) code phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "S1_C_N0": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS S1 carrier-to-noise density C/N0",
+                        "UNITS": "dB-Hz"
+                    }
+                },
+                "S2_C_N0": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS S2 carrier-to-noise density C/N0",
+                        "UNITS": "dB-Hz"
+                    }
+                },
+                "Absolute_STEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Absolute slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Absolute_VTEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Absolute vertical TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Elevation_Angle": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Elevation Angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "Relative_STEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Relative slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Relative_STEC_RMS": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Root mean square error of relative slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "DCB": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS receiver differential code bias (DCB) (P2-P1)",
+                        "UNITS": "TECU"
+                    }
+                },
+                "DCB_Error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Post fit RMS of the least square system using pairs of mapped slant TEC",
+                        "UNITS": "TECU"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GR_TECxTMS_2F",
+        "description": "GRACE ionospheric total electron content",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GR_TECxTMS_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 27,
+        "fileType": "CDF-generic",
+        "defaultDataset": "TEC_TMS",
+        "datasets": {
+            "TEC_TMS": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "GPS_Position": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "X-,Y-,Z-coordinates of the GPS satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "LEO_Position": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "X-,Y-,Z-coordinates of the LEO satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "PRN": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Pseudorandom noise (PRN) code of GPS satellite",
+                        "UNITS": "-"
+                    }
+                },
+                "L1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS L1C (LA in RINEX v.2.10) carrier phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "L2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS L2W (L2 in RINEX v.2.10) carrier phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "P1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS C1W (P1 in RINEX v.2.10) code phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "P2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS C2W (P2 in RINEX v.2.10) code phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "S1_C_N0": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS S1 carrier-to-noise density C/N0",
+                        "UNITS": "dB-Hz"
+                    }
+                },
+                "S2_C_N0": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS S2 carrier-to-noise density C/N0",
+                        "UNITS": "dB-Hz"
+                    }
+                },
+                "Absolute_STEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Absolute slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Absolute_VTEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Absolute vertical TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Elevation_Angle": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Elevation Angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "Relative_STEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Relative slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Relative_STEC_RMS": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Root mean square error of relative slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "DCB": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS receiver differential code bias (DCB) (P2-P1)",
+                        "UNITS": "TECU"
+                    }
+                },
+                "DCB_Error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Post fit RMS of the least square system using pairs of mapped slant TEC",
+                        "UNITS": "TECU"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GF_TECxTMS_2F",
+        "description": "GRACE-FO ionospheric total electron content",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GR_TECxTMS_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 27,
+        "fileType": "CDF-generic",
+        "defaultDataset": "TEC_TMS",
+        "datasets": {
+            "TEC_TMS": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "GPS_Position": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "X-,Y-,Z-coordinates of the GPS satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "LEO_Position": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "X-,Y-,Z-coordinates of the LEO satellite",
+                        "UNITS": "m"
+                    }
+                },
+                "PRN": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Pseudorandom noise (PRN) code of GPS satellite",
+                        "UNITS": "-"
+                    }
+                },
+                "L1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS L1C (LA in RINEX v.2.10) carrier phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "L2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS L2W (L2 in RINEX v.2.10) carrier phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "P1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS C1W (P1 in RINEX v.2.10) code phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "P2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS C2W (P2 in RINEX v.2.10) code phase observation",
+                        "UNITS": "m"
+                    }
+                },
+                "S1_C_N0": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS S1 carrier-to-noise density C/N0",
+                        "UNITS": "dB-Hz"
+                    }
+                },
+                "S2_C_N0": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS S2 carrier-to-noise density C/N0",
+                        "UNITS": "dB-Hz"
+                    }
+                },
+                "Absolute_STEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Absolute slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Absolute_VTEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Absolute vertical TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Elevation_Angle": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Elevation Angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "Relative_STEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Relative slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Relative_STEC_RMS": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Root mean square error of relative slant TEC",
+                        "UNITS": "TECU"
+                    }
+                },
+                "DCB": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "GPS receiver differential code bias (DCB) (P2-P1)",
+                        "UNITS": "TECU"
+                    }
+                },
+                "DCB_Error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Post fit RMS of the least square system using pairs of mapped slant TEC",
+                        "UNITS": "TECU"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GR_NE__KBR_2F",
+        "description": "GRACE dual spacecraft average electron density",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GR_NE__KBR_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 28,
+        "fileType": "CDF-generic",
+        "defaultDataset": "NE__KBR",
+        "datasets": {
+            "NE__KBR": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Middle point position between satellites in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Middle point position between satellites in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Middle point position between satellites in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "LEO_Position": {
+                    "dataType": "float64",
+                    "dimension": [2, 3],
+                    "attributes": {
+                        "DESCRIPTION": "X-, Y-, Z-coordinates of the satellites",
+                        "UNITS": "m"
+                    }
+                },
+                "Distance": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Distance between satellites",
+                        "UNITS": "m"
+                    }
+                },
+                "Relative_Hor_TEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Relative horizontal TEC between satellites",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Relative_Ne": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean relative electron density of the area between satellites",
+                        "UNITS": "1/cm^3"
+                    }
+                },
+                "Absolute_Ne": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Electron density between satellites",
+                        "UNITS": "1/cm^3"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "GF_NE__KBR_2F",
+        "description": "GRACE-FO dual spacecraft average electron density",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/GF_NE__KBR_2F",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 28,
+        "fileType": "CDF-generic",
+        "defaultDataset": "NE__KBR",
+        "datasets": {
+            "NE__KBR": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation, UTC",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Middle point position between satellites in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Middle point position between satellites in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Middle point position between satellites in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "LEO_Position": {
+                    "dataType": "float64",
+                    "dimension": [2, 3],
+                    "attributes": {
+                        "DESCRIPTION": "X-, Y-, Z-coordinates of the satellites",
+                        "UNITS": "m"
+                    }
+                },
+                "Distance": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Distance between satellites",
+                        "UNITS": "m"
+                    }
+                },
+                "Relative_Hor_TEC": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Relative horizontal TEC between satellites",
+                        "UNITS": "TECU"
+                    }
+                },
+                "Relative_Ne": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Mean relative electron density of the area between satellites",
+                        "UNITS": "1/cm^3"
+                    }
+                },
+                "Absolute_Ne": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Electron density between satellites",
+                        "UNITS": "1/cm^3"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_NIX_TMS_2F",
         "description": "Swarm electron density gradient ionosphere index (NEGIX)",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_NIX_TMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
-        "_order": 28,
+        "_order": 29,
         "fileType": "CDF-generic",
         "defaultDataset": "NIX_TMS",
         "datasets": {
@@ -1767,7 +2412,7 @@
         "description": "Swarm total electron content (TEC) gradient ionosphere index (TEGIX)",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_TIX_TMS_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
-        "_order": 28,
+        "_order": 29,
         "fileType": "CDF-generic",
         "defaultDataset": "TIX_TMS",
         "datasets": {

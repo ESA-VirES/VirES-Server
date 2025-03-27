@@ -494,6 +494,64 @@
         "groupSamples": true
     },
     {
+        "name": "CH_OPER_TEC_TMS_2F",
+        "description": "CHAMP ionospheric total electron content",
+        "productType": "CH_TECxTMS_2F",
+        "nominalSampling": "PT10S",
+        "mission": "CHAMP",
+        "groupSamples": true
+    },
+    {
+        "name": "GR_OPER_TEC1TMS_2F",
+        "description": "GRACE 1 ionospheric total electron content",
+        "productType": "GR_TECxTMS_2F",
+        "nominalSampling": "PT10S",
+        "mission": "GRACE",
+        "spacecraft": "1",
+        "groupSamples": true
+    },
+    {
+        "name": "GR_OPER_TEC2TMS_2F",
+        "description": "GRACE 2 ionospheric total electron content",
+        "productType": "GR_TECxTMS_2F",
+        "nominalSampling": "PT10S",
+        "mission": "GRACE",
+        "spacecraft": "2",
+        "groupSamples": true
+    },
+    {
+        "name": "GR_OPER_NE__KBR_2F",
+        "description": "GRACE dual spacecraft average electron density",
+        "productType": "GR_NE__KBR_2F",
+        "nominalSampling": "PT5S",
+        "mission": "GRACE"
+    },
+    {
+        "name": "GF_OPER_TEC1TMS_2F",
+        "description": "GRACE-FO 1 ionospheric total electron content",
+        "productType": "GF_TECxTMS_2F",
+        "nominalSampling": "PT10S",
+        "mission": "GRACE-FO",
+        "spacecraft": "1",
+        "groupSamples": true
+    },
+    {
+        "name": "GF_OPER_TEC2TMS_2F",
+        "description": "GRACE-FO 2 ionospheric total electron content",
+        "productType": "GF_TECxTMS_2F",
+        "nominalSampling": "PT10S",
+        "mission": "GRACE-FO",
+        "spacecraft": "2",
+        "groupSamples": true
+    },
+    {
+        "name": "GF_OPER_NE__KBR_2F",
+        "description": "GRACE-FO dual spacecraft average electron density",
+        "productType": "GF_NE__KBR_2F",
+        "nominalSampling": "PT5S",
+        "mission": "GRACE-FO"
+    },
+    {
         "name": "SW_OPER_FACATMS_2F",
         "description": "Swarm A field-aligned and radial current densities using the single satellite measurements",
         "productType": "SW_FACxTMS_2F",
@@ -1300,6 +1358,7 @@
     {
         "name": "MM_OPER_CON_EPH_2_",
         "productType": "MM_CON_EPH_2_",
+        "mission": "multi-mission",
         "nominalSampling": {
             "crossover": "PT20M",
             "plane_alignment": "P1D"
