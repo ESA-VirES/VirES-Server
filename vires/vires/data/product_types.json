@@ -1451,24 +1451,20 @@
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Geographic radius",
-                        "UNITS": "km"
+                        "UNITS": "m"
                     }
                 },
                 "GPS_Position": {
                     "dataType": "float64",
-                    "dimension": [
-                        3
-                    ],
+                    "dimension": [3],
                     "attributes": {
                         "DESCRIPTION": "X-,Y-,Z-coordinates (WGS84) of the GPS satellite",
-                        "UNITS": "km"
+                        "UNITS": "m"
                     }
                 },
                 "LEO_Position": {
                     "dataType": "float64",
-                    "dimension": [
-                        3
-                    ],
+                    "dimension": [3],
                     "attributes": {
                         "DESCRIPTION": "X-,Y-,Z-coordinates (WGS84) of the LEO satellite",
                         "UNITS": "m"
