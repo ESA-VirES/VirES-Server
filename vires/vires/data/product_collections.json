@@ -1300,6 +1300,7 @@
     {
         "name": "MM_OPER_CON_EPH_2_",
         "productType": "MM_CON_EPH_2_",
+        "mission": "multi-mission",
         "nominalSampling": {
             "crossover": "PT20M",
             "plane_alignment": "P1D"
