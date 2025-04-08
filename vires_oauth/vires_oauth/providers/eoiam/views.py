@@ -27,13 +27,18 @@
 # pylint: disable=missing-docstring
 
 #
-# Required settings:
+# Provider settings:
 #
 # SOCIALACCOUNT_PROVIDERS = {
 #     'eoiam': {
-#         'SERVER_URL': <EOIAM server URL>,
+#         'SERVER_URL': <EOIAM server URL>,     # required
+#         'SERVER_URL': <boolean>,              # optional, False by default
+#         'REQUIRED_GROUP_PERMISSIONS': {       # optional, {} by default
+#            <vires-permission>: [(<eoiam-permission>,<eoiam-permission>), ...],
+#         },
 #     },
 # }
+
 
 from allauth.socialaccount import app_settings
 from allauth.socialaccount.providers.oauth2.views import (
