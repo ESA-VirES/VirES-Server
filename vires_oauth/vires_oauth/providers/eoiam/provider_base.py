@@ -53,6 +53,7 @@ class EoiamProviderBase(OAuth2Provider):
     logger_name = None
     name = "EO Sign In"
     account_class = EoiamAccount
+    oauth2_adapter_class = EoiamAccount
 
     settings = {}
 
