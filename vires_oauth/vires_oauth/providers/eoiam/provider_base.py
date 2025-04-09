@@ -75,16 +75,18 @@ class EoiamProviderBase(OAuth2Provider):
 
     @staticmethod
     def extract_extra_data(data):
+
+        if "Institution" in data:
+            data["institution"] = data.pop("Institution")
+
         if "Oa-Signed-Tcs" in data:
-            permissions = data.pop("Oa-Signed-Tcs")
+            permissions = data.get("Oa-Signed-Tcs")
             if isinstance(permissions, str):
                 permissions = permissions.split(",")
         else:
             permissions = []
-        data["permissions"] = permissions
 
-        if "Institution" in data:
-            data["institution"] = data.pop("Institution")
+        data["permissions"] = permissions
 
         return data
 
