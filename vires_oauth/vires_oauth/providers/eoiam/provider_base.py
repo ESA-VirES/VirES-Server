@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2021-2023 EOX IT Services GmbH
+# Copyright (C) 2021-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,14 +35,6 @@ from .utils import update_user_groups_from_permissions
 
 class EoiamAccount(ProviderAccount):
 
-    def get_profile_url(self):
-        return None
-        #return self.account.extra_data.get( ... TBD ... )
-
-    def get_avatar_url(self):
-        return None
-        #return self.account.extra_data.get( ... TBD ... )
-
     def to_str(self):
         dflt = super().to_str()
         return self.account.extra_data.get("sub", dflt)
@@ -53,7 +45,7 @@ class EoiamProviderBase(OAuth2Provider):
     logger_name = None
     name = "EO Sign In"
     account_class = EoiamAccount
-    oauth2_adapter_class = EoiamAccount
+    oauth2_adapter_class = None
 
     settings = {}
 

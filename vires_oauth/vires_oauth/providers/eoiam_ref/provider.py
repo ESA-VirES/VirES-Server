@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,19 +27,20 @@
 # pylint: disable=missing-docstring
 
 from allauth.socialaccount import app_settings
-from ..eoiam.provider_base import EoiamProviderBase, extract_eoiam
 from ...forms import SignupForm
+from ..eoiam.provider_base import EoiamProviderBase, extract_eoiam
+from .settings import PROVIDER_ID
+from .views import EoiamRefOAuth2Adapter
 
 
 class EoiamRefProvider(EoiamProviderBase):
-    id = "eoiam_ref"
+    id = PROVIDER_ID
     name = "EO Sign In (reference instance)"
     logger_name = __name__
     settings = app_settings.PROVIDERS.get(id, {})
+    oauth2_adapter_class = EoiamRefOAuth2Adapter
 
 provider_classes = [EoiamRefProvider]
 
 
 SignupForm.extractor(EoiamRefProvider.id)(extract_eoiam)
-
-
