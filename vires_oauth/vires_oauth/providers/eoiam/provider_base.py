@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2021-2023 EOX IT Services GmbH
+# Copyright (C) 2021-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,14 +35,6 @@ from .utils import update_user_groups_from_permissions
 
 class EoiamAccount(ProviderAccount):
 
-    def get_profile_url(self):
-        return None
-        #return self.account.extra_data.get( ... TBD ... )
-
-    def get_avatar_url(self):
-        return None
-        #return self.account.extra_data.get( ... TBD ... )
-
     def to_str(self):
         dflt = super().to_str()
         return self.account.extra_data.get("sub", dflt)
@@ -53,6 +45,7 @@ class EoiamProviderBase(OAuth2Provider):
     logger_name = None
     name = "EO Sign In"
     account_class = EoiamAccount
+    oauth2_adapter_class = None
 
     settings = {}
 
@@ -75,16 +68,18 @@ class EoiamProviderBase(OAuth2Provider):
 
     @staticmethod
     def extract_extra_data(data):
+
+        if "Institution" in data:
+            data["institution"] = data.pop("Institution")
+
         if "Oa-Signed-Tcs" in data:
-            permissions = data.pop("Oa-Signed-Tcs")
+            permissions = data.get("Oa-Signed-Tcs")
             if isinstance(permissions, str):
                 permissions = permissions.split(",")
         else:
             permissions = []
-        data["permissions"] = permissions
 
-        if "Institution" in data:
-            data["institution"] = data.pop("Institution")
+        data["permissions"] = permissions
 
         return data
 
@@ -118,6 +113,7 @@ class EoiamProviderBase(OAuth2Provider):
 def extract_eoiam(extra_data):
     """ Extract user info from an EO-IAM user profile. """
     data = {}
+    data["email2"] = extra_data["email"]
     for key in ("country", "institution"):
         if key in extra_data:
             data[key] = extra_data[key]
