@@ -12,10 +12,9 @@ your account:
 
 {{ password_reset_url }}
 
-It might possible that you are trying to sign in using a new external identity
-which has not been connected with your account yet.  Please, use the link
-below to sign in and connect your external account:
+It might be possible that you are trying to sign in using a new external
+identity which has not been connected with your account yet.  Please, sign in
+to your existing account and connect it with your new identity provider:
 
-{{ socialaccount_connections }}
-
+{{ socialaccount_connections_url }}
 {% endblocktrans %}{% endautoescape %}{% endblock content %}
