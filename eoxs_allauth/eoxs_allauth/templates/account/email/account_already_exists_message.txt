@@ -1,0 +1,21 @@
+{% extends "account/email/base_message.txt" %}
+{% load i18n %}
+
+{% block content %}{% autoescape off %}{% blocktrans %}You are receiving this email because you or someone else tried to signup for an
+account using email address:
+
+{{ email }}
+
+However, an account using that email address already exists.  In case you have
+forgotten about this, please use the password forgotten procedure to recover
+your account:
+
+{{ password_reset_url }}
+
+It might possible that you are trying to sign in using a new external identity
+which has not been connected with your account yet.  Please, use the link
+below to sign in and connect your external account:
+
+{{ socialaccount_connections }}
+
+{% endblocktrans %}{% endautoescape %}{% endblock content %}
