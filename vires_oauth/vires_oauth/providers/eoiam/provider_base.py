@@ -113,6 +113,7 @@ class EoiamProviderBase(OAuth2Provider):
 def extract_eoiam(extra_data):
     """ Extract user info from an EO-IAM user profile. """
     data = {}
+    data["email2"] = extra_data["email"]
     for key in ("country", "institution"):
         if key in extra_data:
             data[key] = extra_data[key]
