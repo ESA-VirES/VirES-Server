@@ -32,6 +32,7 @@ from numpy import inf
 from pyamps.model_utils import default_coeff_fn as AMPS
 from eoxmagmod.data import (
     CHAOS_STATIC_LATEST,
+    CHAOS_IONOSPHERE_LATEST as CHAOS_MIO_LATEST,
     IGRF_LATEST,
     IGRF_LATEST_SOURCE,
     LCS1,
@@ -61,6 +62,7 @@ from .cache import ModelCache
 
 DIPOLE_MODEL = "IGRF"
 CHAOS_STATIC_SOURCE = basename(CHAOS_STATIC_LATEST)
+CHAOS_MIO_SOURCE = basename(CHAOS_MIO_LATEST)
 LCS1_SOURCE = basename(LCS1)
 MF7_SOURCE = basename(MF7)
 AMPS_SOURCE = basename(splitext(AMPS)[0])
@@ -220,6 +222,13 @@ MODEL_FACTORIES = {
     "CHAOS-MMA-Secondary": ModelFactory(
         load_model_swarm_mma_2c_internal,
         [CachedComposedModelFile("MMA_CHAOS_")]
+    ),
+    "CHAOS-MIO": ModelFactory(
+        AmpsMagneticFieldModel,
+        [ModelFileWithLiteralSource(
+            CHAOS_MIO_LATEST, CHAOS_MIO_SOURCE,
+            lambda _: AmpsMagneticFieldModel.validity
+        )]
     ),
     "AMPS": ModelFactory(
         AmpsMagneticFieldModel,

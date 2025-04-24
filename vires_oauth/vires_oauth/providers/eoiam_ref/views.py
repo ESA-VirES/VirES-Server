@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,11 +27,15 @@
 # pylint: disable=missing-docstring
 
 #
-# Required settings:
+# Provider settings:
 #
 # SOCIALACCOUNT_PROVIDERS = {
 #     'eoiam_ref': {
-#         'SERVER_URL': <EOIAM server URL>,
+#         'SERVER_URL': <EOIAM server URL>,     # required
+#         'SERVER_URL': <boolean>,              # optional, False by default
+#         'REQUIRED_GROUP_PERMISSIONS': {       # optional, {} by default
+#            <vires-permission>: [(<eoiam-permission>,<eoiam-permission>), ...],
+#         },
 #     },
 # }
 
@@ -39,12 +43,12 @@ from allauth.socialaccount import app_settings
 from allauth.socialaccount.providers.oauth2.views import (
     OAuth2CallbackView, OAuth2LoginView,
 )
-from .provider import EoiamRefProvider
 from ..eoiam.views_base import EoiamOAuth2AdapterBase
+from .settings import PROVIDER_ID
 
 
 class EoiamRefOAuth2Adapter(EoiamOAuth2AdapterBase):
-    provider_id = EoiamRefProvider.id
+    provider_id = PROVIDER_ID
     settings = app_settings.PROVIDERS.get(provider_id, {})
 
     # URL used for browser-to-server connections
