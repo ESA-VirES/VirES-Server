@@ -4185,7 +4185,7 @@
     {
         "name": "SW_ULFxMAG_2F",
         "description": "Swarm Ultra Low Frequency (ULF) wave characterisation from low resolution vector magnetometer data",
-        "resourceUrl": "https://earth.esa.int/eogateway/activities/swarm-ulf-ionosphere",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_ULFxMAG_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 40,
         "fileType": "CDF-with-timespan-attribute",
@@ -4765,7 +4765,7 @@
     {
         "name": "SW_PC1xMAG_2F",
         "description": "Swarm Pc1 wave characterisation from high resolution vector magnetometer data",
-        "resourceUrl": "https://earth.esa.int/eogateway/activities/swarm-ulf-ionosphere",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_PC1xMAG_2F",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 41,
         "fileType": "CDF-with-timespan-attribute",
