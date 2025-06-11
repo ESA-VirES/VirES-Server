@@ -1,11 +1,11 @@
 #-------------------------------------------------------------------------------
 #
-# views
+# server availability probe
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019-2025 EOX IT Services GmbH
+# Copyright (C) 2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,21 +25,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
-# pylint: disable=missing-docstring
 
-from .vires import (
-    test_view,
-    api_user_view,
-    update_user_profile_view,
-    update_user_consent_view,
-)
-from .oauth2 import (
-    AdminApplicationList,
-    AdminApplicationDetail,
-    AdminApplicationDelete,
-    AdminApplicationUpdate,
-    AdminApplicationRegistration,
-    FilteredAuthorizedTokensListView,
-    FixedAuthorizedTokenDeleteView,
-)
-from .probe import probe
+from django.http import HttpResponse
+from django.views.decorators.http import require_GET
+
+
+@require_GET
+def probe(request):
+    """ Server availability probe. """
+    return HttpResponse("{}", content_type="application/json")
