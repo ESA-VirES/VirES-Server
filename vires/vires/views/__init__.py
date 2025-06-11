@@ -6,7 +6,7 @@
 # Authors: Martin Paces <martin.paces@eox.at>
 #
 #-------------------------------------------------------------------------------
-# Copyright (C) 2019 EOX IT Services GmbH
+# Copyright (C) 2019-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,3 +30,4 @@
 from .custom_data import custom_data
 from .custom_model import custom_model
 from .client_state import client_state
+from .probe import probe

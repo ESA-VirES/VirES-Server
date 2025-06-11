@@ -51,6 +51,7 @@ from .views import (
     update_user_profile_view,
     update_user_consent_view,
     api_user_view,
+    probe,
 )
 from .decorators import has_permission, request_consent, altcha_verify
 from .url_utils import decorate_views, filter_urls, iter_ulr_patterns, name_filter
@@ -129,11 +130,12 @@ urlpatterns = [
     path('consent/', update_user_consent_view, name="update_user_consent"),
     path('user/', api_user_view),
     path('accounts/', include('allauth.urls')),
+    path('probe', probe, name="probe"),
 ]
 
 # adding Altcha challenge verification to selected public forms
 
 decorate_views(altcha_verify, filter_urls(
     iter_ulr_patterns(urlpatterns),
-    name_filter("account_signup", "account_reset_password")
+    name_filter("account_signup", "account_reset_password", "probe")
 ))
