@@ -37,7 +37,8 @@ from ..formats.common import get_datetime64_string_size
 from ..data_type import parse_data_type
 from .common import (
     HapiResponse, HapiError,
-    catch_error, allowed_parameters, required_parameters, map_parameters
+    catch_error, allowed_parameters, required_parameters, map_parameters,
+    sanitize_response_value,
 )
 
 EXTRA_METADATA_FIELDS = [
@@ -172,7 +173,9 @@ def _parse_parameters(requested_parameters, dataset_definition):
         parameters_set = set(parameters)
 
         for parameter in parameters_set - set(definition):
-            raise ValueError(f"invalid parameter {parameter}")
+            raise ValueError(
+                f"invalid parameter {sanitize_response_value(parameter)}"
+            )
 
         if len(parameters_set) < len(parameters):
             for parameter in _find_duplicates(parameters):
