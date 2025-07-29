@@ -98,9 +98,6 @@ class HapiResponse(JsonResponse):
         else:
             hapi_status = 1400
 
-        if hapi_status >= 1400 and not reason:
-            reason = f"HAPI error {hapi_status}: {message}"
-
         super().__init__({
             "HAPI": self.VERSION,
             "status": self.generate_status(hapi_status, message, debug),
