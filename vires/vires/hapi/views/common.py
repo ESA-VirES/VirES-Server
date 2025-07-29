@@ -28,6 +28,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring,too-few-public-methods
 
+import re
 from logging import getLogger
 from traceback import format_exc
 from datetime import datetime, time
@@ -98,9 +99,6 @@ class HapiResponse(JsonResponse):
         else:
             hapi_status = 1400
 
-        if hapi_status >= 1400 and not reason:
-            reason = f"HAPI error {hapi_status}: {message}"
-
         super().__init__({
             "HAPI": self.VERSION,
             "status": self.generate_status(hapi_status, message, debug),
@@ -142,7 +140,8 @@ def allowed_parameters(*allowed_parameters):
             extra_parameters = set(request.GET.keys()) - allowed_parameters
             if extra_parameters:
                 raise HapiError(hapi_status=1401, message=(
-                    f"unexpected request parameter '{next(iter(extra_parameters))}'"
+                    "unexpected request parameter "
+                    f"'{sanitize_response_value(next(iter(extra_parameters)))}'"
                 ))
             return view(request, *args, **kwargs)
         return _check_allowed_parameters
@@ -198,4 +197,14 @@ def parse_datetime(value):
     parsed_value = django_parse_date(value)
     if parsed_value is not None:
         return naive_to_utc(datetime.combine(parsed_value, time()))
-    raise ValueError(f"invalid time {value}'")
+    raise ValueError(f"invalid time {sanitize_response_value(value)}'")
+
+
+def sanitize_response_value(value, max_size=128):
+    """ Sanitize response value value to not contain any special
+    white-space characters and clip it to the allowed maximum size.
+    """
+    sanitized_value = str(value)[:max_size]
+    if len(sanitized_value) < len(value):
+        sanitized_value = f"{sanitized_value}..."
+    return re.sub(r'\s', ' ', value)
