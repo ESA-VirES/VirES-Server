@@ -81,7 +81,7 @@ def flush_collection(collection, model_names=None, product_filter=None,
     logger = logger or getLogger(__name__)
     models = select_models(collection, model_names)
 
-    cache_options = collection.metadata.get("cachedMagneticModels") or {}
+    model_options = collection.model_options
     cache_dir = get_collection_model_cache_directory(collection.identifier)
     init_directory(cache_dir, logger)
 
@@ -98,7 +98,7 @@ def flush_collection(collection, model_names=None, product_filter=None,
         for product, cache_file in records:
             yield _flush_product(
                 _get_product_info(product), cache_file, models,
-                options=cache_options,
+                options=model_options,
                 force_flush=force_flush,
                 flush_nonlisted_models=flush_nonlisted_models,
                 remove_empty_file=remove_empty_files,
@@ -111,7 +111,7 @@ def flush_collection(collection, model_names=None, product_filter=None,
             product, cache_file = record
             return submit(
                 _flush_product, _get_product_info(product), cache_file, models,
-                options=cache_options, force_flush=force_flush,
+                options=model_options, force_flush=force_flush,
                 flush_nonlisted_models=flush_nonlisted_models,
                 remove_empty_file=remove_empty_files, logger=logger
             )

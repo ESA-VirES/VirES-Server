@@ -71,9 +71,9 @@
         "subtractableCollections": {
             "C": "SW_OPER_MAGC_LR_1B"
         },
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "linear",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -88,9 +88,9 @@
         "nominalSampling": "PT1S",
         "mission": "Swarm",
         "spacecraft": "B",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "linear",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -108,9 +108,9 @@
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_LR_1B"
         },
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "linear",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -129,9 +129,9 @@
         "subtractableCollections": {
             "C": "SW_FAST_MAGC_LR_1B"
         },
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "linear",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -147,9 +147,9 @@
         "mission": "Swarm",
         "spacecraft": "B",
         "grade": "FAST",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "linear",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -168,9 +168,9 @@
         "subtractableCollections": {
             "A": "SW_FAST_MAGA_LR_1B"
         },
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "linear",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -188,7 +188,7 @@
         "subtractableCollections": {
             "C": "SW_OPER_MAGC_HR_1B"
         },
-        "cachedMagneticModels": {
+        "modelOptions": {
             "noCache": true
         }
     },
@@ -199,7 +199,7 @@
         "nominalSampling": "PT0.02S",
         "mission": "Swarm",
         "spacecraft": "B",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "noCache": true
         }
     },
@@ -213,7 +213,7 @@
         "subtractableCollections": {
             "A": "SW_OPER_MAGA_HR_1B"
         },
-        "cachedMagneticModels": {
+        "modelOptions": {
             "noCache": true
         }
     },
@@ -228,7 +228,7 @@
         "subtractableCollections": {
             "C": "SW_FAST_MAGC_HR_1B"
         },
-        "cachedMagneticModels": {
+        "modelOptions": {
             "noCache": true
         }
     },
@@ -240,7 +240,7 @@
         "mission": "Swarm",
         "spacecraft": "B",
         "grade": "FAST",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "noCache": true
         }
     },
@@ -255,7 +255,7 @@
         "subtractableCollections": {
             "A": "SW_FAST_MAGA_HR_1B"
         },
-        "cachedMagneticModels": {
+        "modelOptions": {
             "noCache": true
         }
     },
@@ -1049,9 +1049,9 @@
         "calculateOrbitDirection": true,
         "mission": "GRACE",
         "spacecraft": "1",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -1067,9 +1067,9 @@
         "calculateOrbitDirection": true,
         "mission": "GRACE",
         "spacecraft": "2",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -1085,9 +1085,9 @@
         "calculateOrbitDirection": true,
         "mission": "GRACE-FO",
         "spacecraft": "1",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -1103,9 +1103,9 @@
         "calculateOrbitDirection": true,
         "mission": "GRACE-FO",
         "spacecraft": "2",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -1121,9 +1121,9 @@
         "calculateOrbitDirection": false,
         "mission": "GRACE-FO",
         "spacecraft": "1",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -1139,9 +1139,9 @@
         "calculateOrbitDirection": false,
         "mission": "GRACE-FO",
         "spacecraft": "2",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -1156,9 +1156,9 @@
         "nominalSampling": "PT16S",
         "calculateOrbitDirection": true,
         "mission": "GOCE",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -1173,9 +1173,9 @@
         "nominalSampling": "PT16S",
         "calculateOrbitDirection": false,
         "mission": "GOCE",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -1190,9 +1190,9 @@
         "nominalSampling": "PT1S",
         "calculateOrbitDirection": true,
         "mission": "CHAMP",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",
@@ -1207,9 +1207,9 @@
         "nominalSampling": "PT4S",
         "calculateOrbitDirection": true,
         "mission": "CryoSat-2",
-        "cachedMagneticModels": {
+        "modelOptions": {
             "interpolationKind": "nearest",
-            "models": [
+            "cachedModels": [
                 "'CHAOS-Static'",
                 "'_MIO_SHA_2C-Primary'",
                 "'_MIO_SHA_2C-Secondary'",

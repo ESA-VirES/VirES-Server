@@ -64,5 +64,5 @@ def dump_model_info(model):
         "collection": model.collection.identifier,
         "expression": model.expression,
         **(model.metadata or {}),
-        **(model.collection.metadata.get("cachedMagneticModels") or {}),
+        **(model.collection.model_options),
     }
