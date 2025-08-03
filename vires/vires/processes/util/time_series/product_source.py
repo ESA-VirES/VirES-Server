@@ -254,6 +254,10 @@ class ProductSource:
         """ Get collection metadata. """
         raise NotImplementedError
 
+    @cached_property
+    def model_options(self):
+        return self.metadata.get("modelOptions") or {}
+
     def count_products(self, start, end, time_tolerance=TD_ZERO):
         """ Count products overlapping the given time interval.
         """

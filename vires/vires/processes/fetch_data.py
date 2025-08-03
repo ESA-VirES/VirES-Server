@@ -157,6 +157,8 @@ class FetchData(WPSProcess):
             abstract=(
                 "Optional boolean flag forcing the server to ignore "
                 "the cached models and to calculate the models on-the-fly."
+                "This option also disables interpolation from the "
+                "low-resolution datasets."
             ),
         )),
         ("shc", ComplexData(

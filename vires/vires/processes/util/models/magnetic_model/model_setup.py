@@ -28,19 +28,24 @@
 
 from logging import getLogger
 from collections import defaultdict
-from vires.models import CachedMagneticModel
+from vires.models import CachedMagneticModel, ProductCollection
 from .residual import MagneticModelResidual
 from .source_model import SourceMagneticModel
 from .mio_model import MagneticModelMioMultiplication
-from .cached_model  import CachedModelGapFill
-from ...time_series import CachedModelExtraction, product_source_factory
+from .cached_model  import ModelGapFill
+from ...time_series import (
+    ModelInterpolation,
+    CachedModelExtraction,
+    product_source_factory,
+)
 
 LOGGER = getLogger(__name__)
 
 
 def generate_magnetic_model_sources(mission, spacecraft, grade,
                                     requested_models, source_models,
-                                    no_cache=False, master=None):
+                                    no_cache=False, master=None,
+                                    interpolated_collection=None):
     """ Generate resolver models and other sources from the input
     model specification.
 
@@ -54,16 +59,24 @@ def generate_magnetic_model_sources(mission, spacecraft, grade,
         source_models: list of the source models needed by the requested models
         no_cache: set to True to skip cached models
         master: optional master time-series
+        interpolated_collection: set to collection or collection id
+            from which the model values should be interpolated
     """
     # ignore cache if explicitly requested by the master collection
     master_source = getattr(master, "source", None)
     #raise Exception(f"{master} {master_source}")
     if master_source:
-        if (
-            (master_source.metadata.get("cachedMagneticModels") or {})
-            .get("noCache", False)
-        ):
+        model_options = master_source.model_options
+        if model_options.get("noCache", False):
             no_cache = True
+        if model_options.get("interpolateFromCollection", None):
+            interpolated_collection = model_options["interpolateFromCollection"]
+
+    if (
+        interpolated_collection and
+        not isinstance(interpolated_collection, ProductCollection)
+    ):
+        interpolated_collection = _get_collection(interpolated_collection)
 
     available_cached_models = _get_available_cached_models(
         mission, spacecraft, grade
@@ -72,9 +85,10 @@ def generate_magnetic_model_sources(mission, spacecraft, grade,
     # process source models required by the requested named composed models
     source_models = _handle_source_mio_models(source_models)
     if not no_cache:
-        source_models = _handle_cached_models(
+        source_models = _handle_cached_and_interpolated_models(
             source_models, available_cached_models,
             master_source=master_source,
+            interpolated_collection=interpolated_collection,
         )
     yield from source_models
 
@@ -100,7 +114,17 @@ def _get_available_cached_models(mission, spacecraft, grade):
     return models
 
 
-def _handle_cached_models(models, available_cached_models, master_source=None):
+def _get_collection(collection_id):
+    try:
+        return ProductCollection.objects.get(identifier=collection_id)
+    except ProductCollection.DoesNotExist:
+        return None
+
+
+def _handle_cached_and_interpolated_models(
+    models, available_cached_models, master_source=None,
+    interpolated_collection=None
+):
     """ If possible, replace cached source models with the cache extraction
     time-series object.
     """
@@ -112,6 +136,7 @@ def _handle_cached_models(models, available_cached_models, master_source=None):
         )
 
     cached_models = defaultdict(list)
+    interpolated_models = defaultdict(list)
 
     delayed_models = []
 
@@ -124,8 +149,11 @@ def _handle_cached_models(models, available_cached_models, master_source=None):
                     for model in available_cached_models[model.name]
                 )
                 cached_models[collections].append(model)
-                delayed_models.append(CachedModelGapFill(model))
-            else: # non-cached source -> pass through
+                delayed_models.append(ModelGapFill(model))
+            elif interpolated_collection: # interpolated sources model
+                interpolated_models[interpolated_collection].append(model)
+                delayed_models.append(ModelGapFill(model))
+            else: # non-cached non-interpolated source -> pass through
                 yield model
         else: # non-source models -> retain after cached models
             delayed_models.append(model)
@@ -154,9 +182,17 @@ def _handle_cached_models(models, available_cached_models, master_source=None):
             master_source=master_source
         )
 
-    # release retained postprocessing models
-    for model in delayed_models:
-        yield model
+    # get per-collection interpolated model objects
+    for collection, models_ in interpolated_models.items():
+        yield ModelInterpolation(
+            product_source_factory([collection]),
+            models_,
+            master_source=master_source
+        )
+
+    # release retained post-processing models
+    yield from delayed_models
+
 
 def _handle_source_mio_models(models):
     """ Split source MIO models in two parts - source model without the F10.7

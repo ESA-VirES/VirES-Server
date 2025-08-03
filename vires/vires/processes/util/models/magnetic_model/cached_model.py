@@ -33,8 +33,8 @@ from vires.dataset import Dataset
 from ..base import Model
 
 
-class CachedModelGapFill(Model):
-    """ Special model filling gaps in the extracted cached model values. """
+class ModelGapFill(Model):
+    """ Special model filling gaps in cached or interpolated model values. """
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -54,7 +54,7 @@ class CachedModelGapFill(Model):
 
         super().__init__()
 
-        self.source_variable = f"__cached__B_NEC_{model.name}"
+        self.source_variable = f"__intermediate__B_NEC_{model.name}"
         self.target_variable = f"B_NEC_{model.name}"
         self.model = model
 
