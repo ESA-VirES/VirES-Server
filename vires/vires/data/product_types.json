@@ -349,8 +349,15 @@
         "defaultDataset": "MDR_MAG_HR",
         "hapiOptions": {
             "MDR_MAG_HR": {
-                "magneticModels": [],
-                "magneticModelResiduals": ["B_NEC"]
+                "magneticModels": [
+                    {
+                        "name": "Model",
+                        "description": "CHAOS magnetic model",
+                        "expression": "'CHAOS-Core'+'CHAOS-Static'+'CHAOS-MMA-Primary'+'CHAOS-MMA-Secondary'"
+                    }
+                ],
+                "calculateMagneticFieldIntensity": true,
+                "magneticModelResiduals": ["F", "B_NEC"]
             }
         },
         "_order": 12,
