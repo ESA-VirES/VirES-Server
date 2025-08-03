@@ -254,6 +254,22 @@ class ModelInterpolation(BaseModelInterpolation):
         """ Get subset of the time series overlapping the given time range.
         """
 
+        def _fill_model_values(dataset):
+            for target_variable, model in self.models.items():
+                source_variable = self.translate_fw_models[target_variable]
+                dataset.merge(
+                    model.eval(dataset, [source_variable]),
+                    {source_variable: target_variable}
+                )
+
+        def _extract_model_sources(start, end):
+            for model in self.models.values():
+                self.product_set.update(
+                    extract_model_sources_datetime(
+                        model.source_model, start, end
+                    )
+                )
+
         def _format_time_range(start, stop):
             return f"{format_datetime(start)}/{format_datetime(stop)}"
 
@@ -268,7 +284,7 @@ class ModelInterpolation(BaseModelInterpolation):
 
         counter = 0
         products = self.source.iter_products(start, stop, self.time_tolerance)
-        for collection_index, data_start, data_stop, product in products:
+        for _, data_start, data_stop, product in products:
             data_start = max(start, data_start)
             data_stop = min(stop, data_stop)
             source_dataset = product.get_dataset(self.source.dataset_id)
@@ -299,13 +315,15 @@ class ModelInterpolation(BaseModelInterpolation):
             }
 
             self.logger.debug("cache file is missing")
-            dataset, missing_model_variables = self._extract_product_data(
+            dataset, _ = self._extract_product_data(
                 source_dataset['location'],
                 [*variables, *self.EXTRA_MODEL_INPUT_VARIABLES],
                 **temporal_subset_options,
             )
 
-            self._fill_model_values(dataset, self.models)
+            _fill_model_values(dataset)
+
+            _extract_model_sources(data_start, data_stop)
 
             yield dataset
             counter += 1
@@ -316,15 +334,6 @@ class ModelInterpolation(BaseModelInterpolation):
             dataset = self._get_empty_dataset(variables)
             if dataset:
                 yield dataset
-
-    def _fill_model_values(self, dataset, models):
-        """ Calculate the model values.  """
-        for target_variable, model in models.items():
-            source_variable = self.translate_fw_models[target_variable]
-            dataset.merge(
-                model.eval(dataset, [source_variable]),
-                {source_variable: target_variable}
-            )
 
 
 class CachedModelExtraction(BaseModelInterpolation):
