@@ -174,10 +174,12 @@ class TestDataset(ArrayMixIn, TestCase):
         self.assertEqual(dataset.cdf_attr.get('C'), TEST_ATTRIB)
 
     def test_merge(self):
-        """Test Dataset.merge() method."""
+        """Test Dataset.merge() method, including name translation."""
+
         dataset_a = Dataset()
-        dataset_a.set('A', DATA_A, CDF_DOUBLE_TYPE, TEST_ATTRIB)
-        dataset_a.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_a.set('X', DATA_A, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_a.set('Y', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        variable_mapping = {"X": "A", "Y": "B"}
 
         dataset_b = Dataset()
         dataset_b.set('B', DATA_D)
@@ -188,7 +190,7 @@ class TestDataset(ArrayMixIn, TestCase):
         dataset_zero_size.set('C', DATA_ZERO_VECTOR)
 
         dataset = Dataset()
-        dataset.merge(dataset_a)
+        dataset.merge(dataset_a, variable_mapping)
         dataset.merge(dataset_b)
         dataset.merge(Dataset())
         with self.assertRaises(ValueError):

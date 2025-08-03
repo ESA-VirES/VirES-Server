@@ -70,7 +70,7 @@ class Dataset(OrderedDict):
         if cdf_attr is not None:
             self.cdf_attr[variable] = dict(cdf_attr)
 
-    def merge(self, dataset):
+    def merge(self, dataset, variable_mapping=None):
         """ Merge datasets.
         The merge adds variables from the given dataset if these are not already
         present otherwise the variables are ignored.
@@ -81,12 +81,18 @@ class Dataset(OrderedDict):
                 (dataset.length, self.length)
             )
 
-        for variable, data in dataset.items():
-            if variable not in self:
+        if not variable_mapping:
+            variable_mapping = {}
+
+        for source_variable, data in dataset.items():
+            target_variable = variable_mapping.get(
+                source_variable, source_variable
+            )
+            if target_variable not in self:
                 self.set(
-                    variable, data,
-                    dataset.cdf_type.get(variable),
-                    dataset.cdf_attr.get(variable)
+                    target_variable, data,
+                    dataset.cdf_type.get(source_variable),
+                    dataset.cdf_attr.get(source_variable)
                 )
 
     def update(self, dataset):
