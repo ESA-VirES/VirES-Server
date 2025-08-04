@@ -46,7 +46,9 @@ DATA_ZERO_VECTOR = random((0, M))
 
 DATA_X = array([1.0, 3.0, 4.0, 5.0])
 DATA_Y = array([1.0, 3.0, 1.0, 2.0])
+DATA_Y_SLOPE = array([2.0, 0.0, 0.0, 1.0])
 DATA_Z = array([[1.0, 2.0], [3.0, 1.0], [1.0, 3.0], [2.0, 1.0]])
+DATA_Z_SLOPE = array([[2.0, -1.0], [0.0, 0.0], [0.0, 0.0], [1.0, -2.0]])
 
 DATA_X_INTERPOLATED = array([
     -0.25, 0.25, 0.75, 1.25, 1.75, 2.25, 2.75,
@@ -455,9 +457,17 @@ class TestDataset(ArrayMixIn, TestCase):
         dataset_source.set("A", DATA_Y)
         dataset_source.set("B", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
         dataset_source.set("C", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("D", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("E", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("F", DATA_Y)
+        dataset_source.set("_d_F_dt", DATA_Y_SLOPE)
         dataset_source.set("K", DATA_Z)
         dataset_source.set("L", DATA_Z)
         dataset_source.set("M", DATA_Z)
+        dataset_source.set("N", DATA_Z)
+        dataset_source.set("O", DATA_Z)
+        dataset_source.set("P", DATA_Z)
+        dataset_source.set("_d_P_dt", DATA_Z_SLOPE)
 
         data_x = array([
             -0.25, 0.25, 0.75, 1.25, 1.75, 2.25, 2.75,
@@ -484,11 +494,21 @@ class TestDataset(ArrayMixIn, TestCase):
         kinds = {
             "B": "nearest",
             "C": "previous",
+            "D": "linear",
+            "E": "cubic", # fallback to linear
+            "F": "cubic",
             "L": "nearest",
             "M": "zero",
+            "N": "linear",
+            "O": "cubic", # fallback to linear
+            "P": "cubic",
         }
 
         dataset = dataset_source.interpolate(data_x, "T", kinds=kinds)
+
+        # auxiliary slopes are not to be interpolated
+        assert "_d_F_dt" not in dataset
+        assert "_d_P_dt" not in dataset
 
         self.assertEqual(dataset.length, len(data_x))
         self.assertFalse(dataset.is_empty)
@@ -504,6 +524,18 @@ class TestDataset(ArrayMixIn, TestCase):
         self.assertAllEqual(dataset['C'], array([
             nan, nan, nan, 1.0, 1.0, 1.0, 1.0,
             3.0, 3.0, 1.0, 1.0, nan, nan, nan,
+        ]))
+        self.assertAllEqual(dataset['D'], array([
+            nan, nan, nan, 1.25, 1.75, 2.25, 2.75,
+            2.5 , 1.5 , 1.25, 1.75, nan,  nan, nan,
+        ]))
+        self.assertAllEqual(dataset['E'], array([
+            nan, nan, nan, 1.25, 1.75, 2.25, 2.75,
+            2.5 , 1.5 , 1.25, 1.75, nan,  nan, nan,
+        ]))
+        self.assertAllEqual(dataset['F'], array([
+            nan, nan, nan, 1.46875, 2.21875, 2.71875, 2.96875,
+            2.6875, 1.3125, 1.109375, 1.703125, nan, nan, nan
         ]))
 
         self.assertAllEqual(dataset['K'], array([
@@ -522,6 +554,21 @@ class TestDataset(ArrayMixIn, TestCase):
             [nan, nan], [nan, nan], [nan, nan], [1.0, 2.0], [1.0, 2.0],
             [1.0, 2.0], [1.0, 2.0], [3.0, 1.0], [3.0, 1.0], [1.0, 3.0],
             [1.0, 3.0], [nan, nan], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['N'], array([
+            [nan, nan], [nan, nan], [nan, nan], [1.25, 1.875], [1.75, 1.625],
+            [2.25, 1.375], [2.75, 1.125], [2.5, 1.5], [1.5, 2.5],
+            [1.25, 2.5], [1.75, 1.5], [nan, nan], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['O'], array([
+            [nan, nan], [nan, nan], [nan, nan], [1.25, 1.875], [1.75, 1.625],
+            [2.25, 1.375], [2.75, 1.125], [2.5, 1.5], [1.5, 2.5],
+            [1.25, 2.5], [1.75, 1.5], [nan, nan], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['P'], array([
+            [nan, nan], [nan, nan], [nan, nan], [1.46875, 1.765625], [2.21875, 1.390625],
+            [2.71875, 1.140625], [2.96875, 1.015625], [2.6875, 1.3125], [1.3125, 2.6875],
+            [1.109375, 2.78125], [1.703125, 1.59375], [nan, nan], [nan, nan], [nan, nan],
         ]))
 
         self.assertEqual(dataset.cdf_type.get('A'), CDF_DOUBLE_TYPE)
@@ -542,9 +589,17 @@ class TestDataset(ArrayMixIn, TestCase):
         dataset_source.set("A", DATA_Y)
         dataset_source.set("B", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
         dataset_source.set("C", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("D", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("E", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("F", DATA_Y)
+        dataset_source.set("_d_F_dt", DATA_Y_SLOPE)
         dataset_source.set("K", DATA_Z)
         dataset_source.set("L", DATA_Z)
         dataset_source.set("M", DATA_Z)
+        dataset_source.set("N", DATA_Z)
+        dataset_source.set("O", DATA_Z)
+        dataset_source.set("P", DATA_Z)
+        dataset_source.set("_d_P_dt", DATA_Z_SLOPE)
 
         data_x = array([
             -0.25, 0.25, 0.75, 1.25, 1.75, 2.25, 2.75,
@@ -553,15 +608,25 @@ class TestDataset(ArrayMixIn, TestCase):
 
         kinds = {
             "B": "nearest",
-            "C": "zero",
+            "C": "previous",
+            "D": "linear",
+            "E": "cubic", # fallback to linear
+            "F": "cubic",
             "L": "nearest",
-            "M": "previous",
+            "M": "zero",
+            "N": "linear",
+            "O": "cubic", # fallback to linear
+            "P": "cubic",
         }
 
         dataset = dataset_source.interpolate(
             data_x, "T", kinds=kinds,
             gap_threshold=1.0, segment_neighbourhood=0.5,
         )
+
+        # auxiliary slopes are not to be interpolated
+        assert "_d_F_dt" not in dataset
+        assert "_d_P_dt" not in dataset
 
         self.assertEqual(dataset.length, len(data_x))
         self.assertFalse(dataset.is_empty)
@@ -578,23 +643,48 @@ class TestDataset(ArrayMixIn, TestCase):
             nan, nan, nan, 1.0, nan, nan, nan,
             3.0, 3.0, 1.0, 1.0, 2.0, nan, nan,
         ]))
+        self.assertAllEqual(dataset['D'], array([
+            nan, nan, nan, nan, nan, nan, 3.5,
+            2.5, 1.5, 1.25, 1.75, 2.25, nan, nan,
+        ]))
+        self.assertAllEqual(dataset['E'], array([
+            nan, nan, nan, nan, nan, nan, 3.5,
+            2.5, 1.5, 1.25, 1.75, 2.25, nan, nan,
+        ]))
+        self.assertAllEqual(dataset['F'], array([
+            nan, nan, nan, nan, nan, nan, 2.5625,
+            2.6875, 1.3125, 1.109375, 1.703125, 2.171875, nan, nan
+        ]))
 
         self.assertAllEqual(dataset['K'], array([
             [nan, nan], [nan, nan], [1.0, 2.0], [1.0, 2.0], [nan, nan],
             [nan, nan], [3.0, 1.0], [3.0, 1.0], [1.0, 3.0], [1.0, 3.0],
             [2.0, 1.0], [2.0, 1.0], [nan, nan], [nan, nan],
         ]))
-
         self.assertAllEqual(dataset['L'], array([
             [nan, nan], [nan, nan], [1.0, 2.0], [1.0, 2.0], [nan, nan],
             [nan, nan], [3.0, 1.0], [3.0, 1.0], [1.0, 3.0], [1.0, 3.0],
             [2.0, 1.0], [2.0, 1.0], [nan, nan], [nan, nan],
         ]))
-
         self.assertAllEqual(dataset['M'], array([
             [nan, nan], [nan, nan], [nan, nan], [1.0, 2.0], [nan, nan],
             [nan, nan], [nan, nan], [3.0, 1.0], [3.0, 1.0], [1.0, 3.0],
             [1.0, 3.0], [2.0, 1.0], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['N'], array([
+            [nan, nan], [nan, nan], [nan, nan], [nan, nan], [nan, nan],
+            [nan, nan], [3.5, 0.5], [2.5, 1.5], [1.5, 2.5], [1.25, 2.5],
+            [1.75, 1.5], [2.25, 0.5], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['O'], array([
+            [nan, nan], [nan, nan], [nan, nan], [nan, nan], [nan, nan],
+            [nan, nan], [3.5, 0.5], [2.5, 1.5], [1.5, 2.5], [1.25, 2.5],
+            [1.75, 1.5], [2.25, 0.5], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['P'], array([
+            [nan, nan], [nan, nan], [nan, nan], [nan, nan], [nan, nan],
+            [nan, nan], [2.5625, 1.4375], [2.6875, 1.3125], [1.3125, 2.6875], [1.109375, 2.78125],
+            [1.703125, 1.59375], [2.171875, 0.65625], [nan, nan], [nan, nan],
         ]))
 
         self.assertEqual(dataset.cdf_type.get('A'), CDF_DOUBLE_TYPE)

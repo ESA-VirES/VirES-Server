@@ -28,15 +28,18 @@
 
 from collections import OrderedDict
 from numpy import array, concatenate, inf
-from .util import include, unique
+from .util import include, exclude, unique
 from .cdf_util import CDF_DOUBLE_TYPE
 from .interpolate import Interp1D
+
 
 
 class Dataset(OrderedDict):
     """ Dataset class an ordered dictionary of arrays with a few additional
     properties and methods.
     """
+    SLOPE_VARIABLE_TEMPLATE = "_d_{name}_dt"
+
     def __init__(self, dataset=None):
         OrderedDict.__init__(self)
         self.cdf_type = {}
@@ -174,6 +177,8 @@ class Dataset(OrderedDict):
         dictionary. The supported kinds are: last, nearest, linear.
         The values as well the variable must be sorted in ascending order.
         """
+        slope_variable_template = self.SLOPE_VARIABLE_TEMPLATE
+
         if kinds is None:
             kinds = {}
         dataset = Dataset()
@@ -181,15 +186,19 @@ class Dataset(OrderedDict):
         interp1d = Interp1D(
             self[variable], values, gap_threshold, segment_neighbourhood
         )
-        variables = (
+        variables = list(
             self if variables is None else include(unique(variables), self)
         )
+        excluded_variables = set(
+            slope_variable_template.format(name=name) for name in variables
+        )
 
-        for name in variables:
+        for name in exclude(variables, excluded_variables):
             kind = kinds.get(name, 'nearest')
             data = self[name]
+            slope = self.get(slope_variable_template.format(name=name))
             dataset.set(
-                name, interp1d(data, kind).astype(data.dtype),
+                name, interp1d(data, slope, kind).astype(data.dtype),
                 CDF_DOUBLE_TYPE, #self.cdf_type.get(name),
                 self.cdf_attr.get(name)
             )
