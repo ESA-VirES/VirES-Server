@@ -163,7 +163,20 @@ class FetchFilteredDataAsync(WPSProcess):
             "ignore_cached_models", bool, optional=True, default=False,
             abstract=(
                 "Optional boolean flag forcing the server to ignore "
-                "the cached models and to calculate the models on-the-fly."
+                "the cached models and to calculate the cached models "
+                "on-the-fly. The cached LR model values, when used, are "
+                "always interpolated for HR datasets. "
+                "The model caching is a performance optimisation and "
+                "its disabling makes the calculation significantly slower."
+            ),
+        )),
+        ("do_not_interpolate_models", LiteralData(
+            "do_not_interpolate_models", bool, optional=True, default=False,
+            abstract=(
+                "Optional boolean flag forcing the server not to interpolate"
+                "non-cached models for HR datasets from the LR ones."
+                "The model interpolation is a performance optimisation and "
+                "its disabling makes the calculation significantly slower."
             ),
         )),
         ("shc", ComplexData(
@@ -298,7 +311,7 @@ class FetchFilteredDataAsync(WPSProcess):
     def execute(self, permissions, collection_ids, begin_time, end_time,
                 filters, sampling_step, requested_variables, model_ids, shc,
                 csv_time_format, output, source_products, ignore_cached_models,
-                context, **kwargs):
+                do_not_interpolate_models, context, **kwargs):
         """ Execute process """
         access_logger = self.get_access_logger(**kwargs)
         #workspace_dir = ""
@@ -463,6 +476,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         mission, spacecraft, grade,
                         requested_models, source_models,
                         no_cache=ignore_cached_models,
+                        no_interpolation=do_not_interpolate_models,
                         master=master,
                     ),
                     copied_variables,
