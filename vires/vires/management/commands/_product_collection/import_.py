@@ -184,12 +184,12 @@ def update_cached_models(collection, events):
                     "Fix the model and reload the product collection again."
                 )
 
-    if "cachedMagneticModels" not in collection.metadata:
+    if "modelOptions" not in collection.metadata:
         return
 
     metadata = collection.metadata
 
-    models = metadata["cachedMagneticModels"].pop("models", None) or []
+    models = metadata["modelOptions"].pop("cachedModels", None) or []
 
     models = list(_parse_source_models(models))
 

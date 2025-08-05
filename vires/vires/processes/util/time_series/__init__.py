@@ -37,7 +37,7 @@ from .custom_data import CustomDatasetTimeSeries
 from .indices import IndexKp10, IndexDst, IndexDDst, IndexF107
 from .orbit_counter import OrbitCounter
 from .orbit_direction import OrbitDirection, QDOrbitDirection
-from .cached_model import CachedModelExtraction
+from .cached_model import CachedModelExtraction, ModelInterpolation
 
 
 def get_product_time_series(identifier):

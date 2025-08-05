@@ -275,6 +275,7 @@ class ProductCollection(Model):
     def __str__(self):
         return self.identifier
 
+
     def get_nominal_sampling(self, dataset_id=None):
         """ Get nominal sampling for the given dataset. """
         # The optional nominal sampling can be stored as:
@@ -287,6 +288,10 @@ class ProductCollection(Model):
         if not nominal_sampling:
             return None
         return parse_duration(nominal_sampling)
+
+    @property
+    def model_options(self):
+        return self.metadata.get("modelOptions") or {}
 
     @property
     def spacecraft_tuple(self):

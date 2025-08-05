@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@ from vires.dataset import Dataset
 from ..base import Model
 
 
-class CachedModelGapFill(Model):
-    """ Special model filling gaps in the extracted cached model values. """
+class ModelGapFill(Model):
+    """ Special model filling gaps in cached or interpolated model values. """
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -54,7 +54,7 @@ class CachedModelGapFill(Model):
 
         super().__init__()
 
-        self.source_variable = f"__cached__B_NEC_{model.name}"
+        self.source_variable = f"__intermediate__B_NEC_{model.name}"
         self.target_variable = f"B_NEC_{model.name}"
         self.model = model
 

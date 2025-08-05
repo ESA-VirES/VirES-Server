@@ -81,7 +81,7 @@ def seed_collection(collection, model_names=None, product_filter=None,
     if not models:
         return
 
-    cache_options = collection.metadata.get("cachedMagneticModels") or {}
+    model_options = collection.model_options
     cache_dir = get_collection_model_cache_directory(collection.identifier)
     init_directory(cache_dir, logger)
 
@@ -98,7 +98,7 @@ def seed_collection(collection, model_names=None, product_filter=None,
         for product, cache_file in records:
             yield _seed_product(
                 _get_product_info(product), cache_file, models,
-                options=cache_options, force_reseed=force_reseed, logger=logger
+                options=model_options, force_reseed=force_reseed, logger=logger
             )
 
     def _seed_cache_with_executor(executor, cache_files):
@@ -107,7 +107,7 @@ def seed_collection(collection, model_names=None, product_filter=None,
             product, cache_file = record
             return submit(
                 _seed_product, _get_product_info(product), cache_file, models,
-                options=cache_options, force_reseed=force_reseed, logger=logger
+                options=model_options, force_reseed=force_reseed, logger=logger
             )
 
         def _handle_result(future, record):
@@ -136,14 +136,14 @@ def seed_product(product, model_names=None, force_reseed=False, logger=None):
     if not models:
         return
 
-    cache_options = product.collection.metadata.get("cachedMagneticModels") or {}
+    model_options = product.collection.model_options
     cache_dir = get_collection_model_cache_directory(product.collection.identifier)
     init_directory(cache_dir, logger)
 
     cache_file = get_product_model_cache_file(cache_dir, product.identifier)
     _seed_product(
         _get_product_info(product), cache_file, models,
-        options=cache_options, force_reseed=force_reseed, logger=logger,
+        options=model_options, force_reseed=force_reseed, logger=logger,
     )
 
 

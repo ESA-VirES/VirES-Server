@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -41,6 +41,8 @@ class Interp1D():
     datasets using the same target sampling (x_dst).
     NOTE: both x_src and x_dst must be sorted in ascending order.
     """
+    DEFAULT_KIND = "nearest"
+    KINDS_REQUIRING_SLOPES = {'cubic'}
 
     def __init__(self, x_src, x_dst, gap_threshold=inf,
                  segment_neighbourhood=0, logger=None):
@@ -53,20 +55,28 @@ class Interp1D():
         )
         self._interpolators = {}
         self._iterpolator_classes = {
-            'nearest': NearestNeighbour1DInterpolator,
-            'zero': PreviousNeighbour1DInterpolator,
-            'previous': PreviousNeighbour1DInterpolator,
-            'linear': Linear1DInterpolator,
+            "nearest": NearestNeighbour1DInterpolator,
+            "zero": PreviousNeighbour1DInterpolator,
+            "previous": PreviousNeighbour1DInterpolator,
+            "linear": Linear1DInterpolator,
+            "cubic": Cubic1DInterpolator,
         }
 
-    def __call__(self, y_src, kind):
+    def __call__(self, y_src, dy_src=None, kind=DEFAULT_KIND):
         """ Interpolate values. """
 
         if len(self.x_src) != len(y_src):
             raise ValueError(
                 "x_src and y_src arrays must be equal in length along "
-                "interpolation axis."
+                "interpolation axis. "
+                "dy_src is an optional array of tangent (rate of change) "
+                "values, required by the cubic Hermite spline interpolation, "
+                "and it must be of the same size as y_src or None."
             )
+
+        if kind in self.KINDS_REQUIRING_SLOPES and dy_src is None:
+            # fallback to linear interpolation if the slopes are not provided
+            kind = "linear"
 
         iterpolator = self._interpolators.get(kind)
 
@@ -74,7 +84,7 @@ class Interp1D():
             try:
                 iterpolator_class = self._iterpolator_classes[kind]
             except KeyError:
-                raise ValueError("Invalid interpolation kind %r!" % kind)
+                raise ValueError("Invalid interpolation kind {kind!r}") from None
 
             self._interpolators[kind] = iterpolator = iterpolator_class(
                 self.x_src, self.x_dst,
@@ -82,7 +92,7 @@ class Interp1D():
                 self.segment_neighbourhood,
             )
 
-        return iterpolator(y_src)
+        return iterpolator(y_src, dy_src)
 
 
 class BaseNeighbour1DInterpolator():
@@ -98,14 +108,15 @@ class BaseNeighbour1DInterpolator():
             upper_neighbourhood=max(0, upper_neighbourhood),
         )
 
-    def __call__(self, y_src):
+    def __call__(self, y_src, dy_src=None):
         y_dst = empty(self.x_dst_shape[:1] + y_src.shape[1:])
         if y_dst.size > 0:
             y_dst[self.idx_nan] = nan
             y_dst[self.idx_valid] = y_src[self.index]
         return y_dst
 
-    def _find_indices(self, x_in, i_in, x_out):
+    @staticmethod
+    def _find_indices(x_in, i_in, x_out):
         raise NotImplementedError
 
     def _get_indices(self, x_src, x_dst, gap_threshold,
@@ -137,7 +148,7 @@ class BaseNeighbour1DInterpolator():
             )
 
         idx_nan, idx_valid = _get_nan_mask(index)
-        index_source = index[idx_valid].astype('int')
+        index_source = index[idx_valid].astype("int")
 
         return idx_nan, idx_valid, index_source
 
@@ -161,8 +172,8 @@ class NearestNeighbour1DInterpolator(BaseNeighbour1DInterpolator):
             "bounds_error": False,
             "copy": False,
         }
-        if scipy.__version__ >= '0.14':
-            options['assume_sorted'] = True
+        if scipy.__version__ >= "0.14":
+            options["assume_sorted"] = True
         return interp1d(x_in, i_in, **options)(x_out)
 
 
@@ -185,58 +196,28 @@ class PreviousNeighbour1DInterpolator(BaseNeighbour1DInterpolator):
             "bounds_error": False,
             "copy": False,
         }
-        if scipy.__version__ >= '0.14':
-            options['assume_sorted'] = True
+        if scipy.__version__ >= "0.14":
+            options["assume_sorted"] = True
         return interp1d(x_in, i_in, **options)(x_out)
 
 
-class Linear1DInterpolator():
-    """ Linear 1D interpolator. """
+class BaseSpline1DInterpolator():
+    """ Base piecewise 1D interpolator. """
 
-    def __init__(self, x_src, x_dst, gap_threshold=inf, segment_neighbourhood=0):
-        gap_threshold = max(0, gap_threshold)
-        segment_neighbourhood = max(0, segment_neighbourhood)
-        self.x_dst_shape = x_dst.shape
-        self.idx_nan, self.idx_valid, self.index, self.base = self._get_indices(
-            x_src, x_dst, gap_threshold,
-            segment_neighbourhood, segment_neighbourhood,
-        )
-
-    def __call__(self, y_src):
-        y_dst = empty(self.x_dst_shape[:1] + y_src.shape[1:])
-        if y_dst.size > 0:
-            y_dst[self.idx_nan] = nan
-            # expand_dim requires NumPy >= v1.8.0
-            extra_dims = tuple(range(2, y_src.ndim + 1))
-            y_dst[self.idx_valid] = (
-                expand_dims(self.base, axis=extra_dims) * y_src[self.index]
-            ).sum(axis=1)
-        return y_dst
-
-    @staticmethod
-    def _find_indices(x_in, i_in, x_out):
-        options = {
-            "kind": "linear",
-            "fill_value": "extrapolate",
-            "bounds_error": False,
-            "copy": False,
-        }
-        if scipy.__version__ >= '0.14':
-            options['assume_sorted'] = True
-        return interp1d(x_in, i_in, **options)(x_out)
-
-    def _get_indices(self, x_src, x_dst, gap_threshold,
+    @classmethod
+    def _get_indices(cls, x_src, x_dst, gap_threshold,
                      lower_neighbourhood, upper_neighbourhood):
         """ Get valid/invalid values mask and mapping of the source
         to the destination values.
         """
+        index = full(x_dst.shape, -1)
+        base = full(x_dst.shape, nan)
+
         segments = _generate_contigous_segments(
             x_src, x_dst, gap_threshold,
             lower_neighbourhood, upper_neighbourhood,
         )
 
-        index = full(x_dst.shape, -1)
-        base = full(x_dst.shape, nan)
         for segment in segments:
             (
                 _,
@@ -244,21 +225,18 @@ class Linear1DInterpolator():
                 (idx_dst_low, idx_dst_high),
             ) = segment
 
-            if idx_src_high - 2 < idx_src_low:
-                continue # skip single value segments
+            # skip single element segments
+            if idx_src_high - idx_src_low < 2:
+                continue
 
-            tmp0 = self._find_indices(
-                x_src[idx_src_low:idx_src_high],
+            (
+                index[idx_dst_low:idx_dst_high],
+                base[idx_dst_low:idx_dst_high]
+            ) = cls._get_segment_index_and_parameter(
                 arange(idx_src_low, idx_src_high),
+                x_src[idx_src_low:idx_src_high],
                 x_dst[idx_dst_low:idx_dst_high]
             )
-
-            tmp1 = clip(floor(tmp0), idx_src_low, idx_src_high - 2)
-
-            index[idx_dst_low:idx_dst_high] = tmp1
-            base[idx_dst_low:idx_dst_high] = tmp0 - tmp1
-
-            del tmp0, tmp1
 
         idx_nan, idx_valid = _get_nan_mask(base)
 
@@ -270,6 +248,93 @@ class Linear1DInterpolator():
 
         return idx_nan, idx_valid, index, base
 
+    @classmethod
+    def _get_segment_index_and_parameter(cls, index, x_in, x_out):
+        """ Get segment index and normalized parameter (values from [0, 1] interval) """
+        assert index.size > 1
+
+        def _find_indices(x_in, i_in, x_out):
+            options = {
+                "kind": "linear",
+                "fill_value": "extrapolate",
+                "bounds_error": False,
+                "copy": False,
+            }
+            if scipy.__version__ >= "0.14":
+                options["assume_sorted"] = True
+            return interp1d(x_in, i_in, **options)(x_out)
+
+        decimal_index = _find_indices(x_in, index, x_out)
+
+        floor_index = clip(floor(decimal_index), index[0], index[-2])
+
+        return floor_index.astype("int64"), decimal_index - floor_index
+
+
+class Linear1DInterpolator(BaseSpline1DInterpolator):
+    """ Linear 1D interpolator. """
+
+    def __init__(self, x_src, x_dst, gap_threshold=inf, segment_neighbourhood=0):
+        gap_threshold = max(0, gap_threshold)
+        segment_neighbourhood = max(0, segment_neighbourhood)
+        self.x_dst_shape = x_dst.shape
+        self.idx_nan, self.idx_valid, self.index, self.base = self._get_indices(
+            x_src, x_dst, gap_threshold,
+            segment_neighbourhood, segment_neighbourhood,
+        )
+
+    def __call__(self, y_src, dy_src=None):
+        del dy_src
+        y_dst = empty(self.x_dst_shape[:1] + y_src.shape[1:])
+        if y_dst.size > 0:
+            y_dst[self.idx_nan] = nan
+            # expand_dim requires NumPy >= v1.8.0
+            extra_dims = tuple(range(2, y_src.ndim + 1))
+            y_dst[self.idx_valid] = (
+                expand_dims(self.base, axis=extra_dims) * y_src[self.index]
+            ).sum(axis=1)
+        return y_dst
+
+
+class Cubic1DInterpolator(BaseSpline1DInterpolator):
+    """ Cubic Hermit spline 1D interpolator. """
+
+    @staticmethod
+    def _get_hermit_spline_basis(x_src, index, base):
+        a1, b1 = base[:, 0], base[:, 1]
+        a2, b2 = a1*a1, b1*b1
+        dx = (x_src[1:] - x_src[:-1])[index[:, 0]]
+
+        return (
+            stack(((1 + 2*b1) * a2, (1 + 2*a1) * b2), axis=1),
+            stack((b1 * a2 * dx, -a1 * b2 * dx), axis=1)
+        )
+
+    def __init__(self, x_src, x_dst, gap_threshold=inf, segment_neighbourhood=0):
+        gap_threshold = max(0, gap_threshold)
+        segment_neighbourhood = max(0, segment_neighbourhood)
+        self.x_dst_shape = x_dst.shape
+        self.idx_nan, self.idx_valid, self.index, base = self._get_indices(
+            x_src, x_dst, gap_threshold,
+            segment_neighbourhood, segment_neighbourhood,
+        )
+        self.base0, self.base1 = self._get_hermit_spline_basis(
+            x_src, self.index, base
+        )
+
+    def __call__(self, y_src, dy_src=None):
+        y_dst = empty(self.x_dst_shape[:1] + y_src.shape[1:])
+        if y_dst.size > 0:
+            y_dst[self.idx_nan] = nan
+            # expand_dim requires NumPy >= v1.8.0
+            extra_dims = tuple(range(2, y_src.ndim + 1))
+            y_dst[self.idx_valid] = (
+                expand_dims(self.base0, axis=extra_dims) * y_src[self.index]
+            ).sum(axis=1) + (
+                expand_dims(self.base1, axis=extra_dims) * dy_src[self.index]
+            ).sum(axis=1)
+        return y_dst
+
 
 def _generate_contigous_segments(x_src, x_dst, gap_threshold,
                                  lower_neighbourhood, upper_neighbourhood):
@@ -279,8 +344,8 @@ def _generate_contigous_segments(x_src, x_dst, gap_threshold,
         x_l = x_src[idx_src_low] - lower_neighbourhood
         x_h = x_src[idx_src_high-1] + upper_neighbourhood
         # get range of the x_dst overlapping the x_src segment
-        idx_dst_low = searchsorted(x_dst, x_l, side='left')
-        idx_dst_high = searchsorted(x_dst, x_h, side='right')
+        idx_dst_low = searchsorted(x_dst, x_l, side="left")
+        idx_dst_high = searchsorted(x_dst, x_h, side="right")
         if idx_dst_high > idx_dst_low:
             yield (
                 (x_l, x_h),
