@@ -44,8 +44,8 @@ LOGGER = getLogger(__name__)
 
 def generate_magnetic_model_sources(mission, spacecraft, grade,
                                     requested_models, source_models,
-                                    no_cache=False, master=None,
-                                    interpolated_collection=None):
+                                    no_cache=False, no_interpolation=False,
+                                    master=None, interpolated_collection=None):
     """ Generate resolver models and other sources from the input
     model specification.
 
@@ -58,6 +58,7 @@ def generate_magnetic_model_sources(mission, spacecraft, grade,
         requested_models: list of the requested composed models
         source_models: list of the source models needed by the requested models
         no_cache: set to True to skip cached models
+        no_interpolation: set to True to skip interpolation of non-cached models
         master: optional master time-series
         interpolated_collection: set to collection or collection id
             from which the model values should be interpolated
@@ -72,24 +73,27 @@ def generate_magnetic_model_sources(mission, spacecraft, grade,
         if model_options.get("interpolateFromCollection", None):
             interpolated_collection = model_options["interpolateFromCollection"]
 
+    if no_interpolation:
+        interpolated_collection = None
+
     if (
         interpolated_collection and
         not isinstance(interpolated_collection, ProductCollection)
     ):
         interpolated_collection = _get_collection(interpolated_collection)
 
-    available_cached_models = _get_available_cached_models(
+    available_cached_models = {} if no_cache else _get_available_cached_models(
         mission, spacecraft, grade
     )
 
     # process source models required by the requested named composed models
     source_models = _handle_source_mio_models(source_models)
-    if not no_cache:
-        source_models = _handle_cached_and_interpolated_models(
-            source_models, available_cached_models,
-            master_source=master_source,
-            interpolated_collection=interpolated_collection,
-        )
+    source_models = _handle_cached_and_interpolated_models(
+        models=source_models,
+        available_cached_models=available_cached_models,
+        master_source=master_source,
+        interpolated_collection=interpolated_collection,
+    )
     yield from source_models
 
     # process requested composed models
@@ -123,7 +127,7 @@ def _get_collection(collection_id):
 
 def _handle_cached_and_interpolated_models(
     models, available_cached_models, master_source=None,
-    interpolated_collection=None
+    interpolated_collection=None,
 ):
     """ If possible, replace cached source models with the cache extraction
     time-series object.
@@ -143,17 +147,20 @@ def _handle_cached_and_interpolated_models(
     # collect cached models, group them by collection and setup gap fillers
     for model in models:
         if isinstance(model, SourceMagneticModel):
-            if model.name in available_cached_models: # cached source model
+            if model.name in available_cached_models:
+                # cached source model
                 collections = tuple(
                     model.collection
                     for model in available_cached_models[model.name]
                 )
                 cached_models[collections].append(model)
                 delayed_models.append(ModelGapFill(model))
-            elif interpolated_collection: # interpolated sources model
+            elif interpolated_collection:
+                # interpolated sources model
                 interpolated_models[interpolated_collection].append(model)
                 delayed_models.append(ModelGapFill(model))
-            else: # non-cached non-interpolated source -> pass through
+            else:
+                # non-cached non-interpolated source -> pass through
                 yield model
         else: # non-source models -> retain after cached models
             delayed_models.append(model)
