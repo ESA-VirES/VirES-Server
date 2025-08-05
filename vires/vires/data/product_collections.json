@@ -189,7 +189,7 @@
             "C": "SW_OPER_MAGC_HR_1B"
         },
         "modelOptions": {
-            "interpolationKind": "linear",
+            "interpolationKind": "cubic",
             "interpolateFromCollection": "SW_OPER_MAGA_LR_1B"
         }
     },
@@ -201,7 +201,7 @@
         "mission": "Swarm",
         "spacecraft": "B",
         "modelOptions": {
-            "interpolationKind": "linear",
+            "interpolationKind": "cubic",
             "interpolateFromCollection": "SW_OPER_MAGB_LR_1B"
         }
     },
@@ -216,7 +216,7 @@
             "A": "SW_OPER_MAGA_HR_1B"
         },
         "modelOptions": {
-            "interpolationKind": "linear",
+            "interpolationKind": "cubic",
             "interpolateFromCollection": "SW_OPER_MAGC_LR_1B"
         }
     },
@@ -232,7 +232,7 @@
             "C": "SW_FAST_MAGC_HR_1B"
         },
         "modelOptions": {
-            "interpolationKind": "linear",
+            "interpolationKind": "cubic",
             "interpolateFromCollection": "SW_FAST_MAGA_LR_1B"
         }
     },
@@ -245,7 +245,7 @@
         "spacecraft": "B",
         "grade": "FAST",
         "modelOptions": {
-            "interpolationKind": "linear",
+            "interpolationKind": "cubic",
             "interpolateFromCollection": "SW_FAST_MAGB_LR_1B"
         }
     },
@@ -261,7 +261,7 @@
             "A": "SW_FAST_MAGA_HR_1B"
         },
         "modelOptions": {
-            "interpolationKind": "linear",
+            "interpolationKind": "cubic",
             "interpolateFromCollection": "SW_FAST_MAGC_LR_1B"
         }
     },

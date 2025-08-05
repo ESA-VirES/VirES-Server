@@ -39,6 +39,12 @@ class Dataset(OrderedDict):
     properties and methods.
     """
     SLOPE_VARIABLE_TEMPLATE = "_d_{name}_dt"
+    KINDS_REQUIRING_SLOPES = Interp1D.KINDS_REQUIRING_SLOPES
+
+    @classmethod
+    def get_slope_variable(cls, variable):
+        """ Get slope variable name. """
+        return cls.SLOPE_VARIABLE_TEMPLATE.format(name=variable)
 
     def __init__(self, dataset=None):
         OrderedDict.__init__(self)

@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2023 EOX IT Services GmbH
+# Copyright (C) 2023-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ from os.path import exists
 from logging import getLogger, LoggerAdapter
 from collections import defaultdict
 from numpy import empty, full, nan
-from vires.cdf_util import cdf_rawtime_to_datetime
+from vires.cdf_util import cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime
 from vires.time_util import naive_to_utc, utc_to_naive, format_datetime
 from vires.util import include, exclude, pretty_list, LazyString
 from vires.dataset import Dataset
@@ -40,6 +40,7 @@ from vires.management.api.cached_magnetic_model import (
     read_sources_with_time_ranges,
     extract_model_sources_datetime,
 )
+from vires.finite_differences import get_slopes_from_nodes
 from .base import TimeSeries
 from .base_product import BaseProductTimeSeries
 from .data_extraction import CDFDataset
@@ -47,6 +48,7 @@ from .data_extraction import CDFDataset
 
 class BaseModelInterpolation(BaseProductTimeSeries):
     """ Base model time-series interpolation class. """
+    KINDS_REQUIRING_SLOPES = {'cubic'}
 
     @property
     def variables(self):
@@ -74,6 +76,7 @@ class BaseModelInterpolation(BaseProductTimeSeries):
                 ) or
                 source.model_options.get("interpolationKind") or "nearest"
             )
+        self.interpolation_kind = interpolation_kind
 
         self.models = {
             f"__intermediate__B_NEC_{model.name}": model
@@ -158,6 +161,26 @@ class BaseModelInterpolation(BaseProductTimeSeries):
             else:
                 self.logger.debug("item time-span is empty")
             dataset.append(item)
+
+        # estimate slopes for the cubic spline interpolation
+        if self.interpolation_kind in dataset.KINDS_REQUIRING_SLOPES:
+
+            for variable in self.models:
+                slope_variable = Dataset.get_slope_variable(variable)
+                self.logger.debug(
+                    "Extracting slope of %s into %s.",
+                    variable, slope_variable,
+                )
+                dataset.set(
+                    slope_variable,
+                    get_slopes_from_nodes(
+                        dataset[self.time_variable],
+                        dataset[variable],
+                        gap_threshold=timedelta_to_cdf_rawtime(
+                            self.time_gap_threshold, cdf_type
+                        ),
+                    )
+                )
 
         return dataset
 
@@ -427,7 +450,20 @@ class CachedModelExtraction(BaseModelInterpolation):
                     pretty_list(missing_model_variables)
                 )
 
-            self._fill_missing_variables(dataset, missing_model_variables)
+            if self.interpolation_kind in dataset.KINDS_REQUIRING_SLOPES:
+                # model values are required slopes slopes for
+                # the cubic spline interpolation
+                for target_variable in missing_model_variables:
+                    model = self.models[target_variable]
+                    source_variable = self.translate_fw_models[target_variable]
+                    dataset.merge(
+                        model.eval(dataset, [source_variable]),
+                        {source_variable: target_variable}
+                    )
+
+            else:
+                # model values will be filled in later
+                self._fill_missing_variables(dataset, missing_model_variables)
 
             yield dataset
             counter += 1

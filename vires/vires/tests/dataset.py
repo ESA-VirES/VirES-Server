@@ -75,6 +75,13 @@ class FilterStub():
 
 class TestDataset(ArrayMixIn, TestCase):
 
+    def test_get_slope_variable(self):
+        variable_name = "VARIABLE"
+        self.assertEqual(
+            Dataset.get_slope_variable(variable_name),
+            Dataset.SLOPE_VARIABLE_TEMPLATE.format(name=variable_name)
+        )
+
     def test_epmty(self):
         """Test empty dataset."""
         dataset = Dataset()

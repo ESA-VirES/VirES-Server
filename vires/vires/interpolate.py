@@ -42,6 +42,7 @@ class Interp1D():
     NOTE: both x_src and x_dst must be sorted in ascending order.
     """
     DEFAULT_KIND = "nearest"
+    KINDS_REQUIRING_SLOPES = {'cubic'}
 
     def __init__(self, x_src, x_dst, gap_threshold=inf,
                  segment_neighbourhood=0, logger=None):
@@ -73,8 +74,8 @@ class Interp1D():
                 "and it must be of the same size as y_src or None."
             )
 
-        if kind == "cubic" and dy_src is None:
-            # fallback to linear interpolation if the tangents are not provided
+        if kind in self.KINDS_REQUIRING_SLOPES and dy_src is None:
+            # fallback to linear interpolation if the slopes are not provided
             kind = "linear"
 
         iterpolator = self._interpolators.get(kind)
