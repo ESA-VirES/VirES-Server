@@ -32,8 +32,10 @@ from collections import defaultdict
 from numpy import empty, full, nan
 from vires.cdf_util import cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime
 from vires.time_util import naive_to_utc, utc_to_naive, format_datetime
-from vires.util import include, exclude, pretty_list, LazyString
+from vires.util import include, exclude, unique, pretty_list, LazyString
 from vires.dataset import Dataset
+from vires.cache_util import cache_path
+from vires.data.vires_settings import CACHED_PRODUCT_FILE
 from vires.management.api.cached_magnetic_model import (
     get_collection_model_cache_directory,
     get_product_model_cache_file,
@@ -49,10 +51,67 @@ from .data_extraction import CDFDataset
 class BaseModelInterpolation(BaseProductTimeSeries):
     """ Base model time-series interpolation class. """
     KINDS_REQUIRING_SLOPES = {'cubic'}
+    MASTER_TIME_VARIABLE = "Timestamp"
+    MASTER_VARIABLES = [MASTER_TIME_VARIABLE, "Latitude", "Longitude", "Radius"]
 
     @property
     def variables(self):
         return list(self.models)
+
+    def _resolve_model_workflow(self, source_models):
+
+        # using delayed import to prevent cyclic dependencies
+        # pylint: disable=import-outside-toplevel
+        from vires.processes.util import VariableResolver
+        from vires.processes.util.time_series import (
+            get_product_time_series,
+            IndexF107,
+        )
+        from vires.processes.util.models import (
+            SunPosition,
+            SubSolarPoint,
+            MagneticDipole,
+            DipoleTiltAngle,
+        )
+
+        class _MasterMock:
+            """ Local resolver mock of the master time-series. """
+
+            # pylint: disable=too-few-public-methods
+            variables = self.MASTER_VARIABLES
+            time_variable = self.MASTER_TIME_VARIABLE
+
+            def __init__(self):
+                self.product_set = set()
+
+        resolver = VariableResolver()
+
+        resolver.add_master(_MasterMock())
+
+        for item in [
+            IndexF107(cache_path(CACHED_PRODUCT_FILE["AUX_F10_2_"])),
+            get_product_time_series("OMNI_HR_1min_avg20min_delay10min"),
+        ]:
+            resolver.add_slave(item)
+
+        for item in [
+            SunPosition(),
+            SubSolarPoint(),
+            MagneticDipole(),
+            DipoleTiltAngle(),
+            *source_models,
+        ]:
+            resolver.add_model(item)
+
+        resolver.add_output_variables([
+            variable
+            for item in source_models
+            for variable in item.variables
+        ])
+
+        resolver.reduce()
+
+        return resolver
 
     def __init__(self, source, source_models, master_source=None, logger=None):
 
@@ -111,6 +170,7 @@ class BaseModelInterpolation(BaseProductTimeSeries):
         if is_master:
             self.logger.debug("using master collection")
         self.logger.debug("interpolation kind: %s", interpolation_kind)
+
 
     def subset_count(self, start, stop):
         """ Count products overlapping the given time interval. """
@@ -186,10 +246,6 @@ class BaseModelInterpolation(BaseProductTimeSeries):
 
     def _extract_product_data(self, filename, variables, **temporal_subset_options):
         """ Extraction of variables from the original product. """
-
-        extracted_variables = set(exclude(variables, self.models))
-        missing_model_variables = set(include(variables, self.models))
-
         with CDFDataset(
             filename,
             translation=self.source.translate_fw,
@@ -198,13 +254,11 @@ class BaseModelInterpolation(BaseProductTimeSeries):
             subset, nrv_shape = cdf_ds.get_temporal_subset(
                 **temporal_subset_options,
             )
-            dataset = cdf_ds.extract_datset(
-                variables=extracted_variables,
+            return cdf_ds.extract_datset(
+                variables=variables,
                 subset=subset,
                 nrv_shape=nrv_shape
             )
-
-        return dataset, missing_model_variables
 
     def _get_empty_dataset(self, variables):
         """ Generate an empty dataset. """
@@ -252,11 +306,53 @@ class BaseModelInterpolation(BaseProductTimeSeries):
             for source in sources[variable]:
                 self.product_set.add(source)
 
+    def _eval_models(self, models, product_filename, **temporal_subset_options):
+        resolver = self._resolve_model_workflow(models.values())
+
+        # extract time and locations
+        tmp_dataset = self._extract_product_data(
+            product_filename,
+            resolver.master.variables,
+            **temporal_subset_options
+        )
+
+        # evaluate models and their dependencies in a temporary dataset
+        required_variables = list(
+            exclude(resolver.required, resolver.master.variables)
+        )
+
+        for slave in resolver.slaves:
+            tmp_dataset.merge(
+                slave.interpolate(
+                    variables=required_variables,
+                    times=tmp_dataset[resolver.master.time_variable],
+                    cdf_type=tmp_dataset.cdf_type[resolver.master.time_variable],
+                )
+            )
+
+        for model in resolver.models:
+            tmp_dataset.merge(
+                model.eval(tmp_dataset, required_variables)
+            )
+
+        # extract the requested model values with variable name translation
+        variable_mapping = {
+            self.translate_fw_models[target_variable]: target_variable
+            for target_variable, _ in models.items()
+        }
+
+        dataset = tmp_dataset.extract(
+            [resolver.master.time_variable, *variable_mapping],
+            variable_mapping=variable_mapping,
+        )
+
+        sources = resolver.extract_sources()
+
+        return dataset, sources
+
 
 class ModelInterpolation(BaseModelInterpolation):
     """ Interpolated model time-series class. """
-
-    EXTRA_MODEL_INPUT_VARIABLES = ["Latitude", "Longitude", "Radius"]
 
     class _LoggerAdapter(LoggerAdapter):
         def process(self, msg, kwargs):
@@ -276,22 +372,6 @@ class ModelInterpolation(BaseModelInterpolation):
     def _subset(self, start, stop, variables):
         """ Get subset of the time series overlapping the given time range.
         """
-
-        def _fill_model_values(dataset):
-            for target_variable, model in self.models.items():
-                source_variable = self.translate_fw_models[target_variable]
-                dataset.merge(
-                    model.eval(dataset, [source_variable]),
-                    {source_variable: target_variable}
-                )
-
-        def _extract_model_sources(start, end):
-            for model in self.models.values():
-                self.product_set.update(
-                    extract_model_sources_datetime(
-                        model.source_model, start, end
-                    )
-                )
 
         def _format_time_range(start, stop):
             return f"{format_datetime(start)}/{format_datetime(stop)}"
@@ -338,15 +418,13 @@ class ModelInterpolation(BaseModelInterpolation):
             }
 
             self.logger.debug("cache file is missing")
-            dataset, _ = self._extract_product_data(
-                source_dataset['location'],
-                [*variables, *self.EXTRA_MODEL_INPUT_VARIABLES],
-                **temporal_subset_options,
+
+            dataset, sources = self._eval_models(
+                self.models, source_dataset['location'],
+                **temporal_subset_options
             )
 
-            _fill_model_values(dataset)
-
-            _extract_model_sources(data_start, data_stop)
+            self.product_set.update(sources)
 
             yield dataset
             counter += 1
@@ -439,10 +517,12 @@ class CachedModelExtraction(BaseModelInterpolation):
                 )
             else:
                 self.logger.debug("cache file is missing")
-                dataset, missing_model_variables = self._extract_product_data(
-                    source_dataset['location'], variables,
+                dataset = self._extract_product_data(
+                    source_dataset['location'],
+                    set(exclude(variables, self.models)),
                     **temporal_subset_options,
                 )
+                missing_model_variables = set(include(variables, self.models))
 
             if missing_model_variables:
                 self.logger.debug(
@@ -450,20 +530,23 @@ class CachedModelExtraction(BaseModelInterpolation):
                     pretty_list(missing_model_variables)
                 )
 
-            if self.interpolation_kind in dataset.KINDS_REQUIRING_SLOPES:
-                # model values are required slopes slopes for
-                # the cubic spline interpolation
-                for target_variable in missing_model_variables:
-                    model = self.models[target_variable]
-                    source_variable = self.translate_fw_models[target_variable]
-                    dataset.merge(
-                        model.eval(dataset, [source_variable]),
-                        {source_variable: target_variable}
+                if self.interpolation_kind in dataset.KINDS_REQUIRING_SLOPES:
+                    # model values are required for the calculation of slopes,
+                    # which are required by the cubic spline interpolation
+                    tmp_dataset, sources = self._eval_models(
+                        {
+                            variable: self.models[variable]
+                            for variable in missing_model_variables
+                        },
+                        source_dataset['location'],
+                        **temporal_subset_options
                     )
+                    dataset.merge(tmp_dataset)
+                    self.product_set.update(sources)
 
-            else:
-                # model values will be filled in later
-                self._fill_missing_variables(dataset, missing_model_variables)
+                else:
+                    # model values will be filled in later
+                    self._fill_missing_variables(dataset, missing_model_variables)
 
             yield dataset
             counter += 1
