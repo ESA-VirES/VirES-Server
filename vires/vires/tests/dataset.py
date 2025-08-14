@@ -266,12 +266,13 @@ class TestDataset(ArrayMixIn, TestCase):
     def test_extract(self):
         """Test Dataset.extract() method."""
         dataset_source = Dataset()
-        dataset_source.set('A', DATA_A)
-        dataset_source.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set('X', DATA_A)
+        dataset_source.set('Y', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
         dataset_source.set('C', DATA_C, CDF_DOUBLE_TYPE, TEST_ATTRIB)
         dataset_source.set('D', DATA_D)
+        variable_mapping = {'X': 'A', 'Y': 'B'}
 
-        dataset = dataset_source.extract(['B', 'D', 'G'])
+        dataset = dataset_source.extract(['Y', 'D', 'G'], variable_mapping)
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, N)

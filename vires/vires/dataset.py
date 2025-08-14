@@ -106,8 +106,8 @@ class Dataset(OrderedDict):
 
     def update(self, dataset):
         """ Update the given dataset with this one.
-        The merge adds variables from the given dataset replacing variables
-        already present in the dataset.
+        Unlike the merge, the update adds variables from the given dataset
+        replacing variables already present in the dataset.
         """
         if self and dataset and self.length != dataset.length:
             raise ValueError(
@@ -160,19 +160,26 @@ class Dataset(OrderedDict):
                 )
         return dataset
 
-    def extract(self, variables):
+    def extract(self, variables, variable_mapping=None):
         """ Get new subset containing only the selected variables. """
         dataset = Dataset()
-        for variable in unique(variables):
+
+        if not variable_mapping:
+            variable_mapping = {}
+
+        for source_variable in unique(variables):
+            target_variable = variable_mapping.get(
+                source_variable, source_variable
+            )
             try:
-                data = self[variable]
+                data = self[source_variable]
             except KeyError:
                 pass # non-existent variables are silently ignored
             else:
                 dataset.set(
-                    variable, data,
-                    self.cdf_type.get(variable),
-                    self.cdf_attr.get(variable)
+                    target_variable, data,
+                    self.cdf_type.get(source_variable),
+                    self.cdf_attr.get(source_variable)
                 )
         return dataset
 
