@@ -172,37 +172,46 @@
     {% endif %}
 
   {% endblock body %}
-
     <script src="{% static 'js/cookie_banner.js'%}"></script>
     <script type="text/javascript">
-      var _paq = _paq || [];
-      function startPiwicTracking() {
+      var _paq = window._paq = window._paq || [];
+      function startMatomoTracking() {
         // user has given consent to process their data
         // Check if the title was set already somewhere else
         var documentTitleSet = false;
         for (var i = _paq.length - 1; i >= 0; i--) {
-        if (_paq[i][0]=="setDocumentTitle"){
-          documentTitleSet = true;
-        }
+            if (_paq[i][0]=="setDocumentTitle"){
+                documentTitleSet = true;
+                break;
+            }
         }
         // only if it is not set set it here with the default
         if(!documentTitleSet){
-        _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+            _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
         }
-
         _paq.push(["setDoNotTrack", true]);
         _paq.push(['trackPageView']);
         _paq.push(['enableLinkTracking']);
         (function() {
-         var u="//nix.eox.at/piwik/";
-         _paq.push(['setTrackerUrl', u+'piwik.php']);
-         _paq.push(['setSiteId', 4]);
-         var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-         g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+            var u="https://nix.eox.at/";
+            _paq.push(['setTrackerUrl', u+'matomo.php']);
+            _paq.push(['setSiteId', 4]);
+            // if require.js if used then matomo.js must be loaded
+            // with require() or bad things happen.
+            if (typeof require === "function" && typeof define === "function" && define.amd) {
+                require.config({contex: "matomo", paths: {matomo: u+"matomo"}})(
+                    ["require"], function (require) {
+                        require(["matomo"], function (matomo) {});
+                    }
+                );
+            } else {
+                var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+                g.type='text/javascript'; g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+            }
         })();
       }
     </script>
-    <noscript><p><img src="//nix.eox.at/piwik/piwik.php?idsite=4" style="border:0;" alt="" /></p></noscript>
+    <noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="https://nix.eox.at/matomo.php?idsite=4&amp;rec=1" style="border:0" alt="" /></p></noscript>
     <script type="text/javascript">
       var window_onload = window.onload;
       window.onload = function() {
@@ -216,12 +225,12 @@
             '</div>';
 
         // Add the accept button
-        html += '<div class="cookiebutton ok"><a href="javascript:void(0);" onclick="CookieBanner.accept();startPiwicTracking();"><span>Accept</span></a></div>';
+        html += '<div class="cookiebutton ok"><a href="javascript:void(0);" onclick="CookieBanner.accept();startMatomoTracking();"><span>Accept</span></a></div>';
         html += '<div class="cookiebutton notok"><a href="javascript:void(0);" onclick="CookieBanner.deny();"><span>Decline</span></a></div>';
 
         CookieBanner.showUnlessInteracted(html);
         if (CookieBanner._checkCookie(CookieBanner.cookieName) == 'accepted') {
-          startPiwicTracking();
+          startMatomoTracking();
         }
       }
     </script>
