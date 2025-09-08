@@ -109,6 +109,12 @@ class ConjunctionsTable():
         product_pair = self.ProductPair(*product_pair)
 
         def _convert_input_data(dataset):
+            if dataset.is_empty:
+                return InputData(
+                    empty(0, 'datetime64[ms]'),
+                    empty(0, 'float64'),
+                    empty(0, 'float64')
+                )
             return InputData(
                 dataset['Timestamp'], dataset['Latitude'], dataset['Longitude']
             )
