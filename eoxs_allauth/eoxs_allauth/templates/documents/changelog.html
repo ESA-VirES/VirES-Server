@@ -3,6 +3,40 @@
 {% block content %}
 <h1>Changelog</h1>
 <hr>
+<h3 id="3.16.0">
+    Release of Service v3.16.0 (2025-10-XX)
+</h3>
+<p>
+    Features:
+</p>
+<ul>
+    <li><b>Web client visualization of Swarm L2 MIT and PPI products.</b><br>
+        It is now possible to visualize the data from the
+        <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_MITx_LP_2F">MITx_LP_2F</a>,
+        <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_MITxTEC_2F">MITxTEC_2F</a>, and
+        <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_PPIxFAC_2F">PPIxFAC_2F</a>
+        products in the VirES web client.
+    </li>
+    <li><b>CHAOS-8 MIO model</b><br>
+        The ionospheric component of the
+        <a target="_blank" href="https://www.spacecenter.dk/files/magnetic-models/CHAOS-8/">CHAOS-8</a>
+        magetic model is now available.
+    </li>
+    <li><b>Interpolation of Swarm 50Hz HR model values from 1Hz values</b><br>
+        As a performance optimization, the magnetic model values for the Swarm
+        <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_MAGx_HR_1B">MAGx_HR_1B</a>
+        times and locations served by the VirES APIs are now
+        interpolated from the magnetic model values at the
+        <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_MAGx_LR_1B">MAGx_LR_1B</a>
+        1Hz times and locations (see <a href="https://viresclient.readthedocs.io/en/latest/available_parameters.html" target="_bank">VirES Python client</a> documentation).
+    <li><b>MAGx_HR_1B CHAOS model and residuals served via HAPI</b><br>
+        The VirES <a href="/hapi" target="_blank">HAPI</a> endpoint serves
+        CHAOS magnetic model and residuals for the high-resolution Swarm
+        <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_MAGx_HR_1B">MAGx_HR_1B</a>
+        magnetic field measurements.
+    </li>
+</ul>
+<hr>
 <h3 id="3.15.2">
     Release of Service v3.15.2 (2025-04-28)
 </h3>
@@ -98,7 +132,7 @@
         have been added to VirES and are accessible via the
         <a href="https://viresclient.readthedocs.io/en/latest/available_parameters.html" target="_bank">VirES Python client</a>
         and
-        <a href="/hapi" target="_blank"> HAPI</a>.
+        <a href="/hapi" target="_blank">HAPI</a>.
     </li>
     <li><b>New Swarm thermospheric density products</b><br>
         The Swarm thermospheric density <a href="https://swarmhandbook.earth.esa.int/catalogue/SW_DNSxPOD_2_" target="_blank">DNSxPOD_2_</a>
@@ -107,7 +141,7 @@
         products have been added to VirES and are accessible via the
         <a href="https://viresclient.readthedocs.io/en/latest/available_parameters.html" target="_bank">VirES Python client</a>
         and
-        <a href="/hapi" target="_blank"> HAPI</a>.
+        <a href="/hapi" target="_blank">HAPI</a>.
     </li>
     <li><b>New TOLEOS thermospheric density and crosswind products</b><br>
         The CHAMP, GRACE, and GRACE-FO thermospheric density
@@ -119,7 +153,7 @@
         project have been added to VirES and are accessible via the
         <a href="https://viresclient.readthedocs.io/en/latest/available_parameters.html" target="_bank">VirES Python client</a>
         and
-        <a href="/hapi" target="_blank"> HAPI</a>.
+        <a href="/hapi" target="_blank">HAPI</a>.
     </li>
     <li><b>New TOLEOS multi-mission crossover and plane alignment conjunctions product</b><br>
         The Swarm, CHAMP, GOCE, GRACE, and GRACE-FO multi-mission crossover and plane alignment conjunctions
@@ -129,7 +163,7 @@
         project have been added to VirES and are accessible via the
         <a href="https://viresclient.readthedocs.io/en/latest/available_parameters.html" target="_bank">VirES Python client</a>
         and
-        <a href="/hapi" target="_blank"> HAPI</a>.
+        <a href="/hapi" target="_blank">HAPI</a>.
     </li>
 </ul>
 <hr>
@@ -349,7 +383,7 @@
     Features:
 </p>
 <ul>
-    <li><b>New plasmapause Related boundaries in the topside Ionosphere as derived from Swarm Measurements (PRISM) products</b><br>
+    <li><b>New Plasmapause Related boundaries in the topside Ionosphere as derived from Swarm Measurements (PRISM) products</b><br>
       The data from the new MITx_LP_2F, MITxTEC_2F, PPIxFAC_2F products prepared by the
       <a href="https://earth.esa.int/eogateway/activities/plasmapause-related-boundaries-in-the-topside-ionosphere-as-derived-from-swarm-measurements" target="_blank">PRISM project</a>
       have been added to VirES and they are accessible through the VirES API.
