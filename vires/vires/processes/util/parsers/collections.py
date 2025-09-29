@@ -31,6 +31,7 @@ from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
 from ..time_series import (
     ProductTimeSeries, CustomDatasetTimeSeries, product_source_factory,
+    MergedTimeSeries,
 )
 
 
@@ -54,6 +55,10 @@ def parse_collections(input_id, source, permissions,
 
     master_type = None
     for label, datasets in result.items():
+
+        merged_timeline = len(datasets) > 0 and datasets[0] is None
+        if merged_timeline:
+            _, *datasets = datasets
 
         if datasets == custom_dataset:
             continue
@@ -96,15 +101,26 @@ def parse_collections(input_id, source, permissions,
 
     # convert collections to product time-series
     return {
-        label: (
-            [
-                CustomDatasetTimeSeries(user)
-            ] if datasets == custom_dataset else [
-                ProductTimeSeries(product_source_factory(*args))
-                for args in datasets
-            ]
-        ) for label, datasets in result.items()
+        label: _datasets_to_time_series(datasets, custom_dataset, user)
+        for label, datasets in result.items()
     }
+
+def _datasets_to_time_series(datasets, custom_dataset, user):
+
+    def _convert_datasets_to_time_series(datasets):
+        return [
+            ProductTimeSeries(product_source_factory(*args))
+            for args in datasets
+        ]
+
+    if datasets == custom_dataset:
+        return [CustomDatasetTimeSeries(user)]
+
+    if len(datasets) > 0 and datasets[0] is None:
+        time_series = _convert_datasets_to_time_series(datasets[1:])
+        return [MergedTimeSeries(time_series), *time_series]
+
+    return _convert_datasets_to_time_series(datasets)
 
 
 def _get_type_tuple(collection, dataset_id):
@@ -113,10 +129,15 @@ def _get_type_tuple(collection, dataset_id):
 
 
 def _parse_datasets(ids, custom_dataset, permissions,
-                    dataset_separator=":", collection_separator="+"):
+                    dataset_separator=":", collection_separator="+",
+                    blank_master="-"):
 
     if not isinstance(ids, (list, tuple)):
         raise TypeError(f"Invalid list of collection identifiers! {ids!r}")
+
+    no_master = len(ids) > 0 and ids[0] == blank_master
+    if no_master:
+        _, *ids = ids
 
     collection_dataset_ids = []
     for id_ in ids:
@@ -140,6 +161,8 @@ def _parse_datasets(ids, custom_dataset, permissions,
     }
 
     datasets = []
+    if no_master:
+        datasets.append(None)
 
     for collection_ids, dataset_id in collection_dataset_ids:
 

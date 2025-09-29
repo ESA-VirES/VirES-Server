@@ -33,7 +33,6 @@ from .cdf_util import CDF_DOUBLE_TYPE
 from .interpolate import Interp1D
 
 
-
 class Dataset(OrderedDict):
     """ Dataset class an ordered dictionary of arrays with a few additional
     properties and methods.
@@ -79,6 +78,14 @@ class Dataset(OrderedDict):
         if cdf_attr is not None:
             self.cdf_attr[variable] = dict(cdf_attr)
 
+    def remove(self, variable):
+        """ Remove variable. """
+        return (
+            self.pop(variable, None),
+            self.cdf_type.pop(variable, None),
+            self.cdf_attr.pop(variable, None),
+        )
+
     def merge(self, dataset, variable_mapping=None):
         """ Merge datasets.
         The merge adds variables from the given dataset if these are not already
@@ -122,42 +129,60 @@ class Dataset(OrderedDict):
                 dataset.cdf_attr.get(variable)
             )
 
-    def append(self, dataset):
+    def append(self, dataset, remove_incompatible=False):
         """ Append dataset of the same kind to this dataset. All variables
         are concatenated with the current dataset data.
         """
-        if dataset: # ignore empty datasets
-            if not self:
-                # fill empty dataset
-                self.update(dataset)
-            else:
-                if set(dataset) != set(self):
-                    raise ValueError("Dataset variables mismatch! %s != %s " % (
-                        list(set(dataset) - set(self)),
-                        list(set(self) - set(dataset))
-                    ))
-                # concatenate with the current data
-                OrderedDict.update(self, (
-                    (variable, concatenate((data, dataset[variable]), axis=0))
-                    for variable, data in self.items()
+        if not dataset: # ignore empty datasets
+            return
+
+        if not self: # fill empty target dataset
+            self.update(dataset)
+            return
+
+        removed_variables = []
+        updated_variables = list(self)
+
+        if set(dataset) != set(self):
+            extra_variables = set(self) - set(dataset)
+            if not remove_incompatible:
+                raise ValueError("Dataset variables mismatch! %s != %s " % (
+                    list(set(dataset) - set(self)),
+                    list(extra_variables)
                 ))
+            removed_variables = list(extra_variables)
+            updated_variables = list(set(self) - extra_variables)
+
+        new_data = {}
+        for variable in updated_variables:
+            try:
+                new_data[variable] = concatenate(
+                    (self[variable], dataset[variable]), axis=0
+                )
+            except ValueError:
+                if not remove_incompatible:
+                    raise
+                removed_variables.append(variable)
+
+        for variable in removed_variables:
+            self.remove(variable)
+
+        super().update(new_data)
 
     def subset(self, index, always_copy=True):
-        """ Get subset of the dataset defined by the array of indices. """
-        if index is None: # no-index means select all
-            dataset = Dataset(self) if always_copy else self
-        elif self.length == 0 and index.size == 0:
-            # Older Numpy versions fail to apply zero subset of a zero size
-            # multi-dimensional array.
-            dataset = Dataset(self)
-        else:
-            dataset = Dataset()
-            for variable, data in self.items():
-                dataset.set(
-                    variable, data[index],
-                    self.cdf_type.get(variable),
-                    self.cdf_attr.get(variable)
-                )
+        """ Get subset of the dataset defined by give selection.
+        The selection can be an array of indices, boolean mask, slice object,
+        Ellipsis or None.
+        """
+        if index is Ellipsis or index is None: # no-index means select all
+            return Dataset(self) if always_copy else self
+        dataset = Dataset()
+        for variable, data in self.items():
+            dataset.set(
+                variable, data[index],
+                self.cdf_type.get(variable),
+                self.cdf_attr.get(variable)
+            )
         return dataset
 
     def extract(self, variables, variable_mapping=None):

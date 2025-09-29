@@ -35,11 +35,13 @@ from vires.cdf_util import CDF_DOUBLE_TYPE
 
 N = 100
 M = 4
+L = 5
 N_SUBSET = 10
 DATA_A = random(N)
 DATA_B = random((N, M))
 DATA_C = random(N)
 DATA_D = random((N, M))
+DATA_E = random((N, L))
 
 DATA_ZERO_SCALAR = random(0)
 DATA_ZERO_VECTOR = random((0, M))
@@ -143,6 +145,27 @@ class TestDataset(ArrayMixIn, TestCase):
         self.assertEqual(dataset.cdf_attr.get('B'), None)
         self.assertEqual(dataset.cdf_attr.get('C'), TEST_ATTRIB)
         self.assertEqual(dataset.cdf_attr.get('D'), TEST_ATTRIB)
+
+    def test_remove(self):
+
+        dataset = Dataset()
+        dataset.set('A', DATA_A, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+
+        self.assertTrue('A' in dataset)
+        self.assertTrue('A' in dataset.cdf_type)
+        self.assertTrue('A' in dataset.cdf_attr)
+
+        dataset.remove('A')
+
+        self.assertEqual(len(dataset), 1)
+        self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['B']))
+
+        self.assertTrue('A' not in dataset)
+        self.assertTrue('A' not in dataset.cdf_type)
+        self.assertTrue('A' not in dataset.cdf_attr)
 
     def test_update(self):
         """Test Dataset.update() method."""
@@ -263,6 +286,40 @@ class TestDataset(ArrayMixIn, TestCase):
         self.assertEqual(dataset.cdf_attr.get('A'), TEST_ATTRIB)
         self.assertEqual(dataset.cdf_attr.get('B'), TEST_ATTRIB)
 
+    def test_append_incompatible(self):
+
+        dataset_base = Dataset()
+        dataset_base.set('A', DATA_A, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_base.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+
+        dataset_incompatible_dimension = Dataset()
+        dataset_incompatible_dimension.set('A', DATA_C)
+        dataset_incompatible_dimension.set('B', DATA_E)
+
+        dataset_key_missmatch = Dataset()
+        dataset_key_missmatch.set('C', DATA_C)
+        dataset_key_missmatch.set('B', DATA_D)
+
+        dataset = Dataset(dataset_base)
+        with self.assertRaises(ValueError):
+            dataset.append(dataset_key_missmatch)
+        dataset.append(dataset_key_missmatch, remove_incompatible=True)
+
+        self.assertEqual(len(dataset), 1)
+        self.assertEqual(dataset.length, 2*N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['B']))
+
+        dataset = Dataset(dataset_base)
+        with self.assertRaises(ValueError):
+            dataset.append(dataset_incompatible_dimension)
+        dataset.append(dataset_incompatible_dimension, remove_incompatible=True)
+
+        self.assertEqual(len(dataset), 1)
+        self.assertEqual(dataset.length, 2*N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['A']))
+
     def test_extract(self):
         """Test Dataset.extract() method."""
         dataset_source = Dataset()
@@ -352,6 +409,50 @@ class TestDataset(ArrayMixIn, TestCase):
         dataset_source.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
 
         dataset = dataset_source.subset(None)
+
+        self.assertEqual(len(dataset), 2)
+        self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['A', 'B']))
+
+        self.assertAllEqual(dataset['A'], DATA_A)
+        self.assertAllEqual(dataset['B'], DATA_B)
+
+        self.assertEqual(dataset.cdf_type.get('A'), None)
+        self.assertEqual(dataset.cdf_type.get('B'), CDF_DOUBLE_TYPE)
+
+        self.assertEqual(dataset.cdf_attr.get('A'), None)
+        self.assertEqual(dataset.cdf_attr.get('B'), TEST_ATTRIB)
+
+    def test_subset_with_ellipsis(self):
+        """Test Dataset.subset() method with index set to None. """
+        dataset_source = Dataset()
+        dataset_source.set('A', DATA_A)
+        dataset_source.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+
+        dataset = dataset_source.subset(...)
+
+        self.assertEqual(len(dataset), 2)
+        self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['A', 'B']))
+
+        self.assertAllEqual(dataset['A'], DATA_A)
+        self.assertAllEqual(dataset['B'], DATA_B)
+
+        self.assertEqual(dataset.cdf_type.get('A'), None)
+        self.assertEqual(dataset.cdf_type.get('B'), CDF_DOUBLE_TYPE)
+
+        self.assertEqual(dataset.cdf_attr.get('A'), None)
+        self.assertEqual(dataset.cdf_attr.get('B'), TEST_ATTRIB)
+
+    def test_subset_with_slice(self):
+        """Test Dataset.subset() method with index set to None. """
+        dataset_source = Dataset()
+        dataset_source.set('A', DATA_A)
+        dataset_source.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+
+        dataset = dataset_source.subset(slice(None, None))
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, N)
