@@ -112,8 +112,13 @@ class _DatasetWrapper:
         self.time_variable = time_variable
 
     @property
-    def empty(self):
-        """ True for an empty dataset. """
+    def has_data(self):
+        """ True if the dataset has at least one data variable. """
+        return len(self.dataset) > 0
+
+    @property
+    def is_empty(self):
+        """ True dataset is """
         return self.dataset.is_empty
 
     @property
@@ -124,11 +129,15 @@ class _DatasetWrapper:
     @property
     def start(self):
         """ Get dataset start time. """
+        if self.is_empty:
+            return None
         return self.times.min()
 
     @property
     def end(self):
         """ Get dataset end time. """
+        if self.is_empty:
+            return None
         return self.times.max()
 
     @classmethod
@@ -147,14 +156,11 @@ class _DatasetWrapper:
     def split(self, cut_at):
         """ Split dataset into two at the given time. """
         mask = self.times <= cut_at
-        if mask.all():
-            return self, None
-        if not mask.any():
-            return None, self
         return (
             self.__class__(self.dataset.subset(mask), self.time_variable),
             self.__class__(self.dataset.subset(~mask), self.time_variable)
         )
+
 
 class _MultisourceMerge:
 
@@ -168,7 +174,7 @@ class _MultisourceMerge:
                     )
                 except StopIteration:
                     return None
-                if not item.empty:
+                if item.has_data:
                     return item
 
         def __init__(self, items, time_variable, wrapper_class):
@@ -182,16 +188,23 @@ class _MultisourceMerge:
             if self.head is None:
                 return None
             head, tail = self.head.split(cut_at)
-            if tail is None:
-                self.head = self._get_next()
-            elif head is not None:
+            if tail.is_empty: # all data selected - get next chunk
+                next_item = self._get_next()
+                self.head = next_item if next_item and next_item.has_data else tail
+            elif not head.is_empty: # some data selected - keep the rest
                 self.head = tail
+            # else no data selected - do nothing
             return head
 
         @property
-        def empty(self):
+        def has_data(self):
+            """ True if the dataset has some, even empty, data variables. """
+            return self.head is not None and self.head.has_data
+
+        @property
+        def is_empty(self):
             """ True if the source iterator is empty. """
-            return self.head is None
+            return self.head is None or self.head.is_empty
 
     def __init__(self, sources, time_variable, wrapper_class):
         self._wrapper_class = wrapper_class
@@ -199,17 +212,31 @@ class _MultisourceMerge:
             self._Source(source, time_variable, wrapper_class)
             for source in sources
         ]
+        self._output_produced = False
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        ends = [source.head.end for source in self._sources if source.head]
-        if not ends:
-            raise StopIteration
-        cut_at = min(ends)
-        items = [
-            item for source in self._sources
-            if (item := source.split_head(cut_at)) is not None
+        ends = [
+            source.head.end for source in self._sources
+            if source.has_data and not source.is_empty
         ]
+        if not ends:
+            # pass at least one empty dataset to populate variables
+            # for an empty data selection
+            if self._output_produced:
+                raise StopIteration
+            items = [
+                source.head for source in self._sources if source.has_data
+            ]
+            if not items: # no usable item left - bailing out
+                raise StopIteration
+        else:
+            cut_at = min(ends)
+            items = [
+                item for source in self._sources
+                if (item := source.split_head(cut_at)) is not None
+            ]
+        self._output_produced = True
         return self._wrapper_class.merge(items)
