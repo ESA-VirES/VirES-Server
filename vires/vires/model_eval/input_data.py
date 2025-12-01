@@ -55,8 +55,12 @@ from vires.parsers.time.json_time_parser import (
 from .common import (
     FORMAT_SPECIFIC_TIME_FORMAT,
     TIME_KEY,
+    BACKUP_TIME_KEY,
     MJD2000_KEY,
     LOCATION_KEYS,
+    JSON_DEFAULT_TIME_FORMAT,
+    CSV_DEFAULT_TIME_FORMAT,
+    MSGP_DEFAULT_TIME_FORMAT,
 )
 
 CHUNK_SIZE = 1024 * 1024 # 1MiB
@@ -76,10 +80,6 @@ INPUT_TIME_FORMATS = [
     FORMAT_SPECIFIC_TIME_FORMAT,
 ]
 
-JSON_DEFAULT_TIME_FORMAT = "ISO date-time"
-CSV_DEFAULT_TIME_FORMAT = "ISO date-time"
-MSGP_DEFAULT_TIME_FORMAT = "ISO date-time"
-
 TIME_PARSERS = {
     "ISO date-time": array_iso_datetime_to_mjd2000,
     "MJD2000": lambda values: asarray(values, dtype="float64"),
@@ -98,10 +98,11 @@ def convert_json_input(data, time_format, time_key=TIME_KEY, location_keys=LOCAT
     """ Process JSON input data as returned by the json.load() function and
     convert it into a common data format.
     """
-    time_parser = _get_time_parser(
-        "JSON", time_format, JSON_DEFAULT_TIME_FORMAT, TIME_PARSERS
-    )
-    return _convert_input_data(data, time_key, location_keys, time_parser)
+    if time_format == FORMAT_SPECIFIC_TIME_FORMAT:
+        time_format = JSON_DEFAULT_TIME_FORMAT
+    time_parser = _get_time_parser("JSON", time_format, TIME_PARSERS)
+    data = _convert_input_data(data, time_key, location_keys, time_parser)
+    return data, time_format
 
 
 def convert_msgpack_input(data_file, time_format, time_key=TIME_KEY,
@@ -109,11 +110,12 @@ def convert_msgpack_input(data_file, time_format, time_key=TIME_KEY,
     """ Process MessagePack serialized input in form of a binary file-like
     object and convert it into a common data format.
     """
-    time_parser = _get_time_parser(
-        "MessagePack", time_format, MSGP_DEFAULT_TIME_FORMAT, TIME_PARSERS
-    )
+    if time_format == FORMAT_SPECIFIC_TIME_FORMAT:
+        time_format = MSGP_DEFAULT_TIME_FORMAT
+    time_parser = _get_time_parser("MessagePack", time_format, TIME_PARSERS)
     data = msgpack.load(data_file)
-    return _convert_input_data(data, time_key, location_keys, time_parser)
+    data = _convert_input_data(data, time_key, location_keys, time_parser)
+    return data, time_format
 
 
 def convert_csv_input(data_file, time_format, time_key=TIME_KEY,
@@ -121,16 +123,17 @@ def convert_csv_input(data_file, time_format, time_key=TIME_KEY,
     """ Process CSV serialized input in form of a string sequence (or text
     file-like object).
     """
-    time_parser = _get_time_parser(
-        "CSV", time_format, CSV_DEFAULT_TIME_FORMAT, TIME_PARSERS
-    )
+    if time_format == FORMAT_SPECIFIC_TIME_FORMAT:
+        time_format = CSV_DEFAULT_TIME_FORMAT
+    time_parser = _get_time_parser("CSV", time_format, TIME_PARSERS)
     # parse input CSV and convert scalar number types
     data = read_csv_data(
         data_file,
         fields=[time_key, *location_keys],
         type_parsers = [int, float],
     )
-    return _convert_input_data(data, time_key, location_keys, time_parser)
+    data = _convert_input_data(data, time_key, location_keys, time_parser)
+    return data, time_format
 
 
 def convert_cdf_input(data_file, time_format, time_key=TIME_KEY,
@@ -170,23 +173,20 @@ def convert_cdf_input(data_file, time_format, time_key=TIME_KEY,
         raise ValueError("Unsupported CDF time format!")
     elif time_format == FORMAT_SPECIFIC_TIME_FORMAT:
         raise ValueError("Unexpected CDF time format!")
-
-    time_parser = _get_time_parser("CDF", time_format, None, TIME_PARSERS)
-
-    return _convert_input_data(
+    time_parser = _get_time_parser("CDF", time_format, TIME_PARSERS)
+    data = _convert_input_data(
         {key: record.data for key, record in data.items()},
         time_key, location_keys, time_parser
     )
+    return data, time_format
 
 
-def _get_time_parser(data_format_name, selected_format, default_format, parsers):
+def _get_time_parser(data_format_name, time_format, parsers):
     """ Resolve data-format specific time parser. """
-    if selected_format == FORMAT_SPECIFIC_TIME_FORMAT:
-        selected_format = default_format
-    parser = parsers.get(selected_format)
+    parser = parsers.get(time_format)
     if parser is None:
         raise ValueError(
-            f"The {selected_format} time format is not supported by the "
+            f"The {time_format} time format is not supported by the "
             f"{data_format_name} data format!"
         )
     return parser
@@ -194,7 +194,8 @@ def _get_time_parser(data_format_name, selected_format, default_format, parsers)
 
 def _convert_input_data(data, time_key, location_keys, time_parser,
                         target_time_key=MJD2000_KEY,
-                        target_location_keys=LOCATION_KEYS):
+                        target_location_keys=LOCATION_KEYS,
+                        backup_time_key=BACKUP_TIME_KEY):
     """ Convert input data into correctly typed arrays. """
     try:
         data = {
@@ -202,7 +203,9 @@ def _convert_input_data(data, time_key, location_keys, time_parser,
             **{
                 target_key: asarray(data[key], "float64")
                 for target_key, key in zip(target_location_keys, location_keys)
-            }
+            },
+            # preserve the original time values
+            backup_time_key: asarray(data[time_key]),
         }
     except KeyError as error:
         raise ValueError(f"Missing mandatory {error} variable!") from None

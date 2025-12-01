@@ -32,16 +32,27 @@
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData,
     FormatText, FormatBinaryRaw, FormatBinaryBase64, FormatJSON,
+    CDObject, CDFileWrapper, CDFile,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.config import SystemConfigReader
-from vires.model_eval.input_data import (
+from vires.model_eval.common import (
     FORMAT_SPECIFIC_TIME_FORMAT,
+)
+from vires.model_eval.input_data import (
     INPUT_TIME_FORMATS,
     convert_json_input,
     convert_msgpack_input,
     convert_csv_input,
     convert_cdf_input,
+)
+from vires.model_eval.output_data import (
+    OUTPUT_TIME_FORMATS,
+    enforce_1d_data_shape,
+    write_json_output,
+    write_msgpack_output,
+    write_csv_output,
+    write_cdf_output,
 )
 from vires.model_eval.calculation import calculate_model_values
 from vires.processes.base import WPSProcess
@@ -109,12 +120,12 @@ class EvalModelAtTimeAndLocation(WPSProcess):
             allowed_values=INPUT_TIME_FORMATS,
             default=FORMAT_SPECIFIC_TIME_FORMAT,
         )),
-#        ("output_time_format", LiteralData(
-#            "output_time_format", str, optional=True, title="output time format",
-#            abstract="Optional output time format.",
-#            allowed_values=DEFAULT_OUTPUT_TIME_FORMAT,
-#            default=DEFAULT_OUTPUT_TIME_FORMAT,
-#        )),
+        ("output_time_format", LiteralData(
+            "output_time_format", str, optional=True, title="output time format",
+            abstract="Optional output time format.",
+            allowed_values=OUTPUT_TIME_FORMATS,
+            default=FORMAT_SPECIFIC_TIME_FORMAT,
+        )),
     ]
 
     outputs = [
@@ -133,9 +144,10 @@ class EvalModelAtTimeAndLocation(WPSProcess):
     def execute(self, model_ids, shc,
                 input_, output,
                 input_time_format,
+                output_time_format,
                 **kwargs):
         """ Execute process """
-        output_time_format = None
+
 
         access_logger = self.get_access_logger(**kwargs)
 
@@ -153,27 +165,37 @@ class EvalModelAtTimeAndLocation(WPSProcess):
         )
 
         try:
-            data = self._read_input_data(input_, input_time_format)
+            data, input_time_format = self._read_input_data(input_, input_time_format)
         except Exception as error:
             raise InvalidInputValueError(
                 "input", f"Failed to read the input data! {error}"
             ) from None
 
-        self.logger.debug("parsed data: %s", data)
+        # some of the output formats support only 1D data
+        if output["mime_type"] in (
+            "text/csv",
+            "application/cdf",
+            "application/x-cdf",
+        ):
+            try:
+                data = enforce_1d_data_shape(data)
+            except ValueError as error:
+                raise InvalidInputValueError(
+                    "input", f"Failed to read the input data! {error}"
+                ) from None
 
         data = calculate_model_values(
             data, requested_models, source_models,
             get_extra_model_parameters,
         )
 
-        self.logger.debug("output data: %s", data)
+        # TODO extract model sources
 
-        result = self._write_output_data(data, output, output_time_format)
-
-        result = {} # fixme
+        result = self._write_output_data(
+            data, output, output_time_format, input_time_format
+        )
 
         return {"output": result}
-
 
     def _read_input_data(self, input_, input_time_format):
 
@@ -195,5 +217,35 @@ class EvalModelAtTimeAndLocation(WPSProcess):
 
         raise ValueError(f"Unexpected input file format! {input_.mime_type}")
 
-    def _write_output_data(self, data, output, output_time_format):
-        return data
+    def _write_output_data(self, data, output, output_time_format, input_time_format):
+
+        output_mime_type = output["mime_type"]
+        if output_mime_type == "application/json":
+            return CDObject(
+                write_json_output(data, output_time_format, input_time_format),
+                filename="output.json", **output
+            )
+
+        if output_mime_type == "text/csv":
+            return CDFileWrapper(
+                write_csv_output(data, output_time_format, input_time_format),
+                filename="output.json", **output
+            )
+
+        if output_mime_type in ("application/msgpack", "application/x-msgpack"):
+            return CDObject(
+                write_msgpack_output(data, output_time_format, input_time_format),
+                filename="output.mp", **output
+            )
+
+        if output_mime_type in ("application/cdf", "application/x-cdf"):
+            return CDFile(
+                write_cdf_output(
+                    data, output_time_format, input_time_format,
+                    filename_prefix=f"{self.tmp_filename_prefix}_output",
+                    temp_path=SystemConfigReader().path_temp,
+                ),
+                filename="output.mp", **output
+            )
+
+        raise ValueError(f"Unexpected output file format! {output_mime_type}")

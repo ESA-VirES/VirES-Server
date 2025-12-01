@@ -59,6 +59,12 @@ TEST_DATA_01 = {
     'Radius': array([6380000.0, 6500000.0, 7000000.0]),
 }
 
+TEST_INPUT_TIMES_01 = {
+    "ISO date-time": array(["2000-01-01T00:00Z", "2010-01-01T00:00Z", "2025-01-01T00:00Z"]),
+    "CDF_EPOCH": array([63113904000000.0, 63429523200000.0, 63902908800000.0]),
+    "MJD2000": array([0.0, 3653.0, 9132.0]),
+}
+
 CDF_OPTIONS = {
     "filename_prefix": "_temp_test_cdf_input",
     "filename_suffix": ".cdf",
@@ -70,76 +76,101 @@ class InputDataTest(TestCase):
 
     def test_input_json_iso_time_default(self):
         with open(INPUT_JSON_ISO_TIME, "rb") as file:
-            data = convert_json_input(json.load(file), FORMAT_SPECIFIC_TIME_FORMAT)
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_json_input(json.load(file), FORMAT_SPECIFIC_TIME_FORMAT)
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["ISO date-time"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "ISO date-time")
 
     def test_input_json_iso_time(self):
         with open(INPUT_JSON_ISO_TIME, "rb") as file:
-            data = convert_json_input(json.load(file), "ISO date-time")
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_json_input(json.load(file), "ISO date-time")
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["ISO date-time"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "ISO date-time")
 
     def test_input_json_mjd2000(self):
         with open(INPUT_JSON_MJD2000, "rb") as file:
-            data = convert_json_input(json.load(file), "MJD2000")
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_json_input(json.load(file), "MJD2000")
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["MJD2000"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "MJD2000")
 
     def test_input_json_cdf_epoch(self):
         with open(INPUT_JSON_CDF_EPOCH, "rb") as file:
-            data = convert_json_input(json.load(file), "CDF_EPOCH")
-        assert_equal(data, TEST_DATA_01)
-
+            data, time_format = convert_json_input(json.load(file), "CDF_EPOCH")
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["CDF_EPOCH"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "CDF_EPOCH")
 
     def test_input_msgpack_iso_time_default(self):
         with open(INPUT_MSGPK_ISO_TIME, "rb") as file:
-            data = convert_msgpack_input(file, FORMAT_SPECIFIC_TIME_FORMAT)
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_msgpack_input(file, FORMAT_SPECIFIC_TIME_FORMAT)
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["ISO date-time"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "ISO date-time")
 
     def test_input_msgpack_iso_time(self):
         with open(INPUT_MSGPK_ISO_TIME, "rb") as file:
-            data = convert_msgpack_input(file, "ISO date-time")
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_msgpack_input(file, "ISO date-time")
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["ISO date-time"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "ISO date-time")
 
     def test_input_msgpack_mjd2000(self):
         with open(INPUT_MSGPK_MJD2000, "rb") as file:
-            data = convert_msgpack_input(file, "MJD2000")
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_msgpack_input(file, "MJD2000")
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["MJD2000"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "MJD2000")
 
     def test_input_msgpack_cdf_epoch(self):
         with open(INPUT_MSGPK_CDF_EPOCH, "rb") as file:
-            data = convert_msgpack_input(file, "CDF_EPOCH")
-        assert_equal(data, TEST_DATA_01)
-
+            data, time_format = convert_msgpack_input(file, "CDF_EPOCH")
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["CDF_EPOCH"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "CDF_EPOCH")
 
     def test_input_csv_iso_time_default(self):
         with open(INPUT_CSV_ISO_TIME, "r", encoding="utf-8") as file:
-            data = convert_csv_input(file, FORMAT_SPECIFIC_TIME_FORMAT)
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_csv_input(file, FORMAT_SPECIFIC_TIME_FORMAT)
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["ISO date-time"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "ISO date-time")
 
     def test_input_csv_iso_time(self):
         with open(INPUT_CSV_ISO_TIME, "r", encoding="utf-8") as file:
-            data = convert_csv_input(file, "ISO date-time")
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_csv_input(file, "ISO date-time")
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["ISO date-time"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "ISO date-time")
 
     def test_input_csv_mjd2000(self):
         with open(INPUT_CSV_MJD2000, "r", encoding="utf-8") as file:
-            data = convert_csv_input(file, "MJD2000")
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_csv_input(file, "MJD2000")
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["MJD2000"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "MJD2000")
 
     def test_input_csv_cdf_epoch(self):
         with open(INPUT_CSV_CDF_EPOCH, "r", encoding="utf-8") as file:
-            data = convert_csv_input(file, "CDF_EPOCH")
-        assert_equal(data, TEST_DATA_01)
-
+            data, time_format = convert_csv_input(file, "CDF_EPOCH")
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["CDF_EPOCH"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "CDF_EPOCH")
 
     def test_input_cdf_cdf_epoch_default(self):
         with open(INPUT_CDF_CDF_EPOCH, "rb") as file:
-            data = convert_cdf_input(file, FORMAT_SPECIFIC_TIME_FORMAT, **CDF_OPTIONS)
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_cdf_input(file, FORMAT_SPECIFIC_TIME_FORMAT, **CDF_OPTIONS)
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["CDF_EPOCH"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "CDF_EPOCH")
 
     def test_input_cdf_cdf_epoch(self):
         with open(INPUT_CDF_CDF_EPOCH, "rb") as file:
-            data = convert_cdf_input(file, "CDF_EPOCH", **CDF_OPTIONS)
-        assert_equal(data, TEST_DATA_01)
+            data, time_format = convert_cdf_input(file, "CDF_EPOCH", **CDF_OPTIONS)
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["CDF_EPOCH"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "CDF_EPOCH")
 
 
 if __name__ == "__main__":

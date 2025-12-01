@@ -29,5 +29,10 @@
 FORMAT_SPECIFIC_TIME_FORMAT = "format specific default"
 
 TIME_KEY = "Timestamp"
+BACKUP_TIME_KEY = f"_{TIME_KEY}"
 MJD2000_KEY = "MJD2000"
 LOCATION_KEYS = ("Latitude", "Longitude", "Radius")
+
+JSON_DEFAULT_TIME_FORMAT = "ISO date-time"
+CSV_DEFAULT_TIME_FORMAT = "ISO date-time"
+MSGP_DEFAULT_TIME_FORMAT = "ISO date-time"
