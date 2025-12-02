@@ -33,6 +33,7 @@ from os import remove
 from os.path import join, exists
 from uuid import uuid4
 from io import BytesIO, StringIO
+from collections import namedtuple
 import msgpack
 from numpy import asarray, timedelta64, datetime64, char
 from eoxmagmod import mjd2000_to_decimal_year
@@ -45,6 +46,8 @@ from vires.cdf_util import (
     CDF_TIME_TT2000_TYPE,
     CDF_DOUBLE_TYPE,
     CDF_INT8_TYPE,
+    GZIP_COMPRESSION,
+    GZIP_COMPRESSION_LEVEL4,
 )
 from vires.time_cdf_epoch import mjd2000_to_cdf_epoch
 from vires.time_cdf_tt2000 import mjd2000_to_cdf_tt2000
@@ -126,7 +129,6 @@ TIME_CONVERT = {
     "datetime64[ns]": array_mjd2000_to_datetime64("ns"),
 }
 
-
 CDF_TIME_TYPE = {
     "ISO date-time": CDF_CHAR_TYPE,
     "ISO date-time [s]": CDF_CHAR_TYPE,
@@ -143,6 +145,25 @@ CDF_TIME_TYPE = {
     "datetime64[us]": CDF_INT8_TYPE,
     "datetime64[ns]": CDF_INT8_TYPE,
     FORMAT_SPECIFIC_TIME_FORMAT: CDF_EPOCH_TYPE,
+}
+
+TimeInfo = namedtuple("TimeInfo", ["description", "unit"])
+
+TIME_FORMAT_DESCRIPTION = {
+    "ISO date-time": TimeInfo("UTC time", "-"),
+    "ISO date-time [s]": TimeInfo("UTC time", "-"),
+    "ISO date-time [ms]": TimeInfo("UTC time", "-"),
+    "ISO date-time [us]": TimeInfo("UTC time", "-"),
+    "ISO date-time [ns]": TimeInfo("UTC time", "-"),
+    "MJD2000": TimeInfo("MJD2000 time", "days"),
+    "Unix epoch": TimeInfo("UTC time - Unix epoch", "s"),
+    "Decimal year": TimeInfo("Decimal year", "year"),
+    "CDF_EPOCH": TimeInfo("UTC time", "-"),
+    "CDF_TIME_TT2000": TimeInfo("UTC time", "-"),
+    "datetime64[s]": TimeInfo("UTC time - Unix epoch", "s"),
+    "datetime64[ms]": TimeInfo("UTC time - Unix epoch", "ms"),
+    "datetime64[us]": TimeInfo("UTC time - Unix epoch", "us"),
+    "datetime64[ns]": TimeInfo("UTC time - Unix epoch", "ns"),
 }
 
 
@@ -257,7 +278,39 @@ def write_cdf_output(data, time_format, input_time_format, model_info,
         if exists(filename):
             remove(filename)
 
+    def _build_attributes():
+        time_info = TIME_FORMAT_DESCRIPTION[time_format]
+        return {
+            TIME_KEY: {
+                "DESCRIPTION": time_info.description,
+                "UNIT": time_info.unit
+            },
+            LOCATION_KEYS[0]: {
+                "DESCRIPTION": f"ITRF latitude",
+                "UNIT": "deg",
+            },
+            LOCATION_KEYS[1]: {
+                "DESCRIPTION": f"ITRF longitude",
+                "UNIT": "deg",
+            },
+            LOCATION_KEYS[2]: {
+                "DESCRIPTION": f"ITRF radius",
+                "UNIT": "m",
+            },
+            **{
+                "B_NEC_{name}".format(**model): {
+                    "DESCRIPTION": (
+                        "Magnetic field calculated from model: "
+                        "{name} = {expression} ".format(**model)
+                    ) ,
+                    "UNIT": "nT",
+                } for model in model_info.values()
+
+            }
+        }
+
     def _write_cdf(filename, data):
+        attributes = _build_attributes()
         _remove_existent(filename)
         try:
             with cdf_open(filename, "w") as cdf:
@@ -265,11 +318,20 @@ def write_cdf_output(data, time_format, input_time_format, model_info,
                     cdf_type = CDF_TIME_TYPE[time_format] if key == TIME_KEY else CDF_DOUBLE_TYPE
                     itemsize = array.dtype.itemsize if cdf_type == CDF_CHAR_TYPE else 1
                     cdf.new(
-                        name=key, data=array, type=cdf_type, n_elements=itemsize
+                        name=key,
+                        data=array,
+                        type=cdf_type,
+                        n_elements=itemsize,
+                        compress=GZIP_COMPRESSION,
+                        compress_param=GZIP_COMPRESSION_LEVEL4,
                     )
-                    #cdf[variable].attrs.update(
-                    #    dataset.cdf_attr.get(variable, {})
-                    #)
+                    cdf[key].attrs.update(attributes.get(key, {}))
+
+                # add global attributes
+                cdf.attrs.update({
+                    "MAGNETIC_MODELS": _collect_model_expressions(model_info),
+                    "SOURCES": _collect_model_sources(model_info),
+                })
         except:
             _remove_existent(filename)
             raise
@@ -290,12 +352,12 @@ def write_cdf_output(data, time_format, input_time_format, model_info,
 def write_sources(model_info):
     """  Convert model sources to an in-memory text file. """
     file_obj = StringIO(newline="\r\n")
-    for source in _collect_sources(model_info):
+    for source in _collect_model_sources(model_info):
         print(source, file=file_obj)
     return file_obj
 
 
-def _collect_sources(model_info):
+def _collect_model_sources(model_info):
     return sorted(set(
         item
         for model in model_info.values()
@@ -305,7 +367,7 @@ def _collect_sources(model_info):
 
 def _collect_model_expressions(model_info):
     return [
-        f"{name} = {expression}".format(**model)
+        "{name} = {expression}".format(**model)
         for model in model_info.values()
     ]
 

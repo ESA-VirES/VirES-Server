@@ -94,6 +94,7 @@ MODEL_INFO_01 = {
 }
 
 MODEL_SOURCES_01 = ["SOURCE1", "SOURCE2", "SOURCE3"]
+MODEL_LIST_01 = ["Model1 = MODEL01()", "Model2 = MODEL02()"]
 
 
 class SourcesWriterTest(TestCase):
@@ -359,10 +360,14 @@ class CdfWriterTest(TestCase):
     def _read_cdf(self, filename):
         try:
             with cdf_open(filename) as cdf:
-                return {
-                    key: cdf.raw_var(key)[...]
-                    for key in cdf
-                }
+                return (
+                    {
+                        key: cdf.raw_var(key)[...]
+                        for key in cdf
+                    },
+                    list(cdf.attrs["SOURCES"]),
+                    list(cdf.attrs["MAGNETIC_MODELS"]),
+                )
         except:
             if exists(filename):
                 remove(filename)
@@ -396,12 +401,14 @@ class CdfWriterTest(TestCase):
                 if key != "MJD2000"
             }
         }
-        data = self._read_cdf(
+        data, sources, models = self._read_cdf(
             write_cdf_output(
                 input_data, output_time_format, input_time_format, MODEL_INFO_01
             )
         )
         assert_equal(data, expected_data)
+        self.assertEqual(sources, MODEL_SOURCES_01)
+        self.assertEqual(models, MODEL_LIST_01)
 
     def test_cdf_def_iso(self):
         self._test_cdf(FORMAT_SPECIFIC_TIME_FORMAT, "ISO date-time")
