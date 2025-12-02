@@ -31,6 +31,10 @@ _DIRNAME = dirname(__file__)
 
 INPUT_CDF_CDF_EPOCH = join(_DIRNAME, "input_cdf_epoch.cdf")
 
+INPUT_HDF_ISO_TIME = join(_DIRNAME, "input_iso_time.hdf5")
+INPUT_HDF_DT64_US_TIME = join(_DIRNAME, "input_dt64_us.hdf5")
+INPUT_HDF_DT64_NS_TIME = join(_DIRNAME, "input_dt64_ns.hdf5")
+
 INPUT_JSON_ISO_TIME = join(_DIRNAME, "input_iso_time.json")
 INPUT_JSON_MJD2000 = join(_DIRNAME, "input_mjd2000.json")
 INPUT_JSON_CDF_EPOCH = join(_DIRNAME, "input_cdf_epoch.json")

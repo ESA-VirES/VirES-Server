@@ -33,7 +33,8 @@ from collections import namedtuple
 from shutil import copyfileobj
 from tempfile import NamedTemporaryFile
 
-from numpy import asarray
+import h5py
+from numpy import asarray, char
 import msgpack
 
 from vires.cdf_util import (
@@ -61,6 +62,7 @@ from .common import (
     JSON_DEFAULT_TIME_FORMAT,
     CSV_DEFAULT_TIME_FORMAT,
     MSGP_DEFAULT_TIME_FORMAT,
+    HDF_DEFAULT_TIME_FORMAT,
 )
 
 CHUNK_SIZE = 1024 * 1024 # 1MiB
@@ -174,6 +176,43 @@ def convert_cdf_input(data_file, time_format, time_key=TIME_KEY,
     elif time_format == FORMAT_SPECIFIC_TIME_FORMAT:
         raise ValueError("Unexpected CDF time format!")
     time_parser = _get_time_parser("CDF", time_format, TIME_PARSERS)
+    data = _convert_input_data(
+        {key: record.data for key, record in data.items()},
+        time_key, location_keys, time_parser
+    )
+    return data, time_format
+
+
+def convert_hdf_input(data_file, time_format, time_key=TIME_KEY,
+                      location_keys=LOCATION_KEYS,
+                      filename_prefix="_temp_hdf_input",
+                      filename_suffix=".hdf5", temp_path=".",
+                      chunk_size=CHUNK_SIZE):
+    if time_format == FORMAT_SPECIFIC_TIME_FORMAT:
+        time_format = HDF_DEFAULT_TIME_FORMAT
+
+    def _fix_strings(data):
+        if data.dtype.char == "S":
+            return char.decode(data, "ascii")
+        return data
+
+    time_key = "Timestamp"
+    location_keys = ["Latitude", "Longitude", "Radius"]
+
+    # HDF input is written to a temporary file and access by filename
+    with NamedTemporaryFile(
+        mode="wb", prefix=filename_prefix, suffix=filename_suffix,
+        dir=temp_path, delete=True,
+    ) as file:
+        copyfileobj(data_file, file, chunk_size)
+        file.flush()
+        with h5py.File(file.name, "r") as hdf:
+            data = {
+                key: _fix_strings(hdf[key][...])
+                for key in [time_key, *location_keys]
+            }
+
+    time_parser = _get_time_parser("HDF", time_format, TIME_PARSERS)
     data = _convert_input_data(
         {key: record.data for key, record in data.items()},
         time_key, location_keys, time_parser

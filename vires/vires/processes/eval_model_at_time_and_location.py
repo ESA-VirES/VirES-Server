@@ -45,6 +45,7 @@ from vires.model_eval.input_data import (
     convert_msgpack_input,
     convert_csv_input,
     convert_cdf_input,
+    convert_hdf_input,
 )
 from vires.model_eval.output_data import (
     OUTPUT_TIME_FORMATS,
@@ -53,6 +54,7 @@ from vires.model_eval.output_data import (
     write_msgpack_output,
     write_csv_output,
     write_cdf_output,
+    write_hdf_output,
     write_sources,
 )
 from vires.model_eval.calculation import calculate_model_values
@@ -113,6 +115,8 @@ class EvalModelAtTimeAndLocation(WPSProcess):
                 FormatBinaryRaw("application/cdf"),
                 FormatBinaryBase64("application/x-cdf"),
                 FormatBinaryRaw("application/x-cdf"),
+                FormatBinaryBase64("application/x-hdf5"),
+                FormatBinaryRaw("application/x-hdf5"),
             )
         )),
         ("input_time_format", LiteralData(
@@ -138,6 +142,7 @@ class EvalModelAtTimeAndLocation(WPSProcess):
                 FormatBinaryRaw("application/x-msgpack"),
                 FormatBinaryRaw("application/cdf"),
                 FormatBinaryRaw("application/x-cdf"),
+                FormatBinaryRaw("application/x-hdf5"),
             )
         )),
         ("sources", ComplexData(
@@ -224,6 +229,13 @@ class EvalModelAtTimeAndLocation(WPSProcess):
                 temp_path=SystemConfigReader().path_temp,
             )
 
+        if input_.mime_type == "application/x-hdf5":
+            return convert_hdf_input(
+                input_, input_time_format,
+                filename_prefix=f"{self.tmp_filename_prefix}_input",
+                temp_path=SystemConfigReader().path_temp,
+            )
+
         raise ValueError(f"Unexpected input file format! {input_.mime_type}")
 
     def _write_output_data(self, data, output, output_time_format, input_time_format, model_info):
@@ -260,7 +272,17 @@ class EvalModelAtTimeAndLocation(WPSProcess):
                     filename_prefix=f"{self.tmp_filename_prefix}_output",
                     temp_path=SystemConfigReader().path_temp,
                 ),
-                filename="output.mp", **output
+                filename="output.cdf", **output
+            )
+
+        if output_mime_type == "application/x-hdf5":
+            return CDFile(
+                write_hdf_output(
+                    data, output_time_format, input_time_format, model_info,
+                    filename_prefix=f"{self.tmp_filename_prefix}_output",
+                    temp_path=SystemConfigReader().path_temp,
+                ),
+                filename="output.hdf5", **output
             )
 
         raise ValueError(f"Unexpected output file format! {output_mime_type}")

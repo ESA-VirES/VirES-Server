@@ -36,3 +36,4 @@ LOCATION_KEYS = ("Latitude", "Longitude", "Radius")
 JSON_DEFAULT_TIME_FORMAT = "ISO date-time"
 CSV_DEFAULT_TIME_FORMAT = "ISO date-time"
 MSGP_DEFAULT_TIME_FORMAT = "ISO date-time"
+HDF_DEFAULT_TIME_FORMAT = "ISO date-time"

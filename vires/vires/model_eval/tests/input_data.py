@@ -37,6 +37,7 @@ from vires.model_eval.input_data import (
     convert_msgpack_input,
     convert_csv_input,
     convert_cdf_input,
+    convert_hdf_input,
 )
 from data import (
     INPUT_JSON_ISO_TIME,
@@ -49,6 +50,9 @@ from data import (
     INPUT_CSV_MJD2000,
     INPUT_CSV_CDF_EPOCH,
     INPUT_CDF_CDF_EPOCH,
+    INPUT_HDF_ISO_TIME,
+    INPUT_HDF_DT64_US_TIME,
+    INPUT_HDF_DT64_NS_TIME,
 )
 
 
@@ -63,11 +67,19 @@ TEST_INPUT_TIMES_01 = {
     "ISO date-time": array(["2000-01-01T00:00Z", "2010-01-01T00:00Z", "2025-01-01T00:00Z"]),
     "CDF_EPOCH": array([63113904000000.0, 63429523200000.0, 63902908800000.0]),
     "MJD2000": array([0.0, 3653.0, 9132.0]),
+    "datetime64[us]": array([946684800000000, 1262304000000000, 1735689600000000]),
+    "datetime64[ns]": array([946684800000000000, 1262304000000000000, 1735689600000000000]),
 }
 
 CDF_OPTIONS = {
     "filename_prefix": "_temp_test_cdf_input",
     "filename_suffix": ".cdf",
+    "temp_path": "/tmp",
+}
+
+HDF_OPTIONS = {
+    "filename_prefix": "_temp_test_hdf_input",
+    "filename_suffix": ".hdf5",
     "temp_path": "/tmp",
 }
 
@@ -171,6 +183,34 @@ class InputDataTest(TestCase):
         expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["CDF_EPOCH"]}
         assert_equal(data, expected_data)
         self.assertEqual(time_format, "CDF_EPOCH")
+
+    def test_input_hdf_iso_time_default(self):
+        with open(INPUT_HDF_ISO_TIME, "rb") as file:
+            data, time_format = convert_hdf_input(file, FORMAT_SPECIFIC_TIME_FORMAT, **HDF_OPTIONS)
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["ISO date-time"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "ISO date-time")
+
+    def test_input_hdf_iso_time(self):
+        with open(INPUT_HDF_ISO_TIME, "rb") as file:
+            data, time_format = convert_hdf_input(file, "ISO date-time", **HDF_OPTIONS)
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["ISO date-time"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "ISO date-time")
+
+    def test_input_hdf_dt64_ns(self):
+        with open(INPUT_HDF_DT64_NS_TIME, "rb") as file:
+            data, time_format = convert_hdf_input(file, "datetime64[ns]", **HDF_OPTIONS)
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["datetime64[ns]"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "datetime64[ns]")
+
+    def test_input_hdf_dt64_us(self):
+        with open(INPUT_HDF_DT64_US_TIME, "rb") as file:
+            data, time_format = convert_hdf_input(file, "datetime64[us]", **HDF_OPTIONS)
+        expected_data = {**TEST_DATA_01, "_Timestamp": TEST_INPUT_TIMES_01["datetime64[us]"]}
+        assert_equal(data, expected_data)
+        self.assertEqual(time_format, "datetime64[us]")
 
 
 if __name__ == "__main__":

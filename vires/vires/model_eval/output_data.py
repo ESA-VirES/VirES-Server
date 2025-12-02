@@ -29,15 +29,23 @@
 
 # TODO: fix dependencies and move time conversion functions to a separate module
 
+from collections import namedtuple
+from datetime import datetime
+from io import BytesIO, StringIO
 from os import remove
 from os.path import join, exists
 from uuid import uuid4
-from io import BytesIO, StringIO
-from collections import namedtuple
+
+import h5py
 import msgpack
 from numpy import asarray, timedelta64, datetime64, char
+
 from eoxmagmod import mjd2000_to_decimal_year
-from vires.time_util import mjd2000_to_unix_epoch
+from vires.time_util import (
+    mjd2000_to_unix_epoch,
+    naive_to_utc,
+    format_datetime,
+)
 from vires.hapi.formats.common import format_datetime64_array
 from vires.cdf_util import (
     cdf_open,
@@ -60,6 +68,7 @@ from .common import (
     JSON_DEFAULT_TIME_FORMAT,
     CSV_DEFAULT_TIME_FORMAT,
     MSGP_DEFAULT_TIME_FORMAT,
+    HDF_DEFAULT_TIME_FORMAT,
 )
 
 CDF_DEFAULT_TIME_FORMAT = "CDF_EPOCH"
@@ -245,6 +254,11 @@ def write_csv_output(data, time_format, input_time_format, model_info):
     data = _covert_time_to_output_format(
         data, time_convert, time_format, input_time_format
     )
+    # fix data type
+    data = {
+        key: array.astype("int64") if array.dtype.char == "M" else array
+        for key, array in data.items()
+    }
     return _write_csv(StringIO(newline="\r\n"), data)
 
 
@@ -286,15 +300,15 @@ def write_cdf_output(data, time_format, input_time_format, model_info,
                 "UNIT": time_info.unit
             },
             LOCATION_KEYS[0]: {
-                "DESCRIPTION": f"ITRF latitude",
+                "DESCRIPTION": "ITRF latitude",
                 "UNIT": "deg",
             },
             LOCATION_KEYS[1]: {
-                "DESCRIPTION": f"ITRF longitude",
+                "DESCRIPTION": "ITRF longitude",
                 "UNIT": "deg",
             },
             LOCATION_KEYS[2]: {
-                "DESCRIPTION": f"ITRF radius",
+                "DESCRIPTION": "ITRF radius",
                 "UNIT": "m",
             },
             **{
@@ -313,9 +327,14 @@ def write_cdf_output(data, time_format, input_time_format, model_info,
         attributes = _build_attributes()
         _remove_existent(filename)
         try:
-            with cdf_open(filename, "w") as cdf:
+            with cdf_open(filename, "w", backward_compatible=False) as cdf:
                 for key, array in data.items():
-                    cdf_type = CDF_TIME_TYPE[time_format] if key == TIME_KEY else CDF_DOUBLE_TYPE
+                    if key == TIME_KEY:
+                        cdf_type = CDF_TIME_TYPE[time_format]
+                        if array.dtype.char == "M":
+                            array = array.astype("int64")
+                    else:
+                        cdf_type = CDF_DOUBLE_TYPE
                     itemsize = array.dtype.itemsize if cdf_type == CDF_CHAR_TYPE else 1
                     cdf.new(
                         name=key,
@@ -346,6 +365,87 @@ def write_cdf_output(data, time_format, input_time_format, model_info,
         temp_path, f"{filename_prefix}{uuid4().hex}{filename_suffix}"
     )
     _write_cdf(filename, data)
+    return filename
+
+
+def write_hdf_output(data, time_format, input_time_format, model_info,
+                     filename_prefix="_temp_hdf_output_",
+                     filename_suffix=".cdf", temp_path="."):
+    """ Convert output data to a HDF temporary file. """
+
+    def _remove_existent(filename):
+        if exists(filename):
+            remove(filename)
+
+    def _build_attributes():
+        time_info = TIME_FORMAT_DESCRIPTION[time_format]
+        return {
+            TIME_KEY: {
+                "description": time_info.description,
+                "unit": time_info.unit
+            },
+            LOCATION_KEYS[0]: {
+                "description": "ITRF latitude",
+                "unit": "deg",
+            },
+            LOCATION_KEYS[1]: {
+                "description": "ITRF longitude",
+                "unit": "deg",
+            },
+            LOCATION_KEYS[2]: {
+                "description": "ITRF radius",
+                "unit": "m",
+            },
+            **{
+                "B_NEC_{name}".format(**model): {
+                    "description": (
+                        "Magnetic field calculated from model: "
+                        "{name} = {expression} ".format(**model)
+                    ) ,
+                    "unit": "nT",
+                } for model in model_info.values()
+
+            }
+        }
+
+    def _write_hdf(filename, data):
+        attributes = _build_attributes()
+        _remove_existent(filename)
+        try:
+            with h5py.File(filename, "w") as hdf:
+                for key, array in data.items():
+                    if array.dtype.char == "U":
+                        array = char.encode(array, "ascii")
+                    elif array.dtype.char == "M":
+                        array = array.astype("int64")
+                    dataset = hdf.create_dataset(
+                        key, data=array, compression="gzip", compression_opts=9
+                    )
+                    dataset.attrs.update(attributes.get(key) or {})
+
+                # add global attributes
+                hdf.attrs.update({
+                    "creator": "VirES for Swarm",
+                    "created": format_datetime(naive_to_utc(
+                        datetime.utcnow().replace(microsecond=0)
+                    )),
+                    "magnetic_models": _collect_model_expressions(model_info),
+                    "sources": _collect_model_sources(model_info),
+                })
+        except:
+            _remove_existent(filename)
+            raise
+
+    if time_format == FORMAT_SPECIFIC_TIME_FORMAT:
+        time_format = HDF_DEFAULT_TIME_FORMAT
+    time_convert = _get_time_convert("HDF", time_format, TIME_CONVERT)
+    data = _covert_time_to_output_format(
+        data, time_convert, time_format, input_time_format
+    )
+    filename = join(
+        temp_path, f"{filename_prefix}{uuid4().hex}{filename_suffix}"
+    )
+    _write_hdf(filename, data)
     return filename
 
 
