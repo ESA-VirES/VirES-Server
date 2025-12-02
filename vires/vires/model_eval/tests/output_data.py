@@ -50,6 +50,7 @@ from vires.model_eval.output_data import (
     write_msgpack_output,
     write_csv_output,
     write_cdf_output,
+    write_sources,
 )
 
 TEST_DATA_01 = {
@@ -57,7 +58,8 @@ TEST_DATA_01 = {
     'Latitude': asarray([-45.0, 0.0, 45.0]),
     'Longitude': asarray([ 90.0, 0.0, -90.0]),
     'Radius': asarray([6380000.0, 6500000.0, 7000000.0]),
-    'B_Model': asarray([[1.9, 2.8, 3.7], [4.6, 5.5, 6.4], [7.3, 8.2, 9.1]]),
+    'B_Model1': asarray([[1.9, 2.8, 3.7], [4.6, 5.5, 6.4], [7.3, 8.2, 9.1]]),
+    'B_Model2': asarray([[7.3, 8.2, 9.1], [4.6, 5.5, 6.4], [1.9, 2.8, 3.7]]),
 }
 
 TEST_TIMES_01 = {
@@ -71,6 +73,43 @@ TEST_CONVERTED_TIMES_01 = {
     "CDF_EPOCH": asarray([63113904000000.0, 63429523200000.0, 63902908800000.0]),
     "MJD2000": asarray([0.0, 3653.0, 9132.0]),
 }
+
+MODEL_INFO_01 = {
+    "Model1": {
+        "name": "Model1",
+        "expression": "MODEL01()",
+        "sources": [
+            "SOURCE2",
+            "SOURCE1",
+        ]
+    },
+    "Model2": {
+        "name": "Model2",
+        "expression": "MODEL02()",
+        "sources": [
+            "SOURCE3",
+            "SOURCE2",
+        ]
+    },
+}
+
+MODEL_SOURCES_01 = ["SOURCE1", "SOURCE2", "SOURCE3"]
+
+
+class SourcesWriterTest(TestCase):
+
+    def _read_sources(self, buffer):
+        buffer.seek(0)
+        return [
+            line.strip("\r\n")
+            for line in buffer
+        ]
+
+    def test_source_writer(self):
+        self.assertEqual(
+            self._read_sources(write_sources(MODEL_INFO_01)),
+            MODEL_SOURCES_01
+        )
 
 
 class JsonWriterTest(TestCase):
@@ -95,9 +134,12 @@ class JsonWriterTest(TestCase):
                 key: values.tolist()
                 for key, values in TEST_DATA_01.items()
                 if key != "MJD2000"
-            }
+            },
+            "__info__": {"models": MODEL_INFO_01},
         }
-        data = write_json_output(input_data, output_time_format, input_time_format)
+        data = write_json_output(
+            input_data, output_time_format, input_time_format, MODEL_INFO_01,
+        )
         assert_equal(data, expected_data)
 
     def test_json_def_iso(self):
@@ -163,10 +205,13 @@ class MsgpackWriterTest(TestCase):
                 key: values.tolist()
                 for key, values in TEST_DATA_01.items()
                 if key != "MJD2000"
-            }
+            },
+            "__info__": {"models": MODEL_INFO_01},
         }
         data = self._read_msgpack(
-            write_msgpack_output(input_data, output_time_format, input_time_format)
+            write_msgpack_output(
+                input_data, output_time_format, input_time_format, MODEL_INFO_01
+            )
         )
         assert_equal(data, expected_data)
 
@@ -266,7 +311,9 @@ class CsvWriterTest(TestCase):
             }
         }
         data = self._read_csv(
-            write_csv_output(input_data, output_time_format, input_time_format)
+            write_csv_output(
+                input_data, output_time_format, input_time_format, MODEL_INFO_01
+            )
         )
         assert_equal(data, expected_data)
 
@@ -350,7 +397,9 @@ class CdfWriterTest(TestCase):
             }
         }
         data = self._read_cdf(
-            write_cdf_output(input_data, output_time_format, input_time_format)
+            write_cdf_output(
+                input_data, output_time_format, input_time_format, MODEL_INFO_01
+            )
         )
         assert_equal(data, expected_data)
 

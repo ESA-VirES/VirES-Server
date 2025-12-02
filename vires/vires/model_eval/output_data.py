@@ -173,7 +173,7 @@ def enforce_1d_data_shape(
     return data
 
 
-def write_json_output(data, time_format, input_time_format):
+def write_json_output(data, time_format, input_time_format, model_info):
     """ Convert output data to serializable output object. """
     if time_format == FORMAT_SPECIFIC_TIME_FORMAT:
         time_format = JSON_DEFAULT_TIME_FORMAT
@@ -183,10 +183,11 @@ def write_json_output(data, time_format, input_time_format):
     )
     data = _covert_ascii_arrays_to_unicode(data)
     data = _covert_arrays_to_lists(data)
+    data["__info__"] = {"models": model_info}
     return data
 
 
-def write_msgpack_output(data, time_format, input_time_format):
+def write_msgpack_output(data, time_format, input_time_format, model_info):
     """ Convert output data to MessagePack in-memory file. """
     if time_format == FORMAT_SPECIFIC_TIME_FORMAT:
         time_format = MSGP_DEFAULT_TIME_FORMAT
@@ -196,10 +197,11 @@ def write_msgpack_output(data, time_format, input_time_format):
     )
     data = _covert_ascii_arrays_to_unicode(data)
     data = _covert_arrays_to_lists(data)
+    data["__info__"] = {"models": model_info}
     return BytesIO(msgpack.dumps(data))
 
 
-def write_csv_output(data, time_format, input_time_format):
+def write_csv_output(data, time_format, input_time_format, model_info):
     """ Convert output data to CSV in-memory file. """
 
     def _write_csv(file_obj, data):
@@ -246,7 +248,7 @@ def get_csv_value_formatter(data, precise=False, encoding="ascii"):
     return _get_csv_value_formatter(data.shape, data.dtype)
 
 
-def write_cdf_output(data, time_format, input_time_format,
+def write_cdf_output(data, time_format, input_time_format, model_info,
                      filename_prefix="_temp_cdf_output_",
                      filename_suffix=".cdf", temp_path="."):
     """ Convert output data to a CDF temporary file. """
@@ -283,6 +285,29 @@ def write_cdf_output(data, time_format, input_time_format,
     )
     _write_cdf(filename, data)
     return filename
+
+
+def write_sources(model_info):
+    """  Convert model sources to an in-memory text file. """
+    file_obj = StringIO(newline="\r\n")
+    for source in _collect_sources(model_info):
+        print(source, file=file_obj)
+    return file_obj
+
+
+def _collect_sources(model_info):
+    return sorted(set(
+        item
+        for model in model_info.values()
+        for item in model.get("sources") or ()
+    ))
+
+
+def _collect_model_expressions(model_info):
+    return [
+        f"{name} = {expression}".format(**model)
+        for model in model_info.values()
+    ]
 
 
 def _covert_arrays_to_lists(data):

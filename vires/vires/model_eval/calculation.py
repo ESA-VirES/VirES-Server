@@ -36,6 +36,7 @@ from .common import (
 )
 
 
+
 def calculate_model_values(data, models, source_models,
                            get_extra_model_parameters,
                            time_key=MJD2000_KEY, location_keys=LOCATION_KEYS):
@@ -58,6 +59,8 @@ def calculate_model_values(data, models, source_models,
     coords[..., 2] = data[location_keys[2]] * 1e-3 # Radius m => km
     mjd2000 = data[time_key] # Timestamp MJD2000
 
+    info = {}
+
     for model in models:
         model_key = f"B_NEC_{model.name}"
         data[model_key] = model.model.eval(
@@ -66,4 +69,10 @@ def calculate_model_values(data, models, source_models,
             **get_extra_model_parameters(mjd2000, model.model.parameters)
         )
 
-    return data
+        info[model.name] = {
+            "name": model.name,
+            "expression": model.expression,
+            "sources": model.sources,
+        }
+
+    return data, info

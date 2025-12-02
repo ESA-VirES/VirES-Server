@@ -53,6 +53,7 @@ from vires.model_eval.output_data import (
     write_msgpack_output,
     write_csv_output,
     write_cdf_output,
+    write_sources,
 )
 from vires.model_eval.calculation import calculate_model_values
 from vires.processes.base import WPSProcess
@@ -139,15 +140,19 @@ class EvalModelAtTimeAndLocation(WPSProcess):
                 FormatBinaryRaw("application/x-cdf"),
             )
         )),
+        ("sources", ComplexData(
+            "sources", title="Calculated output values.", formats=(
+                FormatText("text/plain"),
+            )
+        )),
     ]
 
     def execute(self, model_ids, shc,
-                input_, output,
+                input_, output, sources,
                 input_time_format,
                 output_time_format,
                 **kwargs):
         """ Execute process """
-
 
         access_logger = self.get_access_logger(**kwargs)
 
@@ -184,18 +189,22 @@ class EvalModelAtTimeAndLocation(WPSProcess):
                     "input", f"Failed to read the input data! {error}"
                 ) from None
 
-        data = calculate_model_values(
+        data, info = calculate_model_values(
             data, requested_models, source_models,
             get_extra_model_parameters,
         )
 
-        # TODO extract model sources
+        return {
+            "output": self._write_output_data(
+                data, output, output_time_format, input_time_format, info
+            ),
+            "sources": self._write_sources(info, sources),
+        }
 
-        result = self._write_output_data(
-            data, output, output_time_format, input_time_format
+    def _write_sources(self, model_info, sources):
+        return CDFileWrapper(
+            write_sources(model_info), filename="sources.txt", **sources
         )
-
-        return {"output": result}
 
     def _read_input_data(self, input_, input_time_format):
 
@@ -217,31 +226,37 @@ class EvalModelAtTimeAndLocation(WPSProcess):
 
         raise ValueError(f"Unexpected input file format! {input_.mime_type}")
 
-    def _write_output_data(self, data, output, output_time_format, input_time_format):
+    def _write_output_data(self, data, output, output_time_format, input_time_format, model_info):
 
         output_mime_type = output["mime_type"]
         if output_mime_type == "application/json":
             return CDObject(
-                write_json_output(data, output_time_format, input_time_format),
+                write_json_output(
+                    data, output_time_format, input_time_format, model_info
+                ),
                 filename="output.json", **output
             )
 
         if output_mime_type == "text/csv":
             return CDFileWrapper(
-                write_csv_output(data, output_time_format, input_time_format),
+                write_csv_output(
+                    data, output_time_format, input_time_format, model_info
+                ),
                 filename="output.json", **output
             )
 
         if output_mime_type in ("application/msgpack", "application/x-msgpack"):
             return CDObject(
-                write_msgpack_output(data, output_time_format, input_time_format),
+                write_msgpack_output(
+                    data, output_time_format, input_time_format, model_info
+                ),
                 filename="output.mp", **output
             )
 
         if output_mime_type in ("application/cdf", "application/x-cdf"):
             return CDFile(
                 write_cdf_output(
-                    data, output_time_format, input_time_format,
+                    data, output_time_format, input_time_format, model_info,
                     filename_prefix=f"{self.tmp_filename_prefix}_output",
                     temp_path=SystemConfigReader().path_temp,
                 ),
