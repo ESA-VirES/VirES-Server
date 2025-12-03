@@ -34,7 +34,10 @@ from eoxserver.services.ows.wps.parameters import (
     FormatText, FormatBinaryRaw, FormatBinaryBase64, FormatJSON,
     CDObject, CDFileWrapper, CDFile,
 )
-from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from eoxserver.services.ows.wps.exceptions import (
+    InvalidInputValueError,
+    FileSizeExceeded,
+)
 from vires.config import SystemConfigReader
 from vires.model_eval.common import (
     FORMAT_SPECIFIC_TIME_FORMAT,
@@ -46,6 +49,7 @@ from vires.model_eval.input_data import (
     convert_csv_input,
     convert_cdf_input,
     convert_hdf_input,
+    estimate_output_size,
 )
 from vires.model_eval.output_data import (
     OUTPUT_TIME_FORMATS,
@@ -64,6 +68,9 @@ from vires.processes.util import (
     get_extra_model_parameters,
 )
 
+SIZE_LIMIT = 512 * 1024 * 1024 # 512MB
+TEXT_FACTOR = 32 # extra scaling factor for text-based formats
+
 DEFAULT_FORMAT = FORMAT_SPECIFIC_TIME_FORMAT
 
 DEFAULT_OUTPUT_TIME_FORMAT = DEFAULT_FORMAT
@@ -79,6 +86,11 @@ OUTPUT_TIME_FORMATS = [
     "datetime64[us]",
     "datetime64[ns]",
     DEFAULT_FORMAT,
+]
+
+TEXT_FORMATS = ["application/json", "text/csv"]
+FORMATS_WITH_DEFAULT_ISO_TIME = [
+    "application/x-hdf5" "application/msgpack", "application/x-msgpack",
 ]
 
 
@@ -193,6 +205,26 @@ class EvalModelAtTimeAndLocation(WPSProcess):
                 raise InvalidInputValueError(
                     "input", f"Failed to read the input data! {error}"
                 ) from None
+
+        size_estimate = estimate_output_size(data, requested_models)
+
+        if (
+            output["mime_type"] in TEXT_FORMATS
+            or output_time_format == "ISO date-time"
+            or (
+                output_time_format == DEFAULT_FORMAT
+                and output["mime_type"] in FORMATS_WITH_DEFAULT_ISO_TIME
+            )
+        ):
+            size_estimate *= TEXT_FACTOR
+
+
+        self.logger.debug("Response size estimate: %dB", size_estimate)
+
+        if size_estimate > SIZE_LIMIT:
+            raise FileSizeExceeded(
+                "Estimated response size exceeds the allowed limit!"
+            )
 
         data, info = calculate_model_values(
             data, requested_models, source_models,

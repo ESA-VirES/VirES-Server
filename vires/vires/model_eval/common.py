@@ -37,3 +37,26 @@ JSON_DEFAULT_TIME_FORMAT = "ISO date-time"
 CSV_DEFAULT_TIME_FORMAT = "ISO date-time"
 MSGP_DEFAULT_TIME_FORMAT = "ISO date-time"
 HDF_DEFAULT_TIME_FORMAT = "ISO date-time"
+
+
+def get_max_data_shape(shapes):
+    """ Get maximum of the given shapes. """
+    def _max_shape(shape1, shape2):
+        if len(shape1) > len(shape2):
+            shape1, shape2 = shape2, shape1
+        return (
+            *(max(dim1, dim2) for dim1, dim2 in zip(shape1, shape2)),
+            *shape2[len(shape1):len(shape2)],
+        )
+    max_shape = ()
+    for shape in shapes:
+        max_shape = _max_shape(max_shape, shape)
+    return max_shape
+
+
+def check_shape_compatibility(shape1, shape2):
+    """ Check if two shapes are compatible. """
+    for dim1, dim2 in zip(shape1, shape2):
+        if dim1 != dim2 and min(dim1, dim2) != 1:
+            return False
+    return True

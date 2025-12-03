@@ -26,15 +26,16 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from numpy import empty
+from numpy import empty, broadcast_to
 from eoxmagmod import GEOCENTRIC_SPHERICAL, GEOCENTRIC_SPHERICAL
 from .common import (
     FORMAT_SPECIFIC_TIME_FORMAT,
     TIME_KEY,
     MJD2000_KEY,
     LOCATION_KEYS,
+    get_max_data_shape,
+    check_shape_compatibility,
 )
-
 
 
 def calculate_model_values(data, models, source_models,
@@ -53,11 +54,12 @@ def calculate_model_values(data, models, source_models,
         raise ValueError("Data dimension mismatch!")
 
     # Geocentric spherical coordinates
-    coords = empty(shape + (3,))
-    coords[..., 0] = data[location_keys[0]] # Latitude degrees
-    coords[..., 1] = data[location_keys[1]] # Longitude degrees
-    coords[..., 2] = data[location_keys[2]] * 1e-3 # Radius m => km
-    mjd2000 = data[time_key] # Timestamp MJD2000
+    mjd2000, coords = reshape_input_data(
+        data[time_key],                     # Timestamp MJD2000
+        data[location_keys[0]],             # Latitude degrees
+        data[location_keys[1]],             # Longitude degrees
+        data[location_keys[2]] * 1e-3,      # Radius m => km
+    )
 
     info = {}
 
@@ -76,3 +78,28 @@ def calculate_model_values(data, models, source_models,
         }
 
     return data, info
+
+
+def reshape_input_data(times, lats, lons, rads):
+    """ Reshape model input data. """
+
+    def _expand_and_broadcast_to(data, shape):
+        # add missing dimensions
+        data = data.reshape((*data.shape, *((1,) * (len(shape) - data.ndim))))
+        # broadcast to the final dimensions
+        data = broadcast_to(data, shape)
+        return data
+
+    coords_max_shape = get_max_data_shape([lats.shape, lons.shape, rads.shape])
+    max_shape = get_max_data_shape([times.shape, coords_max_shape])
+
+    times = broadcast_to(times, max_shape[:times.ndim])
+
+    coords = empty((*coords_max_shape, 3))
+    coords[..., 0] = _expand_and_broadcast_to(lats, coords_max_shape)
+    coords[..., 1] = _expand_and_broadcast_to(lons, coords_max_shape)
+    coords[..., 2] = _expand_and_broadcast_to(rads, coords_max_shape)
+
+    coords = broadcast_to(coords, (*max_shape[:len(coords_max_shape)], 3))
+
+    return times, coords

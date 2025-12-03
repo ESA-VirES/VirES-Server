@@ -29,7 +29,7 @@
 
 from unittest import TestCase, main
 import json
-from numpy import array
+from numpy import array, empty
 from numpy.testing import assert_equal
 from vires.model_eval.input_data import (
     FORMAT_SPECIFIC_TIME_FORMAT,
@@ -38,6 +38,13 @@ from vires.model_eval.input_data import (
     convert_csv_input,
     convert_cdf_input,
     convert_hdf_input,
+)
+from vires.model_eval.common import (
+    get_max_data_shape,
+    check_shape_compatibility,
+)
+from vires.model_eval.calculation import (
+    reshape_input_data,
 )
 from data import (
     INPUT_JSON_ISO_TIME,
@@ -82,6 +89,82 @@ HDF_OPTIONS = {
     "filename_suffix": ".hdf5",
     "temp_path": "/tmp",
 }
+
+class ShapeOpTest(TestCase):
+
+    def _test_max_shape(self, input_, expected_output):
+        output = get_max_data_shape(input_)
+        self.assertTrue(isinstance(output, tuple))
+        self.assertEqual(output, expected_output)
+
+    def _test_shape_compatibility(self, shape1, shape2, expected_output):
+        output = check_shape_compatibility(shape1, shape2)
+        if expected_output:
+            self.assertTrue(output)
+        else:
+            self.assertFalse(output)
+
+    def test_max_shape_empty(self):
+        self._test_max_shape([(2, 3, 4), ()], (2, 3, 4))
+        self._test_max_shape([(), (2, 3, 4)], (2, 3, 4))
+
+    def test_max_shape_mixed_sizes(self):
+        self._test_max_shape([(2, 3, 4), (2, 3)], (2, 3, 4))
+        self._test_max_shape([(2, 3), (2, 3, 4)], (2, 3, 4))
+
+    def test_max_shape_mixed_dims(self):
+        self._test_max_shape([(2, 1, 4), (1, 3)], (2, 3, 4))
+        self._test_max_shape([(1, 3), (2, 1, 4)], (2, 3, 4))
+
+    def test_shapes_equal(self):
+        self._test_shape_compatibility((2, 3, 4), (2, 3, 4), True)
+
+    def test_shapes_empty(self):
+        self._test_shape_compatibility((2, 3, 4), (), True)
+        self._test_shape_compatibility((), (2, 3, 4), True)
+
+    def test_shapes_mixed_sizes(self):
+        self._test_shape_compatibility((2, 3, 4), (2, 3), True)
+        self._test_shape_compatibility((2, 3), (2, 3, 4), True)
+
+    def test_shapes_broadcasted(self):
+        self._test_shape_compatibility((2, 1, 4), (1, 3), True)
+        self._test_shape_compatibility((1, 3), (2, 1, 4), True)
+
+    def test_shapes_incompatible(self):
+        self._test_shape_compatibility((2, 3, 4), (3, 2), False)
+        self._test_shape_compatibility((3, 3), (2, 3, 4), False)
+
+    def _test_reshape_input_data(
+        self, time_shape, lats_shape, lons_shape, rads_shape,
+        expected_time_shape, expected_coords_shape
+    ):
+        times, coords = reshape_input_data(
+            empty(time_shape),
+            empty(lats_shape),
+            empty(lons_shape),
+            empty(rads_shape)
+        )
+        self.assertEqual(times.shape, expected_time_shape)
+        self.assertEqual(coords.shape, expected_coords_shape)
+
+    def test_reshape_input_data_equal(self):
+        self._test_reshape_input_data(
+            (2, 3), (2, 3), (2, 3), (2, 3),
+            (2, 3), (2, 3, 3),
+        )
+
+    def test_reshape_input_data_scalar_time_and_radius(self):
+        self._test_reshape_input_data(
+            (), (2, 3), (2, 3), (),
+            (), (2, 3, 3),
+        )
+
+    def test_reshape_input_data_multi_time_and_radius(self):
+        self._test_reshape_input_data(
+            (5,), (1, 1, 3, 2), (1, 1, 3, 2), (1, 4),
+            (5,), (5, 4, 3, 2, 3),
+        )
 
 
 class InputDataTest(TestCase):

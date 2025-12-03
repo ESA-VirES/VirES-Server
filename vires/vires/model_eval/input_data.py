@@ -29,6 +29,7 @@
 
 # TODO: NetCDF support
 
+import math
 from collections import namedtuple
 from shutil import copyfileobj
 from tempfile import NamedTemporaryFile
@@ -63,6 +64,8 @@ from .common import (
     CSV_DEFAULT_TIME_FORMAT,
     MSGP_DEFAULT_TIME_FORMAT,
     HDF_DEFAULT_TIME_FORMAT,
+    get_max_data_shape,
+    check_shape_compatibility,
 )
 
 CHUNK_SIZE = 1024 * 1024 # 1MiB
@@ -255,20 +258,26 @@ def _convert_input_data(data, time_key, location_keys, time_parser,
 
 
 def _enforce_compatible_dimenstions(data, time_key, location_keys):
+    keys = [time_key, *location_keys]
 
-    # FIXME: implement dimension broadcasting
+    max_shape = get_max_data_shape([data[key].shape for key in keys])
 
-    if data[location_keys[0]].shape != data[location_keys[1]].shape:
-        raise ValueError(
-            f"Dimension mismatch between {location_keys[0]} and "
-            f"{location_keys[1]} location coordinates!"
-        )
+    for key in keys:
+        if not check_shape_compatibility(max_shape, data[key].shape):
+            raise ValueError(f"Input {key} has an incompatible data shape!")
 
-    if data[location_keys[0]].shape != data[location_keys[2]].shape:
-        raise ValueError(
-            f"Dimension mismatch between {location_keys[0]} and "
-            f"{location_keys[2]} location coordinates!"
-        )
 
-    if data[location_keys[0]].shape != data[time_key].shape:
-        raise ValueError("Dimension mismatch between location and times!")
+def estimate_output_size(data, models, time_key=MJD2000_KEY, location_keys=LOCATION_KEYS):
+    """ Estimate byte size of the produced data. """
+
+    time_shape = data[time_key].shape
+    location_shape = (*get_max_data_shape(
+        [data[key].shape for key in location_keys]
+    ), len(location_keys))
+    data_shape = get_max_data_shape([time_shape, location_shape])
+
+    return 8 * (
+        math.prod(time_shape)
+        + math.prod(location_shape)
+        + math.prod(data_shape) * len(models)
+    )
