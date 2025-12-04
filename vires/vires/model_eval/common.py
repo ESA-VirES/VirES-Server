@@ -27,6 +27,7 @@
 #-------------------------------------------------------------------------------
 
 FORMAT_SPECIFIC_TIME_FORMAT = "format specific default"
+MIRROR_INPUT_TIME_FORMAT = "input time format"
 
 TIME_KEY = "Timestamp"
 BACKUP_TIME_KEY = f"_{TIME_KEY}"

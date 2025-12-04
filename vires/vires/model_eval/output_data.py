@@ -61,6 +61,7 @@ from vires.time_cdf_epoch import mjd2000_to_cdf_epoch
 from vires.time_cdf_tt2000 import mjd2000_to_cdf_tt2000
 from .common import (
     FORMAT_SPECIFIC_TIME_FORMAT,
+    MIRROR_INPUT_TIME_FORMAT,
     TIME_KEY,
     BACKUP_TIME_KEY,
     MJD2000_KEY,
@@ -89,6 +90,7 @@ OUTPUT_TIME_FORMATS = [
     "datetime64[us]",
     "datetime64[ns]",
     FORMAT_SPECIFIC_TIME_FORMAT,
+    MIRROR_INPUT_TIME_FORMAT,
 ]
 
 

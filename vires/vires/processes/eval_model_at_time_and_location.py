@@ -41,6 +41,7 @@ from eoxserver.services.ows.wps.exceptions import (
 from vires.config import SystemConfigReader
 from vires.model_eval.common import (
     FORMAT_SPECIFIC_TIME_FORMAT,
+    MIRROR_INPUT_TIME_FORMAT,
 )
 from vires.model_eval.input_data import (
     INPUT_TIME_FORMATS,
@@ -70,23 +71,6 @@ from vires.processes.util import (
 
 SIZE_LIMIT = 512 * 1024 * 1024 # 512MB
 TEXT_FACTOR = 32 # extra scaling factor for text-based formats
-
-DEFAULT_FORMAT = FORMAT_SPECIFIC_TIME_FORMAT
-
-DEFAULT_OUTPUT_TIME_FORMAT = DEFAULT_FORMAT
-OUTPUT_TIME_FORMATS = [
-    "ISO date-time",
-    "MJD2000",
-    "Unix epoch",
-    "Decimal year",
-    "CDF_EPOCH",
-    "CDF_TIME_TT2000",
-    "datetime64[s]",
-    "datetime64[ms]",
-    "datetime64[us]",
-    "datetime64[ns]",
-    DEFAULT_FORMAT,
-]
 
 TEXT_FORMATS = ["application/json", "text/csv"]
 FORMATS_WITH_DEFAULT_ISO_TIME = [
@@ -193,6 +177,9 @@ class EvalModelAtTimeAndLocation(WPSProcess):
                 "input", f"Failed to read the input data! {error}"
             ) from None
 
+        if output_time_format == MIRROR_INPUT_TIME_FORMAT:
+            output_time_format = input_time_format
+
         # some of the output formats support only 1D data
         if output["mime_type"] in (
             "text/csv",
@@ -212,7 +199,7 @@ class EvalModelAtTimeAndLocation(WPSProcess):
             output["mime_type"] in TEXT_FORMATS
             or output_time_format == "ISO date-time"
             or (
-                output_time_format == DEFAULT_FORMAT
+                output_time_format == FORMAT_SPECIFIC_TIME_FORMAT
                 and output["mime_type"] in FORMATS_WITH_DEFAULT_ISO_TIME
             )
         ):
