@@ -418,9 +418,11 @@ def write_hdf_output(data, time_format, input_time_format, model_info,
                         array = char.encode(array, "ascii")
                     elif array.dtype.char == "M":
                         array = array.astype("int64")
-                    dataset = hdf.create_dataset(
-                        key, data=array, compression="gzip", compression_opts=9
-                    )
+                    # NOTE: scalar values cannot be compressed
+                    options = {} if array.ndim == 0 else {
+                        "compression": "gzip", "compression_opts": 9
+                    }
+                    dataset = hdf.create_dataset(key, data=array, **options)
                     dataset.attrs.update(attributes.get(key) or {})
 
                 # add global attributes

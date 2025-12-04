@@ -83,6 +83,34 @@ TEST_CONVERTED_TIMES_01 = {
     "datetime64[ns]": asarray([946684800000000000, 1262304000000000000, 1735689600000000000]),
 }
 
+
+TEST_DATA_02 = {
+    'MJD2000': asarray(0.0),
+    'Latitude': asarray([-45.0, 0.0, 45.0]),
+    'Longitude': asarray([ 90.0, 0.0, -90.0]),
+    'Radius': asarray([6380000.0, 6500000.0, 7000000.0]),
+    'B_Model1': asarray([[1.9, 2.8, 3.7], [4.6, 5.5, 6.4], [7.3, 8.2, 9.1]]),
+    'B_Model2': asarray([[7.3, 8.2, 9.1], [4.6, 5.5, 6.4], [1.9, 2.8, 3.7]]),
+}
+
+TEST_TIMES_02 = {
+    "ISO date-time": asarray("2000-01-01T00:00Z"),
+    "CDF_EPOCH": asarray(63113904000000.0),
+    "CDF_TIME_TT2000": asarray(-43135816000000),
+    "MJD2000": asarray(0.0),
+    "datetime64[us]": asarray(946684800000000),
+    "datetime64[ns]": asarray(946684800000000000),
+}
+
+TEST_CONVERTED_TIMES_02 = {
+    "ISO date-time": asarray("2000-01-01T00:00:00.000Z"),
+    "CDF_EPOCH": asarray(63113904000000.0),
+    "CDF_TIME_TT2000": asarray(-43135816000000),
+    "MJD2000": asarray(0.0),
+    "datetime64[us]": asarray(946684800000000),
+    "datetime64[ns]": asarray(946684800000000000),
+}
+
 MODEL_INFO_01 = {
     "Model1": {
         "name": "Model1",
@@ -553,6 +581,12 @@ class CdfWriterTest(TestCase):
 
 class HdfWriterTest(TestCase):
 
+    TEST_DATA = {
+        "data": TEST_DATA_01,
+        "times": TEST_TIMES_01,
+        "converted_times": TEST_CONVERTED_TIMES_01,
+    }
+
     def _read_hdf(self, filename):
         try:
             with h5py.File(filename, "r") as hdf:
@@ -581,18 +615,18 @@ class HdfWriterTest(TestCase):
             output_time_format
         )
         input_data = {
-            **TEST_DATA_01,
-            "_Timestamp": TEST_TIMES_01[input_time_format],
+            **self.TEST_DATA["data"],
+            "_Timestamp": self.TEST_DATA["times"][input_time_format],
         }
         expected_data = {
             "Timestamp": self._fix_strings((
-                TEST_TIMES_01
+                self.TEST_DATA["times"]
                 if input_time_format == resolved_output_time_format else
-                TEST_CONVERTED_TIMES_01
+                self.TEST_DATA["converted_times"]
             )[resolved_output_time_format]),
             **{
                 key: values
-                for key, values in TEST_DATA_01.items()
+                for key, values in self.TEST_DATA["data"].items()
                 if key != "MJD2000"
             }
         }
@@ -712,6 +746,15 @@ class HdfWriterTest(TestCase):
 
     def test_hdf_dt64_ns_dt64_ns(self):
         self._test_hdf("datetime64[ns]", "datetime64[ns]")
+
+
+class HdfWriterTestAlt(HdfWriterTest):
+
+    TEST_DATA = {
+        "data": TEST_DATA_02,
+        "times": TEST_TIMES_02,
+        "converted_times": TEST_CONVERTED_TIMES_02,
+    }
 
 
 class InputDataTest(TestCase):
