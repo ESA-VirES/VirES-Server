@@ -44,15 +44,6 @@ def calculate_model_values(data, models, source_models,
     """ Calculate model values. """
     del source_models # FIXME: optimize to prevent repeated calculation
 
-    # NOTE: assuming compatible dimensions
-    shape = data[location_keys[0]].shape
-    if (
-        shape != data[location_keys[1]].shape or
-        shape != data[location_keys[2]].shape or
-        shape != data[time_key].shape
-    ):
-        raise ValueError("Data dimension mismatch!")
-
     # Geocentric spherical coordinates
     mjd2000, coords = reshape_input_data(
         data[time_key],                     # Timestamp MJD2000
