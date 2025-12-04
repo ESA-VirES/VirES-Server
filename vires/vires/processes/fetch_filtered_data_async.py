@@ -281,8 +281,9 @@ class FetchFilteredDataAsync(WPSProcess):
         except Job.DoesNotExist:
             pass
 
-    def initialize(self, context, inputs, outputs, parts):
+    def initialize(self, context, inputs, outputs, *args):
         """ Asynchronous process initialization. """
+        del args
         context.logger.info(
             "Received %s WPS request from %s.",
             self.identifier, inputs["\\username"] or "an anonymous user"
