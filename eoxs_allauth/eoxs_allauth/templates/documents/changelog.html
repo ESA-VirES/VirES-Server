@@ -4,7 +4,7 @@
 <h1>Changelog</h1>
 <hr>
 <h3 id="3.16.0">
-    Release of Service v3.16.0 (2025-10-XX)
+    Release of Service v3.16.0 (2025-12-XX)
 </h3>
 <p>
     Features:
@@ -29,11 +29,17 @@
         interpolated from the magnetic model values at the
         <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_MAGx_LR_1B">MAGx_LR_1B</a>
         1Hz times and locations (see <a href="https://viresclient.readthedocs.io/en/latest/available_parameters.html" target="_bank">VirES Python client</a> documentation).
+    </li>
     <li><b>MAGx_HR_1B CHAOS model and residuals served via HAPI</b><br>
         The VirES <a href="/hapi" target="_blank">HAPI</a> endpoint serves
         CHAOS magnetic model and residuals for the high-resolution Swarm
         <a target="_blank" href="https://swarmhandbook.earth.esa.int/catalogue/SW_MAGx_HR_1B">MAGx_HR_1B</a>
         magnetic field measurements.
+    </li>
+    <li><b>New API for calculation of geo-magnetic models at user-provided times and locations</b><br>
+        The VirES API allows calculation of model values at user-provided times and location.
+        This API will be soon exposed via the VirES
+        <a href="https://viresclient.readthedocs.io/en/latest/available_parameters.html" target="_bank">VirES Python client</a>.
     </li>
 </ul>
 <hr>
