@@ -56,7 +56,6 @@ class ArrayMixIn():
         except AssertionError as exc:
             raise AssertionError("Not all array elements are equal!\n%s" % exc)
 
-
     @staticmethod
     def assertAllAlmostEqual(arr0, arr1, delta=1e-7):
         arr0 = asarray(arr0)

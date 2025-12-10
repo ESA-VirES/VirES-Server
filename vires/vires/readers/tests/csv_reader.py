@@ -33,7 +33,9 @@ from numpy.testing import assert_equal
 from vires.readers import (
     InvalidFileFormat, read_csv_data, reduce_int_type, sanitize_custom_data,
 )
-from vires.readers.csv_reader import parse_value, parse_csv_array, parse_datetime
+from vires.readers.csv_reader import (
+    parse_value, parse_csv_array, parse_datetime, extract_fields,
+)
 from vires.util import cached_property
 from vires.readers.tests.data import TEST1_CSV_FILE, TEST2_CSV_FILE
 
@@ -41,13 +43,14 @@ from vires.readers.tests.data import TEST1_CSV_FILE, TEST2_CSV_FILE
 class CSVReaderTestMixIn(TestCase):
     TEST_CSV_FILE = None
     N_RECORDS = None
+    OPTIONS = {}
 
     @cached_property
     def data(self):
         return self.load_data()
 
     def load_data(self):
-        return read_csv_data(self.TEST_CSV_FILE)
+        return read_csv_data(self.TEST_CSV_FILE, **self.OPTIONS)
 
     def assert_type_and_shape(self, variable, shape, dtype_string):
         data = self.data[variable]
@@ -76,6 +79,53 @@ class TestCSVReader(CSVReaderTestMixIn, TestCase):
 
     def test_scalar_mixed_int_float(self):
         self.assert_type_and_shape('ASM_Freq_Dev', (), 'float64')
+
+
+class TestCSVReaderWithVariableExtraction(CSVReaderTestMixIn, TestCase):
+    TEST_CSV_FILE = TEST1_CSV_FILE
+    N_RECORDS = 5
+    OPTIONS = {
+        "fields": ["Timestamp", "F", "Latitude", "B_NEC", "Longitude", "Flags_B"],
+    }
+
+    def test_extracted_keys(self):
+        self.assertEqual(list(self.data), self.OPTIONS["fields"])
+
+    def test_timestamp(self):
+        self.assert_type_and_shape('Timestamp', (), '<M8[ms]')
+
+    def test_scalar_float(self):
+        self.assert_type_and_shape('F', (), 'float64')
+
+    def test_vector_float(self):
+        self.assert_type_and_shape('B_NEC', (3,), 'float64')
+
+    def test_scalar_int(self):
+        self.assert_type_and_shape('Flags_B', (), 'int64')
+
+
+class TestCSVReaderWithCustomTypeParsing(CSVReaderTestMixIn, TestCase):
+    TEST_CSV_FILE = TEST1_CSV_FILE
+    N_RECORDS = 5
+    OPTIONS = {
+        "fields": ["Timestamp", "F", "B_NEC", "Flags_B"],
+        "type_parsers": [int, float],
+    }
+
+    def test_extracted_keys(self):
+        self.assertEqual(list(self.data), self.OPTIONS["fields"])
+
+    def test_timestamp(self):
+        self.assert_type_and_shape('Timestamp', (), '<U20')
+
+    def test_scalar_float(self):
+        self.assert_type_and_shape('F', (), 'float64')
+
+    def test_vector_float(self):
+        self.assert_type_and_shape('B_NEC', (), '<U34')
+
+    def test_scalar_int(self):
+        self.assert_type_and_shape('Flags_B', (), 'int64')
 
 
 class TestCSVReaderSanitized(CSVReaderTestMixIn, TestCase):
@@ -197,6 +247,23 @@ class TextCsvValueParser(TestCase):
         self.assertEqual(parse_value(input_, float), expected)
         self.assertEqual(parse_value(input_, parse_csv_array), expected)
         self.assertEqual(parse_value(input_, parse_datetime), expected)
+
+
+class TestExtractFields(TestCase):
+
+    def test_field_extraciton(self):
+        keys = ["D", "C", "A"]
+        source = [
+            ("A", "B", "C"),
+            ("1", "2", "3"),
+            ("4", "5", "6"),
+        ]
+        expected_result = [
+            ("C", "A"),
+            ("3", "1"),
+            ("6", "4"),
+        ]
+        self.assertEqual(list(extract_fields(iter(source), keys)), expected_result)
 
 
 if __name__ == "__main__":

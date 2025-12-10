@@ -36,17 +36,9 @@ from .models import Model
 
 def extract_product_names(resolvers):
     """ Extract product names from the resolvers time-series and models. """
-    def _extract_product_sets(resolver):
-        for item in resolver.models:
-            yield item.product_set
-        for item in resolver.time_series:
-            yield item.product_set
-
     product_set = set()
     for resolver in resolvers:
-        for item in _extract_product_sets(resolver):
-            product_set.update(item)
-
+        product_set.update(resolver.extract_sources())
     return list(sorted(product_set))
 
 
@@ -54,6 +46,21 @@ class VariableResolver:
     """ Variable Resolver collects the available sources, models and filters
     and resolves the variable consumer/producer dependencies.
     """
+
+    def extract_sources(self):
+        """ Extract sources from resolver's time-series and models. """
+
+        def _extract_product_sets(resolver):
+            for item in resolver.models:
+                yield item.product_set
+            for item in resolver.time_series:
+                yield item.product_set
+
+        product_set = set()
+        for item in _extract_product_sets(self):
+            product_set.update(item)
+
+        return product_set
 
     def __init__(self):
         self._producers = OrderedDict()

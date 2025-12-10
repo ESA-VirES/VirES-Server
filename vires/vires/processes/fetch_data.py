@@ -156,7 +156,20 @@ class FetchData(WPSProcess):
             "ignore_cached_models", bool, optional=True, default=False,
             abstract=(
                 "Optional boolean flag forcing the server to ignore "
-                "the cached models and to calculate the models on-the-fly."
+                "the cached models and to calculate the cached models "
+                "on-the-fly. The cached LR model values, when used, are "
+                "always interpolated for HR datasets. "
+                "The model caching is a performance optimisation and "
+                "its disabling makes the calculation significantly slower."
+            ),
+        )),
+        ("do_not_interpolate_models", LiteralData(
+            "do_not_interpolate_models", bool, optional=True, default=False,
+            abstract=(
+                "Optional boolean flag forcing the server not to interpolate"
+                "non-cached models for HR datasets from the LR ones."
+                "The model interpolation is a performance optimisation and "
+                "its disabling makes the calculation significantly slower."
             ),
         )),
         ("shc", ComplexData(
@@ -189,7 +202,8 @@ class FetchData(WPSProcess):
 
     def execute(self, user, permissions, collection_ids, begin_time, end_time,
                 sampling_step, bbox, requested_variables, model_ids, shc,
-                csv_time_format, output, ignore_cached_models, **kwargs):
+                csv_time_format, output, ignore_cached_models,
+                do_not_interpolate_models, **kwargs):
         """ Execute process """
         access_logger = self.get_access_logger(**kwargs)
 
@@ -375,6 +389,7 @@ class FetchData(WPSProcess):
                         mission, spacecraft, grade,
                         requested_models, source_models,
                         no_cache=ignore_cached_models,
+                        no_interpolation=do_not_interpolate_models,
                         master=master,
                     ),
                     copied_variables,

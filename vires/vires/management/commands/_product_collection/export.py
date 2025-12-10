@@ -86,10 +86,11 @@ def export_metadata(collection, metadata):
 
 def export_cached_models(collection, metadata):
     if collection.cached_magnetic_models.count() > 0:
-        conf = metadata.get("cachedMagneticModels") or {}
-        conf["models"] = [
-            model.expression
-            for model in collection.cached_magnetic_models.all()
-        ]
-        metadata["cachedMagneticModels"] = conf
+        metadata["modelOptions"] = {
+            **(metadata.get("modelOptions") or {}),
+            "cachedModels": [
+                model.expression
+                for model in collection.cached_magnetic_models.all()
+            ],
+        }
     return metadata

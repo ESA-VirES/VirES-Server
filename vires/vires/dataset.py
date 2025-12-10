@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
 
 from collections import OrderedDict
 from numpy import array, concatenate, inf
-from .util import include, unique
+from .util import include, exclude, unique
 from .cdf_util import CDF_DOUBLE_TYPE
 from .interpolate import Interp1D
 
@@ -37,6 +37,14 @@ class Dataset(OrderedDict):
     """ Dataset class an ordered dictionary of arrays with a few additional
     properties and methods.
     """
+    SLOPE_VARIABLE_TEMPLATE = "_d_{name}_dt"
+    KINDS_REQUIRING_SLOPES = Interp1D.KINDS_REQUIRING_SLOPES
+
+    @classmethod
+    def get_slope_variable(cls, variable):
+        """ Get slope variable name. """
+        return cls.SLOPE_VARIABLE_TEMPLATE.format(name=variable)
+
     def __init__(self, dataset=None):
         OrderedDict.__init__(self)
         self.cdf_type = {}
@@ -70,7 +78,15 @@ class Dataset(OrderedDict):
         if cdf_attr is not None:
             self.cdf_attr[variable] = dict(cdf_attr)
 
-    def merge(self, dataset):
+    def remove(self, variable):
+        """ Remove variable. """
+        return (
+            self.pop(variable, None),
+            self.cdf_type.pop(variable, None),
+            self.cdf_attr.pop(variable, None),
+        )
+
+    def merge(self, dataset, variable_mapping=None):
         """ Merge datasets.
         The merge adds variables from the given dataset if these are not already
         present otherwise the variables are ignored.
@@ -81,18 +97,24 @@ class Dataset(OrderedDict):
                 (dataset.length, self.length)
             )
 
-        for variable, data in dataset.items():
-            if variable not in self:
+        if not variable_mapping:
+            variable_mapping = {}
+
+        for source_variable, data in dataset.items():
+            target_variable = variable_mapping.get(
+                source_variable, source_variable
+            )
+            if target_variable not in self:
                 self.set(
-                    variable, data,
-                    dataset.cdf_type.get(variable),
-                    dataset.cdf_attr.get(variable)
+                    target_variable, data,
+                    dataset.cdf_type.get(source_variable),
+                    dataset.cdf_attr.get(source_variable)
                 )
 
     def update(self, dataset):
         """ Update the given dataset with this one.
-        The merge adds variables from the given dataset replacing variables
-        already present in the dataset.
+        Unlike the merge, the update adds variables from the given dataset
+        replacing variables already present in the dataset.
         """
         if self and dataset and self.length != dataset.length:
             raise ValueError(
@@ -107,57 +129,82 @@ class Dataset(OrderedDict):
                 dataset.cdf_attr.get(variable)
             )
 
-    def append(self, dataset):
+    def append(self, dataset, remove_incompatible=False):
         """ Append dataset of the same kind to this dataset. All variables
         are concatenated with the current dataset data.
         """
-        if dataset: # ignore empty datasets
-            if not self:
-                # fill empty dataset
-                self.update(dataset)
-            else:
-                if set(dataset) != set(self):
-                    raise ValueError("Dataset variables mismatch! %s != %s " % (
-                        list(set(dataset) - set(self)),
-                        list(set(self) - set(dataset))
-                    ))
-                # concatenate with the current data
-                OrderedDict.update(self, (
-                    (variable, concatenate((data, dataset[variable]), axis=0))
-                    for variable, data in self.items()
+        if not dataset: # ignore empty datasets
+            return
+
+        if not self: # fill empty target dataset
+            self.update(dataset)
+            return
+
+        removed_variables = []
+        updated_variables = list(self)
+
+        if set(dataset) != set(self):
+            extra_variables = set(self) - set(dataset)
+            if not remove_incompatible:
+                raise ValueError("Dataset variables mismatch! %s != %s " % (
+                    list(set(dataset) - set(self)),
+                    list(extra_variables)
                 ))
+            removed_variables = list(extra_variables)
+            updated_variables = list(set(self) - extra_variables)
+
+        new_data = {}
+        for variable in updated_variables:
+            try:
+                new_data[variable] = concatenate(
+                    (self[variable], dataset[variable]), axis=0
+                )
+            except ValueError:
+                if not remove_incompatible:
+                    raise
+                removed_variables.append(variable)
+
+        for variable in removed_variables:
+            self.remove(variable)
+
+        super().update(new_data)
 
     def subset(self, index, always_copy=True):
-        """ Get subset of the dataset defined by the array of indices. """
-        if index is None: # no-index means select all
-            dataset = Dataset(self) if always_copy else self
-        elif self.length == 0 and index.size == 0:
-            # Older Numpy versions fail to apply zero subset of a zero size
-            # multi-dimensional array.
-            dataset = Dataset(self)
-        else:
-            dataset = Dataset()
-            for variable, data in self.items():
-                dataset.set(
-                    variable, data[index],
-                    self.cdf_type.get(variable),
-                    self.cdf_attr.get(variable)
-                )
+        """ Get subset of the dataset defined by give selection.
+        The selection can be an array of indices, boolean mask, slice object,
+        Ellipsis or None.
+        """
+        if index is Ellipsis or index is None: # no-index means select all
+            return Dataset(self) if always_copy else self
+        dataset = Dataset()
+        for variable, data in self.items():
+            dataset.set(
+                variable, data[index],
+                self.cdf_type.get(variable),
+                self.cdf_attr.get(variable)
+            )
         return dataset
 
-    def extract(self, variables):
+    def extract(self, variables, variable_mapping=None):
         """ Get new subset containing only the selected variables. """
         dataset = Dataset()
-        for variable in unique(variables):
+
+        if not variable_mapping:
+            variable_mapping = {}
+
+        for source_variable in unique(variables):
+            target_variable = variable_mapping.get(
+                source_variable, source_variable
+            )
             try:
-                data = self[variable]
+                data = self[source_variable]
             except KeyError:
                 pass # non-existent variables are silently ignored
             else:
                 dataset.set(
-                    variable, data,
-                    self.cdf_type.get(variable),
-                    self.cdf_attr.get(variable)
+                    target_variable, data,
+                    self.cdf_type.get(source_variable),
+                    self.cdf_attr.get(source_variable)
                 )
         return dataset
 
@@ -168,6 +215,8 @@ class Dataset(OrderedDict):
         dictionary. The supported kinds are: last, nearest, linear.
         The values as well the variable must be sorted in ascending order.
         """
+        slope_variable_template = self.SLOPE_VARIABLE_TEMPLATE
+
         if kinds is None:
             kinds = {}
         dataset = Dataset()
@@ -175,15 +224,19 @@ class Dataset(OrderedDict):
         interp1d = Interp1D(
             self[variable], values, gap_threshold, segment_neighbourhood
         )
-        variables = (
+        variables = list(
             self if variables is None else include(unique(variables), self)
         )
+        excluded_variables = set(
+            slope_variable_template.format(name=name) for name in variables
+        )
 
-        for name in variables:
+        for name in exclude(variables, excluded_variables):
             kind = kinds.get(name, 'nearest')
             data = self[name]
+            slope = self.get(slope_variable_template.format(name=name))
             dataset.set(
-                name, interp1d(data, kind).astype(data.dtype),
+                name, interp1d(data, slope, kind).astype(data.dtype),
                 CDF_DOUBLE_TYPE, #self.cdf_type.get(name),
                 self.cdf_attr.get(name)
             )

@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016 EOX IT Services GmbH
+# Copyright (C) 2016-2025 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,18 +35,22 @@ from vires.cdf_util import CDF_DOUBLE_TYPE
 
 N = 100
 M = 4
+L = 5
 N_SUBSET = 10
 DATA_A = random(N)
 DATA_B = random((N, M))
 DATA_C = random(N)
 DATA_D = random((N, M))
+DATA_E = random((N, L))
 
 DATA_ZERO_SCALAR = random(0)
 DATA_ZERO_VECTOR = random((0, M))
 
 DATA_X = array([1.0, 3.0, 4.0, 5.0])
 DATA_Y = array([1.0, 3.0, 1.0, 2.0])
+DATA_Y_SLOPE = array([2.0, 0.0, 0.0, 1.0])
 DATA_Z = array([[1.0, 2.0], [3.0, 1.0], [1.0, 3.0], [2.0, 1.0]])
+DATA_Z_SLOPE = array([[2.0, -1.0], [0.0, 0.0], [0.0, 0.0], [1.0, -2.0]])
 
 DATA_X_INTERPOLATED = array([
     -0.25, 0.25, 0.75, 1.25, 1.75, 2.25, 2.75,
@@ -72,6 +76,13 @@ class FilterStub():
 
 
 class TestDataset(ArrayMixIn, TestCase):
+
+    def test_get_slope_variable(self):
+        variable_name = "VARIABLE"
+        self.assertEqual(
+            Dataset.get_slope_variable(variable_name),
+            Dataset.SLOPE_VARIABLE_TEMPLATE.format(name=variable_name)
+        )
 
     def test_epmty(self):
         """Test empty dataset."""
@@ -135,6 +146,27 @@ class TestDataset(ArrayMixIn, TestCase):
         self.assertEqual(dataset.cdf_attr.get('C'), TEST_ATTRIB)
         self.assertEqual(dataset.cdf_attr.get('D'), TEST_ATTRIB)
 
+    def test_remove(self):
+
+        dataset = Dataset()
+        dataset.set('A', DATA_A, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+
+        self.assertTrue('A' in dataset)
+        self.assertTrue('A' in dataset.cdf_type)
+        self.assertTrue('A' in dataset.cdf_attr)
+
+        dataset.remove('A')
+
+        self.assertEqual(len(dataset), 1)
+        self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['B']))
+
+        self.assertTrue('A' not in dataset)
+        self.assertTrue('A' not in dataset.cdf_type)
+        self.assertTrue('A' not in dataset.cdf_attr)
+
     def test_update(self):
         """Test Dataset.update() method."""
         dataset_a = Dataset()
@@ -174,10 +206,12 @@ class TestDataset(ArrayMixIn, TestCase):
         self.assertEqual(dataset.cdf_attr.get('C'), TEST_ATTRIB)
 
     def test_merge(self):
-        """Test Dataset.merge() method."""
+        """Test Dataset.merge() method, including name translation."""
+
         dataset_a = Dataset()
-        dataset_a.set('A', DATA_A, CDF_DOUBLE_TYPE, TEST_ATTRIB)
-        dataset_a.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_a.set('X', DATA_A, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_a.set('Y', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        variable_mapping = {"X": "A", "Y": "B"}
 
         dataset_b = Dataset()
         dataset_b.set('B', DATA_D)
@@ -188,7 +222,7 @@ class TestDataset(ArrayMixIn, TestCase):
         dataset_zero_size.set('C', DATA_ZERO_VECTOR)
 
         dataset = Dataset()
-        dataset.merge(dataset_a)
+        dataset.merge(dataset_a, variable_mapping)
         dataset.merge(dataset_b)
         dataset.merge(Dataset())
         with self.assertRaises(ValueError):
@@ -252,15 +286,50 @@ class TestDataset(ArrayMixIn, TestCase):
         self.assertEqual(dataset.cdf_attr.get('A'), TEST_ATTRIB)
         self.assertEqual(dataset.cdf_attr.get('B'), TEST_ATTRIB)
 
+    def test_append_incompatible(self):
+
+        dataset_base = Dataset()
+        dataset_base.set('A', DATA_A, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_base.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+
+        dataset_incompatible_dimension = Dataset()
+        dataset_incompatible_dimension.set('A', DATA_C)
+        dataset_incompatible_dimension.set('B', DATA_E)
+
+        dataset_key_missmatch = Dataset()
+        dataset_key_missmatch.set('C', DATA_C)
+        dataset_key_missmatch.set('B', DATA_D)
+
+        dataset = Dataset(dataset_base)
+        with self.assertRaises(ValueError):
+            dataset.append(dataset_key_missmatch)
+        dataset.append(dataset_key_missmatch, remove_incompatible=True)
+
+        self.assertEqual(len(dataset), 1)
+        self.assertEqual(dataset.length, 2*N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['B']))
+
+        dataset = Dataset(dataset_base)
+        with self.assertRaises(ValueError):
+            dataset.append(dataset_incompatible_dimension)
+        dataset.append(dataset_incompatible_dimension, remove_incompatible=True)
+
+        self.assertEqual(len(dataset), 1)
+        self.assertEqual(dataset.length, 2*N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['A']))
+
     def test_extract(self):
         """Test Dataset.extract() method."""
         dataset_source = Dataset()
-        dataset_source.set('A', DATA_A)
-        dataset_source.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set('X', DATA_A)
+        dataset_source.set('Y', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
         dataset_source.set('C', DATA_C, CDF_DOUBLE_TYPE, TEST_ATTRIB)
         dataset_source.set('D', DATA_D)
+        variable_mapping = {'X': 'A', 'Y': 'B'}
 
-        dataset = dataset_source.extract(['B', 'D', 'G'])
+        dataset = dataset_source.extract(['Y', 'D', 'G'], variable_mapping)
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, N)
@@ -340,6 +409,50 @@ class TestDataset(ArrayMixIn, TestCase):
         dataset_source.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
 
         dataset = dataset_source.subset(None)
+
+        self.assertEqual(len(dataset), 2)
+        self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['A', 'B']))
+
+        self.assertAllEqual(dataset['A'], DATA_A)
+        self.assertAllEqual(dataset['B'], DATA_B)
+
+        self.assertEqual(dataset.cdf_type.get('A'), None)
+        self.assertEqual(dataset.cdf_type.get('B'), CDF_DOUBLE_TYPE)
+
+        self.assertEqual(dataset.cdf_attr.get('A'), None)
+        self.assertEqual(dataset.cdf_attr.get('B'), TEST_ATTRIB)
+
+    def test_subset_with_ellipsis(self):
+        """Test Dataset.subset() method with index set to None. """
+        dataset_source = Dataset()
+        dataset_source.set('A', DATA_A)
+        dataset_source.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+
+        dataset = dataset_source.subset(...)
+
+        self.assertEqual(len(dataset), 2)
+        self.assertEqual(dataset.length, N)
+        self.assertFalse(dataset.is_empty)
+        self.assertEqual(set(dataset), set(['A', 'B']))
+
+        self.assertAllEqual(dataset['A'], DATA_A)
+        self.assertAllEqual(dataset['B'], DATA_B)
+
+        self.assertEqual(dataset.cdf_type.get('A'), None)
+        self.assertEqual(dataset.cdf_type.get('B'), CDF_DOUBLE_TYPE)
+
+        self.assertEqual(dataset.cdf_attr.get('A'), None)
+        self.assertEqual(dataset.cdf_attr.get('B'), TEST_ATTRIB)
+
+    def test_subset_with_slice(self):
+        """Test Dataset.subset() method with index set to None. """
+        dataset_source = Dataset()
+        dataset_source.set('A', DATA_A)
+        dataset_source.set('B', DATA_B, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+
+        dataset = dataset_source.subset(slice(None, None))
 
         self.assertEqual(len(dataset), 2)
         self.assertEqual(dataset.length, N)
@@ -453,9 +566,17 @@ class TestDataset(ArrayMixIn, TestCase):
         dataset_source.set("A", DATA_Y)
         dataset_source.set("B", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
         dataset_source.set("C", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("D", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("E", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("F", DATA_Y)
+        dataset_source.set("_d_F_dt", DATA_Y_SLOPE)
         dataset_source.set("K", DATA_Z)
         dataset_source.set("L", DATA_Z)
         dataset_source.set("M", DATA_Z)
+        dataset_source.set("N", DATA_Z)
+        dataset_source.set("O", DATA_Z)
+        dataset_source.set("P", DATA_Z)
+        dataset_source.set("_d_P_dt", DATA_Z_SLOPE)
 
         data_x = array([
             -0.25, 0.25, 0.75, 1.25, 1.75, 2.25, 2.75,
@@ -482,11 +603,21 @@ class TestDataset(ArrayMixIn, TestCase):
         kinds = {
             "B": "nearest",
             "C": "previous",
+            "D": "linear",
+            "E": "cubic", # fallback to linear
+            "F": "cubic",
             "L": "nearest",
             "M": "zero",
+            "N": "linear",
+            "O": "cubic", # fallback to linear
+            "P": "cubic",
         }
 
         dataset = dataset_source.interpolate(data_x, "T", kinds=kinds)
+
+        # auxiliary slopes are not to be interpolated
+        assert "_d_F_dt" not in dataset
+        assert "_d_P_dt" not in dataset
 
         self.assertEqual(dataset.length, len(data_x))
         self.assertFalse(dataset.is_empty)
@@ -502,6 +633,18 @@ class TestDataset(ArrayMixIn, TestCase):
         self.assertAllEqual(dataset['C'], array([
             nan, nan, nan, 1.0, 1.0, 1.0, 1.0,
             3.0, 3.0, 1.0, 1.0, nan, nan, nan,
+        ]))
+        self.assertAllEqual(dataset['D'], array([
+            nan, nan, nan, 1.25, 1.75, 2.25, 2.75,
+            2.5 , 1.5 , 1.25, 1.75, nan,  nan, nan,
+        ]))
+        self.assertAllEqual(dataset['E'], array([
+            nan, nan, nan, 1.25, 1.75, 2.25, 2.75,
+            2.5 , 1.5 , 1.25, 1.75, nan,  nan, nan,
+        ]))
+        self.assertAllEqual(dataset['F'], array([
+            nan, nan, nan, 1.46875, 2.21875, 2.71875, 2.96875,
+            2.6875, 1.3125, 1.109375, 1.703125, nan, nan, nan
         ]))
 
         self.assertAllEqual(dataset['K'], array([
@@ -520,6 +663,21 @@ class TestDataset(ArrayMixIn, TestCase):
             [nan, nan], [nan, nan], [nan, nan], [1.0, 2.0], [1.0, 2.0],
             [1.0, 2.0], [1.0, 2.0], [3.0, 1.0], [3.0, 1.0], [1.0, 3.0],
             [1.0, 3.0], [nan, nan], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['N'], array([
+            [nan, nan], [nan, nan], [nan, nan], [1.25, 1.875], [1.75, 1.625],
+            [2.25, 1.375], [2.75, 1.125], [2.5, 1.5], [1.5, 2.5],
+            [1.25, 2.5], [1.75, 1.5], [nan, nan], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['O'], array([
+            [nan, nan], [nan, nan], [nan, nan], [1.25, 1.875], [1.75, 1.625],
+            [2.25, 1.375], [2.75, 1.125], [2.5, 1.5], [1.5, 2.5],
+            [1.25, 2.5], [1.75, 1.5], [nan, nan], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['P'], array([
+            [nan, nan], [nan, nan], [nan, nan], [1.46875, 1.765625], [2.21875, 1.390625],
+            [2.71875, 1.140625], [2.96875, 1.015625], [2.6875, 1.3125], [1.3125, 2.6875],
+            [1.109375, 2.78125], [1.703125, 1.59375], [nan, nan], [nan, nan], [nan, nan],
         ]))
 
         self.assertEqual(dataset.cdf_type.get('A'), CDF_DOUBLE_TYPE)
@@ -540,9 +698,17 @@ class TestDataset(ArrayMixIn, TestCase):
         dataset_source.set("A", DATA_Y)
         dataset_source.set("B", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
         dataset_source.set("C", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("D", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("E", DATA_Y, CDF_DOUBLE_TYPE, TEST_ATTRIB)
+        dataset_source.set("F", DATA_Y)
+        dataset_source.set("_d_F_dt", DATA_Y_SLOPE)
         dataset_source.set("K", DATA_Z)
         dataset_source.set("L", DATA_Z)
         dataset_source.set("M", DATA_Z)
+        dataset_source.set("N", DATA_Z)
+        dataset_source.set("O", DATA_Z)
+        dataset_source.set("P", DATA_Z)
+        dataset_source.set("_d_P_dt", DATA_Z_SLOPE)
 
         data_x = array([
             -0.25, 0.25, 0.75, 1.25, 1.75, 2.25, 2.75,
@@ -551,15 +717,25 @@ class TestDataset(ArrayMixIn, TestCase):
 
         kinds = {
             "B": "nearest",
-            "C": "zero",
+            "C": "previous",
+            "D": "linear",
+            "E": "cubic", # fallback to linear
+            "F": "cubic",
             "L": "nearest",
-            "M": "previous",
+            "M": "zero",
+            "N": "linear",
+            "O": "cubic", # fallback to linear
+            "P": "cubic",
         }
 
         dataset = dataset_source.interpolate(
             data_x, "T", kinds=kinds,
             gap_threshold=1.0, segment_neighbourhood=0.5,
         )
+
+        # auxiliary slopes are not to be interpolated
+        assert "_d_F_dt" not in dataset
+        assert "_d_P_dt" not in dataset
 
         self.assertEqual(dataset.length, len(data_x))
         self.assertFalse(dataset.is_empty)
@@ -576,23 +752,48 @@ class TestDataset(ArrayMixIn, TestCase):
             nan, nan, nan, 1.0, nan, nan, nan,
             3.0, 3.0, 1.0, 1.0, 2.0, nan, nan,
         ]))
+        self.assertAllEqual(dataset['D'], array([
+            nan, nan, nan, nan, nan, nan, 3.5,
+            2.5, 1.5, 1.25, 1.75, 2.25, nan, nan,
+        ]))
+        self.assertAllEqual(dataset['E'], array([
+            nan, nan, nan, nan, nan, nan, 3.5,
+            2.5, 1.5, 1.25, 1.75, 2.25, nan, nan,
+        ]))
+        self.assertAllEqual(dataset['F'], array([
+            nan, nan, nan, nan, nan, nan, 2.5625,
+            2.6875, 1.3125, 1.109375, 1.703125, 2.171875, nan, nan
+        ]))
 
         self.assertAllEqual(dataset['K'], array([
             [nan, nan], [nan, nan], [1.0, 2.0], [1.0, 2.0], [nan, nan],
             [nan, nan], [3.0, 1.0], [3.0, 1.0], [1.0, 3.0], [1.0, 3.0],
             [2.0, 1.0], [2.0, 1.0], [nan, nan], [nan, nan],
         ]))
-
         self.assertAllEqual(dataset['L'], array([
             [nan, nan], [nan, nan], [1.0, 2.0], [1.0, 2.0], [nan, nan],
             [nan, nan], [3.0, 1.0], [3.0, 1.0], [1.0, 3.0], [1.0, 3.0],
             [2.0, 1.0], [2.0, 1.0], [nan, nan], [nan, nan],
         ]))
-
         self.assertAllEqual(dataset['M'], array([
             [nan, nan], [nan, nan], [nan, nan], [1.0, 2.0], [nan, nan],
             [nan, nan], [nan, nan], [3.0, 1.0], [3.0, 1.0], [1.0, 3.0],
             [1.0, 3.0], [2.0, 1.0], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['N'], array([
+            [nan, nan], [nan, nan], [nan, nan], [nan, nan], [nan, nan],
+            [nan, nan], [3.5, 0.5], [2.5, 1.5], [1.5, 2.5], [1.25, 2.5],
+            [1.75, 1.5], [2.25, 0.5], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['O'], array([
+            [nan, nan], [nan, nan], [nan, nan], [nan, nan], [nan, nan],
+            [nan, nan], [3.5, 0.5], [2.5, 1.5], [1.5, 2.5], [1.25, 2.5],
+            [1.75, 1.5], [2.25, 0.5], [nan, nan], [nan, nan],
+        ]))
+        self.assertAllEqual(dataset['P'], array([
+            [nan, nan], [nan, nan], [nan, nan], [nan, nan], [nan, nan],
+            [nan, nan], [2.5625, 1.4375], [2.6875, 1.3125], [1.3125, 2.6875], [1.109375, 2.78125],
+            [1.703125, 1.59375], [2.171875, 0.65625], [nan, nan], [nan, nan],
         ]))
 
         self.assertEqual(dataset.cdf_type.get('A'), CDF_DOUBLE_TYPE)

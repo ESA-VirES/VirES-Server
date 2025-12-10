@@ -121,6 +121,6 @@ class TimeSeries():
 
     def __str__(self):
         name = self.__class__.__name__
-        inputs = self.required_variable
+        inputs = ",".join(self.required_variables)
         outputs = ",".join(self.variables)
         return f"{name}([{inputs}] -> [{outputs}])"
