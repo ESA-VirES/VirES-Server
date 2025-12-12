@@ -492,8 +492,8 @@
         }
     },
     {
-        "name": "SW_EFIx_LP_1B",
-        "description": "Swarm plasma data from the Langmuir Probe (LP) at 2Hz rate",
+        "name": "SW_EFIx_LP_1B_B06",
+        "description": "Swarm plasma data from the Langmuir Probe (LP) at 2Hz rate (baseline 06)",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EFIx_LP_1B",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 20,
@@ -623,8 +623,8 @@
         }
     },
     {
-        "name": "SW_EFIx_LP_1B_B07",
-        "description": "Swarm plasma data from the Langmuir Probe (LP) at 2Hz rate (baseline 07)",
+        "name": "SW_EFIx_LP_1B",
+        "description": "Swarm plasma data from the Langmuir Probe (LP) at 2Hz rate",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EFIx_LP_1B",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 20,
