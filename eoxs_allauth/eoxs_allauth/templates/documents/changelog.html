@@ -39,7 +39,22 @@
     <li><b>New API for calculation of geo-magnetic models at user-provided times and locations</b><br>
         The VirES API allows calculation of model values at user-provided times and location.
         This API will be soon exposed via the VirES
-        <a href="https://viresclient.readthedocs.io/en/latest/available_parameters.html" target="_bank">VirES Python client</a>.
+        <a target="_blank" href="https://viresclient.readthedocs.io/en/latest/available_parameters.html">VirES Python client</a>.
+    </li>
+</ul>
+<p>
+    Breaking changes:
+</p>
+<ul>
+    <li><b>VirES API strict enforcement of the correct request content type</b><br>
+        The new VirES API for calculation of model values at user-provided times and locations
+        requires use of special HTTP/POST requests with attached binary content.
+        In order to support these requests, strict enforcement of the request
+        content type had to be implemented. Unfortunately, as result of this change,
+        older versions of the Python client (&lt;&nbsp;0.12.2) may not longer work.<br>
+        If you see an error like <code>Unsupported application/x-www-form-urlencoded request format!</code>,
+        please, upgrade to the latest version of the
+        <a target="_blank" href="https://github.com/ESA-VirES/VirES-Python-Client">VirES Python client</a>.
     </li>
 </ul>
 <hr>
