@@ -695,7 +695,6 @@
                     }
                 },
                 "N_elec": {
-                    "alias": "Ne",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Plasma density estimated from the electron current",
@@ -703,7 +702,6 @@
                     }
                 },
                 "N_elec_error": {
-                    "alias": "Ne_error",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Statistical error of the electron density estimate",
@@ -711,7 +709,6 @@
                     }
                 },
                 "T_elec": {
-                    "alias": "Te",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Plasma electron temperature",
@@ -726,7 +723,6 @@
                     }
                 },
                 "T_elec_error": {
-                    "alias": "Te_error",
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Error estimate of plasma electron temperature (T_elec)",
@@ -762,7 +758,6 @@
                     }
                 },
                 "Flags_N_elec": {
-                    "alias": "Flags_Ne",
                     "dataType": "uint8",
                     "attributes": {
                         "DESCRIPTION": "Flags characterizing the electron density estimate",
@@ -770,7 +765,6 @@
                     }
                 },
                 "Flags_T_elec": {
-                    "alias": "Flags_Te",
                     "dataType": "uint8",
                     "attributes": {
                         "DESCRIPTION": "Flags characterizing the electron temperature measurement",
