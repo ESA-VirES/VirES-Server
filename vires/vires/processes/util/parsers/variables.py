@@ -27,17 +27,43 @@
 # pylint: disable=too-many-branches,unused-argument
 
 import re
+from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
+from vires.parsers.exceptions import ParserError
+from vires.parsers.variables_list_parser import (
+    get_variables_list_parser,
+    SourceVariable,
+)
+from vires.parsers.variables_list_lexer import get_variables_list_lexer
+from ..models import Identity
 
 RE_SUBTRACTED_VARIABLE = re.compile(r'(.+)_(?:res|diff)([ABC])([ABC])')
 
 
 def parse_variables(input_id, variables_strings):
     """ Variable parsers.  """
-    variables_strings = (variables_strings or '').strip()
-    variables = [
-        var.strip() for var in variables_strings.split(',')
-    ] if variables_strings else []
+
+    def _parse_variables(input_):
+        lexer = get_variables_list_lexer()
+        parser = get_variables_list_parser()
+        return parser.parse(input_, lexer=lexer)
+
+    try:
+        parsed_variables = _parse_variables(variables_strings)
+    except ParserError as error:
+        raise InvalidInputValueError(input_id, str(error)) from None
+
+    variables = []
     extra_functions = []
+    for variable in parsed_variables:
+        variables.append(variable.name)
+        if (
+            isinstance(variable.source, SourceVariable)
+            and variable.name != variable.source.name
+        ):
+            extra_functions.append(
+                Identity(variable.source.name, variable.name)
+            )
+
     return variables, extra_functions
 
 
