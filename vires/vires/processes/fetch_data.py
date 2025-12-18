@@ -216,7 +216,7 @@ class FetchData(WPSProcess):
         requested_models, source_models = parse_model_list(
             "model_ids", model_ids, shc
         )
-        requested_variables = parse_variables(
+        requested_variables, extra_functions = parse_variables(
             "requested_variables", requested_variables
         )
         self.logger.debug(
@@ -393,6 +393,7 @@ class FetchData(WPSProcess):
                         master=master,
                     ),
                     copied_variables,
+                    extra_functions,
                 ):
                     resolver.add_consumer(model)
 

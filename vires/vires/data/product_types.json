@@ -492,8 +492,8 @@
         }
     },
     {
-        "name": "SW_EFIx_LP_1B",
-        "description": "Swarm plasma data from the Langmuir Probe (LP) at 2Hz rate",
+        "name": "SW_EFIx_LP_1B_B06",
+        "description": "Swarm plasma data from the Langmuir Probe (LP) at 2Hz rate (baseline 06)",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EFIx_LP_1B",
         "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
         "_order": 20,
@@ -609,6 +609,200 @@
                     "dataType": "uint8",
                     "attributes": {
                         "DESCRIPTION": "Flags characterizing the spacecraft potential measurement",
+                        "UNITS": "-"
+                    }
+                },
+                "SyncStatus": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Synchronization status",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "SW_EFIx_LP_1B",
+        "description": "Swarm plasma data from the Langmuir Probe (LP) at 2Hz rate",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EFIx_LP_1B",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 20,
+        "fileType": "CDF-generic",
+        "defaultDataset": "MDR_EFI_LP",
+        "datasets": {
+            "MDR_EFI_LP": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "U_orbit": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Spacecraft velocity in the ITRF",
+                        "UNITS": "m/s"
+                    }
+                },
+                "N_ion": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Plasma density estimated from the ion current",
+                        "UNITS": "cm-3"
+                    }
+                },
+                "dN_ion": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Suggested calibration correction of N_ion",
+                        "UNITS": "cm-3"
+                    }
+                },
+                "N_ion_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Statistical error of the ion density estimate",
+                        "UNITS": "cm-3"
+                    }
+                },
+                "N_elec": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Plasma density estimated from the electron current",
+                        "UNITS": "cm-3"
+                    }
+                },
+                "N_elec_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Statistical error of the electron density estimate",
+                        "UNITS": "cm-3"
+                    }
+                },
+                "T_elec": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Plasma electron temperature",
+                        "UNITS": "K"
+                    }
+                },
+                "dT_elec": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Suggested calibration correction of T_elec",
+                        "UNITS": "K"
+                    }
+                },
+                "T_elec_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Error estimate of plasma electron temperature (T_elec)",
+                        "UNITS": "K"
+                    }
+                },
+                "Vs": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Spacecraft potential",
+                        "UNITS": "V"
+                    }
+                },
+                "Vs_error": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Error estimate of spacecraft potential (Vs)",
+                        "UNITS": "V"
+                    }
+                },
+                "Flags_LP": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags indicating the source/method of LP measurements (N_ion, T_elec, Vs)",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_N_ion": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the ion density estimate",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_N_elec": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the electron density estimate",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_T_elec": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the electron temperature measurement",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_Vs": {
+                    "dataType": "uint8",
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the spacecraft potential measurement",
+                        "UNITS": "-"
+                    }
+                },
+                "Gamma1": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Sun inclination angle related to right-side solar-panel normal angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "Gamma2": {
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Sun inclination angle related to left-side solar-panel normal angle",
+                        "UNITS": "deg"
+                    }
+                },
+                "Flagbits1": {
+                    "dataType": "int32",
+                    "attributes": {
+                        "DESCRIPTION": "Detailed indication of the source and anomalies",
+                        "UNITS": "-"
+                    }
+                },
+                "Flagbits2": {
+                    "dataType": "int32",
+                    "attributes": {
+                        "DESCRIPTION": "Detailed indication of the source and anomalies",
                         "UNITS": "-"
                     }
                 },

@@ -325,7 +325,7 @@ class FetchFilteredDataAsync(WPSProcess):
             "model_ids", model_ids, shc
         )
         filters = parse_filters("filters", filters)
-        requested_variables = parse_variables(
+        requested_variables, extra_functions = parse_variables(
             "requested_variables", requested_variables
         )
         self.logger.debug(
@@ -481,6 +481,7 @@ class FetchFilteredDataAsync(WPSProcess):
                         master=master,
                     ),
                     copied_variables,
+                    extra_functions,
                 ):
                     resolver.add_consumer(model)
 

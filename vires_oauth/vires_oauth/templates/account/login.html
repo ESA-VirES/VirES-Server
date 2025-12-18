@@ -5,7 +5,7 @@
   <h2>Log in</h2>
   {% get_providers as socialaccount_providers %}
   {% if socialaccount_providers %}
-  <p style="text-align: center;">Log in using your preferred social network account:</p>
+  <p style="text-align: center;">Log in using your preferred external identity provider:</p>
   <ul class="socialaccount_providers">
     {% include "socialaccount/snippets/provider_list.html" with process="login" %}
   </ul>
@@ -60,7 +60,7 @@
     <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign-up</a>
   </div>
   <p style="text-align: center; margin-top: 2em;">
-     or sign up using your preferred social network account:
+     or sign up using your preferred external identity provider:
   </p>
   <ul class="socialaccount_providers">
     {% include "socialaccount/snippets/provider_list.html" with process="signup" %}

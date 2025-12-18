@@ -1,9 +1,9 @@
 {% extends "socialaccount/base.html" %}
 {% load i18n %}
-{% block head_title %}{% trans "Social Network Login Failure" %}{% endblock %}
+{% block head_title %}{% trans "External Identity Provider Login Failure" %}{% endblock %}
 {% block content %}
-  <h2>{% trans "Social Network Login Failure" %}</h2>
-  <p>{% trans "An error occurred while attempting to log in via your social network account." %}</p>
+  <h2>{% trans "External Identity Provider Login Failure" %}</h2>
+  <p>{% trans "An error occurred while attempting to log in via your external identity provider." %}</p>
   <p>
     <a href="{% url 'account_login' %}"  class="btn btn-primary">Retry to log in &raquo;</a>
   </p>

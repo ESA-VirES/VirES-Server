@@ -292,7 +292,7 @@
     {
         "name": "SW_FAST_EFIA_LP_1B",
         "description": "Swarm A plasma fast track data from the Langmuir Probe (LP) at 2Hz rate",
-        "productType": "SW_EFIx_LP_1B",
+        "productType": "SW_EFIx_LP_1B_B06",
         "nominalSampling": "PT0.5S",
         "mission": "Swarm",
         "spacecraft": "A",
@@ -301,7 +301,7 @@
     {
         "name": "SW_FAST_EFIB_LP_1B",
         "description": "Swarm B plasma fast track data from the Langmuir Probe (LP) at 2Hz rate",
-        "productType": "SW_EFIx_LP_1B",
+        "productType": "SW_EFIx_LP_1B_B06",
         "nominalSampling": "PT0.5S",
         "mission": "Swarm",
         "spacecraft": "B",
@@ -310,7 +310,7 @@
     {
         "name": "SW_FAST_EFIC_LP_1B",
         "description": "Swarm C plasma fast track data from the Langmuir Probe (LP) at 2Hz rate",
-        "productType": "SW_EFIx_LP_1B",
+        "productType": "SW_EFIx_LP_1B_B06",
         "nominalSampling": "PT0.5S",
         "mission": "Swarm",
         "spacecraft": "C",
