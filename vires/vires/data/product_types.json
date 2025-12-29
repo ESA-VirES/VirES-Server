@@ -6259,7 +6259,7 @@
                     "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Geocetric latitude",
+                        "DESCRIPTION": "Geocentric latitude",
                         "UNITS": "deg"
                     }
                 },
@@ -6267,7 +6267,7 @@
                     "essentialVariable": true,
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Geocetric longitude",
+                        "DESCRIPTION": "Geocentric longitude",
                         "UNITS": "deg"
                     }
                 },
@@ -6337,7 +6337,7 @@
                     "source": "Latitude_SV",
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Geocetric latitude",
+                        "DESCRIPTION": "Geocentric latitude",
                         "UNITS": "deg"
                     }
                 },
@@ -6346,7 +6346,7 @@
                     "source": "Longitude_SV",
                     "dataType": "float64",
                     "attributes": {
-                        "DESCRIPTION": "Geocetric longitude",
+                        "DESCRIPTION": "Geocentric longitude",
                         "UNITS": "deg"
                     }
                 },
