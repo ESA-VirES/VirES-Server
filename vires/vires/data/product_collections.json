@@ -317,6 +317,30 @@
         "grade": "FAST"
     },
     {
+        "name": "SW_OPER_STRAEPF_1B",
+        "description": "Swarm A proton flux of energetic particles (>100 MeV) measured by each Camera Head Unit (CHU)",
+        "productType": "SW_STRxEPF_1B",
+        "nominalSampling": "PT1S",
+        "mission": "Swarm",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_OPER_STRBEPF_1B",
+        "description": "Swarm B proton flux of energetic particles (>100 MeV) measured by each Camera Head Unit (CHU)",
+        "productType": "SW_STRxEPF_1B",
+        "nominalSampling": "PT1S",
+        "mission": "Swarm",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_OPER_STRCEPF_1B",
+        "description": "Swarm C proton flux of energetic particles (>100 MeV) measured by each Camera Head Unit (CHU)",
+        "productType": "SW_STRxEPF_1B",
+        "nominalSampling": "PT1S",
+        "mission": "Swarm",
+        "spacecraft": "C"
+    },
+    {
         "name": "SW_PREL_EFIAIDM_2_",
         "description": "Swarm A LP ion drift, density and effective mass data",
         "productType": "SW_EFIxIDM_2_",

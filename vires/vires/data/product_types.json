@@ -817,6 +817,278 @@
         }
     },
     {
+        "name": "SW_STRxEPF_1B",
+        "description": "Proton flux of energetic particles (>100 MeV) measured by each Camera Head Unit (CHU)",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_STRxEPF_1B",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "fileType": "CDF-generic",
+        "defaultDataset": "__default__",
+        "_order": 50,
+        "datasets": {
+            "__default__": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "EPF": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Energetic particle flux",
+                        "UNITS": "cm^-2s^-1"
+                    }
+                },
+                "EPD": {
+                    "dataType": "uint16",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Energetic particle detections",
+                        "UNITS": "-"
+                    }
+                },
+                "T_CHU": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "CHU temperature",
+                        "UNITS": "C"
+                    }
+                },
+                "RA": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Right ascension of CHU attitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Dec": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Declination of CHU attitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "EPD_T_corr": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Temperature correction of particle count",
+                        "UNITS": "-"
+                    }
+                },
+                "EPD_Dens_corr": {
+                    "dataType": "float64",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Star density correction of particle count",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_EPF": {
+                    "dataType": "uint8",
+                    "dimension": [3],
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the energetic particle flux estimate",
+                        "UNITS": "-"
+                    }
+                },
+                "SyncStatus": {
+                    "dataType": "uint16",
+                    "attributes": {
+                        "DESCRIPTION": "Synchronization status",
+                        "UNITS": "-"
+                    }
+                }
+            },
+            "flattened": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "tranformations": [
+                        {"op": "broadcast", "args": [[3]]},
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Time stamp",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "tranformations": [
+                        {"op": "broadcast", "args": [[3]]},
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "tranformations": [
+                        {"op": "broadcast", "args": [[3]]},
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Geocentric longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Radius": {
+                    "essentialVariable": true,
+                    "dataType": "float64",
+                    "tranformations": [
+                        {"op": "broadcast", "args": [[3]]},
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Position in ITRF - Radius",
+                        "UNITS": "m"
+                    }
+                },
+                "EPF": {
+                    "dataType": "float64",
+                    "tranformations": [
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Energetic particle flux",
+                        "UNITS": "cm^-2s^-1"
+                    }
+                },
+                "EPD": {
+                    "dataType": "uint16",
+                    "tranformations": [
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Energetic particle detections",
+                        "UNITS": "-"
+                    }
+                },
+                "T_CHU": {
+                    "dataType": "float64",
+                    "tranformations": [
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "CHU temperature",
+                        "UNITS": "C"
+                    }
+                },
+                "RA": {
+                    "dataType": "float64",
+                    "tranformations": [
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Right ascension of CHU attitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Dec": {
+                    "dataType": "float64",
+                    "tranformations": [
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Declination of CHU attitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "EPD_T_corr": {
+                    "dataType": "float64",
+                    "tranformations": [
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Temperature correction of particle count",
+                        "UNITS": "-"
+                    }
+                },
+                "EPD_Dens_corr": {
+                    "dataType": "float64",
+                    "tranformations": [
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Star density correction of particle count",
+                        "UNITS": "-"
+                    }
+                },
+                "Flags_EPF": {
+                    "dataType": "uint8",
+                    "tranformations": [
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Flags characterizing the energetic particle flux estimate",
+                        "UNITS": "-"
+                    }
+                },
+                "SensorId": {
+                    "dataType": "uint8",
+                    "tranformations": [
+                        {"op": "index", "args": ["Timestamp", [1, 2, 3], "uint8"]},
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "CHU identifier",
+                        "UNITS": "-"
+                    }
+                },
+                "SyncStatus": {
+                    "dataType": "uint16",
+                    "tranformations": [
+                        {"op": "broadcast", "args": [[3]]},
+                        {"op": "ravel"}
+                    ],
+                    "attributes": {
+                        "DESCRIPTION": "Synchronization status",
+                        "UNITS": "-"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_EFIxIDM_2_",
         "description": "Swarm LP ion drift, density and effective mass data",
         "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EFIxIDM_2_",
