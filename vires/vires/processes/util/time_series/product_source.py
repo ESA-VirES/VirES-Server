@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016-2023 EOX IT Services GmbH
+# Copyright (C) 2016-2026 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,7 @@ from itertools import chain
 from datetime import timedelta
 from vires.util import cached_property, unique
 from vires.models import Product, ProductCollection
+from vires.data_transformations import parse_transformation_spec
 
 
 TD_ZERO = timedelta(minutes=0)
@@ -183,6 +184,9 @@ class ProductSource:
         # mapping from VirES to product variable names
         self.translate_fw = self._get_variable_mapping(self.dataset_definition)
 
+        # parsing extra transformations
+        self.transformations = self._get_transformations(self.dataset_definition)
+
     @staticmethod
     def _get_id(base_id, dataset_id, default_dataset_id):
         if dataset_id == default_dataset_id:
@@ -206,6 +210,14 @@ class ProductSource:
                 (variable, type_info.get("source"))
                 for variable, type_info in dataset_definition.items()
             ) if source
+        }
+
+    @staticmethod
+    def _get_transformations(dataset_definition):
+        return {
+            variable: parse_transformation_spec(variable, transformation)
+            for variable, type_info in dataset_definition.items()
+            if (transformation := type_info.get("tranformations"))
         }
 
     @staticmethod
