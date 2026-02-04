@@ -78,12 +78,21 @@ class RegisterProductSubcommand(Subcommand):
                 "overlapping time extent of the new product."
             )
         )
+        parser.add_argument(
+            "--skip-post-registration-actions", dest="skip_post_reg_actions",
+            action="store_true", default=False, help=(
+                "Register product without executing any post-registration "
+                "actions. Do not use unless you know what you doing!"
+            )
+        )
+
 
     def handle(self, **kwargs):
         data_files = kwargs["product-file"]
         update_existing = not kwargs["ignore_registered"]
         resolve_time_overlaps = not kwargs["ignore_overlaps"]
         collection_id = kwargs["collection_id"]
+        skip_post_reg_actions = kwargs["skip_post_reg_actions"]
 
         try:
             collection = get_product_collection(collection_id)
@@ -128,7 +137,10 @@ class RegisterProductSubcommand(Subcommand):
             finally:
                 counter.total += 1
 
-            if result and (result.inserted or result.updated):
+            if (
+                not skip_post_reg_actions and
+                result and (result.inserted or result.updated)
+            ):
                 execute_post_registration_actions(
                     result.product, logger=self.logger
                 )
