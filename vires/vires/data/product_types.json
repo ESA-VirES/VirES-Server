@@ -1483,12 +1483,20 @@
                         "UNITS": "mV/m"
                     }
                 },
-                "EEJ": {
+                "EEJ_meast": {
                     "dataType": "float64",
                     "dimension": [81],
                     "attributes": {
-                        "DESCRIPTION": "Height-integrated east current profile in QD latitude, spanning [-20:0.5:20] degrees",
-                        "UNITS": "mA/m"
+                        "DESCRIPTION": "Height-integrated magnetic eastward current profile, spanning [-20:0.5:20] degrees of QD-latitude",
+                        "UNITS": "A/km"
+                    }
+                },
+                "EEJ_mnorth": {
+                    "dataType": "float64",
+                    "dimension": [81],
+                    "attributes": {
+                        "DESCRIPTION": "Height-integrated magnetic northward current profile, spanning [-20:0.5:20] degrees of QD-latitude",
+                        "UNITS": "A/km"
                     }
                 },
                 "RelErr": {
