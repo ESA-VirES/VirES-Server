@@ -50,6 +50,12 @@ class StatsCachedMagneticModelsSubcommand(CachedMagneticModelsSubcommand):
                 f"CPU cores ({N_CPU})."
             ),
         )
+        parser.add_argument(
+            "--issues-only", dest="print_issues_only",
+            action="store_true", default=False, help=(
+                "Print output only when issues were detected."
+            )
+        )
 
     def handle(self, **kwargs):
         models = self.select_collections(
@@ -66,21 +72,25 @@ class StatsCachedMagneticModelsSubcommand(CachedMagneticModelsSubcommand):
         model_names = set(models.values_list("name", flat=True))
 
         n_workers = max(1, kwargs["n_proc"])
+        print_issues_only = kwargs["print_issues_only"]
 
         executor = (
             MultiProcessStreamExecutor(n_workers) if n_workers > 1 else None
         )
 
         for collection in collections:
-            self.print_collection_stats(
-                collection,
-                collect_collection_cache_stats(
-                    collection=collection,
-                    model_names=model_names,
-                    logger=self.logger,
-                    executor=executor,
-                )
+            stats = collect_collection_cache_stats(
+                collection=collection,
+                model_names=model_names,
+                logger=self.logger,
+                executor=executor,
             )
+            if not (
+                print_issues_only
+                and stats["collection"]["synced"]
+                and stats["collection"]["clean"]
+            ):
+                self.print_collection_stats(collection, stats)
 
     def print_collection_stats(self, collection, stats):
 

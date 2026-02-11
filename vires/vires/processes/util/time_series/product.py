@@ -4,7 +4,7 @@
 #
 # Authors: Martin Paces <martin.paces@eox.at>
 #-------------------------------------------------------------------------------
-# Copyright (C) 2016-2023 EOX IT Services GmbH
+# Copyright (C) 2016-2026 EOX IT Services GmbH
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,9 @@
 
 from logging import getLogger, LoggerAdapter
 from numpy import full
-from vires.util import pretty_list, LazyString, cached_property
+from vires.util import unique, pretty_list, LazyString, cached_property
 from vires.cdf_util import cdf_rawtime_to_datetime, CDF_UINT1_TYPE
+from vires.cdf_write_util import get_cdf_type
 from vires.time_util import naive_to_utc, format_datetime
 from vires.dataset import Dataset
 from .base import TimeSeries
@@ -145,32 +146,36 @@ class ProductTimeSeries(BaseProductTimeSeries):
         def _format_time_range(start, stop):
             return f"{format_datetime(start)}/{format_datetime(stop)}"
 
-        start = naive_to_utc(start)
-        stop = naive_to_utc(stop)
+        def _yield_extracted_variables(transformations, variables):
+            for variable in variables:
+                if transformation := transformations.get(variable):
+                    yield from transformation.required_variables
+                else:
+                    yield variable
 
-        self.logger.debug("subset: %s", LazyString(_format_time_range, start, stop))
-        self.logger.debug("extracted variables: %s", pretty_list(variables))
+        def _transform_dataset(input_dataset, transformations, variables):
+            dataset = Dataset()
+            for variable in variables:
+                if transformation := transformations.get(variable):
+                    data = transformation(input_dataset)
+                elif variable in input_dataset:
+                    data = input_dataset[variables]
+                else:
+                    continue
+                cdf_type = (
+                    input_dataset.cdf_type.get(variable)
+                    or get_cdf_type(data.dtype)
+                )
+                cdf_attr = (
+                    input_dataset.cdf_attr.get(variable)
+                    or (
+                        self.source.dataset_definition.get(variable) or {}
+                    ).get("attributes")
+                )
+                dataset.set(variable, data, cdf_type, cdf_attr)
+            return dataset
 
-        if not variables: # stop here if no variables are requested
-            return
-
-        counter = 0
-        for item in self.source.iter_products(start, stop, self.time_tolerance):
-            product = item.data
-            data_start = max(start, item.start)
-            data_stop = min(stop, item.end)
-            source_dataset = product.get_dataset(self.source.dataset_id)
-
-            if not source_dataset:
-                continue
-
-
-            self.logger.debug("product: %s ", product.identifier)
-            self.logger.debug(
-                "subset time span: %s",
-                LazyString(_format_time_range, data_start, data_stop)
-            )
-
+        def _extract_dataset(source_dataset, data_start, data_stop, variables):
             time_subset = source_dataset.get('indexRange')
             if time_subset:
                 time_subset = slice(*time_subset[:2])
@@ -191,11 +196,62 @@ class ProductTimeSeries(BaseProductTimeSeries):
                     subset=time_subset,
                     is_sorted=source_dataset.get('isSorted', True),
                 )
-                dataset = cdf_ds.extract_datset(
+                return cdf_ds.extract_datset(
                     variables=variables,
                     subset=subset,
                     nrv_shape=nrv_shape,
                     ignored_variables=(self.COLLECTION_INDEX_VARIABLE,),
+                )
+
+        start = naive_to_utc(start)
+        stop = naive_to_utc(stop)
+
+        self.logger.debug("subset: %s", LazyString(_format_time_range, start, stop))
+        self.logger.debug("extracted variables: %s", pretty_list(variables))
+
+        if not variables: # stop here if no variables are requested
+            return
+
+        counter = 0
+        for item in self.source.iter_products(start, stop, self.time_tolerance):
+            product = item.data
+            data_start = max(start, item.start)
+            data_stop = min(stop, item.end)
+            source_dataset = product.get_dataset(self.source.dataset_id)
+
+            if not source_dataset:
+                continue
+
+            self.logger.debug("product: %s ", product.identifier)
+            self.logger.debug(
+                "subset time span: %s",
+                LazyString(_format_time_range, data_start, data_stop)
+            )
+
+            if not self.source.transformations:
+                # fast track data extraction if no transformation is requested
+                dataset = _extract_dataset(
+                    source_dataset,
+                    data_start,
+                    data_stop,
+                    variables,
+                )
+            else:
+                # data extraction with transformation
+                dataset = _transform_dataset(
+                    input_dataset=_extract_dataset(
+                        source_dataset,
+                        data_start=data_start,
+                        data_stop=data_stop,
+                        variables=list(unique(
+                            _yield_extracted_variables(
+                                transformations=self.source.transformations,
+                                variables=variables,
+                            )
+                        ))
+                    ),
+                    transformations=self.source.transformations,
+                    variables=variables,
                 )
 
             self.logger.debug("dataset length: %s ", dataset.length)
