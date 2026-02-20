@@ -27,10 +27,10 @@
 # pylint: disable=missing-docstring
 
 from django.db import transaction
-from django.utils.timezone import now
 from django.contrib.auth.models import User
 from allauth.socialaccount.models import SocialAccount
 from eoxs_allauth.models import UserProfile
+from eoxs_allauth.time_utils import now
 
 from .common import UserSelectionSubcommandProtected
 

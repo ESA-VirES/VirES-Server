@@ -30,9 +30,8 @@
 import re
 import math
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from numpy import datetime64, timedelta64
-from django.utils.timezone import utc
 
 DT_1970 = datetime(1970, 1, 1)
 DT_2000 = datetime(2000, 1, 1)
@@ -41,7 +40,7 @@ DT64_1970 = datetime64(DT_1970)
 TD64_1S = timedelta64(1, 's')
 
 
-TZ_UTC = utc
+TZ_UTC = timezone.utc
 
 RE_ZULU = re.compile(r'\+00:00$')
 
@@ -55,6 +54,11 @@ RE_ISO_8601_DURATION = re.compile(
     r"(?:(?P<minutes>\d+(\.\d+)?)M)?"
     r"(?:(?P<seconds>\d+(\.\d+)?)S)?$"
 )
+
+
+def now():
+    """ Get current time. """
+    return datetime.now(TZ_UTC)
 
 
 def format_datetime(dtobj):

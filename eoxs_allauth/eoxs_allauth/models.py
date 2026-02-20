@@ -32,9 +32,9 @@ from django.db.models import (
     Model, OneToOneField, ForeignKey, BinaryField, CharField, DateTimeField,
     BooleanField, CASCADE,
 )
-from django.utils.timezone import now
 from django.contrib.auth.models import User
 from django_countries.fields import CountryField
+from .time_utils import now
 
 
 class UserProfile(Model):
