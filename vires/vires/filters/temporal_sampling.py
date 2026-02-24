@@ -26,7 +26,7 @@
 #-------------------------------------------------------------------------------
 
 from logging import getLogger, LoggerAdapter
-from numpy import empty, diff, concatenate, in1d, arange, inf
+from numpy import empty, diff, concatenate, isin, arange, inf
 from vires.interpolate import NearestNeighbour1DInterpolator
 from .base import Filter
 from .utils import merge_indices
@@ -123,7 +123,7 @@ class GroupingSampler(Filter):
         """
         if data.size > 0: # non-empty array
             self.logger.debug("initial size: %d", data.size)
-            res_index = in1d(data, data[index]).nonzero()[0]
+            res_index = isin(data, data[index]).nonzero()[0]
         else: # empty array
             res_index = empty(0, 'int64')
         self.logger.debug("filtered size: %d", index.size)

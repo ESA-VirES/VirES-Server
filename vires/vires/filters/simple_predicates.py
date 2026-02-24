@@ -25,10 +25,7 @@
 # THE SOFTWARE.
 #-------------------------------------------------------------------------------
 
-from numpy import (
-    char, bytes_, unicode_,
-    equal, not_equal, isnan,
-)
+from numpy import char, bytes_, equal, not_equal, isnan
 from .base import Filter
 from .utils import format_variable, get_data
 
