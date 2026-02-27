@@ -34,7 +34,7 @@ from .aux_common import (
 )
 
 HOURS_TO_DAYS = 1.0 / 24.0
-DST_FLAGS = {b"D": 0, b"P": 1} # Definitive / Preliminary(?)
+DST_FLAGS = {"D": 0, "P": 1} # Definitive / Preliminary(?)
 
 
 def update_dst(src_file, dst_file):
@@ -63,7 +63,7 @@ def update_dst(src_file, dst_file):
             cdf.attrs['VALIDITY'] = [start, end]
 
     if isinstance(src_file, str):
-        with open(src_file) as file_in:
+        with open(src_file, encoding="ascii") as file_in:
             _write_dst(file_in, dst_file)
     else:
         _write_dst(src_file, dst_file)
