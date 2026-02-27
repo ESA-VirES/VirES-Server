@@ -33,7 +33,7 @@ from vires.cdf_util import (
     CDF_CHAR_TYPE, CDF_DOUBLE_TYPE, CDF_EPOCH_TYPE,
     GZIP_COMPRESSION, GZIP_COMPRESSION_LEVEL4,
 )
-from vires.time_util import datetime, format_datetime, naive_to_utc
+from vires.time_util import format_datetime, now
 from .common import remove_file
 
 
@@ -44,10 +44,10 @@ RADIUS_VAR = "Radius"
 
 REQUIRED_VARIABLES = [TIME_VAR, LATITUDE_VAR, LONGITUDE_VAR, RADIUS_VAR]
 
-CDF_COMPRESSION = dict(
-    compress=GZIP_COMPRESSION,
-    compress_param=GZIP_COMPRESSION_LEVEL4,
-)
+CDF_COMPRESSION = {
+    "compress": GZIP_COMPRESSION,
+    "compress_param": GZIP_COMPRESSION_LEVEL4,
+}
 
 
 def save_options(cdf, options):
@@ -137,9 +137,7 @@ def write_sources_with_time_ranges(cdf, sources):
 
 def append_log_record(cdf, message):
     """ Append new cache-file log record. """
-    timestamp = format_datetime(naive_to_utc(
-        datetime.utcnow().replace(microsecond=0)
-    ))
+    timestamp = format_datetime(now().replace(microsecond=0))
     cdf.attrs["CHANGELOG"].append(f"{timestamp} {message}")
 
 

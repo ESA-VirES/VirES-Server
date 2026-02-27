@@ -31,7 +31,7 @@ import json
 from logging import getLogger
 from uuid import uuid4
 from django.http import HttpResponse
-from ..time_util import datetime, naive_to_utc, format_datetime
+from ..time_util import format_datetime, now
 from ..models import ClientState
 from .exceptions import HttpError400, HttpError404, HttpError405, HttpError413
 from .decorators import (
@@ -116,7 +116,7 @@ def post_item(request, **kwargs):
     """ Post client state. """
     # metadata
     owner = request.user if request.user.is_authenticated else None
-    timestamp = naive_to_utc(datetime.utcnow())
+    timestamp = now()
     identifier = str(uuid4()) # create a new random identifier
 
     # parse payload
@@ -183,7 +183,7 @@ def _parse_request(data):
     try:
         return json.loads(data)
     except ValueError as error:
-        raise HttpError400(str(error))
+        raise HttpError400(str(error)) from error
 
 
 def _get_models(owner):
@@ -194,7 +194,7 @@ def _get_model(owner, identifier):
     try:
         return ClientState.objects.get(owner=owner, identifier=identifier)
     except ClientState.DoesNotExist:
-        raise HttpError404
+        raise HttpError404 from None
 
 
 def _log_change(logger, action, owner, state):

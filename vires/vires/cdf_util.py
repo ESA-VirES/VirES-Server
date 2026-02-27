@@ -35,7 +35,7 @@ import spacepy
 from spacepy import pycdf
 from spacepy.pycdf import CDFError
 from . import FULL_PACKAGE_NAME
-from .time_util import naive_to_utc, format_datetime
+from .time_util import naive_to_utc, format_datetime, now
 from .time_cdf import (
     UnsupportedCDFTimeTypeError,
     cdf_epoch16_to_cdf_epoch,
@@ -126,9 +126,7 @@ def cdf_open(filename, mode="r", backward_compatible=True):
             # add extra attributes
             cdf.attrs.update({
                 "CREATOR": CDF_CREATOR,
-                "CREATED": format_datetime(naive_to_utc(
-                    datetime.utcnow().replace(microsecond=0)
-                ))
+                "CREATED": format_datetime(now().replace(microsecond=0))
             })
     else:
         raise ValueError("Invalid mode value %r!" % mode)

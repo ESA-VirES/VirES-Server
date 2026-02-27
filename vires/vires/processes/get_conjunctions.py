@@ -29,7 +29,6 @@
 from io import StringIO, BytesIO
 from os import remove
 from os.path import join, exists
-from itertools import chain
 from uuid import uuid4
 from datetime import datetime
 import msgpack
@@ -44,7 +43,7 @@ from vires.config import SystemConfigReader
 from vires.cdf_util import cdf_open
 from vires.cdf_write_util import cdf_add_variable
 from vires.time_util import (
-    format_datetime, datetime64_to_unix_epoch,
+    format_datetime, datetime64_to_unix_epoch, now,
 )
 from vires.cache_util import cache_path
 from vires.processes.base import WPSProcess
@@ -219,7 +218,7 @@ class GetConjunctions(WPSProcess):
             f"{spacecraft_ids[0]}_{spacecraft_ids[1]}_"
             f"{begin_time:%Y%m%dT%H%M%S}_"
             f"{end_time:%Y%m%dT%H%M%S}_"
-            f"{datetime.utcnow():%Y%m%dT%H%M%S}"
+            f"{now():%Y%m%dT%H%M%S}"
         )
 
         if output["mime_type"] == "text/csv":

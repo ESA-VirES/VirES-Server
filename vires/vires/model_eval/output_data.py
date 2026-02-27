@@ -30,7 +30,6 @@
 # TODO: fix dependencies and move time conversion functions to a separate module
 
 from collections import namedtuple
-from datetime import datetime
 from io import BytesIO, StringIO
 from os import remove
 from os.path import join, exists
@@ -45,6 +44,7 @@ from vires.time_util import (
     mjd2000_to_unix_epoch,
     naive_to_utc,
     format_datetime,
+    now,
 )
 from vires.hapi.formats.common import format_datetime64_array
 from vires.cdf_util import (
@@ -430,9 +430,7 @@ def write_hdf_output(data, time_format, input_time_format, model_info,
                 # add global attributes
                 hdf.attrs.update({
                     "creator": "VirES for Swarm",
-                    "created": format_datetime(naive_to_utc(
-                        datetime.utcnow().replace(microsecond=0)
-                    )),
+                    "created": format_datetime(now().replace(microsecond=0)),
                     "magnetic_models": _collect_model_expressions(model_info),
                     "sources": _collect_model_sources(model_info),
                 })
