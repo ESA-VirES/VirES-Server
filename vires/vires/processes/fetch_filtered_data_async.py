@@ -34,7 +34,6 @@ from os.path import exists
 from itertools import chain
 from datetime import datetime, timedelta
 from numpy import nan, full
-from django.utils.timezone import utc
 from eoxserver.services.ows.wps.parameters import (
     LiteralData, ComplexData, AllowedRange, Reference,
     FormatText, FormatJSON, FormatBinaryRaw, RequestParameter,
@@ -45,7 +44,7 @@ from eoxserver.services.ows.wps.exceptions import (
 from vires.models import Job, get_user
 from vires.util import unique, exclude, include, pretty_list, LazyString
 from vires.access_util import get_vires_permissions
-from vires.time_util import naive_to_utc, format_timedelta, format_datetime
+from vires.time_util import now, naive_to_utc, format_timedelta, format_datetime
 from vires.cdf_util import (
     cdf_rawtime_to_datetime, cdf_rawtime_to_mjd2000, cdf_rawtime_to_unix_epoch,
     timedelta_to_cdf_rawtime, get_formatter, cdf_open,
@@ -219,7 +218,7 @@ class FetchFilteredDataAsync(WPSProcess):
             job = update_job(
                 Job.objects.get(identifier=context.identifier),
                 status=Job.STARTED,
-                started=datetime.now(utc),
+                started=now(),
             )
             context.logger.info(
                 "Job started after %.3gs waiting.",
@@ -237,7 +236,7 @@ class FetchFilteredDataAsync(WPSProcess):
             job = update_job(
                 Job.objects.get(identifier=context.identifier),
                 status=Job.SUCCEEDED,
-                stopped=datetime.now(utc),
+                stopped=now(),
             )
             context.logger.info(
                 "Job finished after %.3gs running.",
@@ -254,7 +253,7 @@ class FetchFilteredDataAsync(WPSProcess):
         # The failure may happen before the Job is fully started and the start
         # timestamp set.
         try:
-            timestamp = datetime.now(utc)
+            timestamp = now()
             job = Job.objects.get(identifier=context.identifier)
             job = update_job(
                 job,

@@ -39,7 +39,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from eoxmagmod import load_model_shc, decimal_year_to_mjd2000
 from ..time_util import (
-    datetime, naive_to_utc, mjd2000_to_datetime, format_datetime,
+    naive_to_utc, mjd2000_to_datetime, format_datetime, now,
 )
 from ..models import CustomModel
 from ..locked_file_access import log_append
@@ -72,11 +72,9 @@ def log_change(change, identifier, timestamp=None):
     filename = join(get_upload_dir(), LOG_FILENAME)
 
     if timestamp is None:
-        timestamp = naive_to_utc(datetime.utcnow())
+        timestamp = now()
 
-    log_append(filename, "%s %s %s" % (
-        format_datetime(timestamp), identifier, change
-    ))
+    log_append(filename, f"{format_datetime(timestamp)} {identifier} {change}")
 
 
 @set_extra_kwargs(**EXTRA_KWASGS)
@@ -132,10 +130,10 @@ def check_input_file(path):
         ))
 
     try:
-        with open(path) as file_:
+        with open(path, encoding="UTF-8") as file_:
             shc_model = load_model_shc(file_)
     except Exception as error:
-        raise InvalidFileFormat('Not a valid SHC file!')
+        raise InvalidFileFormat("Not a valid SHC file!") from error
 
     parameters = {
         "min_degree": shc_model.min_degree,
@@ -181,7 +179,7 @@ def post_item(request, **kwargs):
         raise HttpError400("Invalid filename!")
 
     # metadata
-    timestamp = naive_to_utc(datetime.utcnow())
+    timestamp = now()
     identifier = str(uuid4()) # create a new random identifier
     basename = uploaded_file.name
     size = uploaded_file.size
@@ -202,7 +200,7 @@ def post_item(request, **kwargs):
         try:
             content_type, start, end, parameters = check_input_file(filename)
         except InvalidFileFormat as error:
-            raise HttpError400(str(error))
+            raise HttpError400(str(error)) from error
 
         model = CustomModel()
         model.owner = owner
@@ -275,7 +273,7 @@ def _get_model(owner, identifier):
     try:
         return CustomModel.objects.get(owner=owner, identifier=identifier)
     except CustomModel.DoesNotExist:
-        raise HttpError404
+        raise HttpError404 from None
 
 
 def _log_change(logger, action, owner, model):

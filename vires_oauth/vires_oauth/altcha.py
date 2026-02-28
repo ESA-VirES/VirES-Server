@@ -177,7 +177,7 @@ def _create_altcha_challenge(include_maxnumber=False, **options):
     }
 
     if include_maxnumber:
-        payload["maxnumber"] = challenge.maxnumber
+        payload["maxnumber"] = challenge.max_number
 
     return payload
 

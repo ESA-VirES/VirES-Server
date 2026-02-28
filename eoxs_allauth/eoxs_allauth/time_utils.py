@@ -27,8 +27,7 @@
 # pylint: disable=missing-docstring
 
 import re
-from datetime import datetime, timedelta
-from django.utils.timezone import utc
+from datetime import datetime, timedelta, timezone
 from django.utils.dateparse import parse_datetime
 
 RE_ZULU = re.compile(r'\+00:00$')
@@ -46,7 +45,7 @@ RE_ISO_8601_DURATION = re.compile(
 
 def now():
     """ Get current time. """
-    return naive_to_utc(datetime.utcnow())
+    return datetime.now(timezone.utc)
 
 
 def format_datetime(dtobj):
@@ -101,5 +100,5 @@ def parse_datetime_or_duration(value, now=None):
 def naive_to_utc(dt_obj):
     """ Convert naive `datetime.datetime` to UTC time-zone aware one. """
     if dt_obj.tzinfo is None:
-        dt_obj = dt_obj.replace(tzinfo=utc)
-    return dt_obj.astimezone(utc)
+        dt_obj = dt_obj.replace(tzinfo=timezone.utc)
+    return dt_obj.astimezone(timezone.utc)

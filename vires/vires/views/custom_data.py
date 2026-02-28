@@ -39,7 +39,7 @@ from uuid import uuid4
 from numpy import argmax, argmin, datetime64, asarray
 from django.conf import settings
 from django.http import HttpResponse
-from ..time_util import datetime, naive_to_utc, format_datetime, Timer
+from ..time_util import naive_to_utc, format_datetime, Timer, now
 from ..cdf_util import (
     is_cdf_file, cdf_open, convert_cdf_raw_times, CDFError,
     CDF_EPOCH_TYPE, CDF_EPOCH16_TYPE, CDF_TIME_TT2000_TYPE, CDF_DOUBLE_TYPE,
@@ -197,7 +197,7 @@ def post_item(request, **kwargs):
         raise HttpError400("Invalid filename!")
 
     # metadata
-    timestamp = naive_to_utc(datetime.utcnow())
+    timestamp = now()
     identifier = str(uuid4()) # create a new random identifier
     base_name = uploaded_file.name
     size = uploaded_file.size
@@ -222,7 +222,7 @@ def post_item(request, **kwargs):
                 content_type, start, end, fields_info, datafile,
             ) = process_input_file(filename)
         except InvalidFileFormat as error:
-            raise HttpError400(str(error))
+            raise HttpError400(str(error)) from error
 
         kwargs["logger"].info(
             "%s: %s[%dB, %s] processed in %.3gs",
@@ -245,7 +245,7 @@ def post_item(request, **kwargs):
 
         data = json.dumps(model_to_infodict(dataset))
 
-        with open(join(upload_dir, "info.json"), "w") as file_:
+        with open(join(upload_dir, "info.json"), "w", encoding="UTF-8") as file_:
             file_.write(data)
 
         update_change_log("CREATED", identifier, timestamp)
@@ -274,18 +274,18 @@ def update_item(request, identifier, **kwargs):
     try:
         parsed_request = json.loads(request.body)
         fields_info = update_field_info(fields_info, parsed_request)
-    except (ValueError, InvalidFileFormat):
-        raise HttpError400("Invalid update request!")
+    except (ValueError, InvalidFileFormat) as error:
+        raise HttpError400("Invalid update request!") from error
 
     dataset.is_valid = not fields_info["missing_fields"]
     dataset.info = json.dumps(fields_info)
 
     data = json.dumps(model_to_infodict(dataset))
 
-    _save_constant_variables(dataset.location, fields_info['constant_fields'])
+    _save_constant_variables(dataset.location, fields_info["constant_fields"])
 
     upload_dir = join(get_upload_dir(), identifier)
-    with open(join(upload_dir, "info.json"), "w") as file_:
+    with open(join(upload_dir, "info.json"), "w", encoding="UTF-8") as file_:
         file_.write(data)
 
     update_change_log("UPDATED", identifier)
@@ -334,7 +334,7 @@ def _get_model(owner, identifier):
     try:
         return CustomDataset.objects.get(owner=owner, identifier=identifier)
     except CustomDataset.DoesNotExist:
-        raise HttpError404
+        raise HttpError404 from None
 
 
 def _log_action(logger, action, owner, dataset):
@@ -356,11 +356,9 @@ def update_change_log(change, identifier, timestamp=None):
     filename = join(get_upload_dir(), CHANGE_LOG_FILENAME)
 
     if timestamp is None:
-        timestamp = naive_to_utc(datetime.utcnow())
+        timestamp = now()
 
-    log_append(filename, "%s %s %s" % (
-        format_datetime(timestamp), identifier, change
-    ))
+    log_append(filename, f"{format_datetime(timestamp)} {identifier} {change}")
 
 
 def update_field_info(info, update):
@@ -412,13 +410,13 @@ def _parse_input_constant_field(field):
 
     try:
         parsed_value = asarray(source_value, CDF_TYPE_TO_DTYPE[cdf_type])
-    except (ValueError, TypeError):
-        raise ValueError("Invalid field value!")
+    except (ValueError, TypeError) as error:
+        raise ValueError("Invalid field value!") from error
 
     try:
         shape = tuple(field.get('shape', parsed_value.shape))
-    except TypeError:
-        raise ValueError("Invalid field shape!")
+    except TypeError as error:
+        raise ValueError("Invalid field shape!") from error
 
     if shape != parsed_value.shape:
         raise ValueError("Invalid field value shape!")
@@ -433,6 +431,7 @@ def _parse_input_constant_field(field):
 
 def process_input_file(path):
     """ Process input file and extract information. """
+    format_ = None
     try:
         if is_cdf_file(path):
             format_ = "CDF"
@@ -441,7 +440,7 @@ def process_input_file(path):
             format_ = "CSV"
             mime_type, cdf_file = _convert_input_csv(path)
     except InvalidFileFormat as error:
-        raise InvalidFileFormat("Invalid %s file! %s" % (format_, error))
+        raise InvalidFileFormat(f"Invalid {format_} file! {error}") from error
 
     start, end, fields_info = process_input_cdf(cdf_file)
 
@@ -459,7 +458,7 @@ def process_input_cdf(path):
                 } for field in cdf
             }
     except CDFError as error:
-        raise InvalidFileFormat(str(error))
+        raise InvalidFileFormat(str(error)) from error
 
     if "Timestamp" not in fields:
         raise InvalidFileFormat("Missing mandatory Timestamp field!")
@@ -513,13 +512,13 @@ def _get_missing_fields(fields):
             return
 
         if field["cdf_type"] not in types:
-            raise InvalidFileFormat("Invalid type of %s field!" % name)
+            raise InvalidFileFormat(f"Invalid type of {name} field!")
 
         if len(field["shape"]) != len(shape):
-            raise InvalidFileFormat("Invalid dimension of %s field!" % name)
+            raise InvalidFileFormat(f"Invalid dimension of {name} field!")
 
         if tuple(field["shape"]) != shape:
-            raise InvalidFileFormat("Invalid shape of %s field!" % name)
+            raise InvalidFileFormat(f"Invalid shape of {name} field!")
 
 
     for name, types, shape in MANDATORY_FIELDS:
@@ -537,7 +536,7 @@ def _convert_input_cdf(filename):
         with cdf_open(filename, 'w') as cdf:
             _convert_time_variables_to_cdf_epoch(cdf)
     except CDFError as error:
-        raise InvalidFileFormat(str(error))
+        raise InvalidFileFormat(str(error)) from error
     return "application/x-cdf", filename
 
 
@@ -549,7 +548,7 @@ def _convert_time_variables_to_cdf_epoch(cdf):
         raw_var = cdf.raw_var(variable)
         if raw_var.type() not in converted_time_types:
             continue
-        data = convert_cdf_raw_times(raw_var[...], raw_var.type(), CDF_EPOCH)
+        data = convert_cdf_raw_times(raw_var[...], raw_var.type(), CDF_EPOCH_TYPE)
         attributes = raw_var.attrs
         compress, compress_param = raw_var.compress()
         del cdf[variable]
@@ -574,7 +573,7 @@ def _convert_input_csv(path):
     try:
         _save_dataset_to_cdf(cdf_file, data)
     except (CDFError, TypeError, ValueError) as error:
-        raise InvalidFileFormat(str(error))
+        raise InvalidFileFormat(str(error)) from error
 
     remove(path)
 

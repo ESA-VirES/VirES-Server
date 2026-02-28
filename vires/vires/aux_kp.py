@@ -35,7 +35,7 @@ from .aux_common import (
     SingleSourceMixIn, MJD2000TimeMixIn, CdfReader, render_filename,
 )
 
-KP_FLAGS = {b"D": 0, b"Q": 1} # Definitive / Quick-look
+KP_FLAGS = {"D": 0, "Q": 1} # Definitive / Quick-look
 
 
 class KpReader(SingleSourceMixIn, MJD2000TimeMixIn, CdfReader):
@@ -60,7 +60,7 @@ def update_kp(src_file, dst_file):
             cdf.attrs['VALIDITY'] = [start, end]
 
     if isinstance(src_file, str):
-        with open(src_file) as file_in:
+        with open(src_file, encoding="ascii") as file_in:
             _write_kp(file_in, dst_file)
     else:
         _write_kp(src_file, dst_file)

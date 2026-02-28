@@ -27,7 +27,7 @@
 # pylint: disable=too-many-arguments
 
 from collections import OrderedDict
-from numpy import array, concatenate, inf
+from numpy import asarray, concatenate, inf
 from .util import include, exclude, unique
 from .cdf_util import CDF_DOUBLE_TYPE
 from .interpolate import Interp1D
@@ -66,11 +66,14 @@ class Dataset(OrderedDict):
 
     def set(self, variable, data, cdf_type=None, cdf_attr=None):
         """ Set variable. """
-        data = array(data, copy=False)
+        data = asarray(data)
+        if data.ndim == 0:
+            raise ValueError(f"0D array not allowed! variable: {variable}")
+
         if self and self.length != data.shape[0]:
             raise ValueError(
-                "Array size mismatch! variable: %s, size: %s, dataset: %s" %
-                (variable, data.shape[0], self.length)
+                f"Array size mismatch! variable: {variable}, size: "
+                f"{data.shape[0]} != {self.length}"
             )
         self[variable] = data
         if cdf_type is not None:

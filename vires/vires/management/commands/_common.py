@@ -34,7 +34,7 @@ from logging import (
 from datetime import datetime, time
 from django.core.management.base import BaseCommand
 from django.utils.dateparse import parse_date, parse_datetime
-from vires.time_util import naive_to_utc, parse_duration
+from vires.time_util import naive_to_utc, parse_duration, now
 
 LOGGER_NAME = "vires"
 
@@ -54,10 +54,10 @@ def time_spec(value):
     if datetime_ is not None:
         return naive_to_utc(datetime_)
     try:
-        return naive_to_utc(datetime.utcnow() - abs(parse_duration(value)))
+        return naive_to_utc(now() - abs(parse_duration(value)))
     except ValueError:
         pass
-    raise ValueError("Invalid time specification '%s'." % value)
+    raise ValueError(f"Invalid time specification '{value}'.")
 
 
 class ConsoleOutput():
@@ -72,7 +72,7 @@ class ConsoleOutput():
         self.print_message("ERROR", message, *args)
 
     def print_message(self, label, message, *args):
-        print("%s: %s" % (label, message % args), file=sys.stderr)
+        print(f"{label}: {message % args}", file=sys.stderr)
 
 
 class Subcommand(ConsoleOutput):

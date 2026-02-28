@@ -30,9 +30,8 @@
 import re
 import math
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from numpy import datetime64, timedelta64
-from django.utils.timezone import utc
 
 DT_1970 = datetime(1970, 1, 1)
 DT_2000 = datetime(2000, 1, 1)
@@ -41,7 +40,7 @@ DT64_1970 = datetime64(DT_1970)
 TD64_1S = timedelta64(1, 's')
 
 
-TZ_UTC = utc
+TZ_UTC = timezone.utc
 
 RE_ZULU = re.compile(r'\+00:00$')
 
@@ -55,6 +54,11 @@ RE_ISO_8601_DURATION = re.compile(
     r"(?:(?P<minutes>\d+(\.\d+)?)M)?"
     r"(?:(?P<seconds>\d+(\.\d+)?)S)?$"
 )
+
+
+def now():
+    """ Get current time. """
+    return datetime.now(TZ_UTC)
 
 
 def format_datetime(dtobj):
@@ -275,8 +279,7 @@ def unix_epoch_to_datetime(ux_epoch):
     """ Convert number of seconds since 1970-01-01 to `datetime.datetime`
     object.
     """
-    return datetime.utcfromtimestamp(ux_epoch)
-    #return timedelta(seconds=ux_epoch) + DT_1970
+    return datetime.fromtimestamp(ux_epoch, TZ_UTC).replace(tzinfo=None)
 
 
 def unix_epoch_to_mjd2000(ux_epoch):
@@ -333,9 +336,7 @@ def datetime_to_datetime64(dt_obj, *args):
 
 def datetime64_to_datetime(dt64_time, *args):
     """ Convert UTC numpy.datetime64 value to datetime.datetime object. """
-    return naive_to_utc(datetime.utcfromtimestamp(
-        datetime64_to_unix_epoch(dt64_time)
-    ))
+    return datetime.fromtimestamp(datetime64_to_unix_epoch(dt64_time), TZ_UTC)
 
 
 def datetime64_to_unix_epoch(dt64_time):

@@ -28,7 +28,6 @@
 # pylint: disable=missing-docstring,too-many-ancestors,too-few-public-methods,no-self-use
 
 from django.forms.models import modelform_factory
-from django.utils import timezone
 from oauth2_provider.models import get_application_model
 from oauth2_provider.views import (
     ApplicationList,
@@ -39,6 +38,7 @@ from oauth2_provider.views import (
     AuthorizedTokensListView,
     AuthorizedTokenDeleteView,
 )
+from vires_oauth.time_utils import now
 
 
 APP_FIELDS = [
@@ -108,12 +108,13 @@ class AdminApplicationRegistration(ApplicationRegistration):
 class FilteredAuthorizedTokensListView(AuthorizedTokensListView):
     """ Token list view. """
     def get_queryset(self):
+        timestamp = now()
         # remove expired tokens
         super().get_queryset().filter(
-            user=self.request.user, expires__lte=timezone.now()
+            user=self.request.user, expires__lte=timestamp,
         ).delete()
         return super().get_queryset().select_related("application").filter(
-            user=self.request.user, expires__gt=timezone.now()
+            user=self.request.user, expires__gt=timestamp,
         ).order_by("-created")
 
 

@@ -33,7 +33,7 @@ from datetime import datetime
 from vires.util import unique, include
 from vires.cdf_util import cdf_open, CDFError
 from vires.cache_util import cache_path
-from vires.time_util import naive_to_utc, format_datetime
+from vires.time_util import format_datetime, TZ_UTC
 from vires.model_shc import process_zipped_files, filename2id
 from vires.data.vires_settings import (
     SPACECRAFTS, AUX_DB_DST, AUX_DB_KP, CACHED_PRODUCT_FILE,
@@ -70,7 +70,10 @@ class DumpCachedProductSubcommand(Subcommand):
         ]
 
         filename = kwargs["filename"]
-        with (sys.stdout if filename == "-" else open(filename, "w")) as file_:
+        with (
+            sys.stdout if filename == "-" else
+            open(filename, "w", encoding="UTF-8")
+        ) as file_:
             json.dump(data, file_, **JSON_OPTS)
 
 
@@ -88,7 +91,7 @@ def read_info_file(filename):
 
     def _read_sources_from_file(filename):
         try:
-            with open(filename) as file_:
+            with open(filename, encoding="UTF-8") as file_:
                 return [line.strip() for line in file_]
         except FileNotFoundError:
             return []
@@ -105,8 +108,10 @@ def read_info_cdf(filename):
             last_modified = cdf.attrs['CREATED'][0]
             if 'SOURCES' in cdf.attrs:
                 sources = list(cdf.attrs['SOURCES'])
-            if 'SOURCE' in cdf.attrs:
+            elif 'SOURCE' in cdf.attrs:
                 sources = list(cdf.attrs['SOURCE'])
+            else:
+                sources = []
     except CDFError:
         last_modified, sources = None, []
 
@@ -133,7 +138,7 @@ def read_info_zip(filename):
 
 def _get_file_timestamp(filename):
     try:
-        return naive_to_utc(datetime.utcfromtimestamp(getmtime(filename)))
+        return datetime.fromtimestamp(getmtime(filename), TZ_UTC)
     except FileNotFoundError:
         return None
 
