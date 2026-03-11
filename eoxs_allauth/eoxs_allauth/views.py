@@ -357,6 +357,9 @@ class AccessTokenAPI:
 
     @classmethod
     def create(cls, user, purpose=None, expires=None, scopes=None):
+        # clip purpose to the maximum allowed size
+        if purpose and len(purpose) > AuthenticationToken.MAX_PURPOSE_SIZE:
+            purpose = f"{purpose[:(AuthenticationToken.MAX_PURPOSE_SIZE - 4)]} ..."
         token_obj = AuthenticationToken(
             owner=user,
             expires=(expires or None),
