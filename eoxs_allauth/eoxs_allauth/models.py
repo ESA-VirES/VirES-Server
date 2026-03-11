@@ -59,6 +59,8 @@ def get_default_token():
 
 
 class AuthenticationToken(Model):
+    MAX_PURPOSE_SIZE = 256
+    MAX_SCOPES_SIZE = 128
 
     SCOPE_VIRES_APP = "ViresApp"
     SCOPE_TOKEN_MNG = "TokenMng"
@@ -78,8 +80,8 @@ class AuthenticationToken(Model):
     )
     created = DateTimeField(auto_now_add=True)
     expires = DateTimeField(null=True, default=None)
-    purpose = CharField(max_length=128, blank=True, null=True)
-    scopes_packed = CharField(max_length=128, blank=False, null=False)
+    purpose = CharField(max_length=MAX_PURPOSE_SIZE, blank=True, null=True)
+    scopes_packed = CharField(max_length=MAX_SCOPES_SIZE, blank=False, null=False)
 
     @property
     def is_expired(self):

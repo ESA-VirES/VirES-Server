@@ -16,7 +16,7 @@
     <fieldset>
     <div class="control-group">
       <label class="form-check-label" for="token-purpose">Purpose (optional)</label>
-      <input type="text" id="token-purpose" name="purpose" placeholder="optional label indicating purpose of the new token">
+      <input type="text" id="token-purpose" name="purpose" maxlength="256" placeholder="optional label indicating purpose of the new token">
     </div>
     <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
       <button id="create-token-btn" type="button" class="btn btn-primary">Create New Access Token</button>
@@ -67,7 +67,7 @@ window.onload = function() {
   var tokenListRowTmpl = _.template(
     '<tr>' +
     '<td><%= created %></td>' +
-    '<td><%= purpose %></td>' +
+    '<td style="max-width:36em;word-break:break-all;"><%= purpose %></td>' +
     '<td><button id="delete-btn" type="button" class="btn btn-sm btn-danger btn-block">Remove</button></td>' +
     '</tr>'
   );
