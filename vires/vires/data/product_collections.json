@@ -711,6 +711,36 @@
         "splitBy": {"QDOrbitDirection": 0}
     },
     {
+        "name": "SW_FAST_AEJALPL_2F",
+        "description": "Swarm A fast track ionospheric sheet current densities determined by the Line Current (LC) method",
+        "productType": "SW_AEJxLPL_2F",
+        "mission": "Swarm",
+        "spacecraft": "A",
+        "grade": "FAST",
+        "nominalSampling": "PT16S",
+        "splitBy": {"QDOrbitDirection": 0}
+    },
+    {
+        "name": "SW_FAST_AEJBLPL_2F",
+        "description": "Swarm B fast track ionospheric sheet current densities determined by the Line Current (LC) method",
+        "productType": "SW_AEJxLPL_2F",
+        "mission": "Swarm",
+        "spacecraft": "B",
+        "grade": "FAST",
+        "nominalSampling": "PT16S",
+        "splitBy": {"QDOrbitDirection": 0}
+    },
+    {
+        "name": "SW_FAST_AEJCLPL_2F",
+        "description": "Swarm C fast track ionospheric sheet current densities determined by the Line Current (LC) method",
+        "productType": "SW_AEJxLPL_2F",
+        "mission": "Swarm",
+        "spacecraft": "C",
+        "grade": "FAST",
+        "nominalSampling": "PT16S",
+        "splitBy": {"QDOrbitDirection": 0}
+    },
+    {
         "name": "SW_OPER_AEJAPBL_2F",
         "description": "Swarm A ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
         "productType": "SW_AEJxPBL_2F",
@@ -733,6 +763,33 @@
         "nominalSampling": "PT1404S",
         "mission": "Swarm",
         "spacecraft": "C"
+    },
+    {
+        "name": "SW_FAST_AEJAPBL_2F",
+        "description": "Swarm A fast track ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
+        "productType": "SW_AEJxPBL_2F",
+        "nominalSampling": "PT1404S",
+        "mission": "Swarm",
+        "spacecraft": "A",
+        "grade": "FAST"
+    },
+    {
+        "name": "SW_FAST_AEJBPBL_2F",
+        "description": "Swarm B fast track ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
+        "productType": "SW_AEJxPBL_2F",
+        "nominalSampling": "PT1404S",
+        "mission": "Swarm",
+        "spacecraft": "B",
+        "grade": "FAST"
+    },
+    {
+        "name": "SW_FAST_AEJCPBL_2F",
+        "description": "Swarm C fast track ionospheric auroral electrojet peaks and boundaries determined by the Line Current (LC) method",
+        "productType": "SW_AEJxPBL_2F",
+        "nominalSampling": "PT1404S",
+        "mission": "Swarm",
+        "spacecraft": "C",
+        "grade": "FAST"
     },
     {
         "name": "SW_OPER_AEJALPS_2F",
@@ -808,6 +865,33 @@
         "nominalSampling": "PT1404S",
         "mission": "Swarm",
         "spacecraft": "C"
+    },
+    {
+        "name": "SW_FAST_AOBAFAC_2F",
+        "description": "Swarm A fast track aurora oval boundaries determined from the Field Aligned Current (FAC) data",
+        "productType": "SW_AOBxFAC_2F",
+        "nominalSampling": "PT1404S",
+        "mission": "Swarm",
+        "spacecraft": "A",
+        "grade": "FAST"
+    },
+    {
+        "name": "SW_FAST_AOBBFAC_2F",
+        "description": "Swarm B fast track aurora oval boundaries determined from the Field Aligned Current (FAC) data",
+        "productType": "SW_AOBxFAC_2F",
+        "nominalSampling": "PT1404S",
+        "mission": "Swarm",
+        "spacecraft": "B",
+        "grade": "FAST"
+    },
+    {
+        "name": "SW_FAST_AOBCFAC_2F",
+        "description": "Swarm C fast track aurora oval boundaries determined from the Field Aligned Current (FAC) data",
+        "productType": "SW_AOBxFAC_2F",
+        "nominalSampling": "PT1404S",
+        "mission": "Swarm",
+        "spacecraft": "C",
+        "grade": "FAST"
     },
     {
         "name": "SW_OPER_MITA_LP_2F",
