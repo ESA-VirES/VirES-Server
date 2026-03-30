@@ -89,5 +89,28 @@ def _yield_orbit_direction_sources(mission, spacecraft, composit_grade):
         )
 
 
+def get_orbit_direction_source(
+    orbit_direction_class, orbit_direction_file, orbit_direction_label,
+    mission, spacecraft, grade
+):
+    """ Helper function generating orbit direction source. """
+    table_paths = []
+    for grade_item in (grade or "").split("+"):
+        try:
+            table_paths.append(cache_path(
+                orbit_direction_file[(mission, spacecraft, grade_item or None)]
+            ))
+        except KeyError:
+            raise ValueError(
+                "Orbit direction table not found for mission/spacecraft/grade"
+                f" {mission}/{spacecraft or '<none>'}/{grade_item or '<none>'}!",
+            ) from None
+
+    return orbit_direction_class(
+        _format_label(orbit_direction_label, mission, spacecraft, grade),
+        *table_paths,
+    )
+
+
 def _format_label(label, *args):
     return ":".join([label, *(arg or "" for arg in args)])

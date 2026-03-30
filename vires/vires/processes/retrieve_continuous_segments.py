@@ -28,23 +28,23 @@
 import csv
 from datetime import datetime
 from eoxserver.services.ows.wps.parameters import (
-    LiteralData, ComplexData, CDTextBuffer, FormatText
+    LiteralData, ComplexData, CDTextBuffer, FormatText, RequestParameter,
 )
 from eoxserver.services.ows.wps.exceptions import InvalidInputValueError
 from vires.models import ProductCollection
+from vires.access_util import get_vires_permissions
 from vires.cache_util import cache_path
 from vires.time_util import naive_to_utc, format_datetime
 from vires.cdf_util import cdf_rawtime_to_datetime, timedelta_to_cdf_rawtime
 from vires.processes.base import WPSProcess
+from vires.processes.util.orbit_info import get_orbit_direction_source
 from vires.processes.util.time_series import (
-    SingleCollectionProductSource, ProductTimeSeries, QDOrbitDirection,
+    product_source_factory, ProductTimeSeries, QDOrbitDirection,
 )
 from vires.data.vires_settings import ORBIT_DIRECTION_MAG_FILE
 
 ALLOWED_PRODUCT_TYPES = ["SW_AEJxLPL_2F", "SW_AEJxLPS_2F"]
 TIME_VARIABLE = "Timestamp"
-
-
 
 
 class RetrieveContinuousSegments(WPSProcess):
@@ -55,6 +55,7 @@ class RetrieveContinuousSegments(WPSProcess):
     profiles = ["vires"]
 
     inputs = WPSProcess.inputs + [
+        ("permissions", RequestParameter(get_vires_permissions)),
         ("collection_id", LiteralData(
             'collection', str, optional=False,
             title="Collection identifier",
@@ -77,23 +78,24 @@ class RetrieveContinuousSegments(WPSProcess):
         )),
     ]
 
-    def execute(self, collection_id, begin_time, end_time, output, **kwargs):
+    def execute(self, permissions, collection_id, begin_time, end_time, output, **kwargs):
         """ Execute process. """
         access_logger = self.get_access_logger(**kwargs)
 
         try:
-            time_series = ProductTimeSeries(
-                SingleCollectionProductSource(
-                    ProductCollection.objects
-                    .select_related('type', 'spacecraft')
-                    .filter(type__identifier__in=ALLOWED_PRODUCT_TYPES)
-                    .get(identifier=collection_id)
-                )
-            )
+            collections = [
+                ProductCollection.select_permitted(permissions)
+                .select_related('type', 'spacecraft')
+                .filter(type__identifier__in=ALLOWED_PRODUCT_TYPES)
+                .get(identifier=id_)
+                for id_ in collection_id.split("+")
+            ]
         except ProductCollection.DoesNotExist:
             raise InvalidInputValueError(
-                "collection_id", "Invalid collection identifier!"
+                "collection", f"Invalid collection name {collection_id!r}!"
             ) from None
+
+        time_series = ProductTimeSeries(product_source_factory(collections))
 
         access_logger.info(
             "request: collection: %s, toi: (%s, %s)",
@@ -163,10 +165,14 @@ class _SegmentExtractionParameters():
     def _get_spacecraft_time_series(mission, spacecraft, grade):
         """ Get list of spacecraft specific time-series. """
         return [
-            QDOrbitDirection(
-                ":".join(["QDOrbitDirection", mission, spacecraft or "", grade or ""]),
-                cache_path(ORBIT_DIRECTION_MAG_FILE[(mission, spacecraft, grade)])
-            ),
+            get_orbit_direction_source(
+                orbit_direction_class=QDOrbitDirection,
+                orbit_direction_file=ORBIT_DIRECTION_MAG_FILE,
+                orbit_direction_label="QDOrbitDirection",
+                mission=mission,
+                spacecraft=spacecraft,
+                grade=grade,
+            )
         ]
 
 
