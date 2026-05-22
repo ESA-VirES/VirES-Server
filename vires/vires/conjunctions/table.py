@@ -83,7 +83,7 @@ class ConjunctionsTable():
         try:
             with cdf_open(tmp_filename, "w") as cdf:
                 self._save_table(cdf)
-        except: # pylint: disable=try-except-raise
+        except BaseException: # pylint: disable=try-except-raise
             raise
         else:
             rename(tmp_filename, self._filename)

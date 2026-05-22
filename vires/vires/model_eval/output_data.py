@@ -353,7 +353,7 @@ def write_cdf_output(data, time_format, input_time_format, model_info,
                     "MAGNETIC_MODELS": _collect_model_expressions(model_info),
                     "SOURCES": _collect_model_sources(model_info),
                 })
-        except:
+        except BaseException:
             _remove_existent(filename)
             raise
 
@@ -434,7 +434,7 @@ def write_hdf_output(data, time_format, input_time_format, model_info,
                     "magnetic_models": _collect_model_expressions(model_info),
                     "sources": _collect_model_sources(model_info),
                 })
-        except:
+        except BaseException:
             _remove_existent(filename)
             raise
 

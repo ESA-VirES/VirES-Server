@@ -252,7 +252,7 @@ def post_item(request, **kwargs):
 
         dataset.save()
 
-    except:
+    except BaseException:
         rmtree(upload_dir, ignore_errors=True)
         raise
 

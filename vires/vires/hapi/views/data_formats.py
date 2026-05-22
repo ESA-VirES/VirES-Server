@@ -112,7 +112,7 @@ class HapiDataResponse():
             except GeneratorExit:
                 # streaming stopped before consuming all chunks - do nothing
                 raise
-            except:
+            except BaseException:
                 getLogger(LOGGER_NAME).error(
                     "An error occurred while streaming HAPI data response! %s",
                     request.get_full_path_info(),

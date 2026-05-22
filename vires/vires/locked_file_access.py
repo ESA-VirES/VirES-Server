@@ -46,7 +46,7 @@ def open_locked(filename, mode="r", **kwargs):
         if exc.errno == EAGAIN:
             raise FileIsLocked("%s is locked!" % filename)
         raise
-    except:
+    except BaseException:
         fobj.close()
         raise
     return fobj

@@ -53,7 +53,7 @@ def altcha_verify(view_func):
 
             try:
                 payload = _parse_altcha_payload(request.POST["altcha"])
-            except:
+            except BaseException:
                 return False
 
             try:
