@@ -75,7 +75,7 @@ def verify_solved_altcha_challenge(payload):
     if not _check_challenge(payload["challenge"]):
         return False
 
-    is_correct, error = altcha.verify_solution(
+    is_correct, error = altcha.verify_solution_v1(
         payload, hmac_key=_get_hmac_key(), check_expires=True
     )
 
@@ -105,13 +105,13 @@ def solve_altcha_challenge(payload, max_number=None, step=DEFAULT_STEP):
 
         if max_number is not None:
             # the max_number is known - can be solved in one pass
-            return altcha.solve_challenge(**parameters, start=0)
+            return altcha.solve_challenge_v1(**parameters, start=0)
 
         # the max_number is not known - solving iteratively
         start, end = 0, step
         solution = None
         while not solution:
-            solution = altcha.solve_challenge(
+            solution = altcha.solve_challenge_v1(
                 **parameters,
                 start=start,
                 max_number=end,
@@ -165,7 +165,7 @@ def _get_altcha_challenge_options(**options):
 
 
 def _create_altcha_challenge(include_maxnumber=False, **options):
-    challenge = altcha.create_challenge(altcha.ChallengeOptions(**options))
+    challenge = altcha.create_challenge_v1(altcha.ChallengeOptionsV1(**options))
 
     _save_challenge(challenge=challenge.challenge, expires=options["expires"])
 

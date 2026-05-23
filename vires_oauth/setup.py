@@ -47,6 +47,7 @@ setup(
         'django-allauth',
         'django-oauth-toolkit>2.0',
         'django_countries',
+        'altcha>=2.0.0',
     ],
     zip_safe=False,
 
