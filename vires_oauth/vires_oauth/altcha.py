@@ -49,12 +49,6 @@ import altcha
 from .time_utils import now
 from .models import Challenge
 
-DEFAULT_STEP = 1000000
-
-
-class AltchaError(ValueError):
-    """ Altcha error exception. """
-
 
 def is_altcha_enabled():
     """ Return true if the Altcha challenge is enabled. """
@@ -68,118 +62,100 @@ def create_altcha_challenge(**options):
         **_get_altcha_challenge_options(**options)
     )
 
+def altcha_challange_to_dict(challenge):
+    """ Convert Altcha challenge to a dictionary. """
+    return challenge.to_dict()
+
+
+def encode_raw_solved_altcha_challange(payload):
+    """ Encode raw solved Altcha challenge. """
+    return payload.to_base64()
+
+
+def parse_raw_solved_altcha_challenge(payload):
+    """ Parse raw solved Altcha challenge. """
+    return altcha.Payload.from_base64(payload)
+
 
 def verify_solved_altcha_challenge(payload):
     """ Verify solved alpha challenge. """
 
-    if not _check_challenge(payload["challenge"]):
+    if not _check_challenge(payload.challenge.signature):
         return False
 
-    is_correct, error = altcha.verify_solution_v1(
-        payload, hmac_key=_get_hmac_key(), check_expires=True
+    _burn_challenge(payload.challenge.signature)
+
+    result = altcha.verify_solution(
+        payload, **_get_hmac_options(_get_altcha_settings()),
     )
 
-    _burn_challenge(payload["challenge"])
-
-    if error:
-        raise AltchaError(error)
-
-    return is_correct
+    return result.verified
 
 
-def solve_altcha_challenge(payload, max_number=None, step=DEFAULT_STEP):
-
-    if "maxnumber" in payload:
-        max_number = payload["maxnumber"]
-
-    def _solve():
-
-        parameters = {
-            "algorithm": payload["algorithm"],
-            "challenge": payload["challenge"],
-            "salt": payload["salt"],
-        }
-
-        if max_number is not None:
-            parameters["max_number"] = max_number
-
-        if max_number is not None:
-            # the max_number is known - can be solved in one pass
-            return altcha.solve_challenge_v1(**parameters, start=0)
-
-        # the max_number is not known - solving iteratively
-        start, end = 0, step
-        solution = None
-        while not solution:
-            solution = altcha.solve_challenge_v1(
-                **parameters,
-                start=start,
-                max_number=end,
-            )
-            start, end = end, end + step
-
-        return solution
-
-    solution = _solve()
-    if solution is not None:
-        solution = {**payload, "number": solution.number}
-
-    return solution
+def solve_altcha_challenge(challenge, timeout=90.0):
+    solution = altcha.solve_challenge(challenge, timeout=timeout)
+    if solution is None:
+        raise RuntimeError("Challenge not solved in time!")
+    return altcha.Payload(challenge, solution)
 
 
 def test_altcha_challenge(**options):
     """ Run simple test of the Altcha challenge workflow. """
+
     challenge = create_altcha_challenge(**options)
+    assert isinstance(challenge, altcha.Challenge)
+
     solution = solve_altcha_challenge(challenge)
+    assert isinstance(solution, altcha.Payload)
+
     if not verify_solved_altcha_challenge(solution):
         raise AssertionError("Failed to verify the solved challenge!")
+
+    if verify_solved_altcha_challenge(solution):
+        raise AssertionError("Failed to mark the challenge as used!")
 
 
 def _get_altcha_settings():
     return getattr(settings, "ALTCHA", None) or {}
 
 
-def _get_hmac_key():
-    altcha_settings = _get_altcha_settings()
-    return altcha_settings.get("HMAC_KEY") or settings.SECRET_KEY
+def _get_hmac_options(altcha_settings):
+    options = {
+        "hmac_secret": altcha_settings.get("HMAC_SECRET") or settings.SECRET_KEY,
+        "hmac_key_secret": altcha_settings.get("HMAC_KEY_SECRET"),
+    }
+    if hmac_algorithm := altcha_settings.get("HMAC_ALGORITHM"):
+        options["hmac_algorithm"] = hmac_algorithm
+    return options
 
 
 def _get_altcha_challenge_options(**options):
     """ Get Altcha challenge options from Django settings. """
     altcha_settings = _get_altcha_settings()
-
     expiration_period = altcha_settings.get("EXPIRE_SECONDS", -1)
 
     return {
         "algorithm": altcha_settings.get("ALGORITHM"),
-        "max_number": altcha_settings.get("MAX_NUMBER"),
-        "salt_length": altcha_settings.get("SALT_LENGTH"),
-        "hmac_key": _get_hmac_key(),
-        "include_maxnumber": altcha_settings.get("INCLUDE_MAXNUMBER") or False,
-        "expires": (
+        "cost": altcha_settings.get("COST"),
+        "counter": altcha_settings.get("COUNTER"),
+        "memory_cost": altcha_settings.get("MEMORY_COST"),
+        "parallelism": altcha_settings.get("PARALLELISM"),
+        "expires_at": (
             now() + timedelta(seconds=expiration_period)
             if expiration_period >= 0 else None
         ),
+        **_get_hmac_options(altcha_settings),
         **options,
     }
 
 
-def _create_altcha_challenge(include_maxnumber=False, **options):
-    challenge = altcha.create_challenge_v1(altcha.ChallengeOptionsV1(**options))
-
-    _save_challenge(challenge=challenge.challenge, expires=options["expires"])
-
-    payload = {
-        "algorithm": challenge.algorithm,
-        "challenge": challenge.challenge,
-        "salt": challenge.salt,
-        "signature": challenge.signature,
-    }
-
-    if include_maxnumber:
-        payload["maxnumber"] = challenge.max_number
-
-    return payload
+def _create_altcha_challenge(**options):
+    challenge = altcha.create_challenge(**options)
+    _save_challenge(
+        challenge=challenge.signature,
+        expires=options.get("expires_at"),
+    )
+    return challenge
 
 
 def _save_challenge(challenge, expires=None):
@@ -188,7 +164,7 @@ def _save_challenge(challenge, expires=None):
 
 
 def _check_challenge(challenge):
-    """ Check if challenge is valid. """
+    """ Check DB if challenge is valid. """
     try:
         return Challenge.objects.get(challenge=challenge).is_valid
     except Challenge.DoesNotExist:
@@ -196,7 +172,7 @@ def _check_challenge(challenge):
 
 
 def _burn_challenge(challenge):
-    """ Label the challenge as used. """
+    """ Label the DB saved challenge as used. """
     try:
         obj = Challenge.objects.get(challenge=challenge)
         obj.used = True

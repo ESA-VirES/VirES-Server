@@ -37,31 +37,23 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from oauth2_provider.settings import oauth2_settings
 from .altcha import (
-    AltchaError, is_altcha_enabled, verify_solved_altcha_challenge,
+    is_altcha_enabled,
+    parse_raw_solved_altcha_challenge,
+    verify_solved_altcha_challenge,
 )
 
 
 def altcha_verify(view_func):
     """ Verify solved Altcha challenge. """
 
-    def _parse_altcha_payload(raw_payload):
-        return json.loads(base64.b64decode(raw_payload).decode("UTF-8"))
-
     def _verify_altcha(request):
-
-        if request.method == "POST" and is_altcha_enabled():
-
-            try:
-                payload = _parse_altcha_payload(request.POST["altcha"])
-            except:
-                return False
-
-            try:
-                return verify_solved_altcha_challenge(payload)
-            except AltchaError:
-                return False
-
-        return True
+        if not (request.method == "POST" and is_altcha_enabled()):
+            return True
+        try:
+            payload = parse_raw_solved_altcha_challenge(request.POST["altcha"])
+        except:
+            return False
+        return verify_solved_altcha_challenge(payload)
 
     @wraps(view_func)
     def _wrapper_(request, *args, **kwargs):
