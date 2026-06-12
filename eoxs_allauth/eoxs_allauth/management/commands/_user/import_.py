@@ -31,7 +31,7 @@ import json
 import base64
 from traceback import print_exc
 from django.db import transaction
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils.dateparse import parse_datetime
 from allauth.socialaccount.models import SocialAccount
 from eoxs_allauth.models import AuthenticationToken
@@ -66,7 +66,7 @@ class ImportUserSubcommand(Subcommand):
         for item in data:
             name = item.get("username")
             try:
-                is_updated = save_user(item)
+                is_updated = save_user(item, console=self)
             except Exception as error:
                 failed_count += 1
                 if kwargs.get('traceback'):
@@ -119,11 +119,12 @@ USER_FIELDS = [
 
 
 @transaction.atomic
-def save_user(data):
+def save_user(data, console):
     is_updated, user = get_user(data["username"])
     set_model(user, USER_FIELDS, data, PARSERS)
     user.save()
 
+    set_groups(user, data.get("groups", []), console=console)
     set_social_accounts(user, data.get("social_accounts", []))
     set_access_tokens(user, data.get("access_tokens", []))
 
@@ -135,6 +136,45 @@ def get_user(username):
         return True, User.objects.get(username=username)
     except User.DoesNotExist:
         return False, User(username=username)
+
+#-------------------------------------------------------------------------------
+
+def set_groups(user, group_names, console):
+    all_groups = get_groups(group_names)
+
+    for group in list(user.groups.exclude(name__in=group_names)):
+        try:
+            user.groups.remove(group)
+            console.info(
+                "user %s removed from group %s",
+                user.username, group.name, log=True
+            )
+        except KeyError:
+            console.warning(
+                "Failed to remove user %s from the group %s!",
+                user.username, group.name, log=True
+            )
+
+    for group_name in group_names:
+        try:
+            user.groups.add(all_groups[group_name])
+            console.info(
+                "user %s added to group %s",
+                user.username, group_name, log=True
+            )
+        except KeyError:
+            console.warning(
+                "User %s cannot be assigned to a group %s. "
+                "The group does not exist", user.username, group_name, log=True
+            )
+
+
+def get_groups(group_names):
+    """ Get a dictionary of the existing user groups. """
+    return {
+        group.name: group
+        for group in Group.objects.filter(name__in=group_names)
+    }
 
 #-------------------------------------------------------------------------------
 

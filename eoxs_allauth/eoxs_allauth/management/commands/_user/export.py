@@ -98,6 +98,7 @@ def serialize_user(object_):
         ("first_name", object_.first_name),
         ("last_name", object_.last_name),
         ("email", object_.email), # copy of the primary e-mail
+        ("groups", get_groups(object_)),
         (
             "user_profile",
             serialize_user_profile(user_profile) if user_profile else None
@@ -115,6 +116,12 @@ def serialize_user(object_):
             serialize_access_tokens(object_.tokens.order_by('created'))
         ),
     ])
+
+
+def get_groups(user):
+    return [
+        group.name for group in user.groups.order_by('name').all()
+    ]
 
 
 @strip_blanks
@@ -140,7 +147,6 @@ def serialize_social_account(object_):
         ("extra_data", object_.extra_data),
         ("provider", object_.provider),
     ])
-
 
 
 @strip_blanks
@@ -170,6 +176,7 @@ def serialize_access_tokens(objects):
 
 def serialize_list(funct, objects):
     return [funct(object_) for object_ in objects]
+
 
 serialize_email_addresses = partial(serialize_list, serialize_email_address)
 serialize_social_accounts = partial(serialize_list, serialize_social_account)
