@@ -1,12 +1,9 @@
-{% extends "account/email/base_message.txt" %}
-{% load i18n %}
-
-{% block content %}{% autoescape off %}{% blocktrans %}
+{% load i18n %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}
 Hello,
 
 someone recently tried to sign up for the {{ site_domain }} service
-using your email address {{ email }}.  An account with this email address
-already exists.
+using your email address {{ email }}.
+An account with this email address already exists.
 
 In case you have forgotten about your existing account, please follow the password
 reset procedure to recover access to your account by clicking the link below:
@@ -24,4 +21,4 @@ If this was not you, no action is needed and you can safely ignore this e-mail.
 
 Best regards
 Your VirES Team (support@vires.services)
-{% endblocktrans %}{% endautoescape %}{% endblock content %}
+{% endblocktrans %}

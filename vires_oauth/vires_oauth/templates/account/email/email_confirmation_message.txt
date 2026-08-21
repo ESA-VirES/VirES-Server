@@ -7,8 +7,8 @@ To complete the service sign-up, please verify your e-mail address by clicking t
 
     {{ activate_url }}
 
-Note: The link can be used only once and it will expire in 3 days.
-      If you did not create an account with us, you can safely ignore this message.
+Note: The link can be used only one time and it will expire in 3 days.
+      If you did not create the new account, you can safely ignore this message.
 
 Best regards
 Your VirES Team (support@vires.services)
