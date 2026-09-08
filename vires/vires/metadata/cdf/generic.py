@@ -27,7 +27,11 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring
 
+from vires.time_util import naive_to_utc
 from .base import CDFMetadataReader
+from ...time_cdf import DT_INVALID_VALUE
+
+DT_INVALID_VALUE_UTC = naive_to_utc(DT_INVALID_VALUE)
 
 
 class GenericCdfMetadataReader(CDFMetadataReader):
@@ -87,7 +91,10 @@ class GenericCdfMetadataReader(CDFMetadataReader):
         if len(times.shape) != 1:
             raise ValueError("Incorrect dimension of the time-stamp array!")
 
-        return (
-            cls._cdf_rawtime_to_datetime(times[0], times.type()),
-            cls._cdf_rawtime_to_datetime(times[-1], times.type()),
-        )
+        start = cls._cdf_rawtime_to_datetime(times[0], times.type())
+        end = cls._cdf_rawtime_to_datetime(times[-1], times.type())
+
+        if DT_INVALID_VALUE_UTC in (start, end):
+            raise ValueError(f"Invalid temporal extent! {start}/{end}")
+
+        return start, end

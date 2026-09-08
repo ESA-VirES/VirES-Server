@@ -29,8 +29,11 @@
 from math import ceil
 from collections import namedtuple
 from itertools import chain
+from vires.time_util import naive_to_utc
 from .base import CDFMetadataReader
-from ...time_cdf import cdf_rawtime_delta_in_seconds
+from ...time_cdf import cdf_rawtime_delta_in_seconds, DT_INVALID_VALUE
+
+DT_INVALID_VALUE_UTC = naive_to_utc(DT_INVALID_VALUE)
 
 
 class ConEphCdfMetadataReader(CDFMetadataReader):
@@ -94,6 +97,9 @@ class ConEphCdfMetadataReader(CDFMetadataReader):
                 min(time_range.start, next_time_range.start),
                 max(time_range.end, next_time_range.end),
             )
+
+        if DT_INVALID_VALUE_UTC in time_range:
+            raise ValueError(f"Invalid temporal extent! {time_range.start}/{time_range.end}")
 
         return time_range
 

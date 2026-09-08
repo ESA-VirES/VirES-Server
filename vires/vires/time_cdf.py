@@ -31,10 +31,13 @@
 from numpy import ndarray, asarray, vectorize
 from spacepy import pycdf
 from .cdf_data_types import (
-    CDF_EPOCH_TYPE, CDF_EPOCH16_TYPE, CDF_TIME_TT2000_TYPE,
+    CDF_EPOCH_TYPE,
+    CDF_EPOCH16_TYPE,
+    CDF_TIME_TT2000_TYPE,
     CDF_TYPE_TO_LABEL,
 )
 from .time_cdf_epoch import (
+    DT_INVALID_VALUE,
     SECONDS_PER_MILLISECOND,
     MILLISECONDS_PER_SECOND,
     milliseconds_to_timedelta,
