@@ -1,8 +1,15 @@
-{% load account %}{% user_display user as user_display %}{% load i18n %}{% autoescape off %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}Hello from {{ site_name }}!
+{% load account %}{% user_display user as user_display %}{% load i18n %}{% autoescape off %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}
+Hello,
 
-You're receiving this e-mail because user {{ user_display }} at {{ site_domain }} has given yours as an e-mail address to connect their account.
+thank you for signing up for the {{ site_domain }} service!
 
-To confirm this is correct, go to {{ activate_url }}
+To complete the service sign-up, please verify your e-mail address by clicking the link below:
+
+    {{ activate_url }}
+
+Note: The link can be used only one time and it will expire in 3 days.
+      If you did not create the new account, you can safely ignore this message.
+
+Best regards
+Your VirES Team (support@vires.services)
 {% endblocktrans %}{% endautoescape %}
-{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}Thank you from {{ site_name }}!
-{{ site_domain }}{% endblocktrans %}

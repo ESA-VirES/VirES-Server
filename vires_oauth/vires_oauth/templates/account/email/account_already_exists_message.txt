@@ -1,20 +1,24 @@
-{% extends "account/email/base_message.txt" %}
-{% load i18n %}
+{% load i18n %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}
+Hello,
 
-{% block content %}{% autoescape off %}{% blocktrans %}You are receiving this email because you or someone else tried to signup for an
-account using email address:
+someone recently tried to sign up for the {{ site_domain }} service
+using your email address {{ email }}.
+An account with this email address already exists.
 
-{{ email }}
+In case you have forgotten about your existing account, please follow the password
+reset procedure to recover access to your account by clicking the link below:
 
-However, an account using that email address already exists.  In case you have
-forgotten about this, please use the password forgotten procedure to recover
-your account:
+    {{ password_reset_url }}
 
-{{ password_reset_url }}
+It might also be possible that you are trying to sign in with a new external
+identity which has not been connected with your account yet.  If so, please,
+sign in to your existing account and connect it with your new identity provider
+by clicking the link below:
 
-It might be possible that you are trying to sign in using a new external
-identity which has not been connected with your account yet.  Please, sign in
-to your existing account and connect it with your new identity provider:
+    {{ socialaccount_connections_url }}
 
-{{ socialaccount_connections_url }}
-{% endblocktrans %}{% endautoescape %}{% endblock content %}
+If this was not you, no action is needed and you can safely ignore this e-mail.
+
+Best regards
+Your VirES Team (support@vires.services)
+{% endblocktrans %}
