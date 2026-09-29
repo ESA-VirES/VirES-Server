@@ -91,6 +91,9 @@ class GetTimeDataProcess(WPSProcess):
         """
         access_logger = self.get_access_logger(**kwargs)
 
+        # strip dataset from the collection ID
+        collection_id = collection_id.partition(":")[0]
+
         try:
             collections = [
                 ProductCollection.select_permitted(permissions).get(identifier=id_)
