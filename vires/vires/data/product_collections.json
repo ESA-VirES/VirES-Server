@@ -322,7 +322,8 @@
         "productType": "SW_STRxEPF_1B",
         "nominalSampling": "PT1S",
         "mission": "Swarm",
-        "spacecraft": "A"
+        "spacecraft": "A",
+        "groupSamples": true
     },
     {
         "name": "SW_OPER_STRBEPF_1B",
@@ -330,7 +331,8 @@
         "productType": "SW_STRxEPF_1B",
         "nominalSampling": "PT1S",
         "mission": "Swarm",
-        "spacecraft": "B"
+        "spacecraft": "B",
+        "groupSamples": true
     },
     {
         "name": "SW_OPER_STRCEPF_1B",
@@ -338,7 +340,8 @@
         "productType": "SW_STRxEPF_1B",
         "nominalSampling": "PT1S",
         "mission": "Swarm",
-        "spacecraft": "C"
+        "spacecraft": "C",
+        "groupSamples": true
     },
     {
         "name": "SW_FAST_STRAEPF_1B",
@@ -347,7 +350,8 @@
         "nominalSampling": "PT1S",
         "mission": "Swarm",
         "spacecraft": "A",
-        "grade": "FAST"
+        "grade": "FAST",
+        "groupSamples": true
     },
     {
         "name": "SW_FAST_STRBEPF_1B",
@@ -356,7 +360,8 @@
         "nominalSampling": "PT1S",
         "mission": "Swarm",
         "spacecraft": "B",
-        "grade": "FAST"
+        "grade": "FAST",
+        "groupSamples": true
     },
     {
         "name": "SW_FAST_STRCEPF_1B",
@@ -365,7 +370,8 @@
         "nominalSampling": "PT1S",
         "mission": "Swarm",
         "spacecraft": "C",
-        "grade": "FAST"
+        "grade": "FAST",
+        "groupSamples": true
     },
     {
         "name": "SW_PREL_EFIAIDM_2_",
