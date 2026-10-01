@@ -184,6 +184,9 @@ class ProductSource:
         # mapping from VirES to product variable names
         self.translate_fw = self._get_variable_mapping(self.dataset_definition)
 
+        # optional data scaling
+        self.scaling = self._get_variable_scaling(self.dataset_definition)
+
         # parsing extra transformations
         self.transformations = self._get_transformations(self.dataset_definition)
 
@@ -210,6 +213,16 @@ class ProductSource:
                 (variable, type_info.get("source"))
                 for variable, type_info in dataset_definition.items()
             ) if source
+        }
+
+    @staticmethod
+    def _get_variable_scaling(dataset_definition):
+        return {
+            variable: scale_factor
+            for variable, scale_factor in (
+                (variable, type_info.get("scaleFactor"))
+                for variable, type_info in dataset_definition.items()
+            ) if scale_factor is not None
         }
 
     @staticmethod
