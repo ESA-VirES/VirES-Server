@@ -1255,6 +1255,70 @@
         }
     },
     {
+        "name": "SW_EFIx_LP_FP",
+        "description": "Electric field instrument (EFI) faceplate (FP) plasma density at 16 Hz",
+        "resourceUrl": "https://swarmhandbook.earth.esa.int/catalogue/SW_EFIx_LP_FP",
+        "dataTerms": "This dataset is provided by the European Space Agency and it is subject to terms condition described in https://vires.services/data_terms.",
+        "_order": 24,
+        "fileType": "CDF-generic",
+        "defaultDataset": "EFI_LP_FP",
+        "datasets": {
+            "EFI_LP_FP": {
+                "Timestamp": {
+                    "essentialVariable": true,
+                    "primaryTimestamp": true,
+                    "dataType": "timestamp",
+                    "dataSubtype": "CDF_EPOCH",
+                    "attributes": {
+                        "DESCRIPTION": "Time of observation",
+                        "UNITS": "-"
+                    }
+                },
+                "Latitude_GD": {
+                    "source": "Latitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic latitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Longitude_GD": {
+                    "source": "Longitude",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "WGS84 geodetic longitude",
+                        "UNITS": "deg"
+                    }
+                },
+                "Height_GD": {
+                    "source": "Height",
+                    "dataType": "float64",
+                    "scaleFactor": 1e3,
+                    "attributes": {
+                        "DESCRIPTION": "Height above WGS84 reference ellipsoid",
+                        "UNITS": "m"
+                    }
+                },
+                "I_FP": {
+                    "source": "Current",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Calibrated measured faceplate current",
+                        "UNITS": "nA"
+                    }
+                },
+                "N_FP": {
+                    "source": "Density",
+                    "dataType": "float64",
+                    "attributes": {
+                        "DESCRIPTION": "Plasma density from the faceplate current",
+                        "UNITS": "cm-3"
+                    }
+                }
+            }
+        }
+    },
+    {
         "name": "SW_EFIx_TCTyy",
         "description": "Swarm Thermal Ion Imager (TII) cross track flow at 2Hz and 16Hz",
         "resourceUrl": "https://earth.esa.int/eogateway/documents/20142/37627/swarm-EFI-TII-cross-track-flow-dataset-release-notes.pdf",
