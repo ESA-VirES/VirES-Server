@@ -184,6 +184,7 @@ class ProductTimeSeries(BaseProductTimeSeries):
                 source_dataset['location'],
                 translation=self.source.translate_fw,
                 time_type=self.TIMESTAMP_TYPE,
+                scaling=self.source.scaling,
             ) as cdf_ds:
                 subset, nrv_shape = cdf_ds.get_temporal_subset(
                     time_variable=self.time_variable,
