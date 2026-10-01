@@ -39,12 +39,14 @@ SLICE_ALL = slice(None)
 class CDFDataset:
     """ Convenience wrapper around the CDF object. """
 
-    def __init__(self, filename, translation=None, time_type=CDF_EPOCH_TYPE):
+    def __init__(self, filename, translation=None, time_type=CDF_EPOCH_TYPE,
+                 scaling=None):
         self.cdf = None
         self.open(filename)
         # variable name translation
         self._translation = translation or {}
         self._time_type = time_type
+        self._scaling = scaling or {}
 
     def __del__(self):
         self.close()
@@ -235,6 +237,9 @@ class CDFDataset:
             data = asarray(cdf_variable[...])
             if nrv_shape:
                 data = broadcast_to(data, (*nrv_shape, *data.shape))
+
+        if (scaling_factor := self._scaling.get(variable)) is not None:
+            data *= scaling_factor
         return data, cdf_variable
 
     @staticmethod
