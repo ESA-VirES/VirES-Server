@@ -476,6 +476,30 @@
         "spacecraft": "C"
     },
     {
+        "name": "SW_EXTD_EFIA_LP_FP",
+        "description": "Swarm A faceplate plasma density at 16 Hz rate",
+        "productType": "SW_EFIx_LP_FP",
+        "nominalSampling": "PT0.0625S",
+        "mission": "Swarm",
+        "spacecraft": "A"
+    },
+    {
+        "name": "SW_EXTD_EFIB_LP_FP",
+        "description": "Swarm B faceplate plasma density at 16 Hz rate",
+        "productType": "SW_EFIx_LP_FP",
+        "nominalSampling": "PT0.0625S",
+        "mission": "Swarm",
+        "spacecraft": "B"
+    },
+    {
+        "name": "SW_EXTD_EFIC_LP_FP",
+        "description": "Swarm C faceplate plasma density at 16 Hz rate",
+        "productType": "SW_EFIx_LP_FP",
+        "nominalSampling": "PT0.0625S",
+        "mission": "Swarm",
+        "spacecraft": "C"
+    },
+    {
         "name": "SW_OPER_IBIATMS_2F",
         "description": "Swarm A ionospheric bubble index",
         "productType": "SW_IBIxTMS_2F",
