@@ -221,7 +221,7 @@ class RecordFilter():
 
         identifiers = set(kwargs['identifier'])
         if identifiers:
-            yield cls._in('identifier', product_collections)
+            yield cls._in('identifier', identifiers)
 
     @staticmethod
     def _in(key, parameter):
