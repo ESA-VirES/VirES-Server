@@ -34,7 +34,7 @@ from .magnetic_model import (
 from .geodetic_coordinates import Geodetic2GeocentricCoordinates
 from .magnetic_coordinates import QuasiDipoleCoordinates, MagneticLocalTime
 from .magnetic_dipole import MagneticDipole, DipoleTiltAngle
-from .sun_ephemeris import SunPosition, SubSolarPoint
+from .sun_ephemeris import SunPosition, SubSolarPoint, LocalSolarTime
 from .label import Label, SpacecraftLabel
 from .spacecraft_subtraction import SatSatSubtraction
 from .indices import IndexKpFromKp10
