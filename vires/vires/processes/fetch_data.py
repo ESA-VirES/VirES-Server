@@ -66,7 +66,7 @@ from vires.processes.util.time_series import (
 )
 from vires.processes.util.models import (
     QuasiDipoleCoordinates, MagneticLocalTime,
-    SpacecraftLabel, SunPosition, SubSolarPoint,
+    SpacecraftLabel, SunPosition, SubSolarPoint, LocalSolarTime,
     SatSatSubtraction, MagneticDipole, DipoleTiltAngle,
     Identity,
     BnecToF,
@@ -299,6 +299,7 @@ class FetchData(WPSProcess):
             model_mlt = MagneticLocalTime()
             model_sun = SunPosition()
             model_subsol = SubSolarPoint()
+            model_lst = LocalSolarTime()
             model_dipole = MagneticDipole()
             model_tilt_angle = DipoleTiltAngle()
             model_gd2gc = Geodetic2GeocentricCoordinates()
@@ -382,7 +383,7 @@ class FetchData(WPSProcess):
                 for model in chain(
                     (
                         model_gd2gc, model_bnec_intensity,
-                        model_qdc, model_mlt, model_sun,
+                        model_qdc, model_mlt, model_sun, model_lst,
                         model_subsol, model_dipole, model_tilt_angle,
                     ),
                     generate_magnetic_model_sources(
