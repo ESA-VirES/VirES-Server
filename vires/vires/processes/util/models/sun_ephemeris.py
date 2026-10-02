@@ -110,9 +110,9 @@ class SunPosition(Model):
 
 class LocalSolarTime(Model):
     """ Local Solar Time (LST) calculation.
-    Calculated from the global Sun Hour Angle and observers Longitude.
+    Calculated from the Sun local Hour Angle
     """
-    DEFAULT_REQUIRED_VARIABLES = ["Longitude", "SunHourAngle"]
+    DEFAULT_REQUIRED_VARIABLES = ["SunHourAngle"]
 
     VARIABLES = {
         "LST": (CDF_DOUBLE_TYPE, {
@@ -141,12 +141,12 @@ class LocalSolarTime(Model):
         self.logger = self._LoggerAdapter(logger or getLogger(__name__), {})
 
     def _extract_required_variables(self, dataset):
-        longitide, hour_angle = self._required_variables
-        return dataset[longitide], dataset[hour_angle]
+        hour_angle, = self._required_variables
+        return dataset[hour_angle]
 
     @staticmethod
-    def _eval_local_solar_time(longitude, hour_angle):
-        return (((hour_angle + longitude)/ 15.0) + 12.0) % 24.0
+    def _eval_local_solar_time(hour_angle):
+        return (hour_angle / 15.0 + 12.0) % 24.0
 
     def eval(self, dataset, variables=None, **kwargs):
         output_ds = Dataset()
@@ -162,8 +162,8 @@ class LocalSolarTime(Model):
             output_ds.set(variable, data, *self.VARIABLES[variable])
 
         if variables:
-            longitude, hour_angle = self._extract_required_variables(dataset)
-            lst = self._eval_local_solar_time(longitude, hour_angle)
+            hour_angle = self._extract_required_variables(dataset)
+            lst = self._eval_local_solar_time(hour_angle)
             _set_output(lst_variable, lst)
 
         return output_ds
