@@ -7566,6 +7566,7 @@
                     }
                 },
                 "local_solar_time": {
+                    "aliases": ["LST"],
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Local solar time",
@@ -7573,6 +7574,7 @@
                     }
                 },
                 "density": {
+                    "aliases": ["NeutralDensity_POD"],
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Mass density",
@@ -7580,6 +7582,7 @@
                     }
                 },
                 "density_orbitmean": {
+                    "aliases": ["NeutralDensityOrbitMean_POD"],
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Orbit average of mass density",
@@ -7587,6 +7590,7 @@
                     }
                 },
                 "validity_flag": {
+                    "aliases": ["ValidityFlag"],
                     "dataType": "int8",
                     "attributes": {
                         "DESCRIPTION": "0 = nominal data, 1 = anomalous data",
@@ -7642,6 +7646,7 @@
                     }
                 },
                 "local_solar_time": {
+                    "aliases": ["LST"],
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Local solar time",
@@ -7649,6 +7654,7 @@
                     }
                 },
                 "density": {
+                    "aliases": ["NeutralDensity_ACC"],
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Mass density",

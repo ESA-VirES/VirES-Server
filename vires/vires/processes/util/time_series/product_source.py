@@ -262,7 +262,24 @@ class ProductSource:
     @cached_property
     def dataset_definition(self):
         """ Get dictionary of available variables """
-        return self.type.get_dataset_definition(self.dataset_id)
+        def _get_alias_definition(variable, definition):
+            return {
+                **definition,
+                "source": definition.get("source", variable),
+                "is_alias": True,
+                "aliases": None,
+            }
+
+        dataset_definition = self.type.get_dataset_definition(self.dataset_id)
+
+        return {
+            **dataset_definition,
+            **{
+                alias: _get_alias_definition(variable, definition)
+                for variable, definition in dataset_definition.items()
+                for alias in definition.get("aliases") or []
+            },
+        }
 
     @cached_property
     def time_variables(self):
