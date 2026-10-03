@@ -27,6 +27,8 @@
 # pylint: disable=missing-docstring, too-few-public-methods
 
 from allauth.account.models import EmailAddress
+from django.conf import settings
+from django.urls import set_script_prefix
 from .common import EmailSelectionSubcommandProtected
 
 
@@ -59,6 +61,9 @@ class SendConfirmationEmailSubcommand(EmailSelectionSubcommandProtected):
                 email.user.username, email.email
             )
         else:
+            # required to set correct path prefix for the confirmation URL
+            if hasattr(settings, "SCRIPT_PREFIX"):
+                set_script_prefix(settings.SCRIPT_PREFIX)
             try:
                 email.send_confirmation()
             except Exception as error:
