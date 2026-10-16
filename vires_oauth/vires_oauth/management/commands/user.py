@@ -36,6 +36,7 @@ from ._user.import_ import ImportUserSubcommand
 from ._user.set_group import SetUserGroupSubcommand
 from ._user.unset_group import UnsetUserGroupSubcommand
 from ._user.revoke_tokens import RevokeTokensSubcommand
+from ._user.remove_invalid import RemoveInvalidUserSubcommand
 
 
 class Command(Supercommand):
@@ -53,5 +54,6 @@ class Command(Supercommand):
             SetUserGroupSubcommand,
             UnsetUserGroupSubcommand,
             RevokeTokensSubcommand,
+            RemoveInvalidUserSubcommand,
         ]
     }

@@ -33,6 +33,7 @@ from .._common import Subcommand, time_spec
 
 class UserSelectionSubcommand(Subcommand):
     """ User selection subcommand. """
+    _self_allow_login_cli_filters = True
 
     def add_arguments(self, parser):
         parser.add_argument("username", nargs="*")
@@ -44,18 +45,19 @@ class UserSelectionSubcommand(Subcommand):
             "--inactive", dest="is_active", action="store_false", default=None,
             help="Select deactivated users."
         )
-        parser.add_argument(
-            "--no-login", action="store_true", default=False,
-            help="Select user who joined but never logged in."
-        )
-        parser.add_argument(
-            "--last-login-after", type=time_spec, required=False,
-            help="Select user whose last logging occurred after the given date."
-        )
-        parser.add_argument(
-            "--last-login-before", type=time_spec, required=False,
-            help="Select user whose last logging occurred before the given date."
-        )
+        if self._self_allow_login_cli_filters:
+            parser.add_argument(
+                "--no-login", action="store_true", default=False,
+                help="Select user who joined but never logged in."
+            )
+            parser.add_argument(
+                "--last-login-after", type=time_spec, required=False,
+                help="Select user whose last logging occurred after the given date."
+            )
+            parser.add_argument(
+                "--last-login-before", type=time_spec, required=False,
+                help="Select user whose last logging occurred before the given date."
+            )
         parser.add_argument(
             "--joined-after", type=time_spec, required=False,
             help="Select user whose last logging occurred after the given date."
