@@ -27,10 +27,9 @@
 # pylint: disable=missing-docstring, invalid-name
 
 from django.apps import AppConfig
-from .settings import PACKAGE_NAME
 
 
 class ViresConfig(AppConfig):
-    name = PACKAGE_NAME
+    name = "vires"
     verbose_name = "VirES server"
     default_auto_field = 'django.db.models.AutoField'
