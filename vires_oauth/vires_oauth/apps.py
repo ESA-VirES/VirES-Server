@@ -34,6 +34,7 @@ from .settings import PACKAGE_NAME
 class ViresOauthConfig(AppConfig):
     name = PACKAGE_NAME
     verbose_name = "VirES OAuth2.0 server"
+    default_auto_field = 'django.db.models.AutoField'
 
     def ready(self):
         from . import signals # initializes app signal handlers - do not remove!
