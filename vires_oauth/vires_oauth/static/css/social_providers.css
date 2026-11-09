@@ -38,6 +38,7 @@ button.socialaccount_provider:focus, button.socialaccount_provider:hover {
 
 .socialaccount_providers{
   padding-left: 0px;
+  padding-bottom: 10px;
   text-align: center;
 }
 

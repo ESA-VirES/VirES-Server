@@ -43,7 +43,7 @@ class EoiamAccount(ProviderAccount):
 class EoiamProviderBase(OAuth2Provider):
     id = None
     logger_name = None
-    name = "EO Sign In"
+    name = "ESA EO Sign In"
     account_class = EoiamAccount
     oauth2_adapter_class = None
 

@@ -28,6 +28,7 @@
 
 import json
 from django.conf import settings
+from allauth.account.internal.templatekit import get_entrance_context_data
 from .altcha import is_altcha_enabled
 
 def vires_oauth(request):
@@ -40,4 +41,7 @@ def vires_oauth(request):
                 or app['required_permission'] in permissions
             )
         ],
+        # adding extra djang-allauth context variables
+        # required by the common base template
+        **get_entrance_context_data(request),
     }

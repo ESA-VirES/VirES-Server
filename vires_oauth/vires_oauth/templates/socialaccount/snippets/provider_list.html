@@ -6,7 +6,9 @@
 <li>
   <form method="post" action="{% provider_login_url provider.id openid=brand.openid_url process=process %}">
     {% csrf_token %}
-    <button type="submit" class="socialaccount_provider {{provider.id}} {{brand.id}}" title="{{brand.name}}">{{brand.name}}</button>
+    <button type="submit" class="btn btn-primary btn-block btn-lg socialaccount_provider_button {{provider.id}} {{brand.id}}" title="{{brand.name}}">
+        {% if process == "connect" %}Connect {{brand.name}} account{% else %}Sign in with {{brand.name}}{% endif %}
+    </button>
   </form>
 </li>
 {% endfor %}
@@ -14,7 +16,9 @@
 <li>
   <form method="post" action="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
     {% csrf_token %}
-    <button type="submit" class="socialaccount_provider {{provider.id}}" title="{{provider.name}}">{{provider.name}}</button>
+    <button type="submit" class="btn btn-primary btn-block btn-lg socialaccount_provider_button {{provider.id}} {{provider.id}}" title="{{provider.name}}">
+        {% if process == "connect" %}Connect {{provider.name}} account{% else %}Sign in with {{provider.name}}{% endif %}
+    </button>
   </form>
 </li>
 {% endfor %}

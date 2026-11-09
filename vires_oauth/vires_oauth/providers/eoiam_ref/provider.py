@@ -35,7 +35,7 @@ from .views import EoiamRefOAuth2Adapter
 
 class EoiamRefProvider(EoiamProviderBase):
     id = PROVIDER_ID
-    name = "EO Sign In (reference instance)"
+    name = "ESA EO Sign In (reference instance)"
     logger_name = __name__
     settings = app_settings.PROVIDERS.get(id, {})
     oauth2_adapter_class = EoiamRefOAuth2Adapter

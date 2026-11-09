@@ -2,33 +2,24 @@
 {% load i18n %}
 {% load account socialaccount %}
 {% block content %}
-  <h2>Log in</h2>
+  <h2>VirES sign-in and registration</h2>
   {% get_providers as socialaccount_providers %}
   {% if socialaccount_providers %}
-  <p style="text-align: center;">Log in using your preferred external identity provider:</p>
   <ul class="socialaccount_providers">
     {% include "socialaccount/snippets/provider_list.html" with process="login" %}
   </ul>
-  <p style="text-align: center;">or with your account credentials:</p>
-  {% else %}
-  <p style="text-align: center;">Login with your account credentials:</p>
+  {% if not SOCIALACCOUNT_ONLY %}<hr>{% endif %}
   {% endif %}
+  {% if not SOCIALACCOUNT_ONLY %}
   <form class="form-horizontal inputwide" method="POST" action="{% url 'account_login' %}">
     {% csrf_token %}
     <fieldset>
-     {% if form.errors %}
-       <p class="help-inline error">
-         Incorrect user credentials or password.<br>
-         Please try again.<br>
-         Note that both fields are case sensitive.
-       </p>
-     {% endif %}
      {% for field in form %}
        {% if field.errors %}
-         <div class="control-group error">
+         <div class="control-group text-danger">
            <label class="control-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
            {{ field }}
-           <span class="help-inline error">
+           <span class="help-inline">
              {% for error in field.errors %}{{ error }}{% endfor %}
            </span>
          </div>
@@ -45,33 +36,17 @@
      {% if redirect_field_value %}
          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
      {% endif %}
-     <p class="help-inline" style="text-align: right;"><a href="{% url 'account_reset_password' %}">Forgot your password?</a></p>
      <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
-         <button type="submit" class="btn btn-primary">{% trans "Log in" %}</button>
+         <button type="submit" class="btn btn-primary" style="width:40%">{% trans "Log in" %}</button>
+         <a class="btn btn-default" href="{% url 'account_signup' %}" style="width:40%">Create new account</a>
      </div>
+     {% if form.errors %}
+       <p class="help-inline error">
+         Incorrect user credentials. Please try again.
+       </p>
+     {% endif %}
     </fieldset>
   </form>
-  <h2>Sign up</h2>
-  {% if socialaccount_providers %}
-  <p style="text-align: center;">
-    If you have not created an account yet, then please sign up directly:
-  </p>
-  <div style="margin-top: 2em; text-align: center; margin:15px 0 20px 0;">
-    <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign-up</a>
-  </div>
-  <p style="text-align: center; margin-top: 2em;">
-     or sign up using your preferred external identity provider:
-  </p>
-  <ul class="socialaccount_providers">
-    {% include "socialaccount/snippets/provider_list.html" with process="signup" %}
-  </ul>
-  {% else %}
-  <p style="text-align: center;">
-    If you have not created an account yet, then please sign up:
-  </p>
-  <div style="margin-top: 2em; text-align: center; margin:15px 0 20px 0;">
-    <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign-up</a>
-  </div>
   {% endif %}
   <hr>
   <p style="text-align: center;">
