@@ -18,6 +18,12 @@ tr.clickable:hover {
 background-color: #f9f9f9;
 }
 
+button > span.icon {
+  float: left;
+  margin-left: 15px;
+  font-size: large;
+}
+
 button.socialaccount_provider {
   color: #428bca;
   background-color: transparent;
@@ -32,8 +38,8 @@ button.socialaccount_provider:focus, button.socialaccount_provider:hover {
 }
 
 .socialaccount_providers li{
-	display: inline;
-	margin-left: 1em;
+  display: inline;
+  margin-left: 1em;
 }
 
 .socialaccount_providers{
@@ -57,6 +63,10 @@ button.socialaccount_provider:focus, button.socialaccount_provider:hover {
   font-size: 40px;
   text-decoration: none;
 }
+span.icon.eoiam::before {
+  font-family: esa-logo;
+  content: "F";
+}
 
 
 .socialaccount_provider.eoiam_ref  {
@@ -73,27 +83,9 @@ button.socialaccount_provider.eoiam_ref:focus, button.socialaccount_provider.eoi
   font-size: 40px;
   text-decoration: none;
 }
-
-
-.socialaccount_provider.facebook  {
-  font-size: 0;
-  text-decoration: none;
-}
-.socialaccount_provider.facebook::before {
-  font-family: FontAwesome;
-  content: "\f082";
-  font-size: 40px;
-}
-
-
-.socialaccount_provider.twitter  {
-  font-size: 0;
-  text-decoration: none;
-}
-.socialaccount_provider.twitter::before {
-  font-family: FontAwesome;
-  content: "\f081";
-  font-size: 40px;
+span.icon.eoiam_ref::before {
+  font-family: esa-logo;
+  content: "F";
 }
 
 
@@ -105,18 +97,11 @@ button.socialaccount_provider.eoiam_ref:focus, button.socialaccount_provider.eoi
   font-family: FontAwesome;
   content: "\f092";
   font-size: 40px;
-}
-
-
-.socialaccount_provider.dropbox  {
-  font-size: 0;
-  text-decoration: none;
-}
-.socialaccount_provider.dropbox::before {
+}span.icon.github::before {
   font-family: FontAwesome;
-  content: "\f16b";
-  font-size: 40px;
+  content: "\f09b";
 }
+
 
 .socialaccount_provider.linkedin_oauth2  {
   font-size: 0;
@@ -127,6 +112,10 @@ button.socialaccount_provider.eoiam_ref:focus, button.socialaccount_provider.eoi
   content: "\f08c";
   font-size: 40px;
 }
+span.icon.linkedin_oauth2::before {
+  font-family: FontAwesome;
+  content: "\f0e1";
+}
 
 .socialaccount_provider.google  {
   font-size: 0;
@@ -136,4 +125,8 @@ button.socialaccount_provider.eoiam_ref:focus, button.socialaccount_provider.eoi
   font-family: FontAwesome;
   content: "\f0d4";
   font-size: 40px;
+}
+span.icon.google::before {
+  font-family: FontAwesome;
+  content: "\f1a0";
 }

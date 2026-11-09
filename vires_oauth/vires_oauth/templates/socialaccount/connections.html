@@ -19,7 +19,7 @@
             <tr class="clickable" onclick="$(this).find('td input:radio').prop('checked', true);">
               <td class="align-middle"><input id="id_account_{{ base_account.id }}" type="radio" name="account" value="{{ base_account.id }}"/></td>
               <td class="align-middle">{{ account }}</td>
-              <td class="align-middle"><span class="socialaccount_provider_label {{ base_account.provider }} {{ account.get_brand.id }} color-grey">{{account.get_brand.name}}</span></td>
+              <td class="align-middle"><span class="icon {{ base_account.provider }} {{ account.get_brand.id }}">&nbsp;</span><span class="socialaccount_provider_label {{ base_account.provider }} {{ account.get_brand.id }} color-grey">{{account.get_brand.name}}</span></td>
             </tr>
           {% endwith %}
           {% endfor %}
