@@ -26,6 +26,7 @@
 #-------------------------------------------------------------------------------
 # pylint: disable=missing-docstring,invalid-name
 
+from django.conf import settings
 from django.urls import path, include, re_path
 from oauth2_provider.views import (
     AuthorizationView,
@@ -46,6 +47,7 @@ from .views import (
     AdminApplicationDelete,
     AdminApplicationUpdate,
     AdminApplicationRegistration,
+    DirectLoginView,
     FilteredAuthorizedTokensListView,
     FixedAuthorizedTokenDeleteView,
     update_user_profile_view,
@@ -123,6 +125,14 @@ oauth2_provider_urlpatterns = [
         name="authorized-token-delete"
     ),
 ]
+
+allauth_urlpatterns = include('allauth.urls')[0].urlpatterns
+
+if getattr(settings, "VIRES_OAUTH_EXTRA_DIRECT_LOGIN_VIEW", False):
+    # inject direct login view
+    allauth_urlpatterns.append(
+        path('direct_login/', DirectLoginView.as_view(), name="direct-login"),
+    )
 
 urlpatterns = [
     path('', request_consent(update_user_profile_view), name='account_update_profile'),

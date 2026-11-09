@@ -41,6 +41,8 @@ def vires_oauth(request):
                 or app['required_permission'] in permissions
             )
         ],
+        "hide_direct_login": getattr(settings, "VIRES_OAUTH_HIDE_DIRECT_LOGIN", False),
+        "hide_direct_signup": getattr(settings, "VIRES_OAUTH_HIDE_DIRECT_SIGNUP", False),
         # adding extra djang-allauth context variables
         # required by the common base template
         **get_entrance_context_data(request),

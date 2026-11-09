@@ -8,9 +8,9 @@
   <ul class="socialaccount_providers">
     {% include "socialaccount/snippets/provider_list.html" with process="login" %}
   </ul>
-  {% if not SOCIALACCOUNT_ONLY %}<hr>{% endif %}
+  {% if not SOCIALACCOUNT_ONLY and not hide_direct_login %}<hr>{% endif %}
   {% endif %}
-  {% if not SOCIALACCOUNT_ONLY %}
+  {% if not SOCIALACCOUNT_ONLY and not hide_direct_login %}
   <form class="form-horizontal inputwide" method="POST" action="{% url 'account_login' %}">
     {% csrf_token %}
     <fieldset>
@@ -38,7 +38,9 @@
      {% endif %}
      <div class="form-actions" style="text-align: center; margin:15px 0 20px 0;">
          <button type="submit" class="btn btn-primary" style="width:40%">{% trans "Log in" %}</button>
+         {% if not hide_direct_signup %}
          <a class="btn btn-default" href="{% url 'account_signup' %}" style="width:40%">Create new account</a>
+         {% endif %}
      </div>
      {% if form.errors %}
        <p class="help-inline error">

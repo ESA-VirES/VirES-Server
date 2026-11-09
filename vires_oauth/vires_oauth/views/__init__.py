@@ -33,6 +33,9 @@ from .vires import (
     update_user_profile_view,
     update_user_consent_view,
 )
+from .login import (
+    DirectLoginView,
+)
 from .oauth2 import (
     AdminApplicationList,
     AdminApplicationDetail,

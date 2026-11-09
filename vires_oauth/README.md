@@ -66,6 +66,21 @@ An optional default user groups can set by the `VIRES_OAUTH_DEFAULT_GROUPS`
 VIRES_OAUTH_DEFAULT_GROUPS = ["default"]
 ```
 
+To hide direct sing-up set
+```
+VIRES_OAUTH_HIDE_DIRECT_SIGNUP = True
+```
+
+To hide direct sing-in and sign-up set
+```
+VIRES_OAUTH_HIDE_DIRECT_LOGIN = True
+```
+
+To render dedicated direct login view set
+```
+VIRES_OAUTH_EXTRA_DIRECT_LOGIN_VIEW = True
+```
+
 ## Management CLI
 
 The content of the server is managed vi the Django `manage.py` command.
