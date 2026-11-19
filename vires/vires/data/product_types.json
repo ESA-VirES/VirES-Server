@@ -7574,7 +7574,7 @@
                     }
                 },
                 "density": {
-                    "aliases": ["NeutralDensity_POD"],
+                    "aliases": ["ThermosphericDensity_POD"],
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Mass density",
@@ -7582,7 +7582,7 @@
                     }
                 },
                 "density_orbitmean": {
-                    "aliases": ["NeutralDensityOrbitMean_POD"],
+                    "aliases": ["ThermosphericDensityOrbitMean_POD"],
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Orbit average of mass density",
@@ -7654,7 +7654,7 @@
                     }
                 },
                 "density": {
-                    "aliases": ["NeutralDensity_ACC"],
+                    "aliases": ["ThermosphericDensity_ACC"],
                     "dataType": "float64",
                     "attributes": {
                         "DESCRIPTION": "Mass density",

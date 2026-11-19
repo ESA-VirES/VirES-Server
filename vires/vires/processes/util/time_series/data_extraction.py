@@ -184,7 +184,7 @@ class CDFDataset:
     def _extract_subset_sorted(times, time_bounds):
         index_low, index_high = searchsorted(times, time_bounds, 'left')
         subset = slice(index_low, index_high)
-        nrv_shape = (index_high - index_low,)
+        nrv_shape = (max(index_high - index_low, 0),)
         return subset, nrv_shape
 
     @staticmethod

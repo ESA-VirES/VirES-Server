@@ -34,6 +34,7 @@ from . import signals # needed to initialize signal receivers
 class EOxServerAllauthConfig(AppConfig):
     name = 'eoxs_allauth'
     verbose_name = "EOxServer allauth"
+    default_auto_field = 'django.db.models.AutoField'
 
     def ready(self):
         from django.contrib.auth.models import User
